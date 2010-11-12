@@ -2,6 +2,10 @@ Import('env')
 
 main_sources = """
 	main.c
+	sdl.c
+	gl.c
+	dpl.c
+	load.c
 """.split()
 
 sources = env.Object(main_sources)

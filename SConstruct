@@ -12,14 +12,16 @@ def CheckPKG(context, name):
 	context.Result( ret )
 	return ret
 
-env.VariantDir('build', '.')
 
 if not env.GetOption('clean'):
+	env.VariantDir('build', '.')
+
 	conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig, 'CheckPKG' : CheckPKG })
 #	conf.CheckCCompiler()
 	conf.CheckPKGConfig('0.2')
 	conf.CheckLib('m')
 	conf.CheckPKG('sdl >= 1.2')
+	conf.CheckPKG('gl >= 7.0')
 
 	conf.Define('APPNAME', env.subst('"slideshowgl"'))
 	conf.Define('VERSION', env.subst('"2.0.0"'))
@@ -27,14 +29,15 @@ if not env.GetOption('clean'):
 	env = conf.Finish()
 
 env.ParseConfig('pkg-config --cflags --libs sdl')
+env.ParseConfig('pkg-config --cflags --libs gl')
 
-env.Append(CCFLAGS = ['-Wall'])
+env.Append(CCFLAGS = ['-Wall','-std=c99'])
 
 #if env.DebugVariant():
 #	env.Append(CCFLAGS = ['-g'])
 #else:
 #	env.Append(CCFLAGS = ['-O2'])
-env.Append(CCFLAGS = ['-O2'])
+env.Append(CCFLAGS = ['-g'])
 
 Export('env')
 
