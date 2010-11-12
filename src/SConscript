@@ -1,0 +1,11 @@
+Import('env')
+
+main_sources = """
+	main.c
+""".split()
+
+sources = env.Object(main_sources)
+
+prog = env.Program('../slideshowgl', sources, install=True)
+
+Export('sources')
