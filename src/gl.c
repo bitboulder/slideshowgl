@@ -85,26 +85,30 @@ struct img *glseltex(struct img *img,enum imgtex it){
 	return NULL;
 }
 
-void glrenderimg(struct img *img,int pos){
+void glrenderimg(struct img *img,char back){
 	struct img *isc;
 	struct ipos *ipos;
-	if(!imgposactive(img->pos,pos)) return;
-	if(!(isc=glseltex(img,imgpostex(img->pos,pos)))) return;
-	if(!(ipos=imgposcur(img->pos,pos))) return;
+	struct iopt *iopt;
+	iopt=imgposopt(img->pos);
+	if(!iopt->active) return;
+	if(iopt->back!=back) return;
+	if(!(isc=glseltex(img,iopt->tex))) return;
+	ipos=imgposcur(img->pos);
 	glPushMatrix();
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
-	glScalef(imgldfitw(isc->ld),imgldfith(isc->ld),1.);
+	iopt=imgposopt(isc->pos);
+	glScalef(iopt->fitw,iopt->fith,1.);
 	glColor4f(1.,1.,1.,ipos->a);
 	glCallList(gl.dls+DLS_IMG);
 	glPopMatrix();
 }
 
 void glrenderimgs(){
-	int i,p;
+	int i;
 	glmode(GLM_2D);
-	for(i=0;i<nimg;i++) for(p=0;p<2;p++)
-		glrenderimg(imgs+i,p);
+	for(i=0;i<nimg;i++) glrenderimg(imgs+i,1);
+	for(i=0;i<nimg;i++) glrenderimg(imgs+i,0);
 }
 
 void glpaint(){

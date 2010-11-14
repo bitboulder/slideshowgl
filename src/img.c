@@ -4,7 +4,7 @@
 #include "dpl.h"
 
 char *imgtex_str[]={
-	"SMALL","BIG","FULL",
+	"TINY", "SMALL","BIG","FULL",
 };
 
 struct img *imgs = NULL;
@@ -13,7 +13,7 @@ int nimg = 0;
 int simg = 0;
 
 void imginit(struct img *img,char *fn){
-	img->ld=imgldinit(fn);
+	img->ld=imgldinit(fn,img);
 	img->pos=imgposinit();
 }
 
@@ -23,7 +23,11 @@ void imgfree(struct img *img){
 }
 
 void imgadd(char *fn){
-	if(nimg==simg) imgs=realloc(imgs,sizeof(struct img)*(simg+=16));
+	if(nimg==simg){
+		int i;
+		imgs=realloc(imgs,sizeof(struct img)*(simg+=16));
+		for(i=0;i<nimg;i++) imgldsetimg(imgs[i].ld,imgs+i);
+	}
 	imginit(imgs+nimg,fn);
 	nimg++;
 }

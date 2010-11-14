@@ -4,13 +4,11 @@
 #include <GL/gl.h>
 #include "img.h"
 
-void ldforcefit();
-
-struct imgld *imgldinit(char *fn);
-void imgldfree(struct imgld * ip);
+struct imgld *imgldinit(char *fn,struct img *img);
+void imgldfree(struct imgld *il);
+void imgldsetimg(struct imgld *il,struct img *img);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
-float imgldfitw(struct imgld *il);
-float imgldfith(struct imgld *il);
+float imgldrat(struct imgld *il);
 
 void ldtexload();
 

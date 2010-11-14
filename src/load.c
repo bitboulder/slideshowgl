@@ -12,18 +12,6 @@
 
 void ldffree(struct imgld *il,enum imgtex it);
 
-/***************************** load *******************************************/
-
-struct load {
-	char force_fit;
-	char do_fit;
-} load = {
-	.force_fit = 0,
-	.do_fit    = 0,
-};
-
-void ldforcefit(){ load.force_fit = 1; }
-
 /***************************** imgld ******************************************/
 
 struct itex {
@@ -35,31 +23,34 @@ struct imgld {
 	char fn[1024];
 	char loadfail;
 	int w,h;
+	float irat;
 	struct itex texs[TEX_NUM];
-	float fitw,fith;
+	struct img *img;
 };
 
-struct imgld *imgldinit(char *fn){
-	struct imgld *ip=calloc(1,sizeof(struct imgld));
-	strncpy(ip->fn,fn,1024);
-	return ip;
+struct imgld *imgldinit(char *fn,struct img *img){
+	struct imgld *il=calloc(1,sizeof(struct imgld));
+	strncpy(il->fn,fn,1024);
+	il->img=img;
+	return il;
 }
 
-void imgldfree(struct imgld * il){
+void imgldfree(struct imgld *il){
 	int i;
 	for(i=0;i<TEX_NUM;i++) if(il->texs[i].tex) glDeleteTextures(1,&il->texs[i].tex);
 	free(il);
 }
 
+void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
+
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
 	for(i=it;i>=0;i--) if(il->texs[i].tex) return il->texs[i].tex;
+	for(i=it;i<TEX_NUM;i++) if(il->texs[i].tex) return il->texs[i].tex;
 	return 0;
 }
 
-float imgldfitw(struct imgld *il){ return il->fitw; }
-float imgldfith(struct imgld *il){ return il->fith; }
-
+float imgldrat(struct imgld *il){ return il->irat; }
 
 /***************************** sdlimg *****************************************/
 
@@ -117,34 +108,23 @@ void ldtexload(){
 	if(tlb.wi==tlb.ri) return;
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
-		glGenTextures(1,&tl->itex->tex);
-		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		if(!tl->itex->tex){
+			glGenTextures(1,&tl->itex->tex);
+			glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
+			glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
 		sdlimg_unref(tl->sdlimg);
-		tl->itex->loading=0;
 	}else{
-		glDeleteTextures(1,&tl->itex->tex);
+		if(tl->itex->tex) glDeleteTextures(1,&tl->itex->tex);
 		tl->itex->tex=0;
 	}
+	tl->itex->loading=0;
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
 }
 
 /***************************** load + free img ********************************/
-
-void ldfitimg(struct imgld *il){
-	float irat=(float)il->h/(float)il->w;
-	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
-	if(srat<irat){
-		il->fitw=srat/irat;
-		il->fith=1.;
-	}else{
-		il->fitw=1.;
-		il->fith=irat/srat;
-	}
-	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
-}
 
 char ldfload(struct imgld *il,enum imgtex it,char replace){
 	struct sdlimg *sdlimg;
@@ -160,6 +140,8 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
+	il->irat=(float)il->h/(float)il->w;
+	imgfit(il->img->pos,il->irat);
 
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;
@@ -170,6 +152,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		case TEX_FULL:  size=32768; break;
 		case TEX_BIG:   size=2048;  break;
 		case TEX_SMALL: size=512;   break;
+		case TEX_TINY:  size=256;   break;
 		}
 		if((sdlimgscale = sdlimg_gen(SDL_ScaleSurface(sdlimg->sf,MIN(size,il->w),MIN(size,il->h))))){
 			sdlimg_unref(sdlimg);
@@ -180,7 +163,6 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		ld=1;
 	}
 	sdlimg_unref(sdlimg);
-	ldfitimg(il);
 	return ld;
 end:
 	sdlimg_unref(sdlimg);
@@ -200,7 +182,6 @@ char ldicheck(struct imgld *il,enum imgtex tload,enum imgtex tfree){
 	int i;
 	char ld=0;
 	if(tload>=0 && !il->texs[tload].tex) ld=ldfload(il,tload,0);
-	else if(load.do_fit) ldfitimg(il);
 	for(i=tfree+1;i<TEX_NUM;i++) if(il->texs[i].tex) ldffree(il,i);
 	return ld;
 }
@@ -213,8 +194,6 @@ char ldfcheck(int imgi,enum imgtex tload,enum imgtex tfree){
 char ldcheck(){
 	int i;
 	int imgi = dplgetimgi();
-	load.do_fit=load.force_fit;
-	load.force_fit=0;
 	if(ldicheck(defimg.ld,TEX_BIG,TEX_BIG)) return 1;
 	if(ldfcheck(imgi+0,dplgetzoom()>1?TEX_FULL:TEX_BIG,TEX_FULL)) return 1;
 	if(ldfcheck(imgi+1,TEX_BIG,  TEX_BIG)) return 1;

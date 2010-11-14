@@ -30,8 +30,8 @@ void sdlresize(int w,int h){
 		debug(DBG_STA,"sdl set video mode fullscreen");
 		if(!(screen=SDL_SetVideoMode(0,0,16,SDL_OPENGL|SDL_FULLSCREEN))) error(1,"video mode init failed");
 	}
-	ldforcefit();
 	glreshape();
+	dplrefresh();
 }
 
 void sdlinit(){

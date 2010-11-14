@@ -3,10 +3,11 @@
 
 enum imgtex {
 	TEX_NONE  = -1,
-	TEX_SMALL =  0,
-	TEX_BIG   =  1,
-	TEX_FULL  =  2,
-	TEX_NUM   =  3,
+	TEX_TINY  =  0,
+	TEX_SMALL =  1,
+	TEX_BIG   =  2,
+	TEX_FULL  =  3,
+	TEX_NUM   =  4,
 };
 
 extern char *imgtex_str[];
