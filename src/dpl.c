@@ -126,7 +126,8 @@ void imgfit(struct imgpos *ip,float irat){
 		ip->opt.fitw=1.;
 		ip->opt.fith=irat/srat;
 	}
-	if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;
+	/*if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;*/
+	if(ip->opt.active) dpl.refresh=1;
 	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
 }
 
@@ -167,16 +168,24 @@ void effinitimg(int d,int i){
 	ip->eff=1;
 }
 
-void effinit(int d){
+void effmaxfit(){
 	int i;
-	/*printf("%i %i\n",dpl.pos.imgi,dpl.pos.zoom);*/
 	dpl.maxfitw=dpl.maxfith=0.;
 	for(i=0;i<nimg;i++) if(effact(i)){
 		struct imgpos *ip=imgs[i].pos;
-		imgfit(ip,imgldrat(imgs[i].ld));
+		float irat=imgldrat(imgs[i].ld);
+		if(irat==0.) continue;
+		imgfit(ip,irat);
 		if(ip->opt.fitw>dpl.maxfitw) dpl.maxfitw=ip->opt.fitw;
 		if(ip->opt.fith>dpl.maxfith) dpl.maxfith=ip->opt.fith;
 	}
+	if(dpl.maxfitw==0.) dpl.maxfitw=1.;
+	if(dpl.maxfith==0.) dpl.maxfith=1.;
+}
+
+void effinit(int d){
+	int i;
+	effmaxfit();
 	for(i=0;i<nimg;i++) effinitimg(d,i);
 }
 
