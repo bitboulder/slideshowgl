@@ -20,6 +20,7 @@ extern struct img *imgs;
 extern struct img defimg;
 extern int nimg;
 
+struct img *imgget(int i);
 void imginit(struct img *img,char *fn);
 void imgadd(char *fn);
 void imgfinalize();

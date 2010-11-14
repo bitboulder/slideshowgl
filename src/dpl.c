@@ -40,6 +40,7 @@ int dplgetzoom(){ return dpl.pos.zoom; }
 
 struct imgpos {
 	char eff;
+	char mark;
 	struct iopt opt;
 	struct ipos cur;
 	struct ipos way[2];
@@ -96,6 +97,7 @@ void effmove(struct ipos *ip,int i){
 char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 	if(dpl.pos.zoom>0 || abs(d)==3){
 		memset(ip,0,sizeof(struct ipos));
+		ip->m=ipon->m;
 		return 1;
 	}
 	*ip=*ipon;
@@ -143,6 +145,7 @@ void effinit(int d){
 		ip->opt.back=0;
 		if(act) effmove(ip->way+1,i);
 		else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);
+		ip->way[1].m=(ip->mark && sdl.writemode)?1.:0.;
 		if(!ip->opt.active){
 			ip->opt.back|=effonoff(ip->way+0,ip->way+1,d);
 			ip->cur=ip->way[0];
@@ -194,6 +197,13 @@ void dplmove(int d){
 	dpl.refresh=0;
 }
 
+void dplmark(){
+	struct img *img=imgget(dpl.pos.imgi);
+	if(!img) return;
+	img->pos->mark=!img->pos->mark;
+	dplmove(0);
+}
+
 /***************************** dpl key ****************************************/
 
 #define DPLKEYS_NUM	32
@@ -216,7 +226,8 @@ void dplkey(SDL_keysym key){
 	switch(key.sym){
 	case SDLK_q:        sdl.quit=1; break;
 	case SDLK_f:        sdl.fullscreen=1; sdl.doresize=1; break;
-	case SDLK_w:        sdl.writemode=!sdl.writemode; break;
+	case SDLK_w:        sdl.writemode=!sdl.writemode; dplmove(0); break;
+	case SDLK_m:        if(sdl.writemode) dplmark();   break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
 	case SDLK_UP:       dplmove( 2); break;
@@ -271,6 +282,8 @@ void effimg(struct imgpos *ip){
 		if(ip->way[0].s!=ip->way[1].s) ip->cur.s=effcalclin(ip->way[0].s,ip->way[1].s,ef); else ip->cur.s=ip->way[0].s;
 		if(ip->way[0].x!=ip->way[1].x) ip->cur.x=effcalclin(ip->way[0].x,ip->way[1].x,ef);
 		if(ip->way[0].y!=ip->way[1].y) ip->cur.y=effcalclin(ip->way[0].y,ip->way[1].y,ef);
+		if(ip->way[0].m!=ip->way[1].m) ip->cur.m=effcalclin(ip->way[0].m,ip->way[1].m,ef);
+		if(ip->way[0].r!=ip->way[1].r) ip->cur.r=effcalclin(ip->way[0].r,ip->way[1].r,ef);
 		if(ip->opt.back) ip->cur.s*=effcalcshrink(ef);
 	}
 	/*printf("%i %i %i %g\n",ip->waytime[0],ip->waytime[1],time,ip->cur.a);*/

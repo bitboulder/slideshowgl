@@ -101,6 +101,14 @@ void glrenderimg(struct img *img,char back){
 	glScalef(iopt->fitw,iopt->fith,1.);
 	glColor4f(1.,1.,1.,ipos->a);
 	glCallList(gl.dls+DLS_IMG);
+	if(ipos->m){
+		glDisable(GL_TEXTURE_2D);
+		glColor4f(1.,1.,1.,ipos->m*0.7);
+		glTranslatef(.4,-.4,0.);
+		glScalef(.1,.1,1.);
+		glCallList(gl.dls+DLS_IMG);
+		glEnable(GL_TEXTURE_2D);
+	}
 	glPopMatrix();
 }
 

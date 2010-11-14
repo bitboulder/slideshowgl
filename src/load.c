@@ -187,8 +187,8 @@ char ldicheck(struct imgld *il,enum imgtex tload,enum imgtex tfree){
 }
 
 char ldfcheck(int imgi,enum imgtex tload,enum imgtex tfree){
-	if(imgi<0 || imgi>=nimg) return 0;
-	return ldicheck(imgs[imgi].ld,tload,tfree);
+	struct img *img=imgget(imgi);
+	return img ? ldicheck(img->ld,tload,tfree) : 0;
 }
 
 char ldcheck(){

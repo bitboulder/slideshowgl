@@ -12,6 +12,11 @@ struct img defimg;
 int nimg = 0;
 int simg = 0;
 
+struct img *imgget(int i){
+	if(i<0 || i>=nimg) return NULL;
+	return imgs+i;
+}
+
 void imginit(struct img *img,char *fn){
 	img->ld=imgldinit(fn,img);
 	img->pos=imgposinit();
