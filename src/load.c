@@ -21,6 +21,7 @@ struct itex {
 
 struct imgld {
 	char fn[1024];
+	char tfn[1024];
 	char loadfail;
 	int w,h;
 	float irat;
@@ -28,9 +29,8 @@ struct imgld {
 	struct img *img;
 };
 
-struct imgld *imgldinit(char *fn,struct img *img){
+struct imgld *imgldinit(struct img *img){
 	struct imgld *il=calloc(1,sizeof(struct imgld));
-	strncpy(il->fn,fn,1024);
 	il->img=img;
 	return il;
 }
@@ -134,7 +134,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	if(il->texs[it].loading) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 
-	sdlimg=sdlimg_gen(IMG_Load(il->fn));
+	sdlimg=sdlimg_gen(IMG_Load((it<TEX_BIG && il->tfn[0]) ? il->tfn : il->fn));
 	if(!sdlimg){ error(0,"Loading img failed \"%s\": %s",il->fn,IMG_GetError()); goto end; }
 	if(sdlimg->sf->format->BytesPerPixel!=3){ error(0,"Wrong pixelformat \"%s\"",il->fn); goto end; }
 
@@ -221,6 +221,23 @@ void *ldthread(void *arg){
 
 /***************************** load files init ********************************/
 
+void ldaddfile(char *fn){
+	struct img *img=imgadd();
+	int i;
+	FILE *fd;
+	strncpy(img->ld->fn,fn,1024);
+	for(i=strlen(fn)-1;i>=0;i--) if(fn[i]=='/'){
+		fn[i]='\0';
+		snprintf(img->ld->tfn,1024,"%s/thumb/%s",fn,fn+i+1);
+		fn[i]='/';
+		if((fd=fopen(img->ld->tfn,"rb"))){
+			fclose(fd);
+			break;
+		}
+	}
+	if(i<0) img->ld->tfn[0]='\0';
+}
+
 void ldaddflst(char *flst){
 	FILE *fd=fopen(flst,"r");
 	char buf[1024];
@@ -230,15 +247,16 @@ void ldaddflst(char *flst){
 		if(!fgets(buf,1024,fd)) continue;
 		len=strlen(buf);
 		while(buf[len-1]=='\n' || buf[len-1]=='\r') buf[--len]='\0';
-		imgadd(buf);
+		ldaddfile(buf);
 	}
 	fclose(fd);
 }
 
 void ldgetfiles(int argc,char **argv){
-	imginit(&defimg,"data/defimg.png");
+	imginit(&defimg);
+	strncpy(defimg.ld->fn,"data/defimg.png",1024);
 	for(;argc;argc--,argv++){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
-		else imgadd(argv[0]);
+		else ldaddfile(argv[0]);
 	}
 }

@@ -17,8 +17,8 @@ struct img *imgget(int i){
 	return imgs+i;
 }
 
-void imginit(struct img *img,char *fn){
-	img->ld=imgldinit(fn,img);
+void imginit(struct img *img){
+	img->ld=imgldinit(img);
 	img->pos=imgposinit();
 }
 
@@ -27,14 +27,15 @@ void imgfree(struct img *img){
 	imgposfree(img->pos);
 }
 
-void imgadd(char *fn){
+struct img *imgadd(){
 	if(nimg==simg){
 		int i;
 		imgs=realloc(imgs,sizeof(struct img)*(simg+=16));
 		for(i=0;i<nimg;i++) imgldsetimg(imgs[i].ld,imgs+i);
 	}
-	imginit(imgs+nimg,fn);
 	nimg++;
+	imginit(imgs+nimg-1);
+	return imgs+nimg-1;
 }
 
 void imgfinalize(){

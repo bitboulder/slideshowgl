@@ -21,8 +21,8 @@ extern struct img defimg;
 extern int nimg;
 
 struct img *imgget(int i);
-void imginit(struct img *img,char *fn);
-void imgadd(char *fn);
+void imginit(struct img *img);
+struct img *imgadd();
 void imgfinalize();
 
 #endif

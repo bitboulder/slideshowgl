@@ -15,6 +15,7 @@ struct dplpos {
 
 struct dpl {
 	struct dplpos pos;
+	float maxfitw,maxfith;
 	Uint32 run;
 	char refresh;
 	struct {
@@ -86,6 +87,8 @@ void effmove(struct ipos *ip,int i){
 		while(ip->x<-0.5){ ip->x+=1.0; ip->y-=ip->s; }
 		while(ip->x> 0.5){ ip->x-=1.0; ip->y+=ip->s; }
 		if(i!=dpl.pos.imgi) ip->s*=0.8;
+		ip->x*=dpl.maxfitw;
+		ip->y*=dpl.maxfith;
 	}else{
 		ip->s=powf(2.,(float)dpl.pos.zoom);
 		ip->x=0.;
@@ -123,6 +126,7 @@ void imgfit(struct imgpos *ip,float irat){
 		ip->opt.fitw=1.;
 		ip->opt.fith=irat/srat;
 	}
+	if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;
 	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
 }
 
@@ -132,39 +136,48 @@ enum imgtex imgseltex(){
 	return TEX_TINY;
 }
 
+void effinitimg(int d,int i){
+	struct imgpos *ip=imgs[i].pos;
+	char act = effact(i);
+	if(!act && !ip->opt.active) return;
+	if(!act) imgfit(ip,imgldrat(imgs[i].ld));
+	/*printf("%i %3s\n",i,act?"on":"off");*/
+	ip->opt.tex=imgseltex();
+	ip->opt.back=0;
+	if(act) effmove(ip->way+1,i);
+	else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);
+	ip->way[1].m=(ip->mark && sdl.writemode)?1.:0.;
+	if(!ip->opt.active){
+		ip->opt.back|=effonoff(ip->way+0,ip->way+1,d);
+		ip->cur=ip->way[0];
+	}else{
+		ip->way[0]=ip->cur;
+		if(act && dpl.pos.zoom<0 &&
+			(fabs(ip->way[0].x-ip->way[1].x)>.5 ||
+			 fabs(ip->way[0].y-ip->way[1].y)>.5)
+			) ip->opt.back=1;
+	}
+	if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
+		ip->opt.active=act;
+		return;
+	}
+	effwaytime(ip,dpl.cfg.efftime);
+	ip->wayact=act;
+	ip->opt.active=1;
+	ip->eff=1;
+}
+
 void effinit(int d){
 	int i;
 	/*printf("%i %i\n",dpl.pos.imgi,dpl.pos.zoom);*/
-	for(i=0;i<nimg;i++){
+	dpl.maxfitw=dpl.maxfith=0.;
+	for(i=0;i<nimg;i++) if(effact(i)){
 		struct imgpos *ip=imgs[i].pos;
-		char act = effact(i);
-		if(!act && !ip->opt.active) continue;
 		imgfit(ip,imgldrat(imgs[i].ld));
-		/*printf("%i %3s\n",i,act?"on":"off");*/
-		ip->opt.tex=imgseltex();
-		ip->opt.back=0;
-		if(act) effmove(ip->way+1,i);
-		else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);
-		ip->way[1].m=(ip->mark && sdl.writemode)?1.:0.;
-		if(!ip->opt.active){
-			ip->opt.back|=effonoff(ip->way+0,ip->way+1,d);
-			ip->cur=ip->way[0];
-		}else{
-			ip->way[0]=ip->cur;
-			if(act && dpl.pos.zoom<0 &&
-				(fabs(ip->way[0].x-ip->way[1].x)>.5 ||
-				 fabs(ip->way[0].y-ip->way[1].y)>.5)
-				) ip->opt.back=1;
-		}
-		if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
-			ip->opt.active=act;
-			continue;
-		}
-		effwaytime(ip,dpl.cfg.efftime);
-		ip->wayact=act;
-		ip->opt.active=1;
-		ip->eff=1;
+		if(ip->opt.fitw>dpl.maxfitw) dpl.maxfitw=ip->opt.fitw;
+		if(ip->opt.fith>dpl.maxfith) dpl.maxfith=ip->opt.fith;
 	}
+	for(i=0;i<nimg;i++) effinitimg(d,i);
 }
 
 void dplmove(int d){
@@ -201,7 +214,7 @@ void dplmark(){
 	struct img *img=imgget(dpl.pos.imgi);
 	if(!img) return;
 	img->pos->mark=!img->pos->mark;
-	dplmove(0);
+	effinitimg(0,dpl.pos.imgi);
 }
 
 /***************************** dpl key ****************************************/

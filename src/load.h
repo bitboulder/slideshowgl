@@ -4,7 +4,7 @@
 #include <GL/gl.h>
 #include "img.h"
 
-struct imgld *imgldinit(char *fn,struct img *img);
+struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
 void imgldsetimg(struct imgld *il,struct img *img);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
