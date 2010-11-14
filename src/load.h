@@ -1,15 +1,18 @@
 #ifndef _LOAD_H
 #define _LOAD_H
 
-struct img {
-	char *fn;
-};
+#include <GL/gl.h>
+#include "img.h"
 
-struct load {
-	int nimg;
-	struct img *imgs;
-};
-extern struct load load;
+void ldforcefit();
+
+struct imgld *imgldinit(char *fn);
+void imgldfree(struct imgld * ip);
+GLuint imgldtex(struct imgld *il,enum imgtex it);
+float imgldfitw(struct imgld *il);
+float imgldfith(struct imgld *il);
+
+void ldtexload();
 
 void *ldthread(void *arg);
 

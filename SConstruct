@@ -20,16 +20,18 @@ if not env.GetOption('clean'):
 #	conf.CheckCCompiler()
 	conf.CheckPKGConfig('0.2')
 	conf.CheckLib('m')
-	conf.CheckPKG('sdl >= 1.2')
 	conf.CheckPKG('gl >= 7.0')
+	conf.CheckPKG('sdl >= 1.2')
+	conf.CheckPKG('SDL_image >= 1.2')
 
 	conf.Define('APPNAME', env.subst('"slideshowgl"'))
 	conf.Define('VERSION', env.subst('"2.0.0"'))
 
 	env = conf.Finish()
 
-env.ParseConfig('pkg-config --cflags --libs sdl')
 env.ParseConfig('pkg-config --cflags --libs gl')
+env.ParseConfig('pkg-config --cflags --libs sdl')
+env.ParseConfig('pkg-config --cflags --libs SDL_image')
 
 env.Append(CCFLAGS = ['-Wall','-std=c99'])
 
@@ -37,7 +39,8 @@ env.Append(CCFLAGS = ['-Wall','-std=c99'])
 #	env.Append(CCFLAGS = ['-g'])
 #else:
 #	env.Append(CCFLAGS = ['-O2'])
-env.Append(CCFLAGS = ['-g'])
+#env.Append(CCFLAGS = ['-g'])
+env.Append(CCFLAGS = ['-O2'])
 
 Export('env')
 

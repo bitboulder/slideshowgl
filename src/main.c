@@ -11,15 +11,17 @@
 #include "load.h"
 #include "dpl.h"
 
+enum debug dbg = DBG_STA;
+
 struct mainthread {
 	void *(*fnc)(void *);
 	int pri;
 	pthread_t pt;
 } mainthreads[] = {
-	{ &sdlthread, 15 },
-	{ &dplthread, 10 },
-	{ &ldthread,   5 },
-	{ NULL,        0 },
+	{ &sdlthread, 15, 0 },
+	{ &dplthread, 10, 0 },
+	{ &ldthread,   5, 0 },
+	{ NULL,        0, 0 },
 };
 
 void error(char quit,char *txt,...){
@@ -36,14 +38,26 @@ void error(char quit,char *txt,...){
 	exit(1);
 }
 
+void debug(enum debug lvl,char *txt,...){
+	va_list ap;
+	if(lvl>dbg) return;
+	printf("dbg: ");
+	va_start(ap,txt);
+	vprintf(txt,ap);
+	va_end(ap);
+	printf("\n");
+}
+
 void start_threads(){
 	struct mainthread *mt=mainthreads;
 	struct sched_param par;
+	mainthreads->pt=pthread_self();
 	for(;mt->fnc;mt++){
-		pthread_create(&mt->pt,NULL,mt->fnc,NULL);
+		if(!mt->pt) pthread_create(&mt->pt,NULL,mt->fnc,NULL);
 		par.__sched_priority=mt->pri;
 		pthread_setschedparam(mt->pt,SCHED_RR,&par);
 	}
+	mainthreads->fnc(NULL);
 }
 
 void usage(char *fn){
@@ -61,6 +75,5 @@ void parse_args(int argc,char **argv){
 int main(int argc,char **argv){
 	parse_args(argc,argv);
 	start_threads();
-	pthread_join(mainthreads->pt,NULL);
 	return 0;
 }

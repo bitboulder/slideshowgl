@@ -6,6 +6,9 @@ main_sources = """
 	gl.c
 	dpl.c
 	load.c
+	support.c
+	img.c
+	cfg.c
 """.split()
 
 sources = env.Object(main_sources)
