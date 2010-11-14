@@ -14,22 +14,44 @@ struct sdl sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
 	.scr_h      = 0,
+	.scrnof_w   = 1024,
+	.scrnof_h   = 640,
 	.doresize   = 0,
 	.sync       = 0,
 	.writemode  = 0,
 };
+
+void sdlfullscreen(){
+	if(sdl.fullscreen){
+		sdl.scr_w=sdl.scrnof_w;
+		sdl.scr_h=sdl.scrnof_h;
+		sdl.fullscreen=0;
+	}else{
+		sdl.scrnof_w=sdl.scr_w;
+		sdl.scrnof_h=sdl.scr_h;
+		sdl.fullscreen=1;
+	}
+	sdl.doresize=1;
+}
 	
 void sdlresize(int w,int h){
+	const SDL_VideoInfo *vi;
 	sdl.doresize=0;
-	if(w) sdl.scr_w = w;
-	if(h) sdl.scr_h = h;
 	if(!sdl.fullscreen){
+		if(!w) w=sdl.scr_w;
+		if(!h) h=sdl.scr_h;
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		if(!(screen=SDL_SetVideoMode(sdl.scr_w,sdl.scr_h,16,SDL_OPENGL|SDL_RESIZABLE|SDL_DOUBLEBUF))) error(1,"video mode init failed");
+		if(!(screen=SDL_SetVideoMode(w,h,16,SDL_OPENGL|SDL_RESIZABLE|SDL_DOUBLEBUF))) error(1,"video mode init failed");
 	}else{
+		w=1440;
+		h=900;
 		debug(DBG_STA,"sdl set video mode fullscreen");
-		if(!(screen=SDL_SetVideoMode(0,0,16,SDL_OPENGL|SDL_FULLSCREEN))) error(1,"video mode init failed");
+		if(!(screen=SDL_SetVideoMode(w,h,16,SDL_OPENGL|SDL_FULLSCREEN))) error(1,"video mode init failed");
 	}
+	vi=SDL_GetVideoInfo();
+	sdl.scr_w=vi->current_w;
+	sdl.scr_h=vi->current_h;
+	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
 	glreshape();
 	dplrefresh();
 }
@@ -39,7 +61,7 @@ void sdlinit(){
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(1,"sdl init failed");
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
-	sdlresize(1024,640);
+	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
 	SDL_WM_SetCaption("Slideshowgl","slideshowgl");
 	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sdl.sync);
 	if(sdl.sync!=1) sdl.sync=0;

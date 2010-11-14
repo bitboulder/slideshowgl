@@ -10,6 +10,7 @@
 #include "sdl.h"
 #include "load.h"
 #include "dpl.h"
+#include "cfg.h"
 
 enum debug dbg = DBG_STA;
 
@@ -66,8 +67,9 @@ void usage(char *fn){
 
 void parse_args(int argc,char **argv){
 	int c;
-	while((c=getopt(argc,argv,"h"))>=0) switch(c){
+	while((c=getopt(argc,argv,"hf"))>=0) switch(c){
 	case 'h': usage(argv[0]); break;
+	case 'f': cfgsetint("sdl.fullscreen",!cfggetint("sd.fullscreen")); break;
 	}
 	ldgetfiles(argc-optind,argv+optind);
 }

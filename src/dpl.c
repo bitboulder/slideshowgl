@@ -20,13 +20,14 @@ struct dpl {
 	char refresh;
 	struct {
 		Uint32 efftime;
-		Uint32 playdelay;
+		Uint32 displayduration;
+		float shrink;
 	} cfg;
 } dpl = {
 	.pos.imgi = -1,
 	.pos.zoom = 0,
-	.pos.x = 0.5,
-	.pos.y = 0.5,
+	.pos.x = 0.,
+	.pos.y = 0.,
 	.run = 0,
 };
 
@@ -86,13 +87,13 @@ void effmove(struct ipos *ip,int i){
 		ip->y=0.;
 		while(ip->x<-0.5){ ip->x+=1.0; ip->y-=ip->s; }
 		while(ip->x> 0.5){ ip->x-=1.0; ip->y+=ip->s; }
-		if(i!=dpl.pos.imgi) ip->s*=0.8;
+		if(i!=dpl.pos.imgi) ip->s*=dpl.cfg.shrink;
 		ip->x*=dpl.maxfitw;
 		ip->y*=dpl.maxfith;
 	}else{
 		ip->s=powf(2.,(float)dpl.pos.zoom);
-		ip->x=0.;
-		ip->y=0.;
+		ip->x=dpl.pos.x;
+		ip->y=dpl.pos.y;
 	}
 	/*printf("=> %.2f %.2f %.2f %.2f\n",ip->a,ip->s,ip->x,ip->y);*/
 }
@@ -126,8 +127,7 @@ void imgfit(struct imgpos *ip,float irat){
 		ip->opt.fitw=1.;
 		ip->opt.fith=irat/srat;
 	}
-	/*if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;*/
-	if(ip->opt.active) dpl.refresh=1;
+	if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;
 	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
 }
 
@@ -185,7 +185,7 @@ void effmaxfit(){
 
 void effinit(int d){
 	int i;
-	effmaxfit();
+	if(dpl.pos.zoom<0) effmaxfit();
 	for(i=0;i<nimg;i++) effinitimg(d,i);
 }
 
@@ -195,12 +195,12 @@ void dplmove(int d){
 		switch(abs(d)){
 		case 1:
 			if(dpl.pos.zoom<=0) dpl.pos.imgi+=d;
-			else dpl.pos.x+=0.1*d;
+			else dpl.pos.x-=(float)d*.25;
 		break;
 		case 2:
 			if(dpl.pos.zoom<0)  dpl.pos.imgi-=d/2*zoomtab[-dpl.pos.zoom].move;
 			if(dpl.pos.zoom==0) dpl.pos.imgi+=d/2*zoomtab[-dpl.pos.zoom].move;
-			else dpl.pos.y+=0.1*(d/2);
+			else dpl.pos.y+=(float)(d/2)*.25;
 		break;
 		case 3:
 			dpl.pos.zoom+=d/3;
@@ -210,6 +210,7 @@ void dplmove(int d){
 		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
 		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
 		if(dpl.pos.zoom>0)    dpl.run=0;
+		if(dpl.pos.zoom<=0)   dpl.pos.x=dpl.pos.y=0.;
 		debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	}else{
 		imgfit(defimg.pos,imgldrat(defimg.ld));
@@ -247,7 +248,7 @@ void dplkey(SDL_keysym key){
 	debug(DBG_STA,"dpl key %i",key.sym);
 	switch(key.sym){
 	case SDLK_q:        sdl.quit=1; break;
-	case SDLK_f:        sdl.fullscreen=1; sdl.doresize=1; break;
+	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        sdl.writemode=!sdl.writemode; dplmove(0); break;
 	case SDLK_m:        if(sdl.writemode) dplmark();   break;
 	case SDLK_RIGHT:    dplmove( 1); break;
@@ -272,7 +273,7 @@ void dplcheckkey(){
 
 void dplrun(){
 	Uint32 time=SDL_GetTicks();
-	if(time-dpl.run>dpl.cfg.playdelay){
+	if(time-dpl.run>dpl.cfg.displayduration){
 		dpl.run=time;
 		dplmove(1);
 	}
@@ -320,7 +321,8 @@ void effdo(){
 
 void dplcfginit(){
 	dpl.cfg.efftime=cfggetint("dpl.efftime");
-	dpl.cfg.playdelay=cfggetint("dpl.playdelay");
+	dpl.cfg.displayduration=cfggetint("dpl.displayduration");
+	dpl.cfg.shrink=cfggetfloat("dpl.shrink");
 }
 
 void *dplthread(void *arg){
