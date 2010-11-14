@@ -197,17 +197,21 @@ char ldcheck(){
 	if(ldicheck(defimg.ld,TEX_BIG,TEX_BIG)) return 1;
 	if(ldfcheck(imgi+0,dplgetzoom()>1?TEX_FULL:TEX_BIG,TEX_FULL)) return 1;
 	if(ldfcheck(imgi+1,TEX_BIG,  TEX_BIG)) return 1;
-	if(ldfcheck(imgi+2,TEX_BIG,  TEX_BIG)) return 1;
-	if(ldfcheck(imgi-1,TEX_BIG,  TEX_BIG)) return 1;
+	if(ldfcheck(imgi+2,TEX_SMALL,TEX_BIG)) return 1;
+	if(ldfcheck(imgi-1,TEX_SMALL,TEX_BIG)) return 1;
 	if(ldfcheck(imgi+3,TEX_SMALL,TEX_BIG)) return 1;
 	if(ldfcheck(imgi+4,TEX_SMALL,TEX_BIG)) return 1;
 	if(ldfcheck(imgi-2,TEX_SMALL,TEX_BIG)) return 1;
 	for(i= 5;i<=15;i++) if(ldfcheck(imgi+i,TEX_SMALL,TEX_SMALL)) return 1;
 	for(i= 3;i<=10;i++) if(ldfcheck(imgi-i,TEX_SMALL,TEX_SMALL)) return 1;
-	for(i=16;i<=20;i++) if(ldfcheck(imgi+i,TEX_NONE, TEX_SMALL)) return 1;
-	for(i=11;i<=15;i++) if(ldfcheck(imgi-i,TEX_NONE, TEX_SMALL)) return 1;
-	for(i=21;i<=nimg;i++) if(ldfcheck(imgi+i,TEX_NONE,TEX_NONE)) return 1;
-	for(i=16;i<=nimg;i++) if(ldfcheck(imgi-i,TEX_NONE,TEX_NONE)) return 1;
+	for(i=16;i<=20;i++) if(ldfcheck(imgi+i,TEX_TINY, TEX_SMALL)) return 1;
+	for(i=11;i<=15;i++) if(ldfcheck(imgi-i,TEX_TINY, TEX_SMALL)) return 1;
+	for(i=21;i<=30;i++) if(ldfcheck(imgi+i,TEX_TINY, TEX_TINY )) return 1;
+	for(i=16;i<=30;i++) if(ldfcheck(imgi-i,TEX_TINY, TEX_TINY )) return 1;
+	for(i=31;i<=40;i++) if(ldfcheck(imgi+i,TEX_NONE, TEX_TINY )) return 1;
+	for(i=31;i<=40;i++) if(ldfcheck(imgi-i,TEX_NONE, TEX_TINY )) return 1;
+	for(i=41;i<=nimg;i++) if(ldfcheck(imgi+i,TEX_NONE,TEX_NONE)) return 1;
+	for(i=41;i<=nimg;i++) if(ldfcheck(imgi-i,TEX_NONE,TEX_NONE)) return 1;
 	return 0;
 }
 

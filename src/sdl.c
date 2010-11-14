@@ -34,20 +34,31 @@ void sdlfullscreen(){
 	}
 	sdl.doresize=1;
 }
+
+char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
+	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags);
+	if(modes==(SDL_Rect**)-1) error(0,"sdl All fullscreen modes available");
+	else if(modes==(SDL_Rect**)0 || !modes[0]) error(0,"sdl No fullscreen modes available");
+	else{
+		int i;
+		*w=*h=0;
+		for(i=0;modes[i];i++) if(modes[i]->w>*w){ *w=modes[i]->w; *h=modes[i]->h; }
+	}
+	return *w && *h;
+}
 	
 void sdlresize(int w,int h){
+	Uint32 flags=SDL_OPENGL|SDL_DOUBLEBUF;
 	const SDL_VideoInfo *vi;
 	sdl.doresize=0;
-	if(!sdl.fullscreen){
+	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
+		debug(DBG_STA,"sdl set video mode fullscreen");
+		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(1,"video mode init failed");
+	}else{
 		if(!w) w=sdl.scr_w;
 		if(!h) h=sdl.scr_h;
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		if(!(screen=SDL_SetVideoMode(w,h,16,SDL_OPENGL|SDL_RESIZABLE|SDL_DOUBLEBUF))) error(1,"video mode init failed");
-	}else{
-		w=1440;
-		h=900;
-		debug(DBG_STA,"sdl set video mode fullscreen");
-		if(!(screen=SDL_SetVideoMode(w,h,16,SDL_OPENGL|SDL_FULLSCREEN))) error(1,"video mode init failed");
+		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_RESIZABLE))) error(1,"video mode init failed");
 	}
 	vi=SDL_GetVideoInfo();
 	sdl.scr_w=vi->current_w;
