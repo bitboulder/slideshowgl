@@ -12,11 +12,20 @@
 #include "dpl.h"
 #include "cfg.h"
 
+#ifdef __linux__
+	#define SCHED_PRIORITY	__sched_priority
+#elif defined __WIN32__
+	#define SCHED_PRIORITY	sched_priority
+#else
+	#error "Unsupported platform"
+#endif
+
 enum debug dbg = DBG_STA;
 
 struct mainthread {
 	void *(*fnc)(void *);
 	int pri;
+	char init;
 	pthread_t pt;
 } mainthreads[] = {
 	{ &sdlthread, 15, 0 },
@@ -53,9 +62,13 @@ void start_threads(){
 	struct mainthread *mt=mainthreads;
 	struct sched_param par;
 	mainthreads->pt=pthread_self();
+	mainthreads->init=1;
 	for(;mt->fnc;mt++){
-		if(!mt->pt) pthread_create(&mt->pt,NULL,mt->fnc,NULL);
-		par.__sched_priority=mt->pri;
+		if(!mt->init){
+			pthread_create(&mt->pt,NULL,mt->fnc,NULL);
+			mt->init=1;
+		}
+		par.SCHED_PRIORITY=mt->pri;
 		pthread_setschedparam(mt->pt,SCHED_RR,&par);
 	}
 	mainthreads->fnc(NULL);

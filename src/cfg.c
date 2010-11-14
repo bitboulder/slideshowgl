@@ -5,6 +5,7 @@
 char *cfg[]={
 	"sdl.fullscreen",      "0",
 	"sdl.sync",            "0",
+	"sdl.hidecursor",      "1500",
 	"dpl.efftime",         "1000",
 	"dpl.displayduration", "6000",
 	"dpl.shrink",          "0.75",

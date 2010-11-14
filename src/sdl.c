@@ -19,6 +19,7 @@ struct sdl sdl = {
 	.doresize   = 0,
 	.sync       = 0,
 	.writemode  = 0,
+	.hidecursor = 0,
 };
 
 void sdlfullscreen(){
@@ -59,6 +60,7 @@ void sdlresize(int w,int h){
 void sdlinit(){
 	sdl.sync=cfggetint("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
+	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(1,"sdl init failed");
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
@@ -72,12 +74,24 @@ void sdlkey(SDL_keysym key){
 	dplkeyput(key);
 }
 
+void sdlmotion(){
+	SDL_ShowCursor(SDL_ENABLE);
+	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
+}
+
+void sdlhidecursor(){
+	if(!sdl.hidecursor || SDL_GetTicks()<sdl.hidecursor) return;
+	SDL_ShowCursor(SDL_DISABLE);
+	sdl.hidecursor=0;
+}
+
 char sdlgetevent(){
 	SDL_Event ev;
 	if(!SDL_PollEvent(&ev)) return 1;
 	switch(ev.type){
 	case SDL_VIDEORESIZE: sdlresize(ev.resize.w,ev.resize.h); break;
 	case SDL_KEYDOWN: sdlkey(ev.key.keysym); break;
+	case SDL_MOUSEMOTION: sdlmotion(); break;
 	case SDL_QUIT: return 0;
 	}
 	return 1;
@@ -96,6 +110,7 @@ void *sdlthread(void *arg){
 	while(!sdl.quit){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
+		sdlhidecursor();
 		
 		ldtexload();
 
@@ -103,6 +118,7 @@ void *sdlthread(void *arg){
 
 		glpaint();
 	}
+	sdl.quit=1;
 	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	if(!i){
 		error(0,"sdl timeout waiting for threads (%i)",sdl.quit);
