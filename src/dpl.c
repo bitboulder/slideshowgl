@@ -141,6 +141,7 @@ void effinitimg(int d,int i){
 	struct imgpos *ip=imgs[i].pos;
 	char act = effact(i);
 	if(!act && !ip->opt.active) return;
+	if(!act && ip->eff && !ip->wayact) return;
 	if(!act) imgfit(ip,imgldrat(imgs[i].ld));
 	/*printf("%i %3s\n",i,act?"on":"off");*/
 	ip->opt.tex=imgseltex();

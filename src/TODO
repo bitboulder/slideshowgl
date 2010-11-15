@@ -1,0 +1,24 @@
+- pano [p,0x8] (5°)
+- displayduration [d]
+- enter imgi [0-9\n]
+- rotate [r,R]
+- gamma, brightness, contrast [g,b,c,+-]
+- exit [q,ESC]
+- info [i]
+- help [h]
+- delete [del]
+- status [,25/5/1s]
+- random [-r]
+- loop [-l]
+
+- exif-rot
+- disable dpms
+- create+read mark file
+- mouse interface
+- parse args + help
+- load order
+- file urls
+- cfg renew
+- zoom position
+- multiple img forward (zoom=0,writemode)
+- small overload by non-thumb
