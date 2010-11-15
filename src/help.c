@@ -1,5 +1,5 @@
 #include <SDL.h>
-#include "support.h"
+#include "help.h"
 
 Uint32 SDL_GetPixel(SDL_Surface *surface, int x, int y)
 {

@@ -79,6 +79,7 @@ void sdlinit(){
 	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sdl.sync);
 	if(sdl.sync!=1) sdl.sync=0;
 	glinit();
+	ldenable(1);
 }
 
 void sdlkey(SDL_keysym key){
@@ -123,7 +124,8 @@ void *sdlthread(void *arg){
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		
-		ldtexload();
+		while(SDL_GetTicks()-paint_last<15)
+			ldtexload();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 

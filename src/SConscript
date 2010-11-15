@@ -7,7 +7,7 @@ sources = """
 	gl.c
 	dpl.c
 	load.c
-	support.c
+	help.c
 	img.c
 	cfg.c
 """.split()

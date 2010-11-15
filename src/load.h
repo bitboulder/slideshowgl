@@ -4,6 +4,9 @@
 #include <GL/gl.h>
 #include "img.h"
 
+void ldenable(char enable);
+void ldmaxtexsize(GLint maxsize);
+
 struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
 void imgldsetimg(struct imgld *il,struct img *img);

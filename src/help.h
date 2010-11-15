@@ -1,5 +1,5 @@
-#ifndef _SUPPORT_H
-#define _SUPPORT_H
+#ifndef _HELP_H
+#define _HELP_H
 
 #define MIN(a,b)	((a)<(b)?(a):(b))
 

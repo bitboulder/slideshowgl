@@ -14,6 +14,8 @@ struct gl {
 } gl;
 
 void glinit(){
+	GLint t;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&t); ldmaxtexsize(t);
 	gl.dls=glGenLists(1);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
 	glBegin(GL_QUADS);
@@ -120,6 +122,8 @@ void glrenderimgs(){
 }
 
 void glpaint(){
+	GLenum glerr;
+
 	glClearColor(0.,0.,0.,1.);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -127,5 +131,7 @@ void glpaint(){
 	
 	glframerate();
 	SDL_GL_SwapBuffers();
+
+	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);
 }
 

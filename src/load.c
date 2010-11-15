@@ -5,12 +5,31 @@
 #include "load.h"
 #include "sdl.h"
 #include "main.h"
-#include "support.h"
+#include "help.h"
 #include "img.h"
 #include "dpl.h"
 
 
 void ldffree(struct imgld *il,enum imgtex it);
+
+/***************************** load *******************************************/
+
+struct load {
+	char enable;
+	int  texsize[TEX_NUM];
+} load = {
+	.enable = 0,
+	.texsize = { 256, 512, 2048, 32768, }
+};
+
+void ldenable(char enable){ load.enable=enable; }
+void ldmaxtexsize(GLint maxtexsize){
+	int i;
+	for(i=0;i<TEX_NUM;i++) if(load.texsize[i]>maxtexsize){
+		if(i && load.texsize[i-1]>=maxtexsize) load.texsize[i]=0;
+		else load.texsize[i]=maxtexsize;
+	}
+}
 
 /***************************** imgld ******************************************/
 
@@ -105,27 +124,37 @@ void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
 }
 
 void ldtexload(){
+	GLenum glerr;
 	struct texload *tl;
 	if(tlb.wi==tlb.ri) return;
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
-		if(!tl->itex->tex){
-			glGenTextures(1,&tl->itex->tex);
-			glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		}
+		if(!tl->itex->tex) glGenTextures(1,&tl->itex->tex);
+		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		sdlimg_unref(tl->sdlimg);
 	}else{
 		if(tl->itex->tex) glDeleteTextures(1,&tl->itex->tex);
 		tl->itex->tex=0;
+	}
+	if((glerr=glGetError())){
+		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",tl->sdlimg?"load":"free",glerr);
+		if(tl->sdlimg) tl->itex->tex=0;
 	}
 	tl->itex->loading=0;
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
 }
 
 /***************************** load + free img ********************************/
+
+int sizesel(int sdemand,int simg){
+	int size=64;
+	if(sdemand<simg) return sdemand;
+	while(size<simg*0.95) size<<=1;
+	return size;
+}
 
 char ldfload(struct imgld *il,enum imgtex it,char replace){
 	struct sdlimg *sdlimg;
@@ -153,16 +182,11 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;
-		int size=10;
+		int size=64;
 		if(!replace && il->texs[i].tex && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
 		if(il->texs[i].loading) continue;
-		switch(i){
-		case TEX_FULL:  size=32768; break;
-		case TEX_BIG:   size=2048;  break;
-		case TEX_SMALL: size=512;   break;
-		case TEX_TINY:  size=256;   break;
-		}
-		if((sdlimgscale = sdlimg_gen(SDL_ScaleSurface(sdlimg->sf,MIN(size,il->w),MIN(size,il->h))))){
+		if(i<TEX_NUM && !(size=load.texsize[i])) continue;
+		if((sdlimgscale = sdlimg_gen(SDL_ScaleSurface(sdlimg->sf,sizesel(size,il->w),sizesel(size,il->h))))){
 			sdlimg_unref(sdlimg);
 			sdlimg=sdlimgscale;
 		}
@@ -205,7 +229,7 @@ char ldcheck(){
 	int i;
 	int imgi = dplgetimgi();
 	if(ldicheck(defimg.ld,TEX_BIG,TEX_BIG)) return 1;
-	if(ldfcheck(imgi+0,dplgetzoom()>1?TEX_FULL:TEX_BIG,TEX_FULL)) return 1;
+	if(ldfcheck(imgi+0,dplgetzoom()>0?TEX_FULL:TEX_BIG,TEX_FULL)) return 1;
 	if(ldfcheck(imgi+1,TEX_BIG,  TEX_BIG)) return 1;
 	if(ldfcheck(imgi+2,TEX_SMALL,TEX_BIG)) return 1;
 	if(ldfcheck(imgi-1,TEX_SMALL,TEX_BIG)) return 1;
@@ -228,7 +252,7 @@ char ldcheck(){
 /***************************** load thread ************************************/
 
 void *ldthread(void *arg){
-	while(!sdl.quit) if(!ldcheck()) SDL_Delay(100);
+	while(!sdl.quit) if(!load.enable || !ldcheck()) SDL_Delay(100);
 	sdl.quit|=THR_LD;
 	return NULL;
 }

@@ -131,9 +131,9 @@ void imgfit(struct imgpos *ip,float irat){
 	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
 }
 
-enum imgtex imgseltex(){
+enum imgtex imgseltex(int imgi){
 	if(dpl.pos.zoom>0)  return TEX_FULL;
-	if(dpl.pos.zoom==0) return zoomtab[-dpl.pos.zoom].tex;
+	if(dpl.pos.imgi==imgi) return zoomtab[-dpl.pos.zoom].tex;
 	return TEX_TINY;
 }
 
@@ -144,7 +144,7 @@ void effinitimg(int d,int i){
 	if(!act && ip->eff && !ip->wayact) return;
 	if(!act) imgfit(ip,imgldrat(imgs[i].ld));
 	/*printf("%i %3s\n",i,act?"on":"off");*/
-	ip->opt.tex=imgseltex();
+	ip->opt.tex=imgseltex(i);
 	ip->opt.back=0;
 	if(act) effmove(ip->way+1,i);
 	else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);
