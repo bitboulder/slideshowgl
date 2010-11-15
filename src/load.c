@@ -369,10 +369,15 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
+extern Uint32 paint_last;
+
 void *ldthread(void *arg){
 	ldconceptcompile();
 	ldfload(defimg.ld,TEX_BIG,0);
-	while(!sdl.quit) if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
+	while(!sdl.quit){
+		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
+		if(SDL_GetTicks()-paint_last>5000) system("killall -9 slideshowgl");
+	}
 	ldconceptfree();
 	sdl.quit|=THR_LD;
 	return NULL;

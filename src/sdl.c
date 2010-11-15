@@ -109,20 +109,20 @@ char sdlgetevent(){
 }
 
 void sdldelay(Uint32 *last,Uint32 delay){
-	*last=SDL_GetTicks()-*last;
-	if(*last<delay) SDL_Delay(delay-*last);
+	int diff=SDL_GetTicks()-*last;
+	if(diff<delay) SDL_Delay(delay-diff);
 	*last=SDL_GetTicks();
 }
 
-void *sdlthread(void *arg){
 	Uint32 paint_last=0;
+void *sdlthread(void *arg){
 	int i;
 	while(!sdl.quit){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		
-		while(SDL_GetTicks()-paint_last < (dplineff()?4:12)) ldtexload();
+		while(SDL_GetTicks()-paint_last < 12) ldtexload();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 
