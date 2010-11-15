@@ -1,4 +1,5 @@
 Import('env')
+Import('prefix')
 
 sources = """
 	main.c
@@ -14,5 +15,8 @@ sources = """
 objects = env.Object(sources)
 
 prog = env.Program('../slideshowgl', objects, install=True)
-#env.Install('/usr/bin',prog)
-#env.Alias('install','/usr/bin')
+
+env.Install(prefix + '/bin',prog)
+install_bin = env.Alias('install-bin',prefix + '/bin')
+
+Export('install_bin')

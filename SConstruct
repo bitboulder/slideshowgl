@@ -5,9 +5,13 @@ Help("Type: 'scons mode=release' to build the production program.\n")
 Help("Type: 'scons mode=debug' to build the debugging program.\n")
 Help("Type: 'scons mode=release os=win' to build the production program for win32.\n")
 Help("Type: 'scons mode=debug os=win' to build the debugging program for win32.\n")
+Help("Type: 'scons prefix=$PREFIX install' to install with specific prefix.\n")
 
 mode = ARGUMENTS.get('mode')
 os   = ARGUMENTS.get('os')
+prefix = '/usr'
+if ARGUMENTS.get('prefix'):
+	prefix = ARGUMENTS.get('prefix')
 
 def CheckPKGConfig(context, version):
 	context.Message( 'Checking for pkg-config... ' )
@@ -80,6 +84,12 @@ else:
 #env.Append(CCFLAGS = ['-O2'])
 
 Export('env')
+Export('prefix')
 
 SConscript(build + '/src/SConscript')
+SConscript(build + '/data/SConscript')
 
+Import('install_bin')
+Import('install_data')
+
+env.Alias('install', [install_bin, install_data])

@@ -1,0 +1,12 @@
+Import('env')
+Import('prefix')
+
+data = """
+	defimg.png
+""".split()
+
+datadir = prefix + '/share/' + env['APPNAME'] + '/'
+env.Install(datadir, [data])
+install_data = env.Alias('install-data', datadir)
+
+Export('install_data')

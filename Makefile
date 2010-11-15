@@ -17,3 +17,10 @@ win-debug:
 
 clean:
 	scons -c
+
+install:
+	scons install mode=release
+
+uninstall:
+	scons -c /
+
