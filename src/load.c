@@ -10,8 +10,6 @@
 #include "dpl.h"
 
 
-void ldffree(struct imgld *il,enum imgtex it);
-
 /***************************** load *******************************************/
 
 struct load {
@@ -204,55 +202,177 @@ end:
 	return ld;
 }
 
-void ldffree(struct imgld *il,enum imgtex it){
-	if(il->texs[it].loading) return;
-	debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
-	ldtexload_put(il->texs+it,NULL);
+char ldffree(struct imgld *il,enum imgtex thold){
+	int it;
+	char ret=0;
+	for(it=thold+1;it<TEX_NUM;it++) if(il->texs[it].tex){
+		if(il->texs[it].loading) continue;
+		debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
+		ldtexload_put(il->texs+it,NULL);
+		ret=1;
+	}
+	return ret;
+}
+
+/***************************** load concept *************************************/
+
+struct loadconcept {
+	char *load_str;
+	char *hold_str;
+	struct loadconept_ld {
+		int imgi;
+		enum imgtex tex;
+	} *load;
+	enum imgtex *hold;
+	int hold_min;
+	int hold_max;
+};
+
+struct loadconcept loadconcepts[4] = {
+	{ "B:0..2,-1;S:+-5,+-10,3..4,-2..-4", "B:-2..4;S:..15;T:..24" }, /* zoom =  0 */
+	{ "S:..17;B:0,1",                     "B:-1..2;S:..22;T:..38" }, /* zoom = -1 */
+	{ "S:..22;T:+-23..31;B:0",            "B:..1;S:..37;T:..52"   }, /* zoom = -2 */
+	{ "T:..38;S:..22;B:0",                "B:..1;S:..37;T:..59"   }, /* zoom = -3 */
+};
+#define NUM_CONCEPTS (sizeof(loadconcepts)/sizeof(struct loadconcept))
+
+struct loadconept_ld *ldconceptadd(int imgi,enum imgtex tex){
+	static int num=0,size=0;
+	static struct loadconept_ld *ret=NULL;
+
+	if(num==size) ret=realloc(ret,sizeof(struct loadconept_ld)*(size+=32));
+	ret[num].imgi=imgi;
+	ret[num].tex=tex;
+	num++;
+
+	if(tex==TEX_NONE){
+		struct loadconept_ld *retl=ret;
+		num=size=0;
+		ret=NULL;
+		return retl;
+	}else return NULL;
+}
+
+struct loadconept_ld *ldconceptstr(char *str){
+	char strcopy[1024];
+	char *tok;
+	enum imgtex tex=TEX_NONE;
+	snprintf(strcopy,1024,str);
+	str=strcopy;
+	while((tok=strsep(&str,",;"))){
+		char sign=0;
+		int  istr,iend;
+		char *tokend;
+		if(tok[1]==':'){
+			switch(tok[0]){
+				case 'B': tex=TEX_BIG; break;
+				case 'S': tex=TEX_SMALL; break;
+				case 'T': tex=TEX_TINY; break;
+				default: error(ERR_QUIT,"concept: unknown tex '%c'",tok[0]);
+			}
+			tok+=2;
+		}
+		if(tok[0]=='.' && tok[1]=='.'){
+			iend=strtol(tok+2,&tokend,0);
+			if(tokend==tok+2) error(ERR_QUIT,"concept: no digits after '..': '%s'",tokend);
+			if(tokend[0]) error(ERR_QUIT,"concept: str after '..[0-9]+': '%s'",tokend);
+			if(iend<0) iend*=-1;
+			for(istr=0;istr<=iend;istr++){
+				ldconceptadd(istr,tex);
+				ldconceptadd(-istr,tex);
+			}
+			continue;
+		}
+		if(tok[0]=='+' && tok[1]=='-'){ sign=1; tok+=2; }
+		istr=strtol(tok,&tokend,0);
+		if(tokend==tok) error(ERR_QUIT,"concept: no digits at begin: '%s'",tokend);
+		if(tokend[-1]=='.') tokend--;
+		tok=tokend;
+		if(tok[0]=='.' && tok[1]=='.'){
+			iend=strtol(tok+2,&tokend,0);
+			if(tokend==tok+2) error(ERR_QUIT,"concept: no digits after '[0-9]+..': '%s'",tokend);
+			if(tokend[0]) error(ERR_QUIT,"concept: str after '[0-9]+..[0-9]+': '%s'",tokend);
+		}else{
+			if(tok[0]) error(ERR_QUIT,"concept: str after '[0-9]+': '%s' (%s)",tok,strcopy);
+			iend=istr;
+		}
+		while(1){
+			ldconceptadd(istr,tex);
+			if(sign) ldconceptadd(-istr,tex);
+			if(istr==iend) break;
+			istr += istr<iend ? 1 : -1;
+		}
+	}
+	return ldconceptadd(0,TEX_NONE);
+}
+
+void ldconceptcompile(){
+	int z;
+	for(z=0;z<NUM_CONCEPTS;z++){
+		int i,hmin,hmax;
+		struct loadconept_ld *hold;
+		loadconcepts[z].load = ldconceptstr(loadconcepts[z].load_str);
+		hold = ldconceptstr(loadconcepts[z].hold_str);
+		for(hmin=hmax=i=0;hold[i].tex!=TEX_NONE;i++){
+			if(hold[i].imgi<hmin) hmin=hold[i].imgi;
+			if(hold[i].imgi>hmax) hmax=hold[i].imgi;
+		}
+		loadconcepts[z].hold_min = hmin;
+		loadconcepts[z].hold_max = hmax;
+		loadconcepts[z].hold=malloc(sizeof(enum imgtex)*(hmax-hmin+1));
+		memset(loadconcepts[z].hold,-1,sizeof(enum imgtex)*(hmax-hmin+1));
+		for(i=0;hold[i].tex!=TEX_NONE;i++) if(loadconcepts[z].hold[hold[i].imgi-hmin]<hold[i].tex)
+			loadconcepts[z].hold[hold[i].imgi-hmin]=hold[i].tex;
+		free(hold);
+	}
+}
+
+void ldconceptfree(){
+	int z;
+	for(z=0;z<NUM_CONCEPTS;z++){
+		free(loadconcepts[z].load);
+		free(loadconcepts[z].hold);
+	}
 }
 
 /***************************** load check *************************************/
 
-char ldicheck(struct imgld *il,enum imgtex tload,enum imgtex tfree){
-	int i;
-	char ld=0;
-	if(tload>=0 && !il->texs[tload].tex) ld=ldfload(il,tload,0);
-	for(i=tfree+1;i<TEX_NUM;i++) if(il->texs[i].tex) ldffree(il,i);
-	return ld;
-}
-
-char ldfcheck(int imgi,enum imgtex tload,enum imgtex tfree){
-	struct img *img=imgget(imgi);
-	return img ? ldicheck(img->ld,tload,tfree) : 0;
-}
-
 char ldcheck(){
 	int i;
 	int imgi = dplgetimgi();
-	if(ldicheck(defimg.ld,TEX_BIG,TEX_BIG)) return 1;
-	if(ldfcheck(imgi+0,dplgetzoom()>0?TEX_FULL:TEX_BIG,TEX_FULL)) return 1;
-	if(ldfcheck(imgi+1,TEX_BIG,  TEX_BIG)) return 1;
-	if(ldfcheck(imgi+2,TEX_SMALL,TEX_BIG)) return 1;
-	if(ldfcheck(imgi-1,TEX_SMALL,TEX_BIG)) return 1;
-	if(ldfcheck(imgi+3,TEX_SMALL,TEX_BIG)) return 1;
-	if(ldfcheck(imgi+4,TEX_SMALL,TEX_BIG)) return 1;
-	if(ldfcheck(imgi-2,TEX_SMALL,TEX_BIG)) return 1;
-	for(i= 5;i<=15;i++) if(ldfcheck(imgi+i,TEX_SMALL,TEX_SMALL)) return 1;
-	for(i= 3;i<=10;i++) if(ldfcheck(imgi-i,TEX_SMALL,TEX_SMALL)) return 1;
-	for(i=16;i<=20;i++) if(ldfcheck(imgi+i,TEX_TINY, TEX_SMALL)) return 1;
-	for(i=11;i<=15;i++) if(ldfcheck(imgi-i,TEX_TINY, TEX_SMALL)) return 1;
-	for(i=21;i<=30;i++) if(ldfcheck(imgi+i,TEX_TINY, TEX_TINY )) return 1;
-	for(i=16;i<=30;i++) if(ldfcheck(imgi-i,TEX_TINY, TEX_TINY )) return 1;
-	for(i=31;i<=40;i++) if(ldfcheck(imgi+i,TEX_NONE, TEX_TINY )) return 1;
-	for(i=31;i<=40;i++) if(ldfcheck(imgi-i,TEX_NONE, TEX_TINY )) return 1;
-	for(i=41;i<=nimg;i++) if(ldfcheck(imgi+i,TEX_NONE,TEX_NONE)) return 1;
-	for(i=41;i<=nimg;i++) if(ldfcheck(imgi-i,TEX_NONE,TEX_NONE)) return 1;
-	return 0;
+	int zoom = dplgetzoom();
+	struct loadconcept *ldcp;
+	char ret=0;
+
+	//if(zoom>0) if(ldfcheck(imgi+0,TEX_FULL,TEX_FULL)) return 1;
+
+	if(zoom>=0) ldcp=loadconcepts+0;
+	else if(zoom>-NUM_CONCEPTS) ldcp=loadconcepts+(-zoom);
+	else ldcp=loadconcepts+NUM_CONCEPTS-1;
+
+	for(i=0;i<nimg;i++){
+		enum imgtex hold=TEX_NONE;
+		if(i-imgi>=ldcp->hold_min && i-imgi<=ldcp->hold_max)
+			hold=ldcp->hold[i-imgi-ldcp->hold_min];
+		if(ldffree(imgs[i].ld,hold)){ ret=1; break; }
+	}
+
+	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
+		struct img *img=imgget(imgi+ldcp->load[i].imgi);
+		enum imgtex tex=ldcp->load[i].tex;
+		if(img && !img->ld->texs[tex].tex && ldfload(img->ld,tex,0)){ ret=1; break; }
+	}
+
+	return ret;
 }
 
 /***************************** load thread ************************************/
 
 void *ldthread(void *arg){
+	ldconceptcompile();
+	ldfload(defimg.ld,TEX_BIG,0);
 	while(!sdl.quit) if(!load.enable || !ldcheck()) SDL_Delay(100);
+	ldconceptfree();
 	sdl.quit|=THR_LD;
 	return NULL;
 }

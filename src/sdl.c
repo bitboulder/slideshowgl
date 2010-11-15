@@ -124,7 +124,7 @@ void *sdlthread(void *arg){
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		
-		while(SDL_GetTicks()-paint_last<15)
+		while(SDL_GetTicks()-paint_last<6)
 			ldtexload();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);

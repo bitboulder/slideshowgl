@@ -16,7 +16,6 @@
 - create+read mark file
 - mouse interface
 - parse args + help
-- load order
 - file urls
 - cfg renew
 - multiple img forward (zoom=0,writemode)
