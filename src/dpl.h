@@ -19,6 +19,7 @@ struct iopt {
 void dplrefresh();
 int dplgetimgi();
 int dplgetzoom();
+char dplineff();
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

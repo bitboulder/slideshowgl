@@ -18,6 +18,7 @@ struct dpl {
 	float maxfitw,maxfith;
 	Uint32 run;
 	char refresh;
+	char ineff;
 	struct {
 		Uint32 efftime;
 		Uint32 displayduration;
@@ -29,14 +30,15 @@ struct dpl {
 	.pos.x = 0.,
 	.pos.y = 0.,
 	.run = 0,
+	.ineff = 0,
 };
-
-void dplrefresh(){ dpl.refresh=1; }
 
 /***************************** dpl interface **********************************/
 
+void dplrefresh(){ dpl.refresh=1; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
+char dplineff(){ return dpl.ineff; }
 
 /***************************** dpl imgpos *************************************/
 
@@ -319,7 +321,12 @@ void effimg(struct imgpos *ip){
 
 void effdo(){
 	int i;
-	for(i=0;i<nimg;i++) if(imgs[i].pos->eff) effimg(imgs[i].pos);
+	char ineff=0;
+	for(i=0;i<nimg;i++) if(imgs[i].pos->eff){
+		effimg(imgs[i].pos);
+		ineff=1;
+	}
+	dpl.ineff=ineff;
 }
 
 /***************************** dpl thread *************************************/

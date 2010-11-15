@@ -13,14 +13,11 @@
 /***************************** load *******************************************/
 
 struct load {
-	char enable;
 	int  texsize[TEX_NUM];
 } load = {
-	.enable = 0,
 	.texsize = { 256, 512, 2048, 32768, }
 };
 
-void ldenable(char enable){ load.enable=enable; }
 void ldmaxtexsize(GLint maxtexsize){
 	int i;
 	for(i=0;i<TEX_NUM;i++) if(load.texsize[i]>maxtexsize){
@@ -114,7 +111,10 @@ struct texloadbuf {
 };
 void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
-	while(nwi==tlb.ri) SDL_Delay(10);
+	while(nwi==tlb.ri){
+		SDL_Delay(10);
+		if(sdl.quit) return;
+	}
 	itex->loading=1;
 	tlb.tl[tlb.wi].itex=itex;
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
@@ -228,11 +228,12 @@ struct loadconcept {
 	int hold_max;
 };
 
-struct loadconcept loadconcepts[4] = {
-	{ "B:0..2,-1;S:+-5,+-10,3..4,-2..-4", "B:-2..4;S:..15;T:..24" }, /* zoom =  0 */
-	{ "S:..17;B:0,1",                     "B:-1..2;S:..22;T:..38" }, /* zoom = -1 */
-	{ "S:..22;T:+-23..31;B:0",            "B:..1;S:..37;T:..52"   }, /* zoom = -2 */
-	{ "T:..38;S:..22;B:0",                "B:..1;S:..37;T:..59"   }, /* zoom = -3 */
+struct loadconcept loadconcepts[] = {
+	{ "F:0,B:0..2,-1;S:+-5,+-10,3..4,-2..-4", "F:0,B:-2..4;S:..15;T:..24" }, /* zoom >  0 */
+	{ "B:0..2,-1;S:+-5,+-10,3..4,-2..-4",     "B:-2..4;S:..15;T:..24"     }, /* zoom =  0 */
+	{ "S:..17;B:0,1",                         "B:-1..2;S:..22;T:..38"     }, /* zoom = -1 */
+	{ "S:..22;T:+-23..31;B:0",                "B:..1;S:..37;T:..52"       }, /* zoom = -2 */
+	{ "T:..38;S:..22;B:0",                    "B:..1;S:..37;T:..59"       }, /* zoom = -3 */
 };
 #define NUM_CONCEPTS (sizeof(loadconcepts)/sizeof(struct loadconcept))
 
@@ -265,6 +266,7 @@ struct loadconept_ld *ldconceptstr(char *str){
 		char *tokend;
 		if(tok[1]==':'){
 			switch(tok[0]){
+				case 'F': tex=TEX_FULL; break;
 				case 'B': tex=TEX_BIG; break;
 				case 'S': tex=TEX_SMALL; break;
 				case 'T': tex=TEX_TINY; break;
@@ -344,10 +346,9 @@ char ldcheck(){
 	struct loadconcept *ldcp;
 	char ret=0;
 
-	//if(zoom>0) if(ldfcheck(imgi+0,TEX_FULL,TEX_FULL)) return 1;
-
-	if(zoom>=0) ldcp=loadconcepts+0;
-	else if(zoom>-NUM_CONCEPTS) ldcp=loadconcepts+(-zoom);
+	if(zoom>0) ldcp=loadconcepts+0;
+	else if(zoom==0) ldcp=loadconcepts+1;
+	else if(1-zoom<NUM_CONCEPTS) ldcp=loadconcepts+(1-zoom);
 	else ldcp=loadconcepts+NUM_CONCEPTS-1;
 
 	for(i=0;i<nimg;i++){
@@ -371,7 +372,7 @@ char ldcheck(){
 void *ldthread(void *arg){
 	ldconceptcompile();
 	ldfload(defimg.ld,TEX_BIG,0);
-	while(!sdl.quit) if(!load.enable || !ldcheck()) SDL_Delay(100);
+	while(!sdl.quit) if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
 	ldconceptfree();
 	sdl.quit|=THR_LD;
 	return NULL;

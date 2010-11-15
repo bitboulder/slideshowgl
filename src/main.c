@@ -93,6 +93,7 @@ void parse_args(int argc,char **argv){
 	ExifData *exif=exif_data_new_from_file("test.jpg");*/
 int main(int argc,char **argv){
 	parse_args(argc,argv);
+	sdlinit();
 	start_threads();
 	return 0;
 }
