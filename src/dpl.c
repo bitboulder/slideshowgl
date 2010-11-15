@@ -205,13 +205,17 @@ void dplmove(int d){
 		break;
 		case 3:
 			dpl.pos.zoom+=d/3;
+			if(dpl.pos.zoom<=0)   dpl.pos.x=dpl.pos.y=0.;
+			else{
+				dpl.pos.x*=powf(2,(float)(d/3));
+				dpl.pos.y*=powf(2,(float)(d/3));
+			}
 		break;
 		}
 		if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
 		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
 		if(dpl.pos.zoom>0)    dpl.run=0;
-		if(dpl.pos.zoom<=0)   dpl.pos.x=dpl.pos.y=0.;
 		debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	}else{
 		imgfit(defimg.pos,imgldrat(defimg.ld));

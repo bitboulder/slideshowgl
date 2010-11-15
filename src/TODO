@@ -19,7 +19,6 @@
 - load order
 - file urls
 - cfg renew
-- zoom position
 - multiple img forward (zoom=0,writemode)
 
 - disable 2^size in sizesel if supported
