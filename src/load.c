@@ -17,6 +17,7 @@ void ldffree(struct imgld *il,enum imgtex it);
 struct itex {
 	GLuint tex;
 	char loading;
+	char thumb;
 };
 
 struct imgld {
@@ -130,13 +131,19 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
+	char *fn = il->fn;
+	char thumb=0;
 	if(il->loadfail) return ld;
 	if(il->texs[it].loading) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 
-	sdlimg=sdlimg_gen(IMG_Load((it<TEX_BIG && il->tfn[0]) ? il->tfn : il->fn));
-	if(!sdlimg){ error(0,"Loading img failed \"%s\": %s",il->fn,IMG_GetError()); goto end; }
-	if(sdlimg->sf->format->BytesPerPixel!=3){ error(0,"Wrong pixelformat \"%s\"",il->fn); goto end; }
+	if(it<TEX_BIG && il->tfn[0]){
+		fn=il->tfn;
+		thumb=1;
+	}
+	sdlimg=sdlimg_gen(IMG_Load(fn));
+	if(!sdlimg){ error(0,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
+	if(sdlimg->sf->format->BytesPerPixel!=3){ error(0,"Wrong pixelformat \"%s\"",fn); goto end; }
 
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
@@ -146,7 +153,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;
 		int size=10;
-		if(!replace && il->texs[i].tex) continue;
+		if(!replace && il->texs[i].tex && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
 		if(il->texs[i].loading) continue;
 		switch(i){
 		case TEX_FULL:  size=32768; break;
@@ -159,6 +166,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 			sdlimg=sdlimgscale;
 		}
 		sdlimg_ref(sdlimg);
+		il->texs[i].thumb=thumb;
 		ldtexload_put(il->texs+i,sdlimg);
 		ld=1;
 	}
