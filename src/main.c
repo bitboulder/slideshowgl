@@ -87,6 +87,8 @@ void parse_args(int argc,char **argv){
 	ldgetfiles(argc-optind,argv+optind);
 }
 
+/*#include <exif-data.h>
+	ExifData *exif=exif_data_new_from_file("test.jpg");*/
 int main(int argc,char **argv){
 	parse_args(argc,argv);
 	start_threads();

@@ -1,6 +1,6 @@
 Import('env')
 
-main_sources = """
+sources = """
 	main.c
 	sdl.c
 	gl.c
@@ -11,8 +11,8 @@ main_sources = """
 	cfg.c
 """.split()
 
-sources = env.Object(main_sources)
+objects = env.Object(sources)
 
-prog = env.Program('../slideshowgl', sources, install=True)
-
-Export('sources')
+prog = env.Program('../slideshowgl', objects, install=True)
+#env.Install('/usr/bin',prog)
+#env.Alias('install','/usr/bin')
