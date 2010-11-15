@@ -5,4 +5,8 @@
 
 SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height);
 
+#ifdef __WIN32__
+char *strsep(char **stringp, const char *delim);
+#endif
+
 #endif

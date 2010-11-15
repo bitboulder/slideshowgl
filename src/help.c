@@ -86,3 +86,22 @@ SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 					SDL_PutPixel(_ret, (Sint32)(_stretch_factor_x * x) + o_x, (Sint32)(_stretch_factor_y * y) + o_y, SDL_GetPixel(Surface, x, y));
 	return _ret;
 }
+
+#ifdef __WIN32__
+char *strsep(char **stringp, const char *delim){
+	int i;
+	char *tok;
+	if(!stringp || !*stringp) return NULL;
+	tok=*stringp;
+	for(;**stringp!='\0';(*stringp)++){
+		for(i=0;delim[i]!='\0';i++) if(**stringp==delim[i]){
+			**stringp='\0';
+			(*stringp)++;
+			return tok;
+		}
+	}
+	*stringp=NULL;
+	return tok;
+}
+#endif
+
