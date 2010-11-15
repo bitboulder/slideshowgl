@@ -20,7 +20,10 @@
 	#error "Unsupported platform"
 #endif
 
-enum debug dbg = DBG_STA;
+enum debug dbg = DBG_NONE;
+#define E(X)	#X
+char *dbgstr[] = { EDEBUG };
+#undef E
 
 struct mainthread {
 	void *(*fnc)(void *);
@@ -34,28 +37,26 @@ struct mainthread {
 	{ NULL,        0, 0 },
 };
 
-void error(char quit,char *txt,...){
-	int lfmt=strlen(txt)+9;
-	char *fmt=malloc(lfmt);
+void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	va_list ap;
-	snprintf(fmt,lfmt,"ERROR: %s\n",txt);
+	char err = lvl==ERR_QUIT || lvl==ERR_CONT;
+	FILE *fout = err ? stderr : stdout;
+	char fcp[5];
+	char *pos;
+	if(!err && lvl>dbg) return;
+	if((pos=strrchr(file,'/'))) file=pos+1;
+	snprintf(fcp,5,file);
+	if((pos=strchr(fcp,'.'))) *pos='\0';
+	fprintf(fout,"%-4s(%3i) ",fcp,line);
+	if(err) fprintf(fout,"ERROR   : ");
+	else    fprintf(fout,"dbg-%-4s: ",dbgstr[lvl]);
 	va_start(ap,txt);
-	vfprintf(stderr,fmt,ap);
+	vfprintf(fout,txt,ap);
 	va_end(ap);
-	free(fmt);
-	if(!quit) return;
+	fprintf(fout,"\n");
+	if(lvl!=ERR_QUIT) return;
 	SDL_Quit();
 	exit(1);
-}
-
-void debug(enum debug lvl,char *txt,...){
-	va_list ap;
-	if(lvl>dbg) return;
-	printf("dbg: ");
-	va_start(ap,txt);
-	vprintf(txt,ap);
-	va_end(ap);
-	printf("\n");
 }
 
 void start_threads(){
@@ -80,8 +81,9 @@ void usage(char *fn){
 
 void parse_args(int argc,char **argv){
 	int c;
-	while((c=getopt(argc,argv,"hf"))>=0) switch(c){
+	while((c=getopt(argc,argv,"hvf"))>=0) switch(c){
 	case 'h': usage(argv[0]); break;
+	case 'v': dbg++; break;
 	case 'f': cfgsetint("sdl.fullscreen",!cfggetint("sd.fullscreen")); break;
 	}
 	ldgetfiles(argc-optind,argv+optind);

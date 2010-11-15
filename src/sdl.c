@@ -37,8 +37,8 @@ void sdlfullscreen(){
 
 char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags);
-	if(modes==(SDL_Rect**)-1) error(0,"sdl All fullscreen modes available");
-	else if(modes==(SDL_Rect**)0 || !modes[0]) error(0,"sdl No fullscreen modes available");
+	if(modes==(SDL_Rect**)-1) error(ERR_CONT,"sdl All fullscreen modes available");
+	else if(modes==(SDL_Rect**)0 || !modes[0]) error(ERR_CONT,"sdl No fullscreen modes available");
 	else{
 		int i;
 		*w=*h=0;
@@ -53,12 +53,12 @@ void sdlresize(int w,int h){
 	sdl.doresize=0;
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
 		debug(DBG_STA,"sdl set video mode fullscreen");
-		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(1,"video mode init failed");
+		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(ERR_QUIT,"video mode init failed");
 	}else{
 		if(!w) w=sdl.scr_w;
 		if(!h) h=sdl.scr_h;
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_RESIZABLE))) error(1,"video mode init failed");
+		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_RESIZABLE))) error(ERR_QUIT,"video mode init failed");
 	}
 	vi=SDL_GetVideoInfo();
 	sdl.scr_w=vi->current_w;
@@ -72,7 +72,7 @@ void sdlinit(){
 	sdl.sync=cfggetint("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
-	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(1,"sdl init failed");
+	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
 	SDL_WM_SetCaption("Slideshowgl","slideshowgl");
@@ -132,7 +132,7 @@ void *sdlthread(void *arg){
 	sdl.quit=1;
 	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	if(!i){
-		error(0,"sdl timeout waiting for threads (%i)",sdl.quit);
+		error(ERR_CONT,"sdl timeout waiting for threads (%i)",sdl.quit);
 	}else{
 		ldtexload();
 		imgfinalize();

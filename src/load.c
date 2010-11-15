@@ -141,9 +141,10 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		fn=il->tfn;
 		thumb=1;
 	}
+	debug(DBG_DBG,"ld Loading img \"%s\"",fn);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
-	if(!sdlimg){ error(0,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
-	if(sdlimg->sf->format->BytesPerPixel!=3){ error(0,"Wrong pixelformat \"%s\"",fn); goto end; }
+	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
+	if(sdlimg->sf->format->BytesPerPixel!=3){ error(ERR_CONT,"Wrong pixelformat \"%s\"",fn); goto end; }
 
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
@@ -167,6 +168,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		}
 		sdlimg_ref(sdlimg);
 		il->texs[i].thumb=thumb;
+		debug(DBG_DBG,"ld Loading to tex %s",imgtex_str[i]);
 		ldtexload_put(il->texs+i,sdlimg);
 		ld=1;
 	}
@@ -253,7 +255,7 @@ void ldaddfile(char *fn){
 void ldaddflst(char *flst){
 	FILE *fd=fopen(flst,"r");
 	char buf[1024];
-	if(!fd){ error(0,"ld read flst failed \"%s\"",flst); return; }
+	if(!fd){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return; }
 	while(!feof(fd)){
 		int len;
 		if(!fgets(buf,1024,fd)) continue;
