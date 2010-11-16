@@ -16,7 +16,9 @@ struct iopt {
 	char back;
 };
 
-void dplrefresh();
+enum dplrefresh { DPLREF_NO, DPLREF_STD, DPLREF_FIT };
+
+void dplrefresh(enum dplrefresh val);
 int dplgetimgi();
 int dplgetzoom();
 char dplineff();
@@ -27,7 +29,7 @@ void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
 struct ipos *imgposcur(struct imgpos *ip);
 
-void imgfit(struct imgpos *ip,float irat);
+char imgfit(struct img *img);
 
 void dplkeyput(SDL_keysym key);
 void sdldelay(Uint32 *last,Uint32 delay);

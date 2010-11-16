@@ -65,7 +65,7 @@ void sdlresize(int w,int h){
 	sdl.scr_h=vi->current_h;
 	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
 	glreshape();
-	dplrefresh();
+	dplrefresh(DPLREF_FIT);
 }
 
 void sdlinit(){
@@ -127,6 +127,7 @@ void *sdlthread(void *arg){
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		
+		if(!dplineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < 12) ldtexload();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);

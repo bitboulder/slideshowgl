@@ -40,7 +40,6 @@ struct imgld {
 	char tfn[1024];
 	char loadfail;
 	int w,h;
-	float irat;
 	struct itex texs[TEX_NUM];
 	struct img *img;
 };
@@ -66,7 +65,11 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 	return 0;
 }
 
-float imgldrat(struct imgld *il){ return il->irat; }
+float imgldrat(struct imgld *il){
+	return (!il->h || !il->w) ? 0. : (float)il->h/(float)il->w;
+}
+
+char *imgldfn(struct imgld *il){ return il->fn; }
 
 /***************************** sdlimg *****************************************/
 
@@ -162,7 +165,10 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	char *fn = il->fn;
 	char thumb=0;
 	if(il->loadfail) return ld;
+	while(it>=0 && !load.texsize[it]) it--;
+	if(it<0) return ld;
 	if(il->texs[it].loading) return ld;
+	if(il->texs[it].tex && !replace) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn,replace);
 	if(it<TEX_BIG && il->tfn[0]){
@@ -176,8 +182,8 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
-	il->irat=(float)il->h/(float)il->w;
-	imgfit(il->img->pos,il->irat);
+	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
+	imgfit(il->img);
 
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;
@@ -362,7 +368,7 @@ char ldcheck(){
 	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
 		struct img *img=imgget(imgi+ldcp->load[i].imgi);
 		enum imgtex tex=ldcp->load[i].tex;
-		if(img && !img->ld->texs[tex].tex && ldfload(img->ld,tex,0)){ ret=1; break; }
+		if(img && ldfload(img->ld,tex,0)){ ret=1; break; }
 	}
 
 	return ret;

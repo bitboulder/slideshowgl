@@ -11,6 +11,7 @@ void imgldfree(struct imgld *il);
 void imgldsetimg(struct imgld *il,struct img *img);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
+char *imgldfn(struct imgld *il);
 
 void ldtexload();
 

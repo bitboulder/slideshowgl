@@ -17,7 +17,7 @@ struct dpl {
 	struct dplpos pos;
 	float maxfitw,maxfith;
 	Uint32 run;
-	char refresh;
+	enum dplrefresh refresh;
 	char ineff;
 	char showinfo;
 	struct {
@@ -33,11 +33,12 @@ struct dpl {
 	.run = 0,
 	.ineff = 0,
 	.showinfo = 0,
+	.refresh = DPLREF_NO,
 };
 
 /***************************** dpl interface **********************************/
 
-void dplrefresh(){ dpl.refresh=1; }
+void dplrefresh(enum dplrefresh val){ dpl.refresh=val; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplineff(){ return dpl.ineff; }
@@ -123,17 +124,24 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 	return 0;
 }
 
-void imgfit(struct imgpos *ip,float irat){
+char imgfit(struct img *img){
+	float irat=imgldrat(img->ld);
 	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
+	struct iopt *iopt=&img->pos->opt;
+	if(!irat) return 0;
 	if(srat<irat){
-		ip->opt.fitw=srat/irat;
-		ip->opt.fith=1.;
+		iopt->fitw=srat/irat;
+		iopt->fith=1.;
 	}else{
-		ip->opt.fitw=1.;
-		ip->opt.fith=irat/srat;
+		iopt->fitw=1.;
+		iopt->fith=irat/srat;
 	}
-	if(ip->opt.active && (ip->opt.fitw>dpl.maxfitw || ip->opt.fith>dpl.maxfith)) dpl.refresh=1;
+	if(iopt->active && dpl.pos.zoom<0 && 
+			(iopt->fitw>dpl.maxfitw || iopt->fith>dpl.maxfith)
+		) dplrefresh(DPLREF_STD);
+	debug(DBG_DBG,"imgfit %.2fx%.2f %s",iopt->fitw,iopt->fith,imgldfn(img->ld));
 	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
+	return 1;
 }
 
 enum imgtex imgseltex(int imgi){
@@ -147,7 +155,6 @@ void effinitimg(int d,int i){
 	char act = effact(i);
 	if(!act && !ip->opt.active) return;
 	if(!act && ip->eff && !ip->wayact) return;
-	if(!act) imgfit(ip,imgldrat(imgs[i].ld));
 	/*printf("%i %3s\n",i,act?"on":"off");*/
 	ip->opt.tex=imgseltex(i);
 	ip->opt.back=0;
@@ -179,9 +186,7 @@ void effmaxfit(){
 	dpl.maxfitw=dpl.maxfith=0.;
 	for(i=0;i<nimg;i++) if(effact(i)){
 		struct imgpos *ip=imgs[i].pos;
-		float irat=imgldrat(imgs[i].ld);
-		if(irat==0.) continue;
-		imgfit(ip,irat);
+		if(!ip->opt.fitw || !ip->opt.fith) continue;
 		if(ip->opt.fitw>dpl.maxfitw) dpl.maxfitw=ip->opt.fitw;
 		if(ip->opt.fith>dpl.maxfith) dpl.maxfith=ip->opt.fith;
 	}
@@ -193,6 +198,12 @@ void effinit(int d){
 	int i;
 	if(dpl.pos.zoom<0) effmaxfit();
 	for(i=0;i<nimg;i++) effinitimg(d,i);
+}
+
+void dplfitrefresh(){
+	int i;
+	imgfit(&defimg);
+	for(i=0;i<nimg;i++) imgfit(imgs+i);
 }
 
 void dplmove(int d){
@@ -222,12 +233,13 @@ void dplmove(int d){
 		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
 		if(dpl.pos.zoom>0)    dpl.run=0;
 		debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
-	}else{
-		imgfit(defimg.pos,imgldrat(defimg.ld));
-		debug(DBG_STA,"dpl move refresh");
+	}
+	if(dpl.refresh!=DPLREF_NO){
+		debug(DBG_STA,"dpl move refresh%s",dpl.refresh==DPLREF_FIT?" (fit)":"");
+		if(dpl.refresh==DPLREF_FIT) dplfitrefresh();
+		dpl.refresh=DPLREF_NO;
 	}
 	effinit(d);
-	dpl.refresh=0;
 }
 
 void dplmark(){
@@ -259,8 +271,8 @@ void dplkey(SDL_keysym key){
 	switch(key.sym){
 	case SDLK_q:        sdl.quit=1; break;
 	case SDLK_f:        sdlfullscreen(); break;
-	case SDLK_w:        sdl.writemode=!sdl.writemode; dplmove(0); break;
-	case SDLK_m:        if(sdl.writemode) dplmark();   break;
+	case SDLK_w:        sdl.writemode=!sdl.writemode; dplrefresh(DPLREF_STD); break;
+	case SDLK_m:        if(sdl.writemode) dplmark(); break;
 	case SDLK_i:        dpl.showinfo=!dpl.showinfo; break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
@@ -347,8 +359,8 @@ void *dplthread(void *arg){
 	while(!sdl.quit){
 
 		dplcheckkey();
-		if(dpl.refresh) dplmove(0);
 		if(dpl.run) dplrun();
+		if(dpl.refresh!=DPLREF_NO) dplmove(0);
 		effdo();
 
 		sdlthreadcheck();
