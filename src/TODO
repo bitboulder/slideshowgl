@@ -10,7 +10,6 @@
 - random [-r]
 - loop [-l]
 
-- exif-rot
 - disable dpms
 - create+read mark file
 - mouse interface

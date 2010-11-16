@@ -30,6 +30,17 @@ struct imgexif {
 };
 
 enum rot imgexifrot(struct imgexif *exif){ return exif->rot; }
+
+float imgexifrotf(struct imgexif *exif){
+	switch(exif->rot){
+	case ROT_0:   return 0.;
+	case ROT_90:  return 90.;
+	case ROT_180: return 180.;
+	case ROT_270: return 270.;
+	}
+	return 0.;
+}
+
 char *imgexifinfo(struct imgexif *exif){ return exif->info; }
 
 struct imgexif *imgexifinit(){
@@ -47,9 +58,9 @@ enum rot imgexifgetrot(ExifData *exdat){
 	if(!exet) return ROT_0;
 	exif_entry_get_value(exet,buf,255);
 	if(!strncmp("top - left",    buf,10)) return ROT_0;
-	if(!strncmp("left - bottom", buf,13)) return ROT_90;
+	if(!strncmp("left - bottom", buf,13)) return ROT_270;
 	if(!strncmp("bottom - right",buf,14)) return ROT_180;
-	if(!strncmp("right - top",   buf,11)) return ROT_270;
+	if(!strncmp("right - top",   buf,11)) return ROT_90;
 	return ROT_0;
 }
 

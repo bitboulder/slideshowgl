@@ -59,7 +59,7 @@ void glinit(){
 
 void glfree(){
 #ifndef __WIN32__
-	ftglDestroyFont(gl.font);
+	if(gl.font) ftglDestroyFont(gl.font);
 #endif
 }
 
@@ -117,6 +117,15 @@ struct img *glseltex(struct img *img,enum imgtex it){
 	return NULL;
 }
 
+void glrendermark(struct ipos *ipos){
+	glDisable(GL_TEXTURE_2D);
+	glColor4f(1.,1.,1.,ipos->m*0.7);
+	glTranslatef(.4,-.4,0.);
+	glScalef(.1,.1,1.);
+	glCallList(gl.dls+DLS_IMG);
+	glEnable(GL_TEXTURE_2D);
+}
+
 void glrenderimg(struct img *img,char back){
 	struct img *isc;
 	struct ipos *ipos;
@@ -132,15 +141,11 @@ void glrenderimg(struct img *img,char back){
 	iopt=imgposopt(isc->pos);
 	glScalef(iopt->fitw,iopt->fith,1.);
 	glColor4f(1.,1.,1.,ipos->a);
+	if(ipos->r && ipos->m) glPushMatrix();
+	if(ipos->r) glRotatef(ipos->r,0.,0.,1.);
 	glCallList(gl.dls+DLS_IMG);
-	if(ipos->m){
-		glDisable(GL_TEXTURE_2D);
-		glColor4f(1.,1.,1.,ipos->m*0.7);
-		glTranslatef(.4,-.4,0.);
-		glScalef(.1,.1,1.);
-		glCallList(gl.dls+DLS_IMG);
-		glEnable(GL_TEXTURE_2D);
-	}
+	if(ipos->r && ipos->m) glPopMatrix();
+	if(ipos->m) glrendermark(ipos);
 	glPopMatrix();
 }
 
@@ -153,6 +158,7 @@ void glrenderimgs(){
 
 void gltextout(char *text,int size,float x,float y){
 #ifndef __WIN32__
+	if(!gl.font) return;
 	ftglSetFontFaceSize(gl.font, size, size);
 	glPushMatrix();
 	glTranslatef(x,y,0.0);

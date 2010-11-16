@@ -6,6 +6,7 @@
 #include "load.h"
 #include "cfg.h"
 #include "main.h"
+#include "exif.h"
 
 struct dplpos {
 	int imgi;
@@ -87,6 +88,8 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 
 void effmove(struct ipos *ip,int i){
 	ip->a=1.;
+	ip->m=(imgs[i].pos->mark && sdl.writemode)?1.:0.;
+	ip->r=imgexifrotf(imgs[i].exif);
 	if(dpl.pos.zoom<0){
 		ip->s=zoomtab[-dpl.pos.zoom].size;
 		ip->x=(i-dpl.pos.imgi)*ip->s;
@@ -108,6 +111,7 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 	if(dpl.pos.zoom>0 || abs(d)==3){
 		memset(ip,0,sizeof(struct ipos));
 		ip->m=ipon->m;
+		ip->r=ipon->r;
 		return 1;
 	}
 	*ip=*ipon;
@@ -122,26 +126,6 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 		}
 	}
 	return 0;
-}
-
-char imgfit(struct img *img){
-	float irat=imgldrat(img->ld);
-	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
-	struct iopt *iopt=&img->pos->opt;
-	if(!irat) return 0;
-	if(srat<irat){
-		iopt->fitw=srat/irat;
-		iopt->fith=1.;
-	}else{
-		iopt->fitw=1.;
-		iopt->fith=irat/srat;
-	}
-	if(iopt->active && dpl.pos.zoom<0 && 
-			(iopt->fitw>dpl.maxfitw || iopt->fith>dpl.maxfith)
-		) dplrefresh(DPLREF_STD);
-	debug(DBG_DBG,"imgfit %.2fx%.2f %s",iopt->fitw,iopt->fith,imgldfn(img->ld));
-	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
-	return 1;
 }
 
 enum imgtex imgseltex(int imgi){
@@ -160,7 +144,6 @@ void effinitimg(int d,int i){
 	ip->opt.back=0;
 	if(act) effmove(ip->way+1,i);
 	else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);
-	ip->way[1].m=(ip->mark && sdl.writemode)?1.:0.;
 	if(!ip->opt.active){
 		ip->opt.back|=effonoff(ip->way+0,ip->way+1,d);
 		ip->cur=ip->way[0];
@@ -198,6 +181,28 @@ void effinit(int d){
 	int i;
 	if(dpl.pos.zoom<0) effmaxfit();
 	for(i=0;i<nimg;i++) effinitimg(d,i);
+}
+
+char imgfit(struct img *img){
+	float irat=imgldrat(img->ld);
+	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
+	struct iopt *iopt=&img->pos->opt;
+	enum rot rot=imgexifrot(img->exif);
+	if(!irat) return 0;
+	if(rot==ROT_90 || rot==ROT_270) irat=1./irat;
+	if(srat<irat){
+		iopt->fitw=srat/irat;
+		iopt->fith=1.;
+	}else{
+		iopt->fitw=1.;
+		iopt->fith=irat/srat;
+	}
+	if(iopt->active && dpl.pos.zoom<0 && 
+			(iopt->fitw>dpl.maxfitw || iopt->fith>dpl.maxfith)
+		) dplrefresh(DPLREF_STD);
+	debug(DBG_DBG,"imgfit %.2fx%.2f %s",iopt->fitw,iopt->fith,imgldfn(img->ld));
+	/*printf("%g %g (%g %g)\n",il->fitw,il->fith,irat,srat);*/
+	return 1;
 }
 
 void dplfitrefresh(){
