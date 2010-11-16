@@ -75,6 +75,7 @@ void start_threads(){
 }
 
 int main(int argc,char **argv){
+	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");
 	ldgetfiles(argc-optind,argv+optind);

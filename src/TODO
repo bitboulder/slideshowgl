@@ -3,12 +3,10 @@
 - gamma, brightness, contrast [g,b,c,+-]
 - delete [del]
 - status [,25/5/1s]
-- random [-r]
 
 - disable dpms
 - create+read mark file
 - mouse interface
-- file urls
 - multiple img forward (zoom=0,writemode)
 
 - disable 2^size in sizesel if supported

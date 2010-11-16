@@ -9,7 +9,7 @@
 #include "img.h"
 #include "dpl.h"
 #include "exif.h"
-
+#include "cfg.h"
 
 /***************************** load *******************************************/
 
@@ -406,6 +406,7 @@ void ldaddfile(char *fn){
 	struct img *img=imgadd();
 	int i;
 	FILE *fd;
+	if(!strncmp(fn,"file://",7)) fn+=7;
 	strncpy(img->ld->fn,fn,1024);
 	for(i=strlen(fn)-1;i>=0;i--) if(fn[i]=='/'){
 		fn[i]='\0';
@@ -440,4 +441,5 @@ void ldgetfiles(int argc,char **argv){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
 		else ldaddfile(argv[0]);
 	}
+	if(cfggetint("ld.random")) imgrandom();
 }

@@ -46,3 +46,16 @@ void imgfinalize(){
 	for(i=0;i<nimg;i++) imgfree(imgs+i);
 	free(imgs);
 }
+
+void imgrandom(){
+	struct img *oimgs=imgs;
+	int i,j;
+	imgs=calloc(sizeof(struct img),simg);
+	for(i=0;i<nimg;i++){
+		j=rand()%nimg;
+		while(imgs[j].ld) j=(j+1)%nimg;
+		imgs[j]=oimgs[i];
+		imgldsetimg(imgs[j].ld,imgs+j);
+	}
+	free(oimgs);
+}

@@ -25,5 +25,6 @@ struct img *imgget(int i);
 void imginit(struct img *img);
 struct img *imgadd();
 void imgfinalize();
+void imgrandom();
 
 #endif
