@@ -26,7 +26,7 @@ struct cfg {
 	{ 0,   "dpl.shrink",          CT_FLT, CM_SET,  "0.75" },
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0" },
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0" },
-	{ 0,   "gl.font",             CT_STR, CM_SET,  "/var/lib/defoma/x-ttcidfont-conf.d/dirs/TrueTypeVerdana.ttf" },
+	{ 0,   "gl.font",             CT_STR, CM_SET,  "data/font.ttf" },
 	{ 0,   NULL,                  0,      0,       NULL },
 };
 

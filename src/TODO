@@ -5,10 +5,10 @@
 - status [,25/5/1s]
 
 # Comfort
-- disable dpms
 - create+read mark file
 - mouse interface
 - multiple img forward (zoom=0,writemode)
+- check for system data dir
 
 # Fixes
 - disable 2^size in sizesel if supported

@@ -1,5 +1,9 @@
 #include <SDL.h>
 #include <SDL_thread.h>
+#if defined HAVE_x11 && defined HAVE_xext
+	#include <X11/Xlib.h>
+	#include <X11/extensions/dpms.h>
+#endif
 #include "sdl.h"
 #include "gl.h"
 #include "main.h"
@@ -21,6 +25,21 @@ struct sdl sdl = {
 	.writemode  = 0,
 	.hidecursor = 0,
 };
+
+void switchdpms(char val){
+#if defined HAVE_x11 && defined HAVE_xext
+	static BOOL state=1;
+	int evb,erb;
+	CARD16 plv;
+	Display *display=XOpenDisplay(NULL);
+	if(!display || !DPMSQueryExtension(display,&evb,&erb) || !DPMSCapable(display)) return;
+	if(!val){
+		DPMSInfo(display,&plv,&state);
+		DPMSDisable(display);
+	}else if(state) DPMSEnable(display); else DPMSDisable(display);
+	XCloseDisplay(display);
+#endif
+}
 
 void sdlfullscreen(){
 	if(sdl.fullscreen){
@@ -122,6 +141,7 @@ void sdldelay(Uint32 *last,Uint32 delay){
 
 void *sdlthread(void *arg){
 	int i;
+	switchdpms(0);
 	while(!sdl.quit){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
@@ -135,6 +155,7 @@ void *sdlthread(void *arg){
 		glpaint();
 	}
 	sdl.quit=1;
+	switchdpms(1);
 	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	if(!i){
 		error(ERR_CONT,"sdl timeout waiting for threads (%i)",sdl.quit);
