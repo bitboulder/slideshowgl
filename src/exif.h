@@ -7,9 +7,11 @@ struct imgexif *imgexifinit();
 void imgexiffree(struct imgexif *exif);
 
 enum rot imgexifrot(struct imgexif *exif);
-float imgexifrotf(struct imgexif *exif);
 char *imgexifinfo(struct imgexif *exif);
 
 void imgexifload(struct imgexif *exif,char *fn,char replace);
+
+float imgexifrotf(struct imgexif *exif);
+void exifrotate(struct imgexif *exif,int r);
 
 #endif

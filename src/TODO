@@ -1,19 +1,24 @@
+# Availabilty
 - pano [p,0x8] (5°)
-- rotate [r,R]
 - gamma, brightness, contrast [g,b,c,+-]
 - delete [del]
 - status [,25/5/1s]
 
+# Comfort
 - disable dpms
 - create+read mark file
 - mouse interface
 - multiple img forward (zoom=0,writemode)
 
+# Fixes
 - disable 2^size in sizesel if supported
 - fix sdlthreadcheck
+- precalc for rotate in glrenderimg
 
+# Fonts
 - libftgl for win32
 - text pos in glrendertext
 - glrenderinputnum
 
+# Want to have
 ? display loop imgs if zoom<0

@@ -278,6 +278,14 @@ void dplmark(){
 	effinitimg(0,dpl.pos.imgi);
 }
 
+void dplrotate(int r){
+	struct img *img=imgget(dpl.pos.imgi);
+	if(!img) return;
+	exifrotate(img->exif,r);
+	imgfit(img);
+	effinitimg(0,dpl.pos.imgi);
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -339,6 +347,7 @@ void dplkey(SDL_keysym key){
 	case SDLK_w:        sdl.writemode=!sdl.writemode; dplrefresh(DPLREF_STD); break;
 	case SDLK_m:        if(sdl.writemode) dplmark(); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
+	case SDLK_r:        dplrotate((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?-1:1); break;
 	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
@@ -380,6 +389,12 @@ float effcalclin(float a,float b,float ef){
 	return (b-a)*ef+a;
 }
 
+float effcalcrot(float a,float b,float ef){
+	while(b-a> 180.) b-=360.;
+	while(b-a<-180.) b+=360.;
+	return (b-a)*ef+a;
+}
+
 #define ECS_TIME	0.2
 #define ECS_SIZE	0.3
 float effcalcshrink(float ef){
@@ -401,7 +416,7 @@ void effimg(struct imgpos *ip){
 		if(ip->way[0].x!=ip->way[1].x) ip->cur.x=effcalclin(ip->way[0].x,ip->way[1].x,ef);
 		if(ip->way[0].y!=ip->way[1].y) ip->cur.y=effcalclin(ip->way[0].y,ip->way[1].y,ef);
 		if(ip->way[0].m!=ip->way[1].m) ip->cur.m=effcalclin(ip->way[0].m,ip->way[1].m,ef);
-		if(ip->way[0].r!=ip->way[1].r) ip->cur.r=effcalclin(ip->way[0].r,ip->way[1].r,ef);
+		if(ip->way[0].r!=ip->way[1].r) ip->cur.r=effcalcrot(ip->way[0].r,ip->way[1].r,ef);
 		if(ip->opt.back) ip->cur.s*=effcalcshrink(ef);
 	}
 	/*printf("%i %i %i %g\n",ip->waytime[0],ip->waytime[1],time,ip->cur.a);*/

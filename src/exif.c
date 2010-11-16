@@ -30,17 +30,6 @@ struct imgexif {
 };
 
 enum rot imgexifrot(struct imgexif *exif){ return exif->rot; }
-
-float imgexifrotf(struct imgexif *exif){
-	switch(exif->rot){
-	case ROT_0:   return 0.;
-	case ROT_90:  return 90.;
-	case ROT_180: return 180.;
-	case ROT_270: return 270.;
-	}
-	return 0.;
-}
-
 char *imgexifinfo(struct imgexif *exif){ return exif->info; }
 
 struct imgexif *imgexifinit(){
@@ -100,3 +89,16 @@ void imgexifload(struct imgexif *exif,char *fn,char replace){
 	exif_data_free(exdat);
 }
 
+float imgexifrotf(struct imgexif *exif){
+	switch(exif->rot){
+	case ROT_0:   return 0.;
+	case ROT_90:  return 90.;
+	case ROT_180: return 180.;
+	case ROT_270: return 270.;
+	}
+	return 0.;
+}
+
+void exifrotate(struct imgexif *exif,int r){
+	exif->rot = (exif->rot+r+4)%4;
+}
