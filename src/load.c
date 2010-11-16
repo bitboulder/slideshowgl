@@ -360,14 +360,24 @@ char ldcheck(){
 
 	for(i=0;i<nimg;i++){
 		enum imgtex hold=TEX_NONE;
-		if(i-imgi>=ldcp->hold_min && i-imgi<=ldcp->hold_max)
-			hold=ldcp->hold[i-imgi-ldcp->hold_min];
+		int diff=i-imgi;
+		if(dplloop()){
+			while(diff>nimg/2) diff-=nimg;
+			while(diff<-nimg/2) diff+=nimg;
+		}
+		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
+			hold=ldcp->hold[diff-ldcp->hold_min];
 		if(ldffree(imgs[i].ld,hold)){ ret=1; break; }
 	}
 
 	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
-		struct img *img=imgget(imgi+ldcp->load[i].imgi);
-		enum imgtex tex=ldcp->load[i].tex;
+		int imgri;
+		struct img *img;
+		enum imgtex tex;
+		imgri=imgi+ldcp->load[i].imgi;
+		if(dplloop()) imgri=(imgri+nimg)%nimg;
+		img=imgget(imgri);
+		tex=ldcp->load[i].tex;
 		if(img && ldfload(img->ld,tex,0)){ ret=1; break; }
 	}
 

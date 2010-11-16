@@ -10,6 +10,7 @@
 
 struct dplpos {
 	int imgi;
+	int imgiold;
 	int zoom;
 	float x,y;
 };
@@ -27,6 +28,7 @@ struct dpl {
 		Uint32 efftime;
 		Uint32 displayduration;
 		float shrink;
+		char loop;
 	} cfg;
 } dpl = {
 	.pos.imgi = -1,
@@ -49,6 +51,7 @@ int dplgetzoom(){ return dpl.pos.zoom; }
 char dplineff(){ return dpl.ineff; }
 char dplshowinfo(){ return dpl.showinfo; }
 int dplinputnum(){ return dpl.inputnum; }
+char dplloop(){ return dpl.cfg.loop; }
 
 /***************************** dpl imgpos *************************************/
 
@@ -74,15 +77,17 @@ struct zoomtab {
 	int move;
 	float size;
 	int inc;
-	enum imgtex tex;
+	enum imgtex texcur;
+	enum imgtex texoth;
 } zoomtab[]={
-	{ .move=5, .size=1.,    .inc=0,  .tex=TEX_BIG   },
-	{ .move=3, .size=1./3., .inc=4,  .tex=TEX_SMALL },
-	{ .move=5, .size=1./5., .inc=12, .tex=TEX_SMALL },
-	{ .move=7, .size=1./7., .inc=24, .tex=TEX_TINY  },
+	{ .move=5, .size=1.,    .inc=0,  .texcur=TEX_BIG,   .texoth=TEX_BIG,   },
+	{ .move=3, .size=1./3., .inc=4,  .texcur=TEX_SMALL, .texoth=TEX_SMALL, },
+	{ .move=5, .size=1./5., .inc=12, .texcur=TEX_SMALL, .texoth=TEX_TINY,  },
+	{ .move=7, .size=1./7., .inc=24, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
 };
 
 char effact(int i){
+	if(dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) return 0;
 	if(i==dpl.pos.imgi) return 1;
 	return dpl.pos.zoom<0 && abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc;
 }
@@ -120,7 +125,9 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 		return 1;
 	}
 	*ip=*ipon;
-	if(dpl.pos.zoom==0){
+	if(dpl.pos.imgi>=nimg || dpl.pos.imgiold>=nimg){
+		ip->a=0.;
+	}else if(dpl.pos.zoom==0){
 		if(sdl.writemode) ip->x += d<0?-1.:1.;
 		else ip->a=0.;
 	}else{
@@ -135,8 +142,8 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 
 enum imgtex imgseltex(int imgi){
 	if(dpl.pos.zoom>0)  return TEX_FULL;
-	if(dpl.pos.imgi==imgi) return zoomtab[-dpl.pos.zoom].tex;
-	return TEX_TINY;
+	if(dpl.pos.imgi==imgi) return zoomtab[-dpl.pos.zoom].texcur;
+	else return zoomtab[-dpl.pos.zoom].texoth;
 }
 
 void effinitimg(int d,int i){
@@ -218,6 +225,7 @@ void dplfitrefresh(){
 
 void dplmove(int d){
 	const static int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
+	dpl.pos.imgiold=dpl.pos.imgi;
 	if(d){
 		switch(abs(d)){
 		case 1:
@@ -239,8 +247,13 @@ void dplmove(int d){
 		break;
 		}
 		if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
-		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
-		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
+		if(dpl.cfg.loop){
+			while(dpl.pos.imgi<0)     dpl.pos.imgi+=nimg;
+			while(dpl.pos.imgi>=nimg) dpl.pos.imgi-=nimg;
+		}else{
+			if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
+			if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
+		}
 		if(dpl.pos.zoom>0)    dpl.run=0;
 		debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	}
@@ -410,6 +423,7 @@ void dplcfginit(){
 	dpl.cfg.efftime=cfggetint("dpl.efftime");
 	dpl.cfg.displayduration=cfggetint("dpl.displayduration");
 	dpl.cfg.shrink=cfggetfloat("dpl.shrink");
+	dpl.cfg.loop=cfggetint("dpl.loop");
 }
 
 void *dplthread(void *arg){

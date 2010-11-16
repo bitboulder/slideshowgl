@@ -25,6 +25,7 @@ char dplineff();
 char dplshowinfo();
 int dplinputnum();
 char *dplhelp();
+char dplloop();
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

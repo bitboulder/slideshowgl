@@ -4,14 +4,11 @@
 - delete [del]
 - status [,25/5/1s]
 - random [-r]
-- loop [-l]
 
 - disable dpms
 - create+read mark file
 - mouse interface
-- parse args + help
 - file urls
-- cfg renew
 - multiple img forward (zoom=0,writemode)
 
 - disable 2^size in sizesel if supported
@@ -20,3 +17,5 @@
 - libftgl for win32
 - text pos in glrendertext
 - glrenderinputnum
+
+? display loop imgs if zoom<0

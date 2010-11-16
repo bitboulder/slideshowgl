@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <SDL.h>
 #include <pthread.h>
@@ -75,22 +74,10 @@ void start_threads(){
 	mainthreads->fnc(NULL);
 }
 
-void usage(char *fn){
-	printf("Usage: %s [-h]\n",fn);
-}
-
-void parse_args(int argc,char **argv){
-	int c;
-	while((c=getopt(argc,argv,"hvf"))>=0) switch(c){
-	case 'h': usage(argv[0]); break;
-	case 'v': dbg++; break;
-	case 'f': cfgsetint("sdl.fullscreen",!cfggetint("sd.fullscreen")); break;
-	}
-	ldgetfiles(argc-optind,argv+optind);
-}
-
 int main(int argc,char **argv){
-	parse_args(argc,argv);
+	cfgparseargs(argc,argv);
+	dbg=cfggetint("main.dbg");
+	ldgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	start_threads();
 	return 0;

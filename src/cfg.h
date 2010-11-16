@@ -4,6 +4,6 @@
 int cfggetint(char *name);
 float cfggetfloat(char *name);
 char *cfggetstr(char *name);
-void cfgsetint(char *name,int i);
+void cfgparseargs(int argc,char **argv);
 
 #endif
