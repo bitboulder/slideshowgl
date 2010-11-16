@@ -1,10 +1,6 @@
 - pano [p,0x8] (5°)
-- displayduration [d]
-- enter imgi [0-9\n]
 - rotate [r,R]
 - gamma, brightness, contrast [g,b,c,+-]
-- exit [q,ESC]
-- help [h]
 - delete [del]
 - status [,25/5/1s]
 - random [-r]
@@ -20,5 +16,7 @@
 
 - disable 2^size in sizesel if supported
 - fix sdlthreadcheck
-- text pos for info
+
 - libftgl for win32
+- text pos in glrendertext
+- glrenderinputnum

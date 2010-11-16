@@ -21,6 +21,8 @@ struct dpl {
 	enum dplrefresh refresh;
 	char ineff;
 	char showinfo;
+	char showhelp;
+	int inputnum;
 	struct {
 		Uint32 efftime;
 		Uint32 displayduration;
@@ -34,6 +36,8 @@ struct dpl {
 	.run = 0,
 	.ineff = 0,
 	.showinfo = 0,
+	.showhelp = 0,
+	.inputnum = 0,
 	.refresh = DPLREF_NO,
 };
 
@@ -44,6 +48,7 @@ int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplineff(){ return dpl.ineff; }
 char dplshowinfo(){ return dpl.showinfo; }
+int dplinputnum(){ return dpl.inputnum; }
 
 /***************************** dpl imgpos *************************************/
 
@@ -247,11 +252,24 @@ void dplmove(int d){
 	effinit(d);
 }
 
+void dplmoveabs(int imgi){
+	if(imgi<0 || imgi>nimg) return;
+	dpl.pos.imgi=imgi;
+	effinit(0);
+}
+
 void dplmark(){
 	struct img *img=imgget(dpl.pos.imgi);
 	if(!img) return;
 	img->pos->mark=!img->pos->mark;
 	effinitimg(0,dpl.pos.imgi);
+}
+
+/***************************** dpl action *************************************/
+
+void dplsetdisplayduration(int dur){
+	if(dur<100) dur*=1000;
+	if(dur>=250 && dur<=30000) dpl.cfg.displayduration=dur;
 }
 
 /***************************** dpl key ****************************************/
@@ -271,14 +289,44 @@ void dplkeyput(SDL_keysym key){
 	if(nwi!=dk.ri) dk.wi=nwi;
 }
 
+char *keyboardlayout=
+	"space\0"       "stop/play\0"
+	"right\0"       "forward (zoom: shift right)\0"
+	"left\0"        "backward (zoom: shift left)\0"
+	"up\0"          "fast forward (zoom: shift up)\0"
+	"down\0"        "fast backward (zoom: shift down)\0"
+	"page-up\0"     "zoom in\0"
+	"page-down\0"   "zoom out\0"
+	"[0-9]+enter\0" "goto image with number\0"
+	"[0-9]+d\0"     "displayduration [s/ms]\0"
+	"f\0"           "switch fullscreen\0"
+	"r/R\0"         "rotate image\0"
+	"w\0"           "switch writing mode\0"
+	"g/b/c\0"       "+/- mode: gamma/brightness/contrase\0"
+	"+/-\0"         "increase/decrease selected\0"
+	"p\0"           "panorama\0"
+	"Del\0"         "move image to del/ and remove from dpl-list (only in writing mode)\0"
+	"m\0"           "toggle mark (only in writing mode)\0"
+	"i\0"           "show image info\0"
+	"h\0"           "show help\0"
+	"q/esc\0"       "quit\0"
+	"\0"
+;
+
+char *dplhelp(){
+	return dpl.showhelp ? keyboardlayout : NULL;
+}
+
 void dplkey(SDL_keysym key){
 	debug(DBG_STA,"dpl key %i",key.sym);
 	switch(key.sym){
+	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl.quit=1; break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        sdl.writemode=!sdl.writemode; dplrefresh(DPLREF_STD); break;
 	case SDLK_m:        if(sdl.writemode) dplmark(); break;
-	case SDLK_i:        dpl.showinfo=!dpl.showinfo; break;
+	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
+	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
 	case SDLK_UP:       dplmove( 2); break;
@@ -288,6 +336,12 @@ void dplkey(SDL_keysym key){
 	case SDLK_SPACE:    dpl.run=dpl.run ? 0 : -100000; break;
 	default: break;
 	}
+	if(key.sym>=SDLK_0 && key.sym<=SDLK_9){
+		dpl.inputnum = dpl.inputnum*10 + (key.sym-SDLK_0);
+	}else dpl.inputnum=0;
+	dpl.showinfo = !dpl.showinfo && key.sym==SDLK_i &&
+		dpl.pos.imgi>=0 && dpl.pos.imgi<nimg;
+	dpl.showhelp = !dpl.showhelp && key.sym==SDLK_h;
 }
 
 void dplcheckkey(){

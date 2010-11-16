@@ -167,18 +167,41 @@ void gltextout(char *text,int size,float x,float y){
 #endif
 }
 
-extern SDL_Surface *screen;
+void glrendertext(char *title,char *text){
+	int i;
+	glmode(GLM_TXT);
+	glPushMatrix();
+	glCallList(gl.dls+DLS_TXT);
+	gltextout("Hello World!",24,0.0,0.0);
+	printf("Title: %s\n",title);
+	for(i=0;text[0];i+=2){
+		printf("%s\t",text);
+		/* TODO */
+		text+=strlen(text)+1;
+		printf("%s\n",text);
+		text+=strlen(text)+1;
+	}
+	glPopMatrix();
+}
+
 void glrenderinfo(){
 	struct img *img;
 	char *info;
 	if(!dplshowinfo()) return;
 	if(!(img=imgget(dplgetimgi()))) return;
 	if(!(info=imgexifinfo(img->exif))) return;
-	glmode(GLM_TXT);
-	glPushMatrix();
-	glCallList(gl.dls+DLS_TXT);
-	gltextout("Hello World!",24,0.0,0.0);
-	glPopMatrix();
+	glrendertext("Image info",info);
+}
+
+void glrenderhelp(){
+	char *help;
+	if((help=dplhelp())) glrendertext("Keyboardlayout:",help);
+}
+
+void glrenderinputnum(){
+	int i=dplinputnum();
+	if(!i) return;
+	/* TODO */
 }
 
 void glpaint(){
@@ -189,6 +212,7 @@ void glpaint(){
 
 	glrenderimgs();
 	glrenderinfo();
+	glrenderhelp();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();
