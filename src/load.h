@@ -4,7 +4,8 @@
 #include <GL/gl.h>
 #include "img.h"
 
-void ldmaxtexsize(GLint maxsize);
+void ldmaxtexsize();
+void ldcheckvartex();
 
 struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);

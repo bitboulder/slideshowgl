@@ -15,16 +15,32 @@
 
 struct load {
 	int  texsize[TEX_NUM];
+	char vartex;
 } load = {
-	.texsize = { 256, 512, 2048, 32768, }
+	.texsize = { 256, 512, 2048, 32768, },
+	.vartex = 0,
 };
 
-void ldmaxtexsize(GLint maxtexsize){
+void ldmaxtexsize(){
+	GLint maxtex;
 	int i;
-	for(i=0;i<TEX_NUM;i++) if(load.texsize[i]>maxtexsize){
-		if(i && load.texsize[i-1]>=maxtexsize) load.texsize[i]=0;
-		else load.texsize[i]=maxtexsize;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex); 
+	for(i=0;i<TEX_NUM;i++) if(load.texsize[i]>maxtex){
+		if(i && load.texsize[i-1]>=maxtex) load.texsize[i]=0;
+		else load.texsize[i]=maxtex;
 	}
+}
+
+#define VT_W	67
+#define VT_H	75
+void ldcheckvartex(){
+	GLuint tex=0;
+	char dat[3*VT_W*VT_H];
+	glGenTextures(1,&tex);
+	glBindTexture(GL_TEXTURE_2D,tex);
+	glTexImage2D(GL_TEXTURE_2D,0,3,VT_W,VT_H,0,GL_RGB,GL_UNSIGNED_BYTE,dat);
+	glDeleteTextures(1,&tex);
+	load.vartex=!glGetError();
 }
 
 /***************************** imgld ******************************************/
@@ -154,6 +170,7 @@ void ldtexload(){
 int sizesel(int sdemand,int simg){
 	int size=64;
 	if(sdemand<simg) return sdemand;
+	if(load.vartex) return simg;
 	while(size<simg*0.95) size<<=1;
 	return size;
 }
@@ -197,7 +214,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		}
 		sdlimg_ref(sdlimg);
 		il->texs[i].thumb=thumb;
-		debug(DBG_DBG,"ld Loading to tex %s",imgtex_str[i]);
+		debug(DBG_DBG,"ld Loading to tex %s (%ix%i)",imgtex_str[i],sdlimg->sf->w,sdlimg->sf->h);
 		ldtexload_put(il->texs+i,sdlimg);
 		ld=1;
 	}

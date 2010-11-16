@@ -25,8 +25,7 @@ struct gl {
 } gl;
 
 void glinit(){
-	GLint t;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&t); ldmaxtexsize(t);
+	ldmaxtexsize();
 	gl.dls=glGenLists(2);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
 	glBegin(GL_QUADS);
@@ -57,6 +56,7 @@ void glinit(){
 #ifndef __WIN32__
 	gl.font = ftglCreatePixmapFont(cfggetstr("gl.font"));
 #endif
+	ldcheckvartex();
 }
 
 void glfree(){
