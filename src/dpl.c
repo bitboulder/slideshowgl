@@ -128,8 +128,12 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 	if(dpl.pos.imgi>=nimg || dpl.pos.imgiold>=nimg){
 		ip->a=0.;
 	}else if(dpl.pos.zoom==0){
-		if(sdl.writemode) ip->x += d<0?-1.:1.;
-		else ip->a=0.;
+		if(sdl.writemode) switch(d){
+			case -2: ip->x -= zoomtab[0].move; break;
+			case -1: ip->x -= 1.; break;
+			case  1: ip->x += 1.; break;
+			case  2: ip->x += zoomtab[0].move; break;
+		}else ip->a=0.;
 	}else{
 		ip->a=0.;
 		switch(abs(d)){
@@ -140,19 +144,38 @@ char effonoff(struct ipos *ip,struct ipos *ipon,int d){
 	return 0;
 }
 
-enum imgtex imgseltex(int imgi){
+char efffaston(struct imgpos *ip,int d,int i){
+	int diff=dpl.pos.imgi-i;
+	if((d!=-2 || diff>=0 || diff<=-zoomtab[0].move) &&
+	   (d!= 2 || diff<=0 || diff>= zoomtab[0].move)) return 0;
+	ip->opt.active=2;
+	ip->cur.a=1.;
+	ip->cur.s=1.;
+	ip->cur.x=((d<0?-1.:1.) * zoomtab[0].move) - (float)diff;
+	ip->cur.y=0.;
+	ip->cur.m=(imgs[i].pos->mark && sdl.writemode)?1.:0.;
+	ip->cur.r=imgexifrotf(imgs[i].exif);
+	ip->eff=0;
+	return 1;
+}
+
+enum imgtex imgseltex(struct imgpos *ip,int i){
 	if(dpl.pos.zoom>0)  return TEX_FULL;
-	if(dpl.pos.imgi==imgi) return zoomtab[-dpl.pos.zoom].texcur;
+	if(dpl.pos.imgi==i) return zoomtab[-dpl.pos.zoom].texcur;
+	else if(ip->opt.active==2) return TEX_SMALL;
 	else return zoomtab[-dpl.pos.zoom].texoth;
 }
 
 void effinitimg(int d,int i){
 	struct imgpos *ip=imgs[i].pos;
 	char act = effact(i);
-	if(!act && !ip->opt.active) return;
+	if(!act && !ip->opt.active){
+		if(dpl.pos.zoom!=0 || abs(d)!=2 || !sdl.writemode) return;
+		if(!efffaston(ip,d,i)) return;
+	}
 	if(!act && ip->eff && !ip->wayact) return;
 	/*printf("%i %3s\n",i,act?"on":"off");*/
-	ip->opt.tex=imgseltex(i);
+	ip->opt.tex=imgseltex(ip,i);
 	ip->opt.back=0;
 	if(act) effmove(ip->way+1,i);
 	else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,-d);

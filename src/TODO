@@ -7,13 +7,13 @@
 # Comfort
 - create+read mark file
 - mouse interface
-- multiple img forward (zoom=0,writemode)
 - check for system data dir
 
 # Fixes
 - disable 2^size in sizesel if supported
 - fix sdlthreadcheck
 - precalc for rotate in glrenderimg
+- optimize SDL_ScaleSurface
 
 # Fonts
 - libftgl for win32
