@@ -15,6 +15,7 @@ extern char *imgtex_str[];
 struct img {
 	struct imgld *ld;
 	struct imgpos *pos;
+	struct imgexif *exif;
 };
 extern struct img *imgs;
 extern struct img defimg;

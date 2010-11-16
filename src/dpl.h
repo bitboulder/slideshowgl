@@ -20,6 +20,7 @@ void dplrefresh();
 int dplgetimgi();
 int dplgetzoom();
 char dplineff();
+char dplshowinfo();
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

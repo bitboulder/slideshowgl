@@ -8,6 +8,7 @@
 #include "help.h"
 #include "img.h"
 #include "dpl.h"
+#include "exif.h"
 
 
 /***************************** load *******************************************/
@@ -163,7 +164,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	if(il->loadfail) return ld;
 	if(il->texs[it].loading) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
-
+	imgexifload(il->img->exif,il->fn,replace);
 	if(it<TEX_BIG && il->tfn[0]){
 		fn=il->tfn;
 		thumb=1;
@@ -376,7 +377,7 @@ void *ldthread(void *arg){
 	ldfload(defimg.ld,TEX_BIG,0);
 	while(!sdl.quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
-		if(SDL_GetTicks()-paint_last>5000) system("killall -9 slideshowgl");
+		sdlthreadcheck();
 	}
 	ldconceptfree();
 	sdl.quit|=THR_LD;

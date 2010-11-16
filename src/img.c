@@ -2,6 +2,7 @@
 #include "img.h"
 #include "load.h"
 #include "dpl.h"
+#include "exif.h"
 
 char *imgtex_str[]={
 	"TINY", "SMALL","BIG","FULL",
@@ -20,11 +21,13 @@ struct img *imgget(int i){
 void imginit(struct img *img){
 	img->ld=imgldinit(img);
 	img->pos=imgposinit();
+	img->exif=imgexifinit();
 }
 
 void imgfree(struct img *img){
 	imgldfree(img->ld);
 	imgposfree(img->pos);
+	imgexiffree(img->exif);
 }
 
 struct img *imgadd(){

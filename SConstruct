@@ -68,6 +68,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('sdl >= 1.2',1)
 		conf.CheckPKG('SDL_image >= 1.2',1)
 		conf.CheckPKG('libexif >= 0.6',1)
+		conf.CheckPKG('ftgl >= 2.1',1)
 
 	conf.Define('APPNAME', env.subst('"slideshowgl"'))
 	conf.Define('VERSION', env.subst('"2.0.0"'))

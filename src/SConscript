@@ -10,6 +10,7 @@ sources = """
 	help.c
 	img.c
 	cfg.c
+	exif.c
 """.split()
 
 objects = env.Object(sources)

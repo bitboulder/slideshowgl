@@ -23,6 +23,7 @@ extern struct sdl sdl;
 void sdlfullscreen();
 
 void sdlinit();
+void sdlthreadcheck();
 void *sdlthread(void *arg);
 
 #endif

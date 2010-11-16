@@ -4,7 +4,6 @@
 - rotate [r,R]
 - gamma, brightness, contrast [g,b,c,+-]
 - exit [q,ESC]
-- info [i]
 - help [h]
 - delete [del]
 - status [,25/5/1s]
@@ -21,3 +20,6 @@
 - multiple img forward (zoom=0,writemode)
 
 - disable 2^size in sizesel if supported
+- fix sdlthreadcheck
+- text pos for info
+- libftgl for win32

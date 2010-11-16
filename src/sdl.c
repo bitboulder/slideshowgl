@@ -115,6 +115,11 @@ void sdldelay(Uint32 *last,Uint32 delay){
 }
 
 	Uint32 paint_last=0;
+	void sdlthreadcheck(){
+		if(SDL_GetTicks()-paint_last>3000)
+			system("killall -9 slideshowgl");
+	}
+
 void *sdlthread(void *arg){
 	int i;
 	while(!sdl.quit){
@@ -135,6 +140,7 @@ void *sdlthread(void *arg){
 	}else{
 		ldtexload();
 		imgfinalize();
+		glfree();
 		SDL_Quit();
 	}
 	return NULL;

@@ -19,6 +19,7 @@ struct dpl {
 	Uint32 run;
 	char refresh;
 	char ineff;
+	char showinfo;
 	struct {
 		Uint32 efftime;
 		Uint32 displayduration;
@@ -31,6 +32,7 @@ struct dpl {
 	.pos.y = 0.,
 	.run = 0,
 	.ineff = 0,
+	.showinfo = 0,
 };
 
 /***************************** dpl interface **********************************/
@@ -39,6 +41,7 @@ void dplrefresh(){ dpl.refresh=1; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplineff(){ return dpl.ineff; }
+char dplshowinfo(){ return dpl.showinfo; }
 
 /***************************** dpl imgpos *************************************/
 
@@ -258,6 +261,7 @@ void dplkey(SDL_keysym key){
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        sdl.writemode=!sdl.writemode; dplmove(0); break;
 	case SDLK_m:        if(sdl.writemode) dplmark();   break;
+	case SDLK_i:        dpl.showinfo=!dpl.showinfo; break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
 	case SDLK_UP:       dplmove( 2); break;
@@ -347,6 +351,7 @@ void *dplthread(void *arg){
 		if(dpl.run) dplrun();
 		effdo();
 
+		sdlthreadcheck();
 		sdldelay(&last,16);
 	}
 	sdl.quit|=THR_DPL;

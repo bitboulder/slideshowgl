@@ -9,6 +9,7 @@ char *cfg[]={
 	"dpl.efftime",         "1000",
 	"dpl.displayduration", "6000",
 	"dpl.shrink",          "0.75",
+	"gl.font",             "/var/lib/defoma/x-ttcidfont-conf.d/dirs/TrueType/Verdana.ttf",
 	NULL,
 };
 
@@ -28,6 +29,11 @@ float cfggetfloat(char *name){
 	char **val=cfgfind(name);
 	if(val) return atof(*val);
 	return 0.;
+}
+
+char *cfggetstr(char *name){
+	char **val=cfgfind(name);
+	return val ? *val : NULL;
 }
 
 void cfgsetint(char *name, int i){

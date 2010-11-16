@@ -1,47 +1,79 @@
 #include <GL/gl.h>
 #include <SDL.h>
+#include <SDL_image.h>
+#ifndef __WIN32__
+	#include <ftgl.h>
+#endif
 #include "gl.h"
 #include "main.h"
 #include "sdl.h"
 #include "dpl.h"
 #include "img.h"
 #include "load.h"
+#include "cfg.h"
+#include "exif.h"
 
-enum dls { DLS_IMG };
+enum dls { DLS_IMG, DLS_TXT };
 
 struct gl {
 	GLuint dls;
+#ifndef __WIN32__
+	FTGLfont *font;
+#endif
 } gl;
 
 void glinit(){
 	GLint t;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&t); ldmaxtexsize(t);
-	gl.dls=glGenLists(1);
+	gl.dls=glGenLists(2);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
 	glBegin(GL_QUADS);
-	glTexCoord2f( 0.0, 0.0);
-	glVertex2f(  -0.5,-0.5);
-	glTexCoord2f( 1.0, 0.0);
-	glVertex2f(   0.5,-0.5);
-	glTexCoord2f( 1.0, 1.0);
-	glVertex2f(   0.5, 0.5);
-	glTexCoord2f( 0.0, 1.0);
-	glVertex2f(  -0.5, 0.5);
+	glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
+	glTexCoord2f( 1.0, 0.0); glVertex2f( 0.5,-0.5);
+	glTexCoord2f( 1.0, 1.0); glVertex2f( 0.5, 0.5);
+	glTexCoord2f( 0.0, 1.0); glVertex2f(-0.5, 0.5);
 	glEnd();
+	glEndList();
+	glNewList(gl.dls+DLS_TXT,GL_COMPILE);
+	glColor4f(0.8,0.8,0.8,0.7);
+	glTranslatef(0.05,0.05,0.0);
+	glScalef(0.9,0.9,1.0);
+	glBegin(GL_QUADS);
+	glVertex2f( 0.0, 0.0);
+	glVertex2f( 1.0, 0.0);
+	glVertex2f( 1.0, 1.0);
+	glVertex2f( 0.0, 1.0);
+	glEnd();
+	glColor4f(0.0,0.0,0.0,1.0);
+	glTranslatef(0.05,0.05,0.0);
+	glScalef(0.9,0.9,1.0);
 	glEndList();
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+#ifndef __WIN32__
+	gl.font = ftglCreatePixmapFont(cfggetstr("gl.font"));
+#endif
+}
+
+void glfree(){
+#ifndef __WIN32__
+	ftglDestroyFont(gl.font);
+#endif
 }
 
 enum glmode { GLM_3D, GLM_2D, GLM_TXT };
 void glmode(enum glmode dst){
+	static enum glmode cur=-1;
+	if(cur==dst) return;
+	cur=dst;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:  glFrustum(-1.0, 1.0, -sdl.scr_h, sdl.scr_h, 5.0, 60.0); break;
-	case GLM_2D:
-	case GLM_TXT: glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
+	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
+	case GLM_TXT: glOrtho( 0.0,1.0,1.0, 0.0,-1.,1.); break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -49,10 +81,8 @@ void glmode(enum glmode dst){
 		glTranslatef(0.0, 0.0, -40.0);
 	if(dst==GLM_TXT){
 		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
 	}else{
 		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_BLEND);
 	}
 }
 
@@ -121,6 +151,30 @@ void glrenderimgs(){
 	for(i=0;i<nimg;i++) glrenderimg(imgs+i,0);
 }
 
+void gltextout(char *text,int size,float x,float y){
+#ifndef __WIN32__
+	ftglSetFontFaceSize(gl.font, size, size);
+	glPushMatrix();
+	glTranslatef(x,y,0.0);
+	ftglRenderFont(gl.font, text, FTGL_RENDER_ALL);
+	glPopMatrix();
+#endif
+}
+
+extern SDL_Surface *screen;
+void glrenderinfo(){
+	struct img *img;
+	char *info;
+	if(!dplshowinfo()) return;
+	if(!(img=imgget(dplgetimgi()))) return;
+	if(!(info=imgexifinfo(img->exif))) return;
+	glmode(GLM_TXT);
+	glPushMatrix();
+	glCallList(gl.dls+DLS_TXT);
+	gltextout("Hello World!",24,0.0,0.0);
+	glPopMatrix();
+}
+
 void glpaint(){
 	GLenum glerr;
 
@@ -128,6 +182,7 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glrenderimgs();
+	glrenderinfo();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();
