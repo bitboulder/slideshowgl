@@ -211,7 +211,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
 	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
-	imgfit(il->img);
+	effrefresh(EFFREF_FIT);
 
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;

@@ -133,6 +133,8 @@ void glrenderimg(struct img *img,char back){
 	struct img *isc;
 	struct ipos *ipos;
 	struct iopt *iopt;
+	float irat=imgldrat(img->ld);
+	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
 	iopt=imgposopt(img->pos);
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
@@ -143,12 +145,7 @@ void glrenderimg(struct img *img,char back){
 	glScalef(ipos->s,ipos->s,1.);
 	iopt=imgposopt(isc->pos);
 	glColor4f(1.,1.,1.,ipos->a);
-	if(ipos->r){
-		// calculate fit without rotation
-		float irat=imgldrat(img->ld);
-		float srat=(float)sdl.scr_h/(float)sdl.scr_w;
-		float fitw = srat<irat ? srat/irat : 1.;
-		float fith = srat>irat ? irat/srat : 1.;
+	{
 		// get rotation near to 90°/270°
 		float rot90 = ipos->r;
 		while(rot90>= 90.) rot90-=180.;
@@ -156,16 +153,14 @@ void glrenderimg(struct img *img,char back){
 		if(rot90<0.) rot90*=-1.;
 		rot90/=90.;
 		// rotate in real ratio
-		glScalef(1./(float)sdl.scr_w,1./(float)sdl.scr_h,1.);
+		if(srat<irat) glScalef(srat,1.,1.);
+		else          glScalef(1.,1./srat,1.);
 		glRotatef(ipos->r,0.,0.,1.);
-		glScalef((float)sdl.scr_w,(float)sdl.scr_h,1.);
-		// use fit without rotation
-		glScalef(fitw,fith,1.);
+		if(srat<irat) glScalef(1./irat,1.,1.);
+		else          glScalef(1.,irat,1.);
 		// correct size
 		irat=powf(irat,rot90);
 		glScalef(irat,irat,1.);
-	}else{
-		glScalef(iopt->fitw,iopt->fith,1.);
 	}
 	glCallList(gl.dls+DLS_IMG);
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));

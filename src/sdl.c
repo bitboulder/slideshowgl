@@ -85,7 +85,7 @@ void sdlresize(int w,int h){
 	sdl.scr_h=vi->current_h;
 	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
 	glreshape();
-	dplrefresh(DPLREF_FIT);
+	effrefresh(EFFREF_FIT);
 }
 
 void sdlinit(){

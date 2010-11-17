@@ -12,13 +12,12 @@ struct ipos {
 struct iopt {
 	char active;
 	enum imgtex tex;
-	float fitw,fith;
 	char back;
 };
 
-enum dplrefresh { DPLREF_NO, DPLREF_STD, DPLREF_FIT };
+enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
 
-void dplrefresh(enum dplrefresh val);
+void effrefresh(enum effrefresh val);
 int dplgetimgi();
 int dplgetzoom();
 char dplineff();
@@ -31,8 +30,6 @@ struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
 struct ipos *imgposcur(struct imgpos *ip);
-
-char imgfit(struct img *img);
 
 void dplkeyput(SDL_keysym key);
 void *dplthread(void *arg);
