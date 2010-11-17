@@ -10,6 +10,7 @@ char *imgtex_str[]={
 
 struct img **imgs = NULL;
 struct img *defimg;
+struct img *delimg;
 int nimg = 0;
 int simg = 0;
 
@@ -60,4 +61,14 @@ void imgrandom(){
 	}
 	free(oimgs);
 	for(i=1;i<nimg;i++) imgs[i-1]->nxt=imgs[i];
+}
+
+struct img *imgdel(int i){
+	struct img *img;
+	if(i<0 || i>=nimg) return NULL;
+	img=imgs[i];
+	if(i>0) imgs[i-1]->nxt=imgs[i]->nxt;
+	nimg--;
+	for(;i<nimg;i++) imgs[i]=imgs[i+1];
+	return img;
 }

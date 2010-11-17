@@ -20,12 +20,15 @@ struct img {
 };
 extern struct img **imgs;
 extern struct img *defimg;
+extern struct img *delimg;
 extern int nimg;
 
 struct img *imgget(int i);
 struct img *imginit();
+void imgfree(struct img *img);
 struct img *imgadd();
 void imgfinalize();
 void imgrandom();
+struct img *imgdel(int i);
 
 #endif

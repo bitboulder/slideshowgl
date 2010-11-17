@@ -72,7 +72,10 @@ struct imgld *imgldinit(struct img *img){
 /* thread: img */
 void imgldfree(struct imgld *il){
 	int i;
-	for(i=0;i<TEX_NUM;i++) if(il->texs[i].tex) glDeleteTextures(1,&il->texs[i].tex);
+	for(i=0;i<TEX_NUM;i++) if(il->texs[i].tex){
+		if(sdl.quit) glDeleteTextures(1,&il->texs[i].tex);
+		/* else TODO: free texture in glthread (ldtexload ?) */
+	}
 	free(il);
 }
 

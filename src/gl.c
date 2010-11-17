@@ -171,6 +171,7 @@ void glrenderimg(struct img *img,char back){
 void glrenderimgs(){
 	struct img *img;
 	glmode(GLM_2D);
+	if(delimg) glrenderimg(delimg,0);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
 }

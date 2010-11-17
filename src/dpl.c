@@ -295,6 +295,29 @@ void dplrotate(int r){
 	effinit(EFFREF_IMG|EFFREF_FIT,0);
 }
 
+void effdel(struct imgpos *ip){
+	ip->way[1]=ip->way[0]=ip->cur;
+	ip->way[1].s=0.;
+	effwaytime(ip,dpl.cfg.efftime);
+	ip->wayact=0;
+	ip->opt.active=1;
+	ip->eff=1;
+}
+
+void dpldel(){
+	struct img *img=imgdel(dpl.pos.imgi);
+	if(!img) return;
+	if(delimg){
+		struct img *tmp=delimg;
+		delimg=NULL;
+		imgfree(tmp);
+	}
+	if(!img->pos->opt.active) return;
+	effdel(img->pos);
+	delimg=img;
+	effinit(EFFREF_ALL|EFFREF_FIT,-1);
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -359,6 +382,7 @@ void dplkey(SDL_keysym key){
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_r:        dplrotate((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?-1:1); break;
 	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
+	case SDLK_DELETE:   dpldel(); break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
 	case SDLK_UP:       dplmove( 2); break;
@@ -438,6 +462,14 @@ void effdo(){
 	for(img=*imgs;img;img=img->nxt) if(img->pos->eff){
 		effimg(img->pos);
 		ineff=1;
+	}
+	if(delimg){
+		if(delimg->pos->eff) effimg(delimg->pos);
+		if(!delimg->pos->eff){
+			struct img *tmp=delimg;
+			delimg=NULL;
+			imgfree(tmp);
+		}
 	}
 	dpl.ineff=ineff;
 }
