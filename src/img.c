@@ -13,6 +13,7 @@ struct img defimg;
 int nimg = 0;
 int simg = 0;
 
+/* thread: all */
 struct img *imgget(int i){
 	if(i<0 || i>=nimg) return NULL;
 	return imgs+i;

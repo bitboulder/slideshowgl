@@ -29,18 +29,33 @@ struct imgexif {
 	char *info;
 };
 
+/* thread: all */
 enum rot imgexifrot(struct imgexif *exif){ return exif->rot; }
 char *imgexifinfo(struct imgexif *exif){ return exif->info; }
 
+/* thread: gl, dpl */
+float imgexifrotf(struct imgexif *exif){
+	switch(exif->rot){
+	case ROT_0:   return 0.;
+	case ROT_90:  return 90.;
+	case ROT_180: return 180.;
+	case ROT_270: return 270.;
+	}
+	return 0.;
+}
+
+/* thread: img */
 struct imgexif *imgexifinit(){
 	return calloc(1,sizeof(struct imgexif));
 }
 
+/* thread: img */
 void imgexiffree(struct imgexif *exif){
 	if(exif->info) free(exif->info);
 	free(exif);
 }
 
+/* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
 	char buf[255];
@@ -53,6 +68,7 @@ enum rot imgexifgetrot(ExifData *exdat){
 	return ROT_0;
 }
 
+/* thread: load */
 #define IILEN	256
 #define IIINC	1024
 char *imgexifgetinfo(ExifData *exdat){
@@ -78,6 +94,7 @@ char *imgexifgetinfo(ExifData *exdat){
 	return imginfo;
 }
 
+/* thread: load */
 void imgexifload(struct imgexif *exif,char *fn,char replace){
 	ExifData *exdat;
 	if(exif->load && !replace) return;
@@ -89,16 +106,7 @@ void imgexifload(struct imgexif *exif,char *fn,char replace){
 	exif_data_free(exdat);
 }
 
-float imgexifrotf(struct imgexif *exif){
-	switch(exif->rot){
-	case ROT_0:   return 0.;
-	case ROT_90:  return 90.;
-	case ROT_180: return 180.;
-	case ROT_270: return 270.;
-	}
-	return 0.;
-}
-
+/* thread: dpl */
 void exifrotate(struct imgexif *exif,int r){
 	exif->rot = (exif->rot+r+4)%4;
 }

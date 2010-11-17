@@ -41,6 +41,7 @@ void switchdpms(char val){
 #endif
 }
 
+/* thread: dpl */
 void sdlfullscreen(){
 	if(sdl.fullscreen){
 		sdl.scr_w=sdl.scrnof_w;
@@ -127,6 +128,7 @@ char sdlgetevent(){
 	return 1;
 }
 
+/* thread: sdl, dpl */
 void sdldelay(Uint32 *last,Uint32 delay){
 	int diff=SDL_GetTicks()-*last;
 	if(diff<delay) SDL_Delay(delay-diff);
@@ -134,6 +136,8 @@ void sdldelay(Uint32 *last,Uint32 delay){
 }
 
 	Uint32 paint_last=0;
+	/* thread: dpl, load */
+	/* TODO: remove */
 	void sdlthreadcheck(){
 		if(SDL_GetTicks()-paint_last>3000)
 			system("killall -9 slideshowgl");
@@ -148,7 +152,7 @@ void *sdlthread(void *arg){
 		sdlhidecursor();
 		
 		if(!dplineff()) ldtexload();
-		//while(SDL_GetTicks()-paint_last < 12) ldtexload();
+		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 

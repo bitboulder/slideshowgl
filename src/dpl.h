@@ -35,7 +35,6 @@ struct ipos *imgposcur(struct imgpos *ip);
 char imgfit(struct img *img);
 
 void dplkeyput(SDL_keysym key);
-void sdldelay(Uint32 *last,Uint32 delay);
 void *dplthread(void *arg);
 
 #endif

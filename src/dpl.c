@@ -45,6 +45,7 @@ struct dpl {
 
 /***************************** dpl interface **********************************/
 
+/* thread: all */
 void dplrefresh(enum dplrefresh val){ dpl.refresh=val; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
@@ -65,9 +66,11 @@ struct imgpos {
 	char   wayact;
 };
 
+/* thread: img */
 struct imgpos *imgposinit(){ return calloc(1,sizeof(struct imgpos)); }
 void imgposfree(struct imgpos *ip){ free(ip); }
 
+/* thread: gl */
 struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
 struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
 
@@ -218,6 +221,7 @@ void effinit(int d){
 	for(i=0;i<nimg;i++) effinitimg(d,i);
 }
 
+/* thread: dpl, load */
 char imgfit(struct img *img){
 	float irat=imgldrat(img->ld);
 	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
@@ -327,6 +331,7 @@ struct dplkeys {
 	.ri = 0,
 };
 
+/* thread: sdl */
 void dplkeyput(SDL_keysym key){
 	int nwi=(dk.wi+1)%DPLKEYS_NUM;
 	dk.keys[dk.wi]=key;

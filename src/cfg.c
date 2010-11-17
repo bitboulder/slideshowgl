@@ -30,6 +30,7 @@ struct cfg {
 	{ 0,   NULL,                  0,      0,       NULL },
 };
 
+/* thread: all */
 struct cfg *cfgfind(char *name){
 	int i;
 	for(i=0;cfg[i].name;i++) if(!strcmp(name,cfg[i].name)) return cfg+i;
@@ -37,6 +38,7 @@ struct cfg *cfgfind(char *name){
 	return NULL;
 }
 
+/* thread: all */
 int cfggetint(char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_INT) return atoi(cfg->val);
@@ -44,6 +46,7 @@ int cfggetint(char *name){
 	return 0;
 }
 
+/* thread: all */
 float cfggetfloat(char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_FLT) return atof(cfg->val);
@@ -51,6 +54,7 @@ float cfggetfloat(char *name){
 	return 0.;
 }
 
+/* thread: all */
 char *cfggetstr(char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_STR) return cfg->val;

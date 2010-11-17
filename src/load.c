@@ -21,6 +21,7 @@ struct load {
 	.vartex = 0,
 };
 
+/* thread: gl */
 void ldmaxtexsize(){
 	GLint maxtex;
 	int i;
@@ -31,6 +32,7 @@ void ldmaxtexsize(){
 	}
 }
 
+/* thread: gl */
 #define VT_W	67
 #define VT_H	75
 void ldcheckvartex(){
@@ -60,20 +62,24 @@ struct imgld {
 	struct img *img;
 };
 
+/* thread: img */
 struct imgld *imgldinit(struct img *img){
 	struct imgld *il=calloc(1,sizeof(struct imgld));
 	il->img=img;
 	return il;
 }
 
+/* thread: img */
 void imgldfree(struct imgld *il){
 	int i;
 	for(i=0;i<TEX_NUM;i++) if(il->texs[i].tex) glDeleteTextures(1,&il->texs[i].tex);
 	free(il);
 }
 
+/* thread: img */
 void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 
+/* thread: gl */
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
 	for(i=it;i>=0;i--) if(il->texs[i].tex) return il->texs[i].tex;
@@ -81,10 +87,12 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 	return 0;
 }
 
+/* thread: dpl, load, gl */
 float imgldrat(struct imgld *il){
 	return (!il->h || !il->w) ? 0. : (float)il->h/(float)il->w;
 }
 
+/* thread: dpl, load */
 char *imgldfn(struct imgld *il){ return il->fn; }
 
 /***************************** sdlimg *****************************************/
@@ -141,12 +149,14 @@ void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
 	tlb.wi=nwi;
 }
 
-void ldtexload(){
+/* thread: sdl */
+char ldtexload(){
 	GLenum glerr;
 	struct texload *tl;
-	if(tlb.wi==tlb.ri) return;
+	if(tlb.wi==tlb.ri) return 0;
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
+		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
 		if(!tl->itex->tex) glGenTextures(1,&tl->itex->tex);
 		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
@@ -163,6 +173,7 @@ void ldtexload(){
 	}
 	tl->itex->loading=0;
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
+	return 1;
 }
 
 /***************************** load + free img ********************************/

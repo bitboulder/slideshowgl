@@ -3,6 +3,7 @@
 - gamma, brightness, contrast [g,b,c,+-]
 - delete [del]
 - status [,25/5/1s]
+- write actions
 
 # Comfort
 - create+read mark file

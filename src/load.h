@@ -14,7 +14,7 @@ GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
 
-void ldtexload();
+char ldtexload();
 
 void *ldthread(void *arg);
 
