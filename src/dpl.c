@@ -307,6 +307,7 @@ void effdel(struct imgpos *ip){
 void dpldel(){
 	struct img *img=imgdel(dpl.pos.imgi);
 	if(!img) return;
+	if(dpl.pos.zoom>0) dpl.pos.zoom=0;
 	if(delimg){
 		struct img *tmp=delimg;
 		delimg=NULL;

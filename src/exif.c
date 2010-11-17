@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_exif
 #include <exif-data.h>
+#endif
 #include "exif.h"
 
+#ifdef HAVE_exif
 struct exifinfo {
 	char *name;
 	ExifTag tag[5];
@@ -22,6 +25,7 @@ struct exifinfo {
 	{"Weißabgleich", {EXIF_TAG_WHITE_BALANCE,0}},
 	{NULL, {0}},
 };
+#endif
 
 struct imgexif {
 	char load;
@@ -55,6 +59,7 @@ void imgexiffree(struct imgexif *exif){
 	free(exif);
 }
 
+#ifdef HAVE_exif
 /* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
@@ -67,7 +72,9 @@ enum rot imgexifgetrot(ExifData *exdat){
 	if(!strncmp("right - top",   buf,11)) return ROT_90;
 	return ROT_0;
 }
+#endif
 
+#ifdef HAVE_exif
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
@@ -93,9 +100,11 @@ char *imgexifgetinfo(ExifData *exdat){
 	if(imginfo) imginfo[iipos]='\0';
 	return imginfo;
 }
+#endif
 
 /* thread: load */
 void imgexifload(struct imgexif *exif,char *fn,char replace){
+#ifdef HAVE_exif
 	ExifData *exdat;
 	if(exif->load && !replace) return;
 	if(exif->info) free(exif->info);
@@ -104,6 +113,7 @@ void imgexifload(struct imgexif *exif,char *fn,char replace){
 	exif->rot=imgexifgetrot(exdat);
 	exif->info=imgexifgetinfo(exdat);
 	exif_data_free(exdat);
+#endif
 }
 
 /* thread: dpl */
