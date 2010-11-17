@@ -101,8 +101,8 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 
 void effmove(struct ipos *ip,int i){
 	ip->a=1.;
-	ip->m=(imgs[i].pos->mark && sdl.writemode)?1.:0.;
-	ip->r=imgexifrotf(imgs[i].exif);
+	ip->m=(imgs[i]->pos->mark && sdl.writemode)?1.:0.;
+	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dpl.pos.zoom<0){
 		ip->s=zoomtab[-dpl.pos.zoom].size;
 		ip->x=(i-dpl.pos.imgi)*ip->s;
@@ -156,8 +156,8 @@ char efffaston(struct imgpos *ip,int d,int i){
 	ip->cur.s=1.;
 	ip->cur.x=((d<0?-1.:1.) * zoomtab[0].move) - (float)diff;
 	ip->cur.y=0.;
-	ip->cur.m=(imgs[i].pos->mark && sdl.writemode)?1.:0.;
-	ip->cur.r=imgexifrotf(imgs[i].exif);
+	ip->cur.m=(imgs[i]->pos->mark && sdl.writemode)?1.:0.;
+	ip->cur.r=imgexifrotf(imgs[i]->exif);
 	ip->eff=0;
 	return 1;
 }
@@ -170,8 +170,11 @@ enum imgtex imgseltex(struct imgpos *ip,int i){
 }
 
 void effinitimg(int d,int i){
-	struct imgpos *ip=imgs[i].pos;
-	char act = effact(i);
+	struct imgpos *ip;
+	char act;
+	if(i<0 || i>=nimg) return;
+	ip=imgs[i]->pos;
+	act=effact(i);
 	if(!act && !ip->opt.active){
 		if(dpl.pos.zoom!=0 || abs(d)!=2 || !sdl.writemode) return;
 		if(!efffaston(ip,d,i)) return;
@@ -206,9 +209,9 @@ char effmaxfit(){
 	int i;
 	float maxfitw=0.,maxfith=0.;
 	for(i=0;i<nimg;i++) if(effact(i)){
-		float irat=imgldrat(imgs[i].ld);
+		float irat=imgldrat(imgs[i]->ld);
 		float srat=(float)sdl.scr_h/(float)sdl.scr_w;
-		enum rot rot=imgexifrot(imgs[i].exif);
+		enum rot rot=imgexifrot(imgs[i]->exif);
 		float fitw,fith;
 		if(!irat) continue;
 		if(rot==ROT_90 || rot==ROT_270) irat=1./irat;
@@ -430,10 +433,10 @@ void effimg(struct imgpos *ip){
 }
 
 void effdo(){
-	int i;
+	struct img *img;
 	char ineff=0;
-	for(i=0;i<nimg;i++) if(imgs[i].pos->eff){
-		effimg(imgs[i].pos);
+	for(img=*imgs;img;img=img->nxt) if(img->pos->eff){
+		effimg(img->pos);
 		ineff=1;
 	}
 	dpl.ineff=ineff;

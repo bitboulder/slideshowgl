@@ -112,9 +112,9 @@ struct img *glseltex(struct img *img,enum imgtex it){
 		glBindTexture(GL_TEXTURE_2D, tex);
 		return img;
 	}
-	if((tex=imgldtex(defimg.ld,it))){
+	if((tex=imgldtex(defimg->ld,it))){
 		glBindTexture(GL_TEXTURE_2D, tex);
-		return &defimg;
+		return defimg;
 	}
 	return NULL;
 }
@@ -159,6 +159,7 @@ void glrenderimg(struct img *img,char back){
 		if(srat<irat) glScalef(1./irat,1.,1.);
 		else          glScalef(1.,irat,1.);
 		// correct size
+		if(irat<srat) irat=1./irat; /* TODO: fix */
 		irat=powf(irat,rot90);
 		glScalef(irat,irat,1.);
 	}
@@ -168,10 +169,10 @@ void glrenderimg(struct img *img,char back){
 }
 
 void glrenderimgs(){
-	int i;
+	struct img *img;
 	glmode(GLM_2D);
-	for(i=0;i<nimg;i++) glrenderimg(imgs+i,1);
-	for(i=0;i<nimg;i++) glrenderimg(imgs+i,0);
+	for(img=*imgs;img;img=img->nxt) glrenderimg(img,1);
+	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
 }
 
 void gltextout(char *text,int size,float x,float y){

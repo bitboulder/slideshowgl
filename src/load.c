@@ -395,7 +395,7 @@ char ldcheck(){
 		}
 		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 			hold=ldcp->hold[diff-ldcp->hold_min];
-		if(ldffree(imgs[i].ld,hold)){ ret=1; break; }
+		if(ldffree(imgs[i]->ld,hold)){ ret=1; break; }
 	}
 
 	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
@@ -418,7 +418,7 @@ extern Uint32 paint_last;
 
 void *ldthread(void *arg){
 	ldconceptcompile();
-	ldfload(defimg.ld,TEX_BIG,0);
+	ldfload(defimg->ld,TEX_BIG,0);
 	while(!sdl.quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
 		sdlthreadcheck();
@@ -463,8 +463,8 @@ void ldaddflst(char *flst){
 }
 
 void ldgetfiles(int argc,char **argv){
-	imginit(&defimg);
-	strncpy(defimg.ld->fn,"data/defimg.png",1024);
+	defimg=imginit();
+	strncpy(defimg->ld->fn,"data/defimg.png",1024);
 	for(;argc;argc--,argv++){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
 		else ldaddfile(argv[0]);

@@ -13,16 +13,17 @@ enum imgtex {
 extern char *imgtex_str[];
 
 struct img {
+	struct img *nxt;
 	struct imgld *ld;
 	struct imgpos *pos;
 	struct imgexif *exif;
 };
-extern struct img *imgs;
-extern struct img defimg;
+extern struct img **imgs;
+extern struct img *defimg;
 extern int nimg;
 
 struct img *imgget(int i);
-void imginit(struct img *img);
+struct img *imginit();
 struct img *imgadd();
 void imgfinalize();
 void imgrandom();
