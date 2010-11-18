@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#ifndef __WIN32__
+#ifdef HAVE_FTGL
 	#include <ftgl.h>
 #endif
 #include "gl.h"
@@ -15,18 +15,27 @@
 #include "cfg.h"
 #include "exif.h"
 
-enum dls { DLS_IMG, DLS_TXT };
+enum dls { DLS_IMG, DLS_NUM };
 
 struct gl {
 	GLuint dls;
-#ifndef __WIN32__
+#ifdef HAVE_FTGL
 	FTGLfont *font;
 #endif
-} gl;
+	struct glcfg {
+		float inputnum_lineh;
+		float txt_bgcolor[4];
+		float txt_fgcolor[4];
+	} cfg;
+} gl = {
+	.cfg.inputnum_lineh = 0.05f,
+	.cfg.txt_bgcolor = { 0.8f, 0.8f, 0.8f, 0.7f },
+	.cfg.txt_fgcolor = { 0.0f, 0.0f, 0.0f, 1.0f },
+};
 
 void glinit(){
 	ldmaxtexsize();
-	gl.dls=glGenLists(2);
+	gl.dls=glGenLists(DLS_NUM);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
 	glBegin(GL_QUADS);
 	glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
@@ -35,47 +44,35 @@ void glinit(){
 	glTexCoord2f( 0.0, 1.0); glVertex2f(-0.5, 0.5);
 	glEnd();
 	glEndList();
-	glNewList(gl.dls+DLS_TXT,GL_COMPILE);
-	glColor4f(0.8,0.8,0.8,0.7);
-	glTranslatef(0.05,0.05,0.0);
-	glScalef(0.9,0.9,1.0);
-	glBegin(GL_QUADS);
-	glVertex2f( 0.0, 0.0);
-	glVertex2f( 1.0, 0.0);
-	glVertex2f( 1.0, 1.0);
-	glVertex2f( 0.0, 1.0);
-	glEnd();
-	glColor4f(0.0,0.0,0.0,1.0);
-	glTranslatef(0.05,0.05,0.0);
-	glScalef(0.9,0.9,1.0);
-	glEndList();
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-#ifndef __WIN32__
-	gl.font = ftglCreatePixmapFont(cfggetstr("gl.font"));
+#ifdef HAVE_FTGL
+	gl.font = ftglCreateBufferFont(cfggetstr("gl.font"));
+	if(gl.font) ftglSetFontFaceSize(gl.font, 24, 24);
 #endif
 	ldcheckvartex();
 }
 
 void glfree(){
-#ifndef __WIN32__
+#ifdef HAVE_FTGL
 	if(gl.font) ftglDestroyFont(gl.font);
 #endif
 }
 
 enum glmode { GLM_3D, GLM_2D, GLM_TXT };
-void glmode(enum glmode dst){
+float glmode(enum glmode dst){
 	static enum glmode cur=-1;
-	if(cur==dst) return;
+	float w = dst==GLM_TXT ? (float)sdl.scr_w/(float)sdl.scr_h : 1.f;
+	if(cur==dst) return w;
 	cur=dst;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:  glFrustum(-1.0, 1.0, -sdl.scr_h, sdl.scr_h, 5.0, 60.0); break;
 	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
-	case GLM_TXT: glOrtho( 0.0,1.0,1.0, 0.0,-1.,1.); break;
+	case GLM_TXT: glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.); break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -83,9 +80,11 @@ void glmode(enum glmode dst){
 		glTranslatef(0.0, 0.0, -40.0);
 	if(dst==GLM_TXT){
 		glDisable(GL_TEXTURE_2D);
+		glScalef(1.f/w,1.f,1.f);
 	}else{
 		glEnable(GL_TEXTURE_2D);
 	}
+	return w;
 }
 
 void glreshape(){
@@ -176,32 +175,54 @@ void glrenderimgs(){
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
 }
 
-void gltextout(char *text,int size,float x,float y){
-#ifndef __WIN32__
-	if(!gl.font) return;
-	ftglSetFontFaceSize(gl.font, size, size);
+#ifdef HAVE_FTGL
+void gltextout(char *text,float x,float y){
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
 	ftglRenderFont(gl.font, text, FTGL_RENDER_ALL);
 	glPopMatrix();
-#endif
 }
+#endif
 
 void glrendertext(char *title,char *text){
-	int i;
-	glmode(GLM_TXT);
-	glPushMatrix();
-	glCallList(gl.dls+DLS_TXT);
-	gltextout("Hello World!",24,0.0,0.0);
-	printf("Title: %s\n",title);
-	for(i=0;text[0];i+=2){
-		printf("%s\t",text);
-		/* TODO */
-		text+=strlen(text)+1;
-		printf("%s\n",text);
-		text+=strlen(text)+1;
+#ifdef HAVE_FTGL
+	/*
+	 * w: .05 | .05 x .05 .75-x .05 | .05
+	 * h: .05 | .05 .8 .05 | .05
+	 */
+	int i,j,lines=2;
+	char *t;
+	float maxw[2]={0.,0.};
+	float w,h,x[2],y;
+	float lineh;
+	float winw;
+	float tw,tx;
+	if(!gl.font) return;
+	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1){
+		float len=ftglGetFontAdvance(gl.font, t);
+		if(len>maxw[j]) maxw[j]=len;
 	}
-	glPopMatrix();
+	lineh=ftglGetFontLineHeight(gl.font);
+	w=(maxw[0]+maxw[1])/.75f;
+	h=(float)lines*lineh/.8f;
+	winw=glmode(GLM_TXT);
+	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
+	else         glScalef(winw/w,winw/w,1.f);
+	glColor4fv(gl.cfg.txt_bgcolor);
+	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
+	x[0]=-.40f*w;
+	x[1]=-.35f*w+maxw[0];
+	y=.4*h-lineh;
+	tw=ftglGetFontAdvance(gl.font,title);
+	tx=-.375f*w+maxw[0]-tw/2.f;
+	if(tx+tw>.4f) tx=.4f-tw;
+	if(tx<-.4f) tx=-.4f;
+	glColor4fv(gl.cfg.txt_fgcolor);
+	gltextout(title,tx,y);
+	y-=lineh*2;
+	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1)
+		gltextout(t,x[j],y);
+#endif
 }
 
 void glrenderinfo(){
@@ -219,9 +240,25 @@ void glrenderhelp(){
 }
 
 void glrenderinputnum(){
+#ifdef HAVE_FTGL
 	int i=dplinputnum();
+	char txt[16];
+	float lineh;
+	float rect[6];
 	if(!i) return;
-	/* TODO */
+	snprintf(txt,16,"%i",i);
+	glmode(GLM_TXT);
+	lineh=ftglGetFontLineHeight(gl.font);
+	glScalef(gl.cfg.inputnum_lineh/lineh,gl.cfg.inputnum_lineh/lineh,1.f);
+	ftglGetFontBBox(gl.font,txt,-1,rect);
+	glTranslatef(-rect[0]-(rect[3]-rect[0])/2.f,
+				 -rect[1]-(rect[4]-rect[1])/2.f,0.f);
+	lineh*=0.2f;
+	glColor4fv(gl.cfg.txt_bgcolor);
+	glRectf(rect[0]-lineh,rect[1]-lineh,rect[3]+lineh,rect[4]+lineh);
+	glColor4fv(gl.cfg.txt_fgcolor);
+	ftglRenderFont(gl.font, txt, FTGL_RENDER_ALL);
+#endif
 }
 
 void glpaint(){
@@ -233,6 +270,7 @@ void glpaint(){
 	glrenderimgs();
 	glrenderinfo();
 	glrenderhelp();
+	glrenderinputnum();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();

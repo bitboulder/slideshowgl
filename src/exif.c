@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_exif
+#ifdef HAVE_EXIF
 #include <exif-data.h>
 #endif
 #include "exif.h"
 
-#ifdef HAVE_exif
+#ifdef HAVE_EXIF
 struct exifinfo {
 	char *name;
 	ExifTag tag[5];
@@ -59,7 +59,7 @@ void imgexiffree(struct imgexif *exif){
 	free(exif);
 }
 
-#ifdef HAVE_exif
+#ifdef HAVE_EXIF
 /* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
@@ -74,7 +74,7 @@ enum rot imgexifgetrot(ExifData *exdat){
 }
 #endif
 
-#ifdef HAVE_exif
+#ifdef HAVE_EXIF
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
@@ -104,7 +104,7 @@ char *imgexifgetinfo(ExifData *exdat){
 
 /* thread: load */
 void imgexifload(struct imgexif *exif,char *fn,char replace){
-#ifdef HAVE_exif
+#ifdef HAVE_EXIF
 	ExifData *exdat;
 	if(exif->load && !replace) return;
 	if(exif->info) free(exif->info);

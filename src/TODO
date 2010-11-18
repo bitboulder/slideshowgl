@@ -11,14 +11,12 @@
 
 # Fixes
 - fix sdlthreadcheck
-- precalc for rotate in glrenderimg
 - optimize SDL_ScaleSurface
 - fix rotated img size in glrenderimg
 
-# Fonts
-- libftgl for win32
-- text pos in glrendertext
-- glrenderinputnum
+# Win32
+- libftgl
+- exif
 
 # Want to have
 ? display loop imgs if zoom<0

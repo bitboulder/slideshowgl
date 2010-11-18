@@ -19,13 +19,14 @@ def CheckPKGConfig(context, version):
 	context.Result( ret )
 	return ret
 
-def CheckPKG(context, name, demand):
+def CheckPKG(context, name, demand, define):
 	context.Message( 'Checking for %s... ' % name )
 	ret = context.TryAction('pkg-config --exists \'%s\'' % name)[0]
 	context.Result( ret )
 	if ret:
 		env.ParseConfig('pkg-config --cflags --libs \'%s\'' % name.split()[0])
-		env.Append(CPPDEFINES = ['HAVE_' + name.split()[0]])
+		if define:
+			env.Append(CPPDEFINES = ['HAVE_' + define])
 	if demand and not ret:
 		print 'Package \'%s\' must be installed!' % name
 		Exit(1)
@@ -65,13 +66,13 @@ if not env.GetOption('clean'):
 		conf.CheckCHeader('pthread.h')
 		conf.CheckLib('pthread')
 		conf.CheckPKGConfig('0.2')
-		conf.CheckPKG('gl >= 7.0',1)
-		conf.CheckPKG('sdl >= 1.2',1)
-		conf.CheckPKG('SDL_image >= 1.2',1)
-		conf.CheckPKG('libexif >= 0.6',1)
-		conf.CheckPKG('ftgl >= 2.1',1)
-		conf.CheckPKG('x11 >= 1.3',0)
-		conf.CheckPKG('xext >= 1.1',0)
+		conf.CheckPKG('gl >= 7.0',1,0)
+		conf.CheckPKG('sdl >= 1.2',1,0)
+		conf.CheckPKG('SDL_image >= 1.2',1,0)
+		conf.CheckPKG('libexif >= 0.6',0,'EXIF')
+		conf.CheckPKG('ftgl >= 2.1',0,'FTGL')
+		conf.CheckPKG('x11 >= 1.3',0,'X11')
+		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 
 	conf.Define('APPNAME', env.subst('"slideshowgl"'))
 	conf.Define('VERSION', env.subst('"2.0.0"'))

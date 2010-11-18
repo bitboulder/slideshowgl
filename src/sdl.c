@@ -1,6 +1,6 @@
 #include <SDL.h>
 #include <SDL_thread.h>
-#if defined HAVE_x11 && defined HAVE_xext
+#if defined HAVE_X11 && defined HAVE_XEXT
 	#include <X11/Xlib.h>
 	#include <X11/extensions/dpms.h>
 #endif
@@ -27,7 +27,7 @@ struct sdl sdl = {
 };
 
 void switchdpms(char val){
-#if defined HAVE_x11 && defined HAVE_xext
+#if defined HAVE_X11 && defined HAVE_XEXT
 	static BOOL state=1;
 	int evb,erb;
 	CARD16 plv;
@@ -162,7 +162,10 @@ void *sdlthread(void *arg){
 	switchdpms(1);
 	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	if(!i){
-		error(ERR_CONT,"sdl timeout waiting for threads (%i)",sdl.quit);
+		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
+			(sdl.quit&THR_SDL)?"":" sdl",
+			(sdl.quit&THR_DPL)?"":" dpl",
+			(sdl.quit&THR_LD )?"":" ld");
 	}else{
 		ldtexload();
 		imgfinalize();
