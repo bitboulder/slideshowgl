@@ -12,6 +12,7 @@
 - fix sdlthreadcheck
 - optimize SDL_ScaleSurface
 - fix rotated img size in glrenderimg
+- thumb find for relative filename
 
 # Win32
 - libftgl
