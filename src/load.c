@@ -446,10 +446,7 @@ void ldaddfile(char *fn){
 		fn[i]='\0';
 		snprintf(img->ld->tfn,1024,"%s/thumb/%s",fn,fn+i+1);
 		fn[i]='/';
-		if((fd=fopen(img->ld->tfn,"rb"))){
-			fclose(fd);
-			break;
-		}
+		if((fd=fopen(img->ld->tfn,"rb"))){ fclose(fd); break; }
 	}
 	if(i<0) img->ld->tfn[0]='\0';
 }

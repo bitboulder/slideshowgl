@@ -90,10 +90,11 @@ void usage(char *fn){
 	printf("Usage: %s [Options] {FILES|FILELISTS.flst}\n",fn);
 	printf("Options:\n");
 	for(i=0;cfg[i].name;i++) if(cfg[i].opt)
-		printf("  -%c  %s %s\n",
+		printf("  -%c  %s %s (%s)\n",
 			cfg[i].opt,
 			cfgmodestr[cfg[i].mode],
-			cfg[i].name);
+			cfg[i].name,
+			cfg[i].val);
 	exit(0);
 }
 
