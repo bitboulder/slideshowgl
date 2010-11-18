@@ -165,7 +165,8 @@ void *sdlthread(void *arg){
 		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
 			(sdl.quit&THR_SDL)?"":" sdl",
 			(sdl.quit&THR_DPL)?"":" dpl",
-			(sdl.quit&THR_LD )?"":" ld");
+			(sdl.quit&THR_LD )?"":" ld",
+			(sdl.quit&THR_ACT)?"":" act");
 	}else{
 		ldtexload();
 		imgfinalize();

@@ -1,10 +1,8 @@
 # Availabilty
 - pano [p,0x8] (5°)
 - gamma, brightness, contrast [g,b,c,+-]
-- write actions
 
 # Comfort
-- create+read mark file
 - mouse interface
 - check for system data dir
 

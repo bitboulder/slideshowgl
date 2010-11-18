@@ -11,6 +11,7 @@
 #include "dpl.h"
 #include "exif.h"
 #include "cfg.h"
+#include "act.h"
 
 /***************************** load *******************************************/
 
@@ -478,4 +479,5 @@ void ldgetfiles(int argc,char **argv){
 		else ldaddfile(argv[0]);
 	}
 	if(cfggetint("ld.random")) imgrandom();
+	actadd(ACT_LOADMARKS,NULL);
 }

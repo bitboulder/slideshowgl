@@ -10,6 +10,7 @@
 #include "load.h"
 #include "dpl.h"
 #include "cfg.h"
+#include "act.h"
 
 #ifdef __linux__
 	#define SCHED_PRIORITY	__sched_priority
@@ -33,6 +34,7 @@ struct mainthread {
 	{ &sdlthread, 15, 0 },
 	{ &dplthread, 10, 0 },
 	{ &ldthread,   5, 0 },
+	{ &actthread,  1, 0 },
 	{ NULL,        0, 0 },
 };
 

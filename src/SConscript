@@ -11,6 +11,7 @@ sources = """
 	img.c
 	cfg.c
 	exif.c
+	act.c
 """.split()
 
 objects = env.Object(sources)

@@ -36,6 +36,8 @@ struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
 struct ipos *imgposcur(struct imgpos *ip);
+void imgpossetmark(struct imgpos *ip);
+char imgposmark(struct imgpos *ip);
 
 void dplkeyput(SDL_keysym key);
 void *dplthread(void *arg);

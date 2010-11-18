@@ -7,6 +7,7 @@
 #include "cfg.h"
 #include "main.h"
 #include "exif.h"
+#include "act.h"
 
 struct dplpos {
 	int imgi;
@@ -84,6 +85,10 @@ void imgposfree(struct imgpos *ip){ free(ip); }
 /* thread: gl */
 struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
 struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
+
+/* thread: load */
+void imgpossetmark(struct imgpos *ip){ ip->mark=1; }
+char imgposmark(struct imgpos *ip){ return ip->mark; }
 
 /***************************** dpl img move ***********************************/
 
@@ -297,6 +302,7 @@ void dplmark(){
 	if(!img) return;
 	img->pos->mark=!img->pos->mark;
 	effinit(EFFREF_IMG,0);
+	actadd(ACT_SAVEMARKS,NULL);
 }
 
 void dplrotate(int r){
@@ -304,6 +310,7 @@ void dplrotate(int r){
 	if(!img) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,0);
+	if(sdl.writemode) actadd(ACT_ROTATE,img);
 }
 
 void effdel(struct imgpos *ip){
@@ -327,7 +334,8 @@ void dpldel(){
 	if(!img->pos->opt.active) return;
 	effdel(img->pos);
 	delimg=img;
-	effinit(EFFREF_ALL|EFFREF_FIT,-1);
+	effinit(EFFREF_ALL|EFFREF_FIT,dpl.pos.zoom<0?-1:1);
+	if(sdl.writemode) actadd(ACT_DELETE,img);
 }
 
 void dplstaton(char on){
@@ -344,8 +352,10 @@ void dplstaton(char on){
 			case ROT_180: txt+=snprintf(txt,dpl.stat.pos.txt+256-txt," rotated-twice"); break;
 			case ROT_270: txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," rotated-left"); break;
 		}
-		if(sdl.writemode) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," (write-mode)");
-		if(img->pos->mark) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," [MARK]");
+		if(sdl.writemode){
+			txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," (write-mode)");
+			if(img->pos->mark) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," [MARK]");
+		}
 	}
 	if(!on) return;
 	switch(dpl.stat.mode){
@@ -431,7 +441,7 @@ void dplkey(SDL_keysym key){
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_r:        dplrotate((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?-1:1); break;
 	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
-	case SDLK_DELETE:   dpldel(); break;
+	case SDLK_DELETE:   if(sdl.writemode) dpldel(); break;
 	case SDLK_RIGHT:    dplmove( 1); break;
 	case SDLK_LEFT:     dplmove(-1); break;
 	case SDLK_UP:       dplmove( 2); break;
