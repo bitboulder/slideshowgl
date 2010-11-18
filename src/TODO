@@ -12,9 +12,5 @@
 - fix rotated img size in glrenderimg
 - thumb find for relative filename
 
-# Win32
-- libftgl
-- exif
-
 # Want to have
 ? display loop imgs if zoom<0

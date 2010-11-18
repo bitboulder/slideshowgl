@@ -268,6 +268,7 @@ void glrenderinputnum(){
 }
 
 void glrenderstat(){
+#ifdef HAVE_FTGL
 	struct istat *stat=dplstat();
 	float winw;
 	float lineh;
@@ -292,6 +293,7 @@ void glrenderstat(){
 	glTranslatef(-rect[0]+lineh*0.2f,-rect[1]+lineh*0.2f,0.f);
 	ftglRenderFont(gl.font, stat->txt, FTGL_RENDER_ALL);
 	glPopMatrix();
+#endif
 }
 
 void glpaint(){
