@@ -24,11 +24,13 @@ struct gl {
 #endif
 	struct glcfg {
 		float inputnum_lineh;
+		float stat_lineh;
 		float txt_bgcolor[4];
 		float txt_fgcolor[4];
 	} cfg;
 } gl = {
 	.cfg.inputnum_lineh = 0.05f,
+	.cfg.stat_lineh     = 0.025f,
 	.cfg.txt_bgcolor = { 0.8f, 0.8f, 0.8f, 0.7f },
 	.cfg.txt_fgcolor = { 0.0f, 0.0f, 0.0f, 1.0f },
 };
@@ -208,6 +210,7 @@ void glrendertext(char *title,char *text){
 	winw=glmode(GLM_TXT);
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
+	glPushMatrix();
 	glColor4fv(gl.cfg.txt_bgcolor);
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
@@ -222,6 +225,7 @@ void glrendertext(char *title,char *text){
 	y-=lineh*2;
 	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1)
 		gltextout(t,x[j],y);
+	glPopMatrix();
 #endif
 }
 
@@ -248,6 +252,7 @@ void glrenderinputnum(){
 	if(!i) return;
 	snprintf(txt,16,"%i",i);
 	glmode(GLM_TXT);
+	glPushMatrix();
 	lineh=ftglGetFontLineHeight(gl.font);
 	glScalef(gl.cfg.inputnum_lineh/lineh,gl.cfg.inputnum_lineh/lineh,1.f);
 	ftglGetFontBBox(gl.font,txt,-1,rect);
@@ -258,7 +263,35 @@ void glrenderinputnum(){
 	glRectf(rect[0]-lineh,rect[1]-lineh,rect[3]+lineh,rect[4]+lineh);
 	glColor4fv(gl.cfg.txt_fgcolor);
 	ftglRenderFont(gl.font, txt, FTGL_RENDER_ALL);
+	glPopMatrix();
 #endif
+}
+
+void glrenderstat(){
+	struct istat *stat=dplstat();
+	float winw;
+	float lineh;
+	float rect[6];
+	float tw,th;
+	float bw,bh;
+	if(!stat->h) return;
+	winw=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(-winw/2.f,-0.5f,0.f);
+	lineh=ftglGetFontLineHeight(gl.font);
+	glScalef(gl.cfg.stat_lineh/lineh,gl.cfg.stat_lineh/lineh,1.f);
+	ftglGetFontBBox(gl.font,stat->txt,-1,rect);
+	tw=rect[3]-rect[0];
+	th=rect[4]-rect[1];
+	bw=tw+lineh*0.4f;
+	bh=th+lineh*0.4f;
+	glTranslatef(0.f,(stat->h-1.f)*bh,0.f);
+	glColor4fv(gl.cfg.txt_bgcolor);
+	glRectf(0.f,0.f,bw,bh);
+	glColor4fv(gl.cfg.txt_fgcolor);
+	glTranslatef(-rect[0]+lineh*0.2f,-rect[1]+lineh*0.2f,0.f);
+	ftglRenderFont(gl.font, stat->txt, FTGL_RENDER_ALL);
+	glPopMatrix();
 }
 
 void glpaint(){
@@ -271,6 +304,7 @@ void glpaint(){
 	glrenderinfo();
 	glrenderhelp();
 	glrenderinputnum();
+	glrenderstat();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();

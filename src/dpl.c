@@ -15,6 +15,8 @@ struct dplpos {
 	float x,y;
 };
 
+enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
+
 struct dpl {
 	struct dplpos pos;
 	float maxfitw,maxfith;
@@ -29,7 +31,13 @@ struct dpl {
 		Uint32 displayduration;
 		float shrink;
 		char loop;
+		Uint32 stat_delay[STAT_NUM];
 	} cfg;
+	struct stat {
+		enum statmode mode;
+		Uint32 in,out;
+		struct istat pos;
+	} stat;
 } dpl = {
 	.pos.imgi = -1,
 	.pos.zoom = 0,
@@ -41,6 +49,8 @@ struct dpl {
 	.showhelp = 0,
 	.inputnum = 0,
 	.refresh = EFFREF_NO,
+	.stat.mode = STAT_OFF,
+	.stat.pos.h = 0.f,
 };
 
 /***************************** dpl interface **********************************/
@@ -53,6 +63,7 @@ char dplineff(){ return dpl.ineff; }
 char dplshowinfo(){ return dpl.showinfo; }
 int dplinputnum(){ return dpl.inputnum; }
 char dplloop(){ return dpl.cfg.loop; }
+struct istat *dplstat(){ return &dpl.stat.pos; }
 
 /***************************** dpl imgpos *************************************/
 
@@ -319,6 +330,42 @@ void dpldel(){
 	effinit(EFFREF_ALL|EFFREF_FIT,-1);
 }
 
+void dplstaton(){
+	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,256,"ANFANG");
+	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,256,"ENDE");
+	else{
+		struct img *img=imgs[dpl.pos.imgi];
+		char *txt=dpl.stat.pos.txt;
+		txt+=snprintf(txt,dpl.stat.pos.txt+512-txt,"%i/%i %s",
+			dpl.pos.imgi+1, nimg, imgldfn(img->ld));
+		switch(imgexifrot(img->exif)){
+			case ROT_0: break;
+			case ROT_90:  txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," rotated-right"); break;
+			case ROT_180: txt+=snprintf(txt,dpl.stat.pos.txt+256-txt," rotated-twice"); break;
+			case ROT_270: txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," rotated-left"); break;
+		}
+		if(sdl.writemode) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," (write-mode)");
+		if(img->pos->mark) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," [MARK]");
+	}
+	switch(dpl.stat.mode){
+		case STAT_OFF:
+			dpl.stat.mode=STAT_RISE;
+			dpl.stat.in=SDL_GetTicks();
+			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[STAT_RISE];
+		break;
+		case STAT_ON:
+			dpl.stat.out=SDL_GetTicks()+dpl.cfg.stat_delay[STAT_ON];
+		break;
+		case STAT_FALL:
+			dpl.stat.mode=STAT_RISE;
+			dpl.stat.in=SDL_GetTicks();
+			dpl.stat.in-=(dpl.stat.out-dpl.stat.in)*dpl.cfg.stat_delay[STAT_RISE]/dpl.cfg.stat_delay[STAT_FALL];
+			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[STAT_RISE];
+		break;
+		default: break;
+	}
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -399,6 +446,7 @@ void dplkey(SDL_keysym key){
 	dpl.showinfo = !dpl.showinfo && key.sym==SDLK_i &&
 		dpl.pos.imgi>=0 && dpl.pos.imgi<nimg;
 	dpl.showhelp = !dpl.showhelp && key.sym==SDLK_h;
+	if(dpl.pos.zoom<=0 && key.sym!=SDLK_RIGHT) dplstaton();
 }
 
 void dplcheckkey(){
@@ -457,6 +505,23 @@ void effimg(struct imgpos *ip){
 	/*printf("%i %i %i %g\n",ip->waytime[0],ip->waytime[1],time,ip->cur.a);*/
 }
 
+void effstat(){
+	float ef=(float)(SDL_GetTicks()-dpl.stat.in)/(float)(dpl.stat.out-dpl.stat.in);
+	if(dpl.stat.mode!=STAT_OFF && ef>=1.f){
+		if(dpl.stat.mode!=STAT_ON || dpl.pos.imgi<nimg){
+			dpl.stat.mode=(dpl.stat.mode+1)%STAT_NUM;
+			dpl.stat.in=dpl.stat.out;
+			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[dpl.stat.mode];
+		}
+	}
+	switch(dpl.stat.mode){
+		case STAT_RISE: dpl.stat.pos.h=effcalclin(0.f,1.f,ef); break;
+		case STAT_FALL: dpl.stat.pos.h=effcalclin(1.f,0.f,ef); break;
+		case STAT_ON:   dpl.stat.pos.h=1.f; break;
+		default:        dpl.stat.pos.h=0.f; break;
+	}
+}
+
 void effdo(){
 	struct img *img;
 	char ineff=0;
@@ -472,6 +537,7 @@ void effdo(){
 			ldffree(tmp->ld,TEX_NONE);
 		}
 	}
+	effstat();
 	dpl.ineff=ineff;
 }
 
@@ -482,11 +548,16 @@ void dplcfginit(){
 	dpl.cfg.displayduration=cfggetint("dpl.displayduration");
 	dpl.cfg.shrink=cfggetfloat("dpl.shrink");
 	dpl.cfg.loop=cfggetint("dpl.loop");
+	dpl.cfg.stat_delay[STAT_OFF] = 0;
+	dpl.cfg.stat_delay[STAT_RISE]=cfggetint("dpl.stat_rise");
+	dpl.cfg.stat_delay[STAT_ON]  =cfggetint("dpl.stat_on");
+	dpl.cfg.stat_delay[STAT_FALL]=cfggetint("dpl.stat_fall");
 }
 
 void *dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
+	dplstaton();
 	while(!sdl.quit){
 
 		dplcheckkey();

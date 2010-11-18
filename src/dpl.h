@@ -15,6 +15,11 @@ struct iopt {
 	char back;
 };
 
+struct istat {
+	char txt[512];
+	float h;
+};
+
 enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
 
 void effrefresh(enum effrefresh val);
@@ -25,6 +30,7 @@ char dplshowinfo();
 int dplinputnum();
 char *dplhelp();
 char dplloop();
+struct istat *dplstat();
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

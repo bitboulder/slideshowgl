@@ -27,6 +27,9 @@ struct cfg {
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0" },
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0" },
 	{ 0,   "gl.font",             CT_STR, CM_SET,  "data/font.ttf" },
+	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250"  },
+	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000" },
+	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000" },
 	{ 0,   NULL,                  0,      0,       NULL },
 };
 
