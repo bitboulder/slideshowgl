@@ -330,7 +330,7 @@ void dpldel(){
 	effinit(EFFREF_ALL|EFFREF_FIT,-1);
 }
 
-void dplstaton(){
+void dplstaton(char on){
 	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,256,"ANFANG");
 	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,256,"ENDE");
 	else{
@@ -347,6 +347,7 @@ void dplstaton(){
 		if(sdl.writemode) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," (write-mode)");
 		if(img->pos->mark) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," [MARK]");
 	}
+	if(!on) return;
 	switch(dpl.stat.mode){
 		case STAT_OFF:
 			dpl.stat.mode=STAT_RISE;
@@ -446,7 +447,7 @@ void dplkey(SDL_keysym key){
 	dpl.showinfo = !dpl.showinfo && key.sym==SDLK_i &&
 		dpl.pos.imgi>=0 && dpl.pos.imgi<nimg;
 	dpl.showhelp = !dpl.showhelp && key.sym==SDLK_h;
-	if(dpl.pos.zoom<=0 && key.sym!=SDLK_RIGHT) dplstaton();
+	dplstaton(sdl.writemode || (dpl.pos.zoom<=0 && key.sym!=SDLK_RIGHT));
 }
 
 void dplcheckkey(){
@@ -557,7 +558,7 @@ void dplcfginit(){
 void *dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
-	dplstaton();
+	dplstaton(1);
 	while(!sdl.quit){
 
 		dplcheckkey();

@@ -301,10 +301,10 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glrenderimgs();
-	glrenderinfo();
-	glrenderhelp();
-	glrenderinputnum();
 	glrenderstat();
+	glrenderinfo();
+	glrenderinputnum();
+	glrenderhelp();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();
