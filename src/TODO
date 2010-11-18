@@ -13,7 +13,6 @@
 - fix sdlthreadcheck
 - precalc for rotate in glrenderimg
 - optimize SDL_ScaleSurface
-- imgldfree: free texture in glthread (ldtexload ?) if active
 - fix rotated img size in glrenderimg
 
 # Fonts

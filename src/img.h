@@ -25,7 +25,6 @@ extern int nimg;
 
 struct img *imgget(int i);
 struct img *imginit();
-void imgfree(struct img *img);
 struct img *imgadd();
 void imgfinalize();
 void imgrandom();

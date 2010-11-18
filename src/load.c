@@ -2,6 +2,7 @@
 #include <string.h>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <pthread.h>
 #include "load.h"
 #include "sdl.h"
 #include "main.h"
@@ -16,6 +17,7 @@
 struct load {
 	int  texsize[TEX_NUM];
 	char vartex;
+	pthread_mutex_t mutex;
 } load = {
 	.texsize = { 256, 512, 2048, 32768, },
 	.vartex = 0,
@@ -142,6 +144,7 @@ struct texloadbuf {
 };
 void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
+	pthread_mutex_lock(&load.mutex);
 	while(nwi==tlb.ri){
 		SDL_Delay(10);
 		if(sdl.quit) return;
@@ -150,6 +153,7 @@ void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
 	tlb.tl[tlb.wi].itex=itex;
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
 	tlb.wi=nwi;
+	pthread_mutex_unlock(&load.mutex);
 }
 
 /* thread: sdl */
@@ -420,6 +424,7 @@ char ldcheck(){
 extern Uint32 paint_last;
 
 void *ldthread(void *arg){
+	pthread_mutex_init(&load.mutex,NULL);
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG,0);
 	while(!sdl.quit){

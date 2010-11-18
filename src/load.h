@@ -15,6 +15,7 @@ float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
 
 char ldtexload();
+char ldffree(struct imgld *il,enum imgtex thold);
 
 void *ldthread(void *arg);
 

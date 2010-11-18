@@ -12,6 +12,7 @@ struct img **imgs = NULL;
 struct img *defimg;
 struct img *delimg;
 int nimg = 0;
+int nimgo = 0;
 int simg = 0;
 
 /* thread: all */
@@ -40,12 +41,13 @@ struct img *imgadd(){
 	if(nimg==simg) imgs=realloc(imgs,sizeof(struct img *)*(simg+=16));
 	imgs[nimg]=imginit();
 	if(nimg) imgs[nimg-1]->nxt=imgs[nimg];
+	nimgo=nimg+1;
 	return imgs[nimg++];
 }
 
 void imgfinalize(){
 	int i;
-	for(i=0;i<nimg;i++) imgfree(imgs[i]);
+	for(i=0;i<nimgo;i++) imgfree(imgs[i]);
 	free(imgs);
 	imgfree(defimg);
 }
@@ -70,5 +72,6 @@ struct img *imgdel(int i){
 	if(i>0) imgs[i-1]->nxt=imgs[i]->nxt;
 	nimg--;
 	for(;i<nimg;i++) imgs[i]=imgs[i+1];
+	imgs[i]=img;
 	return img;
 }

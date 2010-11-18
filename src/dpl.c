@@ -311,7 +311,7 @@ void dpldel(){
 	if(delimg){
 		struct img *tmp=delimg;
 		delimg=NULL;
-		imgfree(tmp);
+		ldffree(tmp->ld,TEX_NONE);
 	}
 	if(!img->pos->opt.active) return;
 	effdel(img->pos);
@@ -469,7 +469,7 @@ void effdo(){
 		if(!delimg->pos->eff){
 			struct img *tmp=delimg;
 			delimg=NULL;
-			imgfree(tmp);
+			ldffree(tmp->ld,TEX_NONE);
 		}
 	}
 	dpl.ineff=ineff;
