@@ -157,14 +157,18 @@ void glrenderimg(struct img *img,char back){
 	if(ipos->r){
 		// get rotation near to 90°/270°
 		float rot90 = ipos->r;
+		float schg=1.f;
 		while(rot90>= 90.) rot90-=180.;
 		while(rot90< -90.) rot90+=180.;
 		if(rot90<0.) rot90*=-1.;
 		rot90/=90.;
 		// correct size
-		if(irat<srat) irat=1./irat; /* TODO: fix */
-		irat=powf(irat,rot90);
-		glScalef(irat,irat,1.);
+		if(srat>irat) if(srat>1.f/irat) schg=1.f/irat;
+		              else              schg=srat;
+		else          if(srat>1.f/irat) schg=1.f/srat;
+		              else              schg=irat;
+		schg=powf(schg,rot90);
+		glScalef(schg,schg,1.);
 	}
 	// collor correction
 	if(icol->g || icol->b || icol->c){

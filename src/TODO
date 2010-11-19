@@ -9,7 +9,6 @@
 # Fixes
 - fix sdlthreadcheck
 - optimize SDL_ScaleSurface
-- fix rotated img size in glrenderimg
 - fix brightness for contrast<=0
 
 # Want to have
