@@ -1,0 +1,16 @@
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
+#define APPNAME "%(APPNAME)s"
+#define VERSION "%(VERSION)s"
+
+#define HAVE_EXIF		%(HAVE_EXIF)i
+
+#define HAVE_FTGL		%(HAVE_FTGL)i
+
+#define HAVE_X11		%(HAVE_X11)i
+#define HAVE_XEXT		%(HAVE_XEXT)i
+
+#define HAVE_REALPATH	%(HAVE_REALPATH)i
+
+#endif

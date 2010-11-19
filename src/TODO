@@ -10,7 +10,6 @@
 - fix sdlthreadcheck
 - optimize SDL_ScaleSurface
 - fix rotated img size in glrenderimg
-- thumb find for relative filename
 
 # Want to have
 ? display loop imgs if zoom<0

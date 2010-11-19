@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -17,6 +18,7 @@ struct cfg {
 	char *val;
 } cfg[]={
 	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0" },
+	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0" },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
 	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "0" },
@@ -85,8 +87,13 @@ void cfgset(struct cfg *cfg, char *val){
 	}
 }
 
+void version(){
+	printf("%s version %s\n",APPNAME,VERSION);
+}
+
 void usage(char *fn){
 	int i;
+	version();
 	printf("Usage: %s [Options] {FILES|FILELISTS.flst}\n",fn);
 	printf("Options:\n");
 	for(i=0;cfg[i].name;i++) if(cfg[i].opt)
@@ -115,5 +122,6 @@ void cfgparseargs(int argc,char **argv){
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
 		for(i=0;cfg[i].name;i++) if(cfg[i].opt==c) cfgset(cfg+i,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0]);
+	if(cfggetint("cfg.version")) version();
 }
 

@@ -1,4 +1,4 @@
-env = Environment(APPNAME = 'slideshowgl', VERSION = '0.5.0')
+env = Environment(APPNAME = 'slideshowgl', VERSION = '2.0.0')
 
 Help("\n")
 Help("Type: 'scons mode=release' to build the production program.\n")
@@ -23,14 +23,35 @@ def CheckPKG(context, name, demand, define):
 	context.Message( 'Checking for %s... ' % name )
 	ret = context.TryAction('pkg-config --exists \'%s\'' % name)[0]
 	context.Result( ret )
+	if define:
+		env['HAVE_'+define] = ret
 	if ret:
 		env.ParseConfig('pkg-config --cflags --libs \'%s\'' % name.split()[0])
-		if define:
-			env.Append(CPPDEFINES = ['HAVE_' + define])
 	if demand and not ret:
 		print 'Package \'%s\' must be installed!' % name
 		Exit(1)
 	return ret
+
+def CheckFuncMy(context, name, demand, define):
+	ret = conf.CheckFunc(name)
+	context.Result('')
+	if define:
+		env['HAVE_'+define] = ret
+	if not ret and demand:
+		print 'Function \'%s\' must be available!' % name
+		Exit(1)
+	return ret
+
+def CheckLibMy(context, name, demand, define):
+	ret = conf.CheckLib(name)
+	context.Result('')
+	if define:
+		env['HAVE_'+define] = ret
+	if not ret and demand:
+		print 'Function \'%s\' must be available!' % name
+		Exit(1)
+	return ret
+
 
 build = 'build'
 if os == 'win':
@@ -40,45 +61,45 @@ env.VariantDir(build, '.')
 
 if not env.GetOption('clean'):
 
-	conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig, 'CheckPKG' : CheckPKG })
-	conf.CheckLib('m')
+	conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig, 'CheckPKG' : CheckPKG, 'CheckFuncMy': CheckFuncMy, 'CheckLibMy' : CheckLibMy })
 
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
 		env.Replace(CC        = ['i586-mingw32msvc-gcc'])
-		env.Append(LIBS       = ['mingw32'])
+		conf.CheckLibMy('mingw32',1,0)
 
 		env.Append(CPPPATH    = ['#/winlib/sdl/SDL-1.2.14/include/SDL/'])
 		env.Append(LIBPATH    = ['#/winlib/sdl/SDL-1.2.14/lib/'])
-		env.Append(LIBS       = ['SDLmain'])
-		env.Append(LIBS       = ['SDL'])
+		conf.CheckLibMy('SDLmain',1,0)
+		conf.CheckLibMy('SDL',1,0)
 
 		env.Append(CPPPATH    = ['#/winlib/sdl_image/SDL_image-1.2.10/'])
 		env.Append(LIBPATH    = ['#/winlib/sdl_image/lib/'])
-		env.Append(LIBS       = ['SDL_image'])
+		conf.CheckLibMy('SDL_image',1,0)
 
 		env.Append(CPPPATH    = ['#/winlib/pthreads/Pre-built.2/include'])
 		env.Append(LIBPATH    = ['#/winlib/pthreads/Pre-built.2/lib'])
-		env.Append(LIBS       = ['pthreadGCE2'])
+		conf.CheckLibMy('pthreadGCE2',1,0)
 
 		env.Append(CPPPATH    = ['#/winlib/exif/libexif-0.6.19'])
 		env.Append(CPPPATH    = ['#/winlib/exif/libexif-0.6.19/libexif'])
 		env.Append(LIBPATH    = ['#/winlib/exif/libexif-0.6.19/libexif/.libs'])
-		env.Append(LIBS       = ['exif'])
-		env.Append(CPPDEFINES = ['HAVE_EXIF'])
+		conf.CheckLibMy('exif',0,'EXIF')
 
 		env.Append(CPPPATH    = ['#/winlib/ftgl/ftgl-2.1.3~rc5/src'])
 		env.Append(CPPPATH    = ['#/winlib/ftgl/ftgl-2.1.3~rc5/src/FTGL'])
 		env.Append(LIBPATH    = ['#/winlib/ftgl/ftgl-2.1.3~rc5/src/.libs'])
-		env.Append(LIBS       = ['ftgl'])
+		conf.CheckLibMy('ftgl',0,'FTGL')
 		env.Append(CPPPATH    = ['#/winlib/ftgl/freetype-2.4.3/include'])
 		env.Append(LIBPATH    = ['#/winlib/ftgl/freetype-2.4.3/objs/.libs'])
-		env.Append(LIBS       = ['freetype'])
-		env.Append(CPPDEFINES = ['HAVE_FTGL'])
+		conf.CheckLibMy('freetype',0,0)
 
-		env.Append(LIBS       = ['opengl32'])
-		env.Append(LIBS       = ['glu32'])
-		env.Append(LIBS       = ['stdc++'])
+		conf.CheckLibMy('opengl32',1,0)
+		conf.CheckLibMy('glu32',1,0)
+		conf.CheckLibMy('stdc++',1,0)
+
+		env['HAVE_X11'] = 0
+		env['HAVE_XEXT'] = 0
 	else:
 		conf.CheckCHeader('pthread.h')
 		conf.CheckLib('pthread')
@@ -91,8 +112,8 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 
-	conf.Define('APPNAME', env.subst('"slideshowgl"'))
-	conf.Define('VERSION', env.subst('"2.0.0"'))
+	conf.CheckFuncMy('realpath',0,'REALPATH')
+	conf.CheckLibMy('m',1,0)
 
 	env = conf.Finish()
 

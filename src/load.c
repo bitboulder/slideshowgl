@@ -1,8 +1,13 @@
+#include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <pthread.h>
+#if HAVE_REALPATH
+	#include <sys/param.h>
+	#include <unistd.h>
+#endif
 #include "load.h"
 #include "sdl.h"
 #include "main.h"
@@ -436,12 +441,9 @@ void *ldthread(void *arg){
 
 /***************************** load files init ********************************/
 
-void ldaddfile(char *fn){
-	struct img *img=imgadd();
+void ldfindthumb(struct img *img,char *fn){
 	int i;
 	FILE *fd;
-	if(!strncmp(fn,"file://",7)) fn+=7;
-	strncpy(img->ld->fn,fn,1024);
 	for(i=strlen(fn)-1;i>=0;i--) if(fn[i]=='/'){
 		fn[i]='\0';
 		snprintf(img->ld->tfn,1024,"%s/thumb/%s",fn,fn+i+1);
@@ -449,6 +451,19 @@ void ldaddfile(char *fn){
 		if((fd=fopen(img->ld->tfn,"rb"))){ fclose(fd); break; }
 	}
 	if(i<0) img->ld->tfn[0]='\0';
+}
+
+void ldaddfile(char *fn){
+	struct img *img=imgadd();
+	if(!strncmp(fn,"file://",7)) fn+=7;
+	strncpy(img->ld->fn,fn,1024);
+	ldfindthumb(img,fn);
+#if HAVE_REALPATH
+	if(!img->ld->tfn[0]){
+		static char rfn[MAXPATHLEN];
+		if((fn=realpath(fn,rfn))) ldfindthumb(img,fn);
+	}
+#endif
 }
 
 void ldaddflst(char *flst){

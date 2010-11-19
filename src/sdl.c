@@ -1,6 +1,7 @@
+#include "config.h"
 #include <SDL.h>
 #include <SDL_thread.h>
-#if defined HAVE_X11 && defined HAVE_XEXT
+#if HAVE_X11 && HAVE_XEXT
 	#include <X11/Xlib.h>
 	#include <X11/extensions/dpms.h>
 #endif
@@ -27,7 +28,7 @@ struct sdl sdl = {
 };
 
 void switchdpms(char val){
-#if defined HAVE_X11 && defined HAVE_XEXT
+#if HAVE_X11 && HAVE_XEXT
 	static BOOL state=1;
 	int evb,erb;
 	CARD16 plv;

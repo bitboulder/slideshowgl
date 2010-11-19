@@ -1,6 +1,17 @@
 Import('env')
 Import('prefix')
 
+def config_h_build(target, source, env):
+
+    config_h_defines = env.Dictionary()
+
+    for a_target, a_source in zip(target, source):
+        config_h = file(str(a_target), "w")
+        config_h_in = file(str(a_source), "r")
+        config_h.write(config_h_in.read() % config_h_defines)
+        config_h_in.close()
+        config_h.close()
+
 sources = """
 	main.c
 	sdl.c
@@ -13,6 +24,8 @@ sources = """
 	exif.c
 	act.c
 """.split()
+
+env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))
 
 objects = env.Object(sources)
 

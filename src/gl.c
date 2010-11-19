@@ -1,9 +1,10 @@
+#include "config.h"
 #include <stdlib.h>
 #include <math.h>
 #include <GL/gl.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	#include <ftgl.h>
 #endif
 #include "gl.h"
@@ -19,7 +20,7 @@ enum dls { DLS_IMG, DLS_NUM };
 
 struct gl {
 	GLuint dls;
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	FTGLfont *font;
 #endif
 	struct glcfg {
@@ -50,7 +51,7 @@ void glinit(){
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	gl.font = ftglCreateBufferFont(cfggetstr("gl.font"));
 	if(gl.font) ftglSetFontFaceSize(gl.font, 24, 24);
 #endif
@@ -58,7 +59,7 @@ void glinit(){
 }
 
 void glfree(){
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	if(gl.font) ftglDestroyFont(gl.font);
 #endif
 }
@@ -177,7 +178,7 @@ void glrenderimgs(){
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
 }
 
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 void gltextout(char *text,float x,float y){
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
@@ -187,7 +188,7 @@ void gltextout(char *text,float x,float y){
 #endif
 
 void glrendertext(char *title,char *text){
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
 	 * h: .05 | .05 .8 .05 | .05
@@ -244,7 +245,7 @@ void glrenderhelp(){
 }
 
 void glrenderinputnum(){
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	int i=dplinputnum();
 	char txt[16];
 	float lineh;
@@ -268,7 +269,7 @@ void glrenderinputnum(){
 }
 
 void glrenderstat(){
-#ifdef HAVE_FTGL
+#if HAVE_FTGL
 	struct istat *stat=dplstat();
 	float winw;
 	float lineh;
