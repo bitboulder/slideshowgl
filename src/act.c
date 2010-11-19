@@ -11,13 +11,14 @@
 struct actcfg {
 	Uint32 savemarks_delay;
 	Uint32 savemarks;
+	char runcmd;
 } actcfg = {
 	.savemarks = 0,
 };
 
 void runcmd(char *cmd){
-	debug(DBG_STA,"running cmd: %s",cmd);
-//	system(cmd);
+	debug(DBG_NONE,"running cmd: %s",cmd);
+	if(actcfg.runcmd) system(cmd);
 }
 
 void actloadmarks(){
@@ -114,6 +115,7 @@ char actpop(){
 
 void *actthread(void *arg){
 	actcfg.savemarks_delay = cfggetint("act.savemarks_delay");
+	actcfg.runcmd          = cfggetint("act.do");
 	while(!sdl.quit){
 		acttrysavemarks();
 		if(!actpop()) SDL_Delay(500);

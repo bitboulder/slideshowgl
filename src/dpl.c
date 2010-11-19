@@ -334,7 +334,7 @@ void dpldel(){
 	if(!img->pos->opt.active) return;
 	effdel(img->pos);
 	delimg=img;
-	effinit(EFFREF_ALL|EFFREF_FIT,dpl.pos.zoom<0?-1:1);
+	effinit(EFFREF_ALL|EFFREF_FIT,1);
 	if(sdl.writemode) actadd(ACT_DELETE,img);
 }
 

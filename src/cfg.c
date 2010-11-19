@@ -34,6 +34,7 @@ struct cfg {
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000" },
 	{ 'm', "act.mark_fn",         CT_STR, CM_SET,  ".mark" },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "10000" },
+	{ 'n', "act.do",              CT_INT, CM_FLIP, "1" },
 	{ 0,   NULL,                  0,      0,       NULL },
 };
 
