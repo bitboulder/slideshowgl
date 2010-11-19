@@ -15,9 +15,14 @@ struct iopt {
 	char back;
 };
 
+#define ISTAT_TXTSIZE	512
 struct istat {
-	char txt[512];
+	char txt[ISTAT_TXTSIZE];
 	float h;
+};
+
+struct icol {
+	float g,b,c;
 };
 
 enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
@@ -36,6 +41,7 @@ struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
 struct ipos *imgposcur(struct imgpos *ip);
+struct icol *imgposcol(struct imgpos *ip);
 void imgpossetmark(struct imgpos *ip);
 char imgposmark(struct imgpos *ip);
 

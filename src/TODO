@@ -1,6 +1,6 @@
 # Availabilty
 - pano [p,0x8] (5°)
-- gamma, brightness, contrast [g,b,c,+-]
+- render gamma
 
 # Comfort
 - mouse interface
@@ -10,6 +10,7 @@
 - fix sdlthreadcheck
 - optimize SDL_ScaleSurface
 - fix rotated img size in glrenderimg
+- fix brightness for contrast<=0
 
 # Want to have
 ? display loop imgs if zoom<0

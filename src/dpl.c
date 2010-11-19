@@ -17,6 +17,9 @@ struct dplpos {
 };
 
 enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
+enum colmode { COL_NONE=-1, COL_G=0, COL_B=1, COL_C=2 };
+
+char *colmodestr[]={"G","B","C"};
 
 struct dpl {
 	struct dplpos pos;
@@ -39,6 +42,7 @@ struct dpl {
 		Uint32 in,out;
 		struct istat pos;
 	} stat;
+	enum colmode colmode;
 } dpl = {
 	.pos.imgi = -1,
 	.pos.zoom = 0,
@@ -52,6 +56,7 @@ struct dpl {
 	.refresh = EFFREF_NO,
 	.stat.mode = STAT_OFF,
 	.stat.pos.h = 0.f,
+	.colmode = COL_NONE,
 };
 
 /***************************** dpl interface **********************************/
@@ -76,6 +81,7 @@ struct imgpos {
 	struct ipos way[2];
 	Uint32 waytime[2];
 	char   wayact;
+	struct icol col;
 };
 
 /* thread: img */
@@ -85,6 +91,7 @@ void imgposfree(struct imgpos *ip){ free(ip); }
 /* thread: gl */
 struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
 struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
+struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
 
 /* thread: load */
 void imgpossetmark(struct imgpos *ip){ ip->mark=1; }
@@ -319,6 +326,7 @@ void effdel(struct imgpos *ip){
 	effwaytime(ip,dpl.cfg.efftime);
 	ip->wayact=0;
 	ip->opt.active=1;
+	ip->opt.back=1;
 	ip->eff=1;
 }
 
@@ -338,24 +346,30 @@ void dpldel(){
 	if(sdl.writemode) actadd(ACT_DELETE,img);
 }
 
+#define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
 void dplstaton(char on){
-	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,256,"ANFANG");
-	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,256,"ENDE");
+	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,"ANFANG");
+	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,"ENDE");
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		char *txt=dpl.stat.pos.txt;
-		txt+=snprintf(txt,dpl.stat.pos.txt+512-txt,"%i/%i %s",
-			dpl.pos.imgi+1, nimg, imgldfn(img->ld));
+		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgldfn(img->ld));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
-			case ROT_90:  txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," rotated-right"); break;
-			case ROT_180: txt+=snprintf(txt,dpl.stat.pos.txt+256-txt," rotated-twice"); break;
-			case ROT_270: txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," rotated-left"); break;
+			case ROT_90:  ADDTXT(" rotated-right"); break;
+			case ROT_180: ADDTXT(" rotated-twice"); break;
+			case ROT_270: ADDTXT(" rotated-left"); break;
 		}
 		if(sdl.writemode){
-			txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," (write-mode)");
-			if(img->pos->mark) txt+=snprintf(txt,dpl.stat.pos.txt+512-txt," [MARK]");
+			ADDTXT(" (write-mode)");
+			if(img->pos->mark) ADDTXT(" [MARK]");
 		}
+		if(dpl.colmode!=COL_NONE || img->pos->col.b || img->pos->col.b || img->pos->col.c){
+			ADDTXT(" G:%.1f",img->pos->col.g);
+			ADDTXT(" B:%.1f",img->pos->col.b);
+			ADDTXT(" C:%.1f",img->pos->col.c);
+		}
+		if(dpl.colmode!=COL_NONE) ADDTXT(" [%s]",colmodestr[dpl.colmode]);
 	}
 	if(!on) return;
 	switch(dpl.stat.mode){
@@ -375,6 +389,17 @@ void dplstaton(char on){
 		break;
 		default: break;
 	}
+}
+
+void dplcol(int d){
+	struct img *img;
+	float *val;
+	if(dpl.colmode==COL_NONE) return;
+	if(!(img=imgget(dpl.pos.imgi))) return;
+	val=((float*)&img->pos->col)+dpl.colmode;
+	*val+=.1f*(float)d;
+	if(*val<-1.f) *val=-1.f;
+	if(*val> 1.f) *val= 1.f;
 }
 
 /***************************** dpl action *************************************/
@@ -432,6 +457,8 @@ char *dplhelp(){
 
 void dplkey(SDL_keysym key){
 	debug(DBG_STA,"dpl key %i",key.sym);
+	if(key.sym!=SDLK_PLUS && key.sym!=SDLK_MINUS)
+		dpl.colmode=COL_NONE;
 	switch(key.sym){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl.quit=1; break;
@@ -440,6 +467,9 @@ void dplkey(SDL_keysym key){
 	case SDLK_m:        if(sdl.writemode) dplmark(); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_r:        dplrotate((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?-1:1); break;
+	case SDLK_g:        dpl.colmode=COL_G; break;
+	case SDLK_b:        dpl.colmode=COL_B; break;
+	case SDLK_c:        dpl.colmode=COL_C; break;
 	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(sdl.writemode) dpldel(); break;
 	case SDLK_RIGHT:    dplmove( 1); break;
@@ -449,6 +479,8 @@ void dplkey(SDL_keysym key){
 	case SDLK_PAGEUP:   dplmove( 3); break;
 	case SDLK_PAGEDOWN: dplmove(-3); break;
 	case SDLK_SPACE:    dpl.run=dpl.run ? 0 : -100000; break;
+	case SDLK_PLUS:     dplcol(1); break;
+	case SDLK_MINUS:    dplcol(-1); break;
 	default: break;
 	}
 	if(key.sym>=SDLK_0 && key.sym<=SDLK_9){

@@ -134,38 +134,90 @@ void glrendermark(struct ipos *ipos,float rot){
 void glrenderimg(struct img *img,char back){
 	struct img *isc;
 	struct ipos *ipos;
-	struct iopt *iopt;
+	struct iopt *iopt=imgposopt(img->pos);
+	struct icol *icol;
 	float irat=imgldrat(img->ld);
 	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
-	iopt=imgposopt(img->pos);
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
 	if(!(isc=glseltex(img,iopt->tex))) return;
 	ipos=imgposcur(img->pos);
+	icol=imgposcol(img->pos);
 	glPushMatrix();
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
 	iopt=imgposopt(isc->pos);
 	glColor4f(1.,1.,1.,ipos->a);
-	{
+	// rotate in real ratio
+	if(srat<irat) glScalef(srat,1.,1.);
+	else          glScalef(1.,1./srat,1.);
+	if(ipos->r) glRotatef(ipos->r,0.,0.,1.);
+	if(srat<irat) glScalef(1./irat,1.,1.);
+	else          glScalef(1.,irat,1.);
+	if(ipos->r){
 		// get rotation near to 90°/270°
 		float rot90 = ipos->r;
 		while(rot90>= 90.) rot90-=180.;
 		while(rot90< -90.) rot90+=180.;
 		if(rot90<0.) rot90*=-1.;
 		rot90/=90.;
-		// rotate in real ratio
-		if(srat<irat) glScalef(srat,1.,1.);
-		else          glScalef(1.,1./srat,1.);
-		glRotatef(ipos->r,0.,0.,1.);
-		if(srat<irat) glScalef(1./irat,1.,1.);
-		else          glScalef(1.,irat,1.);
 		// correct size
 		if(irat<srat) irat=1./irat; /* TODO: fix */
 		irat=powf(irat,rot90);
 		glScalef(irat,irat,1.);
 	}
+	// collor correction
+	if(icol->g || icol->b || icol->c){
+		/* http://stackoverflow.com/questions/1506299/applying-brightness-and-contrast-with-opengl-es
+		 * http://www.opengl.org/sdk/docs/man/xhtml/glGetTexEnv.xml
+		 * http://www.opengl.org/sdk/docs/man/xhtml/glTexEnv.xml
+		 */
+		float g,b,c;
+		GLint op1,op2;
+		b=icol->b;
+		c=-logf((1.f-icol->c)/2.f)/logf(2.f);
+		g=-logf((1.f-icol->g)/2.f)/logf(2.f);
+		if(icol->c>=0.f){
+			b=b-.5f+.5f/c;
+			op1 = b<0.f ? GL_SUBTRACT : GL_ADD;
+			op2 = GL_MODULATE;
+			b=fabs(b);
+		}else{
+			b=(b-.5f)*c+.5f;
+			op1 = GL_MODULATE;
+			op2 = b<0.f ? GL_SUBTRACT : GL_ADD;
+			b=fabs(b);
+		}
+		glColor4f(b,b,b,c);
+
+		glActiveTexture(GL_TEXTURE0);
+		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,op1);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_RGB,GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC1_RGB,GL_PRIMARY_COLOR);
+		if(c<=1.f) glTexEnvi(GL_TEXTURE_ENV,GL_OPERAND1_RGB,GL_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_ALPHA,GL_TEXTURE);
+
+		glActiveTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,op2);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_RGB,GL_PREVIOUS);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC1_RGB,GL_PRIMARY_COLOR);
+		if(c>1.f) glTexEnvi(GL_TEXTURE_ENV,GL_OPERAND1_RGB,GL_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_ALPHA,GL_PREVIOUS);
+	}
+	// draw img
 	glCallList(gl.dls+DLS_IMG);
+	if(icol->g || icol->b || icol->c){
+		glDisable(GL_TEXTURE_2D);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+		glActiveTexture(GL_TEXTURE0);
+		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+	}
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
 	glPopMatrix();
 }
@@ -173,7 +225,7 @@ void glrenderimg(struct img *img,char back){
 void glrenderimgs(){
 	struct img *img;
 	glmode(GLM_2D);
-	if(delimg) glrenderimg(delimg,0);
+	if(delimg) glrenderimg(delimg,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
 }
