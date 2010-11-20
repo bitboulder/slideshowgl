@@ -25,6 +25,7 @@ struct sdl sdl = {
 	.sync       = 0,
 	.writemode  = 0,
 	.hidecursor = 0,
+	.move.base_x= 0xffff,
 };
 
 void switchdpms(char val){
@@ -106,9 +107,49 @@ void sdlkey(SDL_keysym key){
 	dplkeyput(key);
 }
 
-void sdlmotion(){
+void sdlmove(Uint16 x,Uint16 y){
+	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
+	SDL_keysym key={0,0,0,0};
+	int zoom=dplgetzoom();
+	int w=100,wthr;
+	switch(zoom){
+		case -1: w=sdl.scr_h/3/2; break;
+		case -2: w=sdl.scr_h/5/2; break;
+		case -3: w=sdl.scr_h/7/2; break;
+	}
+	if(zoom!=0){ xd*=-1; yd*=-1; }
+	wthr=w*7/10;
+	if(xd<sdl.move.pos_x*w-wthr){ key.sym=SDLK_LEFT;  sdl.move.pos_x--; }
+	if(xd>sdl.move.pos_x*w+wthr){ key.sym=SDLK_RIGHT; sdl.move.pos_x++; }
+	if(yd<sdl.move.pos_y*w-wthr){ key.sym=SDLK_UP;    sdl.move.pos_y--; }
+	if(yd>sdl.move.pos_y*w+wthr){ key.sym=SDLK_DOWN;  sdl.move.pos_y++; }
+	if(key.sym) sdlkey(key);
+	// SDL_Wrap
+}
+
+void sdlmotion(Uint16 x,Uint16 y){
 	SDL_ShowCursor(SDL_ENABLE);
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
+	if(sdl.move.base_x!=0xffff) sdlmove(x,y);
+}
+
+void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
+	SDL_keysym key={0,0,0,0};
+	if(down && button==SDL_BUTTON_WHEELUP){
+		key.sym=SDLK_PAGEUP;
+		sdlkey(key);
+	}else if(down && button==SDL_BUTTON_WHEELDOWN){
+		key.sym=SDLK_PAGEDOWN;
+		sdlkey(key);
+	}else if(down && button==SDL_BUTTON_LEFT){
+		sdl.move.pos_x=0;
+		sdl.move.pos_y=0;
+		sdl.move.base_x=x;
+		sdl.move.base_y=y;
+	}else if(!down && button==SDL_BUTTON_LEFT){
+		sdlmove(x,y);
+		sdl.move.base_x=0xffff;
+	}
 }
 
 void sdlhidecursor(){
@@ -123,7 +164,9 @@ char sdlgetevent(){
 	switch(ev.type){
 	case SDL_VIDEORESIZE: sdlresize(ev.resize.w,ev.resize.h); break;
 	case SDL_KEYDOWN: sdlkey(ev.key.keysym); break;
-	case SDL_MOUSEMOTION: sdlmotion(); break;
+	case SDL_MOUSEMOTION: sdlmotion(ev.motion.x,ev.motion.y); break;
+	case SDL_MOUSEBUTTONDOWN: sdlbutton(1,ev.button.button,ev.button.x,ev.button.y); break;
+	case SDL_MOUSEBUTTONUP:   sdlbutton(0,ev.button.button,ev.button.x,ev.button.y); break;
 	case SDL_QUIT: return 0;
 	}
 	return 1;

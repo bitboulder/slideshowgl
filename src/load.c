@@ -25,7 +25,7 @@ struct load {
 	char vartex;
 	pthread_mutex_t mutex;
 } load = {
-	.texsize = { 256, 512, 2048, 32768, },
+	.texsize = { 256, 512, 2048, 8192, },
 	.vartex = 0,
 };
 

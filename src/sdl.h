@@ -7,6 +7,11 @@ struct sdlcfg {
 	Uint32 hidecursor;
 };
 
+struct sdlmove {
+	Uint16 base_x, base_y;
+	int pos_x, pos_y;
+};
+
 struct sdl {
 	struct sdlcfg cfg;
 	char quit;
@@ -17,6 +22,7 @@ struct sdl {
 	int sync;
 	char writemode;
 	Uint32 hidecursor;
+	struct sdlmove move;
 };
 extern struct sdl sdl;
 
