@@ -15,6 +15,7 @@
 #include "load.h"
 #include "cfg.h"
 #include "exif.h"
+#include "pano.h"
 
 enum dls { DLS_IMG, DLS_NUM };
 
@@ -363,6 +364,7 @@ void glpaint(){
 	glrenderinfo();
 	glrenderinputnum();
 	glrenderhelp();
+	panorender();
 	
 	glframerate();
 	SDL_GL_SwapBuffers();

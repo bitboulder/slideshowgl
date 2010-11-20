@@ -69,6 +69,7 @@ struct imgld {
 	int w,h;
 	struct itex texs[TEX_NUM];
 	struct img *img;
+	struct ipano pano;
 };
 
 /* thread: img */
@@ -108,6 +109,9 @@ void imgldrefresh(struct imgld *il){
 	int i;
 	for(i=0;i<TEX_NUM;i++) il->texs[i].refresh=1;
 }
+
+/* thread: gl */
+struct ipano *imgldpano(struct imgld *il){ return il->pano.enable ? &il->pano : NULL; }
 
 /***************************** sdlimg *****************************************/
 
@@ -214,6 +218,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<0) return ld;
 	if(il->texs[it].loading) return ld;
 	if(il->texs[it].tex && !il->texs[it].refresh) return ld;
+	if(it==TEX_FULL && il->pano.enable) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){
@@ -452,6 +457,17 @@ void *ldthread(void *arg){
 
 /***************************** load files init ********************************/
 
+void ldpanoinit(struct imgld *il){
+	char cmd[1024];
+	FILE *fd;
+	snprintf(cmd,512,"/mnt/img/self/scriptz/pano.pl %s 2>/dev/null",il->fn);
+	if(!(fd=popen(cmd,"r"))) return;
+	il->pano.rotinit=4.f;
+	fscanf(fd,"%f %f %f %f",&il->pano.gw,&il->pano.gh,&il->pano.gyoff,&il->pano.rotinit);
+	pclose(fd);
+	il->pano.enable = il->pano.gw && il->pano.gh;
+}
+
 void ldfindthumb(struct img *img,char *fn){
 	int i;
 	FILE *fd;
@@ -475,6 +491,7 @@ void ldaddfile(char *fn){
 		if((fn=realpath(fn,rfn))) ldfindthumb(img,fn);
 	}
 #endif
+	ldpanoinit(img->ld);
 }
 
 void ldaddflst(char *flst){

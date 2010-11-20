@@ -123,7 +123,7 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 }
 
 void effmove(struct ipos *ip,int i){
-	ip->a=1.;
+	ip->a = dpl.pos.zoom>0 && imgldpano(imgs[i]->ld) ? 0.f : 1.f;
 	ip->m=(imgs[i]->pos->mark && sdl.writemode)?1.:0.;
 	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dpl.pos.zoom<0){

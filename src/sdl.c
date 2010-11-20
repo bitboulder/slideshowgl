@@ -11,6 +11,7 @@
 #include "load.h"
 #include "dpl.h"
 #include "cfg.h"
+#include "pano.h"
 
 SDL_Surface *screen;
 
@@ -183,7 +184,7 @@ void sdldelay(Uint32 *last,Uint32 delay){
 	/* thread: dpl, load */
 	/* TODO: remove */
 	void sdlthreadcheck(){
-		if(SDL_GetTicks()-paint_last>3000)
+		if(SDL_GetTicks()-paint_last>10000)
 			system("killall -9 slideshowgl");
 	}
 
@@ -197,6 +198,7 @@ void *sdlthread(void *arg){
 		
 		if(!dplineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
+		panocheck();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 

@@ -3,6 +3,7 @@
 
 #include <GL/gl.h>
 #include "img.h"
+#include "pano.h"
 
 void ldmaxtexsize();
 void ldcheckvartex();
@@ -14,6 +15,7 @@ GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
 void imgldrefresh(struct imgld *il);
+struct ipano *imgldpano(struct imgld *il);
 
 char ldtexload();
 char ldffree(struct imgld *il,enum imgtex thold);

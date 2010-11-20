@@ -122,3 +122,11 @@ void SDL_ColMod(SDL_Surface *Surface, float g, float b, float c){
 			SDL_PutPixel(Surface,x,y,px);
 		}
 }
+
+void SDL_ExtractSurface(SDL_Surface *src, SDL_Surface *dst, Sint32 xoff, Sint32 yoff){
+	for(Sint32 y = 0; y < dst->h; y++)
+		for(Sint32 x = 0; x < dst->w; x++){
+			SDL_PutPixel(dst,x,y,SDL_GetPixel(src,x+xoff,y+yoff));
+		}
+
+}
