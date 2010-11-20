@@ -448,6 +448,7 @@ void *ldthread(void *arg){
 	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl.quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
+		panocheck();
 		sdlthreadcheck();
 	}
 	ldconceptfree();

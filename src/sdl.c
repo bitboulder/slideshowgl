@@ -198,7 +198,6 @@ void *sdlthread(void *arg){
 		
 		if(!dplineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
-		panocheck();
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 

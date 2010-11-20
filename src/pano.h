@@ -11,5 +11,6 @@ struct ipano {
 
 void panocheck();
 void panorender();
+void panorun();
 
 #endif

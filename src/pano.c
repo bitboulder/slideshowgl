@@ -12,10 +12,26 @@
 #include "help.h"
 #include "sdl.h"
 
+/* TODO: join with load.c */
+struct itex {
+	GLuint tex;
+	char loading;
+	char thumb;
+	char refresh;
+};
+struct sdlimg {
+	SDL_Surface *sf;
+	int ref;
+};
+void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg);
+struct sdlimg* sdlimg_gen(SDL_Surface *sf);
+void sdlimg_unref(struct sdlimg *sdlimg);
+/* TODO: join with load.c */
+
 struct pimg {
 	float gx,gy;
 	float gw,gh;
-	GLuint tex;
+	struct itex tex;
 };
 
 struct pano {
@@ -24,14 +40,17 @@ struct pano {
 	char initfailed;
 	int npimg;
 	struct pimg *pimgs;
+	char run;
 } pano = {
 	.ip=NULL,
 	.initfailed=0,
 	.pimgs=NULL,
+	.run=1,
 };
 
 void panoinit(struct img *img,struct ipano *ip){
-	SDL_Surface *sdlimg,*sdlimg2=NULL;
+	SDL_Surface *sdlimg;
+	struct sdlimg *sdlimg2;
 	int xres,yres,nx,ny,x,y;
 	char *fn=imgldfn(img->ld);
 	pano.ipos=imgposcur(img->pos);
@@ -45,7 +64,7 @@ void panoinit(struct img *img,struct ipano *ip){
 	pano.npimg=nx*ny;
 	pano.pimgs=realloc(pano.pimgs,sizeof(struct pimg)*pano.npimg);
 	for(x=0;x<nx;x++) for(y=0;y<ny;y++){
-//		SDL_Rect rsrc;
+		SDL_Rect rsrc;
 		struct pimg *p=pano.pimgs+x*ny+y;
 		int w = x<nx-1 ? xres : sdlimg->w-xres*x;
 		int h = y<ny-1 ? yres : sdlimg->h-yres*y;
@@ -53,22 +72,14 @@ void panoinit(struct img *img,struct ipano *ip){
 		p->gy=(((float)y*yres+(float)h/2.f)/(float)sdlimg->h-.5f)*ip->gh;
 		p->gw=(float)w/(float)sdlimg->w*ip->gw;
 		p->gh=(float)h/(float)sdlimg->h*ip->gh;
-//		rsrc.x=x*xres; rsrc.w=w;
-//		rsrc.y=y*yres; rsrc.h=h;
-		if(!sdlimg2 || sdlimg2->w!=w || sdlimg2->h!=h){
-			if(sdlimg2) SDL_FreeSurface(sdlimg2);
-			sdlimg2=SDL_CreateRGBSurface(SDL_SWSURFACE,w,h, sdlimg->format->BitsPerPixel,
-				sdlimg->format->Rmask, sdlimg->format->Gmask, sdlimg->format->Bmask, sdlimg->format->Amask);
-		}
-//		SDL_BlitSurface(sdlimg,&rsrc,sdlimg2,NULL);
-		SDL_ExtractSurface(sdlimg,sdlimg2,x*xres,y*yres);
-		glGenTextures(1,&p->tex);
-		glBindTexture(GL_TEXTURE_2D,p->tex);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, sdlimg2->w, sdlimg2->h, 0, GL_RGB, GL_UNSIGNED_BYTE, sdlimg2->pixels);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		rsrc.x=x*xres; rsrc.w=w;
+		rsrc.y=y*yres; rsrc.h=h;
+		sdlimg2=sdlimg_gen(SDL_CreateRGBSurface(SDL_SWSURFACE,w,h, sdlimg->format->BitsPerPixel,
+				sdlimg->format->Rmask, sdlimg->format->Gmask, sdlimg->format->Bmask, sdlimg->format->Amask));
+		SDL_BlitSurface(sdlimg,&rsrc,sdlimg2->sf,NULL);
+		p->tex.tex=0;
+		ldtexload_put(&p->tex,sdlimg2);
 	}
-	SDL_FreeSurface(sdlimg2);
 	SDL_FreeSurface(sdlimg);
 	pano.ip=ip;
 	debug(DBG_STA,"Pano init ready");
@@ -80,7 +91,7 @@ end:
 void panofree(){
 	int i;
 	pano.ip=NULL;
-	for(i=0;i<pano.npimg;i++) glDeleteTextures(1,&pano.pimgs[i].tex);
+	for(i=0;i<pano.npimg;i++) ldtexload_put(&pano.pimgs[i].tex,NULL);
 	free(pano.pimgs);
 	debug(DBG_STA,"Pano free ready");
 	pano.pimgs=NULL;
@@ -96,25 +107,25 @@ void panocheck(){
 	else if(!pano.initfailed) panoinit(img,ip);
 }
 
-void panovertex(float tx,float ty){
+void panovertex(double tx,double ty){
 	const float radius=10.f;
-	float xyradius,x,y,z;
-	tx*=M_PI/180.f;
-	ty*=M_PI/180.f;
+	double xyradius,x,y,z;
+	tx*=M_PI/180.;
+	ty*=M_PI/180.;
 	xyradius=cos(ty)*radius;
 	y=sin(ty)*radius;
 	x=sin(tx)*xyradius;
 	z=cos(tx)*xyradius;
-	glVertex3f(x,y,z);
+	glVertex3d(x,y,z);
 }
 
 void panorenderpimg(struct pimg *p){
-	glBindTexture(GL_TEXTURE_2D,p->tex);
+	glBindTexture(GL_TEXTURE_2D,p->tex.tex);
 	glBegin(GL_QUADS);
-	glTexCoord2i(0,0); panovertex(p->gx-p->gw/2.f,p->gy-p->gh/2.f);
-	glTexCoord2i(1,0); panovertex(p->gx+p->gw/2.f,p->gy-p->gh/2.f);
-	glTexCoord2i(1,1); panovertex(p->gx+p->gw/2.f,p->gy+p->gh/2.f);
-	glTexCoord2i(0,1); panovertex(p->gx-p->gw/2.f,p->gy+p->gh/2.f);
+	glTexCoord2i(0,0); panovertex(p->gx-p->gw/2.,p->gy-p->gh/2.);
+	glTexCoord2i(1,0); panovertex(p->gx+p->gw/2.,p->gy-p->gh/2.);
+	glTexCoord2i(1,1); panovertex(p->gx+p->gw/2.,p->gy+p->gh/2.);
+	glTexCoord2i(0,1); panovertex(p->gx-p->gw/2.,p->gy+p->gh/2.);
 	glEnd();
 }
 
@@ -131,7 +142,13 @@ void panorender(){
 	glLoadIdentity();
 	gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 	glRotatef(pano.ipos->y*pano.ip->gw,-1.,0.,0.);
-	glRotatef(pano.ipos->x*pano.ip->gh,0.,-1.,0.);
+	glRotatef(pano.ipos->x*pano.ip->gh, 0.,1.,0.);
 	glColor4f(1.,1.,1.,1.);
 	for(i=0;i<pano.npimg;i++) panorenderpimg(pano.pimgs+i);
+}
+
+void panorun(){
+	if(!pano.ip) return;
+	if(!pano.run) return;
+	pano.ipos->x+=.01f;
 }
