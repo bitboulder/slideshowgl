@@ -59,6 +59,7 @@ struct itex {
 	GLuint tex;
 	char loading;
 	char thumb;
+	char refresh;
 };
 
 struct imgld {
@@ -102,6 +103,11 @@ float imgldrat(struct imgld *il){
 
 /* thread: dpl, load */
 char *imgldfn(struct imgld *il){ return il->fn; }
+
+void imgldrefresh(struct imgld *il){
+	int i;
+	for(i=0;i<TEX_NUM;i++) il->texs[i].refresh=1;
+}
 
 /***************************** sdlimg *****************************************/
 
@@ -196,19 +202,20 @@ int sizesel(int sdemand,int simg){
 	return size;
 }
 
-char ldfload(struct imgld *il,enum imgtex it,char replace){
+char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
 	char *fn = il->fn;
 	char thumb=0;
+	struct icol *icol;
 	if(il->loadfail) return ld;
 	while(it>=0 && !load.texsize[it]) it--;
 	if(it<0) return ld;
 	if(il->texs[it].loading) return ld;
-	if(il->texs[it].tex && !replace) return ld;
+	if(il->texs[it].tex && !il->texs[it].refresh) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
-	imgexifload(il->img->exif,il->fn,replace);
+	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){
 		fn=il->tfn;
 		thumb=1;
@@ -218,6 +225,9 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
 	if(sdlimg->sf->format->BytesPerPixel!=3){ error(ERR_CONT,"Wrong pixelformat \"%s\"",fn); goto end; }
 
+	icol=imgposcol(il->img->pos);
+	if(icol->g) SDL_ColMod(sdlimg->sf,icol->g,0.f,0.f);
+
 	il->w=sdlimg->sf->w;
 	il->h=sdlimg->sf->h;
 	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
@@ -226,7 +236,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 	for(i=it;i>=0;i--){
 		struct sdlimg *sdlimgscale;
 		int size=64;
-		if(!replace && il->texs[i].tex && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
+		if(il->texs[i].tex && !il->texs[i].refresh && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
 		if(il->texs[i].loading) continue;
 		if(i<TEX_NUM && !(size=load.texsize[i])) continue;
 		if((sdlimgscale = sdlimg_gen(SDL_ScaleSurface(sdlimg->sf,sizesel(size,il->w),sizesel(size,il->h))))){
@@ -235,6 +245,7 @@ char ldfload(struct imgld *il,enum imgtex it,char replace){
 		}
 		sdlimg_ref(sdlimg);
 		il->texs[i].thumb=thumb;
+		il->texs[i].refresh=0;
 		debug(DBG_DBG,"ld Loading to tex %s (%ix%i)",imgtex_str[i],sdlimg->sf->w,sdlimg->sf->h);
 		ldtexload_put(il->texs+i,sdlimg);
 		ld=1;
@@ -416,7 +427,7 @@ char ldcheck(){
 		if(dplloop()) imgri=(imgri+nimg)%nimg;
 		img=imgget(imgri);
 		tex=ldcp->load[i].tex;
-		if(img && ldfload(img->ld,tex,0)){ ret=1; break; }
+		if(img && ldfload(img->ld,tex)){ ret=1; break; }
 	}
 
 	return ret;
@@ -429,7 +440,7 @@ extern Uint32 paint_last;
 void *ldthread(void *arg){
 	pthread_mutex_init(&load.mutex,NULL);
 	ldconceptcompile();
-	ldfload(defimg->ld,TEX_BIG,0);
+	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl.quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
 		sdlthreadcheck();

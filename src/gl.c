@@ -171,16 +171,15 @@ void glrenderimg(struct img *img,char back){
 		glScalef(schg,schg,1.);
 	}
 	// collor correction
-	if(icol->g || icol->b || icol->c){
+	if(icol->b || icol->c){
 		/* http://stackoverflow.com/questions/1506299/applying-brightness-and-contrast-with-opengl-es
 		 * http://www.opengl.org/sdk/docs/man/xhtml/glGetTexEnv.xml
 		 * http://www.opengl.org/sdk/docs/man/xhtml/glTexEnv.xml
 		 */
-		float g,b,c;
+		float b,c;
 		GLint op1,op2;
 		b=icol->b;
 		c=-logf((1.f-icol->c)/2.f)/logf(2.f);
-		g=-logf((1.f-icol->g)/2.f)/logf(2.f);
 		if(icol->c>=0.f){
 			b=b-.5f+.5f/c;
 			op1 = b<0.f ? GL_SUBTRACT : GL_ADD;

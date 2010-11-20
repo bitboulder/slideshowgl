@@ -48,7 +48,7 @@ def CheckLibMy(context, name, demand, define):
 	if define:
 		env['HAVE_'+define] = ret
 	if not ret and demand:
-		print 'Function \'%s\' must be available!' % name
+		print 'Library \'%s\' must be installed!' % name
 		Exit(1)
 	return ret
 
@@ -113,6 +113,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 
 	conf.CheckFuncMy('realpath',0,'REALPATH')
+	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
 
 	env = conf.Finish()

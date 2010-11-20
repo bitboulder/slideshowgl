@@ -1,6 +1,5 @@
 # Availabilty
 - pano [p,0x8] (5°)
-- render gamma
 
 # Comfort
 - mouse interface
@@ -10,6 +9,7 @@
 - fix sdlthreadcheck
 - optimize SDL_ScaleSurface
 - fix brightness for contrast<=0
+- fix gamma
 
 # Want to have
 ? display loop imgs if zoom<0

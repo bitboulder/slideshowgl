@@ -400,6 +400,7 @@ void dplcol(int d){
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
 	if(*val> 1.f) *val= 1.f;
+	if(dpl.colmode==COL_G) imgldrefresh(img->ld);
 }
 
 /***************************** dpl action *************************************/

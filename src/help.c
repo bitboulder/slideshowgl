@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <math.h>
 #include "help.h"
 
 Uint32 SDL_GetPixel(SDL_Surface *surface, int x, int y)
@@ -87,7 +88,7 @@ SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 	return _ret;
 }
 
-#ifdef __WIN32__
+#if ! HAVE_STRSEP
 char *strsep(char **stringp, const char *delim){
 	int i;
 	char *tok;
@@ -105,3 +106,19 @@ char *strsep(char **stringp, const char *delim){
 }
 #endif
 
+void px_colmod(Uint8 *vi,float g,float b,float c){
+	float v=(float)*vi/255.f;
+	v=powf(v,g);
+	*vi=(Uint8)(v*255.f);
+}
+
+void SDL_ColMod(SDL_Surface *Surface, float g, float b, float c){
+	g=-logf((1.f-g)/2.f)/logf(2.f);
+	for(Sint32 y = 0; y < Surface->h; y++)
+		for(Sint32 x = 0; x < Surface->w; x++){
+			Uint32 px;
+			px=SDL_GetPixel(Surface,x,y);
+			for(Sint32 i=0;i<4;i++) px_colmod(((Uint8*)(&px))+i,g,b,c);
+			SDL_PutPixel(Surface,x,y,px);
+		}
+}

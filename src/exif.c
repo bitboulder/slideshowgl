@@ -104,10 +104,10 @@ char *imgexifgetinfo(ExifData *exdat){
 #endif
 
 /* thread: load */
-void imgexifload(struct imgexif *exif,char *fn,char replace){
+void imgexifload(struct imgexif *exif,char *fn){
 #if HAVE_EXIF
 	ExifData *exdat;
-	if(exif->load && !replace) return;
+	if(exif->load) return;
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	if(!(exdat=exif_data_new_from_file(fn))) return;
