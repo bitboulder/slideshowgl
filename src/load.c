@@ -26,6 +26,7 @@ struct load {
 	pthread_mutex_t mutex;
 } load = {
 	.texsize = { 256, 512, 2048, 8192, },
+	/* ms:       1.2  1.2    20 */
 	.vartex = 0,
 };
 
@@ -177,12 +178,15 @@ char ldtexload(){
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
 		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
+		//timer(-2);
 		if(!tl->itex->tex) glGenTextures(1,&tl->itex->tex);
 		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256);
 		sdlimg_unref(tl->sdlimg);
+		//timer(0);
 	}else{
 		if(tl->itex->tex) glDeleteTextures(1,&tl->itex->tex);
 		tl->itex->tex=0;

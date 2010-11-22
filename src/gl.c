@@ -367,6 +367,7 @@ void glpaint(){
 	panorender();
 	
 	glframerate();
+	timer(3,1);
 	SDL_GL_SwapBuffers();
 
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);

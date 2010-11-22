@@ -105,44 +105,60 @@ void sdlinit(){
 }
 
 void sdlkey(SDL_keysym key){
-	dplkeyput(key);
+	switch(key.sym){
+		case SDLK_RIGHT:    dplevput(DE_RIGHT  ,key.sym,0.f,0.f); break;
+		case SDLK_LEFT:     dplevput(DE_LEFT   ,key.sym,0.f,0.f); break;
+		case SDLK_UP:       dplevput(DE_UP     ,key.sym,0.f,0.f); break;
+		case SDLK_DOWN:     dplevput(DE_DOWN   ,key.sym,0.f,0.f); break;
+		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN ,key.sym,0.f,0.f); break;
+		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT,key.sym,0.f,0.f); break;
+		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1,key.sym,0.f,0.f); break;
+		case SDLK_SPACE:    dplevput(DE_PLAY   ,key.sym,0.f,0.f); break;
+		default:            dplevput(DE_KEY    ,key.sym,0.f,0.f); break;
+	}
 }
 
 void sdlmove(Uint16 x,Uint16 y){
 	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
-	SDL_keysym key={0,0,0,0};
 	int zoom=dplgetzoom();
 	int w=100,wthr;
-	switch(zoom){
-		case -1: w=sdl.scr_h/3/2; break;
-		case -2: w=sdl.scr_h/5/2; break;
-		case -3: w=sdl.scr_h/7/2; break;
+	enum dplev ev=0;
+	if(zoom<=0){
+		switch(zoom){
+			case -1: w=sdl.scr_h/3/2; break;
+			case -2: w=sdl.scr_h/5/2; break;
+			case -3: w=sdl.scr_h/7/2; break;
+		}
+		if(zoom!=0){ xd*=-1; yd*=-1; }
+		wthr=w*7/10;
+		if(xd<sdl.move.pos_x*w-wthr){ ev=DE_LEFT;  sdl.move.pos_x--; }
+		if(xd>sdl.move.pos_x*w+wthr){ ev=DE_RIGHT; sdl.move.pos_x++; }
+		if(yd<sdl.move.pos_y*w-wthr){ ev=DE_UP;    sdl.move.pos_y--; }
+		if(yd>sdl.move.pos_y*w+wthr){ ev=DE_DOWN;  sdl.move.pos_y++; }
+		if(ev) dplevput(ev,0,0.f,0.f);
+	}else{
+		float fxd = -(float)xd/(float)sdl.scr_w;
+		float fyd = -(float)yd/(float)sdl.scr_h;
+		dplevput(DE_MOVE,0,fxd,fyd);
+		sdl.move.base_x=x;
+		sdl.move.base_y=y;
 	}
-	if(zoom!=0){ xd*=-1; yd*=-1; }
-	wthr=w*7/10;
-	if(xd<sdl.move.pos_x*w-wthr){ key.sym=SDLK_LEFT;  sdl.move.pos_x--; }
-	if(xd>sdl.move.pos_x*w+wthr){ key.sym=SDLK_RIGHT; sdl.move.pos_x++; }
-	if(yd<sdl.move.pos_y*w-wthr){ key.sym=SDLK_UP;    sdl.move.pos_y--; }
-	if(yd>sdl.move.pos_y*w+wthr){ key.sym=SDLK_DOWN;  sdl.move.pos_y++; }
-	if(key.sym) sdlkey(key);
 	// SDL_Wrap
 }
 
 void sdlmotion(Uint16 x,Uint16 y){
 	SDL_ShowCursor(SDL_ENABLE);
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
+	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdlmove(x,y);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
-	SDL_keysym key={0,0,0,0};
-	if(down && button==SDL_BUTTON_WHEELUP){
-		key.sym=SDLK_PAGEUP;
-		sdlkey(key);
-	}else if(down && button==SDL_BUTTON_WHEELDOWN){
-		key.sym=SDLK_PAGEDOWN;
-		sdlkey(key);
-	}else if(down && button==SDL_BUTTON_LEFT){
+	float fx = (float)x/(float)sdl.scr_w - .5f;
+	float fy = (float)y/(float)sdl.scr_h - .5f;
+	if(down && button==SDL_BUTTON_WHEELUP) dplevput(DE_ZOOMIN,0,fx,fy);
+	else if(down && button==SDL_BUTTON_WHEELDOWN) dplevput(DE_ZOOMOUT,0,fx,fy);
+	else if(down && button==SDL_BUTTON_LEFT){
 		sdl.move.pos_x=0;
 		sdl.move.pos_y=0;
 		sdl.move.base_x=x;
@@ -195,13 +211,17 @@ void *sdlthread(void *arg){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
+		timer(0,1);
 		
 		if(!dplineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
+		timer(1,1);
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
+		timer(2,1);
 
 		glpaint();
+		timer(4,1);
 	}
 	sdl.quit=1;
 	switchdpms(1);

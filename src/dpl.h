@@ -27,6 +27,25 @@ struct icol {
 
 enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
 
+enum dplev {
+	DE_MOVE    = 0x001,
+	DE_RIGHT   = 0x002,
+	DE_LEFT    = 0x004,
+	DE_UP      = 0x008,
+	DE_DOWN    = 0x010,
+	DE_ZOOMIN  = 0x020,
+	DE_ZOOMOUT = 0x040,
+	DE_ROT1    = 0x080,
+	DE_ROT2    = 0x100,
+	DE_PLAY    = 0x200,
+	DE_KEY     = 0x400,
+};
+#define DE_HOR		(DE_RIGHT|DE_LEFT)
+#define DE_VER  	(DE_UP|DE_DOWN)
+#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
+#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT))?-1:0))
+#define DE_NEG(ev)	(DE_DIR(ev)>0?(ev<<1):(DE_DIR(ev)<0?(ev>>1):0))
+
 void effrefresh(enum effrefresh val);
 int dplgetimgi();
 int dplgetzoom();
@@ -45,7 +64,8 @@ struct icol *imgposcol(struct imgpos *ip);
 void imgpossetmark(struct imgpos *ip);
 char imgposmark(struct imgpos *ip);
 
-void dplkeyput(SDL_keysym key);
+void printixy(float sx,float sy);
+void dplevput(enum dplev ev,SDLKey key,float x,float y);
 void *dplthread(void *arg);
 
 #endif

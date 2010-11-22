@@ -1,6 +1,8 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+void timer(int id,char reset);
+
 #define EDEBUG	E(NONE), E(STA), E(DBG)
 #define E(X)	DBG_##X
 enum debug { EDEBUG, ERR_QUIT, ERR_CONT };

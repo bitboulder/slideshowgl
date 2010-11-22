@@ -1,9 +1,5 @@
-# Availabilty
-- pano [p,0x8] (5°)
-
 # Comfort
 - check for system data dir
-- mouse interface with real position
 
 # Fixes
 - fix sdlthreadcheck
