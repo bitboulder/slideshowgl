@@ -295,15 +295,28 @@ void effinit(enum effrefresh effref,enum dplev ev){
 	
 }
 
+void dplclippos(struct img *img){
+	float w,h;
+	float x[2],y[2];
+	if(!imgspos2ipos(img,.5f,.5f,&w,&h)) return;
+	x[0]=-.5f+w; x[1]= .5f-w;
+	y[0]=-.5f+h; y[1]= .5f-h;
+	printf("%.2fx%.2f -> %.2fx%.2f (%.2fx%.2f)\n",x[0],y[0],x[1],y[1],w,h);
+	if(x[1]<x[0]) x[0]=x[1]=0.f;
+	if(y[1]<y[0]) y[0]=y[1]=0.f;
+	if(dpl.pos.x<x[0]) dpl.pos.x=x[0];
+	if(dpl.pos.x>x[1]) dpl.pos.x=x[1];
+	if(dpl.pos.y<y[0]) dpl.pos.y=y[0];
+	if(dpl.pos.y>y[1]) dpl.pos.y=y[1];
+}
+
 void dplmovepos(float sx,float sy){
 	float ix,iy;
-	if(!imgspos2ipos(imgget(dpl.pos.imgi),sx,sy,&ix,&iy)) return;
+	struct img *img=imgget(dpl.pos.imgi);
+	if(!img || !imgspos2ipos(img,sx,sy,&ix,&iy)) return;
 	dpl.pos.x+=ix;
 	dpl.pos.y+=iy;
-	if(dpl.pos.x<-.5f) dpl.pos.x= -.5f;
-	if(dpl.pos.x> .5f) dpl.pos.x=  .5f;
-	if(dpl.pos.y<-.5f) dpl.pos.y= -.5f;
-	if(dpl.pos.y> .5f) dpl.pos.y=  .5f;
+	dplclippos(img);
 	debug(DBG_STA,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 }
 
@@ -318,6 +331,7 @@ void dplzoompos(int nzoom,float sx,float sy){
 		dpl.pos.x+=oix-nix;
 		dpl.pos.y+=oiy-niy;
 	}
+	if(img) dplclippos(img);
 }
 
 void dplmove(enum dplev ev,float x,float y){
@@ -372,8 +386,9 @@ void dplmark(){
 	actadd(ACT_SAVEMARKS,NULL);
 }
 
-void dplrotate(int r){
+void dplrotate(enum dplev ev){
 	struct img *img=imgget(dpl.pos.imgi);
+	int r=DE_DIR(ev);
 	if(!img) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,0);

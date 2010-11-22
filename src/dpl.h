@@ -43,7 +43,7 @@ enum dplev {
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)
 #define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
-#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT))?-1:0))
+#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
 #define DE_NEG(ev)	(DE_DIR(ev)>0?(ev<<1):(DE_DIR(ev)<0?(ev>>1):0))
 
 void effrefresh(enum effrefresh val);
