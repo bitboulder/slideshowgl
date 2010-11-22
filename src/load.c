@@ -1,5 +1,6 @@
 #include "config.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <SDL.h>
 #include <SDL_image.h>
@@ -17,6 +18,11 @@
 #include "exif.h"
 #include "cfg.h"
 #include "act.h"
+
+#ifndef popen
+	extern FILE *popen (__const char *__command, __const char *__modes);
+	extern int pclose (FILE *__stream);
+#endif
 
 /***************************** load *******************************************/
 

@@ -171,6 +171,7 @@ void glrenderimg(struct img *img,char back){
 		schg=powf(schg,rot90);
 		glScalef(schg,schg,1.);
 	}
+#if HAVE_GLACTIVETEXTURE
 	// collor correction
 	if(icol->b || icol->c){
 		/* http://stackoverflow.com/questions/1506299/applying-brightness-and-contrast-with-opengl-es
@@ -213,8 +214,10 @@ void glrenderimg(struct img *img,char back){
 		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
 		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_ALPHA,GL_PREVIOUS);
 	}
+#endif
 	// draw img
 	glCallList(gl.dls+DLS_IMG);
+#if HAVE_GLACTIVETEXTURE
 	if(icol->g || icol->b || icol->c){
 		glDisable(GL_TEXTURE_2D);
 		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
@@ -222,6 +225,7 @@ void glrenderimg(struct img *img,char back){
 		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
 	}
+#endif
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
 	glPopMatrix();
 }

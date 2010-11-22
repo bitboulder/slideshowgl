@@ -12,6 +12,10 @@
 #include "help.h"
 #include "sdl.h"
 
+#ifndef M_PI
+# define M_PI		3.14159265358979323846	/* pi */
+#endif
+
 /* TODO: join with load.c */
 struct itex {
 	GLuint tex;
