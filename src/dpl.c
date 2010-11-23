@@ -301,7 +301,6 @@ void dplclippos(struct img *img){
 	if(!imgspos2ipos(img,.5f,.5f,&w,&h)) return;
 	x[0]=-.5f+w; x[1]= .5f-w;
 	y[0]=-.5f+h; y[1]= .5f-h;
-	printf("%.2fx%.2f -> %.2fx%.2f (%.2fx%.2f)\n",x[0],y[0],x[1],y[1],w,h);
 	if(x[1]<x[0]) x[0]=x[1]=0.f;
 	if(y[1]<y[0]) y[0]=y[1]=0.f;
 	if(dpl.pos.x<x[0]) dpl.pos.x=x[0];

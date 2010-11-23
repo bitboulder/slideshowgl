@@ -27,24 +27,23 @@
 /***************************** load *******************************************/
 
 struct load {
-	int  texsize[TEX_NUM];
+	int  minimgslim[TEX_NUM];
+	int  maximgwide[TEX_NUM];
+	int  maxtexsize;
 	char vartex;
 	pthread_mutex_t mutex;
 } load = {
-	.texsize = { 256, 512, 2048, 8192, },
-	/* ms:       1.2  1.2    20 */
+	.minimgslim = { 128, 384, 1024,    0, },
+	.maximgwide = { 512, 512, 2048, 8192, },
 	.vartex = 0,
+	.maxtexsize = 512,
 };
 
 /* thread: gl */
 void ldmaxtexsize(){
 	GLint maxtex;
-	int i;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex); 
-	for(i=0;i<TEX_NUM;i++) if(load.texsize[i]>maxtex){
-		if(i && load.texsize[i-1]>=maxtex) load.texsize[i]=0;
-		else load.texsize[i]=maxtex;
-	}
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex);
+	if(maxtex<load.maxtexsize) load.maxtexsize=maxtex;
 }
 
 /* thread: gl */
@@ -184,15 +183,17 @@ char ldtexload(){
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
 		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
-		//timer(-2);
+		//timer(-1,0);
 		if(!tl->itex->tex) glGenTextures(1,&tl->itex->tex);
 		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
+		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
+		// http://www.songho.ca/opengl/gl_pbo.html
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256);
+		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
 		sdlimg_unref(tl->sdlimg);
-		//timer(0);
+		//timer(0,0);
 	}else{
 		if(tl->itex->tex) glDeleteTextures(1,&tl->itex->tex);
 		tl->itex->tex=0;
@@ -223,18 +224,16 @@ char ldfload(struct imgld *il,enum imgtex it){
 	char *fn = il->fn;
 	char thumb=0;
 	struct icol *icol;
+	int wide,slim;
+	int lastscale=0;
 	if(il->loadfail) return ld;
-	while(it>=0 && !load.texsize[it]) it--;
 	if(it<0) return ld;
 	if(il->texs[it].loading) return ld;
 	if(il->texs[it].tex && !il->texs[it].refresh) return ld;
 	if(it==TEX_FULL && il->pano.enable) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn);
-	if(it<TEX_BIG && il->tfn[0]){
-		fn=il->tfn;
-		thumb=1;
-	}
+	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
 	debug(DBG_DBG,"ld Loading img \"%s\"",fn);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
@@ -247,22 +246,28 @@ char ldfload(struct imgld *il,enum imgtex it){
 	il->h=sdlimg->sf->h;
 	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
 	effrefresh(EFFREF_FIT);
+	if(il->w<il->h){ slim=il->w; wide=il->h; }
+	else           { slim=il->h; wide=il->w; }
 
-	for(i=it;i>=0;i--){
+	for(i=0;i<=it;i++){
 		struct sdlimg *sdlimgscale;
-		int size=64;
+		int scale=1;
 		if(il->texs[i].tex && !il->texs[i].refresh && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
 		if(il->texs[i].loading) continue;
-		if(i<TEX_NUM && !(size=load.texsize[i])) continue;
-		if((sdlimgscale = sdlimg_gen(SDL_ScaleSurface(sdlimg->sf,sizesel(size,il->w),sizesel(size,il->h))))){
-			sdlimg_unref(sdlimg);
-			sdlimg=sdlimgscale;
+		if(i!=TEX_FULL){
+			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
+			while(wide/scale>load.maximgwide[i]) scale++;
 		}
-		sdlimg_ref(sdlimg);
+		if(lastscale && lastscale==scale) continue;
+		lastscale=scale;
+		if(scale==1 || !(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale)))){
+			sdlimgscale=sdlimg;
+			sdlimg_ref(sdlimgscale);
+		}
 		il->texs[i].thumb=thumb;
 		il->texs[i].refresh=0;
-		debug(DBG_DBG,"ld Loading to tex %s (%ix%i)",imgtex_str[i],sdlimg->sf->w,sdlimg->sf->h);
-		ldtexload_put(il->texs+i,sdlimg);
+		debug(DBG_DBG,"ld Loading to tex %s (%i: %ix%i)",imgtex_str[i],scale,sdlimgscale->sf->w,sdlimgscale->sf->h);
+		ldtexload_put(il->texs+i,sdlimgscale);
 		ld=1;
 	}
 	sdlimg_unref(sdlimg);

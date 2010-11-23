@@ -4,66 +4,43 @@
 
 Uint32 SDL_GetPixel(SDL_Surface *surface, int x, int y)
 {
-	    int bpp = surface->format->BytesPerPixel;
-		    /* Here p is the address to the pixel we want to retrieve */
-		    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to retrieve */
+	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-			    switch(bpp) {
-					    case 1:
-							        return *p;
-									        break;
-
-											    case 2:
-											        return *(Uint16 *)p;
-													        break;
-
-															    case 3:
-															        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-																		            return p[0] << 16 | p[1] << 8 | p[2];
-																	        else
-																				            return p[0] | p[1] << 8 | p[2] << 16;
-																			        break;
-
-																					    case 4:
-																					        return *(Uint32 *)p;
-																							        break;
-
-																									    default:
-																									        return 0;       /* shouldn't happen, but avoids warnings */
-																											    }
+	switch(bpp) {
+	case 1: return *p;
+	case 2: return *(Uint16 *)p;
+	case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+				return p[0] << 16 | p[1] << 8 | p[2];
+			else
+				return p[0] | p[1] << 8 | p[2] << 16;
+	case 4: return *(Uint32 *)p;
+	default: return 0;
+	}
 }
 
 void SDL_PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
-	    int bpp = surface->format->BytesPerPixel;
-		    /* Here p is the address to the pixel we want to set */
-		    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to set */
+	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-			    switch(bpp) {
-					    case 1:
-							        *p = pixel;
-									        break;
-
-											    case 2:
-											        *(Uint16 *)p = pixel;
-													        break;
-
-															    case 3:
-															        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-																		            p[0] = (pixel >> 16) & 0xff;
-																					            p[1] = (pixel >> 8) & 0xff;
-																								            p[2] = pixel & 0xff;
-																											        } else {
-																														            p[0] = pixel & 0xff;
-																																	            p[1] = (pixel >> 8) & 0xff;
-																																				            p[2] = (pixel >> 16) & 0xff;
-																																							        }
-																	        break;
-
-																			    case 4:
-																			        *(Uint32 *)p = pixel;
-																					        break;
-																							    }
+	switch(bpp) {
+	case 1: *p = pixel; break;
+	case 2: *(Uint16 *)p = pixel; break;
+	case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN){
+				p[0] = (pixel >> 16) & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = pixel & 0xff;
+			}else{
+				p[0] = pixel & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = (pixel >> 16) & 0xff;
+			}
+		break;
+	case 4: *(Uint32 *)p = pixel; break;
+	}
 }
 
 SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
@@ -86,6 +63,26 @@ SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 				for(Sint32 o_x = 0; o_x < _stretch_factor_x; ++o_x)
 					SDL_PutPixel(_ret, (Sint32)(_stretch_factor_x * x) + o_x, (Sint32)(_stretch_factor_y * y) + o_y, SDL_GetPixel(Surface, x, y));
 	return _ret;
+}
+
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor)
+{
+    if(!src || factor<2) return 0;
+	Sint32 dw = src->w/factor;
+	Sint32 dh = src->h/factor;
+	Sint32 off = factor/2;
+	SDL_Surface *dst = SDL_CreateRGBSurface(
+			src->flags,
+			dw, dh,
+			src->format->BitsPerPixel,
+			src->format->Rmask, src->format->Gmask,
+			src->format->Bmask, src->format->Amask
+	);
+
+	for(Sint32 y = 0; y < dh; y++)
+		for(Sint32 x = 0; x < dw; x++)
+			SDL_PutPixel(dst,x,y,SDL_GetPixel(src,x*factor+off,y*factor+off));
+	return dst;
 }
 
 #if ! HAVE_STRSEP
