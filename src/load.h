@@ -18,6 +18,7 @@ struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
 void imgldsetimg(struct imgld *il,struct img *img);
 struct itx *imgldtex(struct imgld *il,enum imgtex it);
+struct itx *imgldpanotex(struct imgld *il);
 float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
 void imgldrefresh(struct imgld *il);

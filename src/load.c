@@ -31,7 +31,6 @@ struct load {
 	int  maximgwide[TEX_NUM];
 	int  maxtexsize;
 	char vartex;
-	pthread_mutex_t mutex;
 } load = {
 	.minimgslim = { 128, 384, 1024,    0, },
 	.maximgwide = { 512, 512, 2048, 8192, },
@@ -67,6 +66,7 @@ struct itex {
 	char loading;
 	char thumb;
 	char refresh;
+	char pano;
 };
 
 struct imgld {
@@ -107,7 +107,12 @@ struct itx *imgldtex(struct imgld *il,enum imgtex it){
 	int i;
 	for(i=it;i>=0;i--) if(il->texs[i].loaded) return il->texs[i].tx;
 	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded) return il->texs[i].tx;
-	return 0;
+	return NULL;
+}
+
+struct itx *imgldpanotex(struct imgld *il){
+	if(!il->texs[TEX_FULL].loaded) return NULL;
+	return il->texs[TEX_FULL].tx;
 }
 
 /* thread: dpl, load, gl */
@@ -171,7 +176,6 @@ struct texloadbuf {
 };
 void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,char *loaded){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
-	pthread_mutex_lock(&load.mutex);
 	while(nwi==tlb.ri){
 		if(sdl.quit) return;
 		SDL_Delay(10);
@@ -180,7 +184,6 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,char *loaded){
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
 	tlb.tl[tlb.wi].loaded=loaded;
 	tlb.wi=nwi;
-	pthread_mutex_unlock(&load.mutex);
 }
 
 /* thread: sdl */
@@ -242,7 +245,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<0) return ld;
 	if(il->texs[it].loading != il->texs[it].loaded) return ld;
 	if(il->texs[it].loaded && !il->texs[it].refresh) return ld;
-	if(it==TEX_FULL && il->pano.enable) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
@@ -264,24 +266,27 @@ char ldfload(struct imgld *il,enum imgtex it){
 	for(i=0;i<=it;i++){
 		int scale=1;
 		float sw,sh;
-		int maxtex=load.maxtexsize;
+		int xres=load.maxtexsize;
+		int yres=load.maxtexsize;
 		int tw,th,tx,ty;
 		struct itex *tex = il->texs+i;
 		struct itx *ti;
 		if(tex->loaded && !tex->refresh && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
+		if((tex->pano=(i==TEX_FULL && il->pano.enable)))
+			panores(il->img,&il->pano,il->w,il->h,&xres,&yres);
 		tex->loading=1;
 		tex->loaded=0;
 		if(i!=TEX_FULL){
 			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
 			while(wide/scale>load.maximgwide[i]) scale++;
 		}
-		if(lastscale && lastscale==scale) continue;
+		if(lastscale && lastscale==scale && !tex->pano) continue;
 		lastscale=scale;
 		sw=il->w/scale;
 		sh=il->h/scale;
-		tw=sw/maxtex; if(tw*maxtex<sw) tw++;
-		th=sh/maxtex; if(th*maxtex<sh) th++;
+		tw=sw/xres; if(tw*xres<sw) tw++;
+		th=sh/yres; if(th*yres<sh) th++;
 		debug(DBG_DBG,"ld Loading to tex %s (%i: %ix%i -> t: %ix%i)",imgtex_str[i],scale,il->w/scale,il->h/scale,tw,th);
 		tx=0;
 		if(tex->tx){
@@ -295,14 +300,14 @@ char ldfload(struct imgld *il,enum imgtex it){
 		for(;tx<=tw*th;tx++) tex->tx[tx].tex=0;
 		for(tx=0;tx<tw;tx++) for(ty=0;ty<th;ty++,ti++){
 			struct sdlimg *sdlimgscale;
-			if(!(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale,tx*maxtex,ty*maxtex,maxtex,maxtex)))){
+			if(!(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale,tx*xres,ty*yres,xres,yres)))){
 				sdlimgscale=sdlimg;
 				sdlimg_ref(sdlimgscale);
 			}
 			ti->w=(float)sdlimgscale->sf->w/(float)sw;
 			ti->h=(float)sdlimgscale->sf->h/(float)sh;
-			ti->x=(float)(tx*maxtex)/(float)sw + ti->w*.5f - .5f;
-			ti->y=(float)(ty*maxtex)/(float)sh + ti->h*.5f - .5f;
+			ti->x=(float)(tx*xres)/(float)sw + ti->w*.5f - .5f;
+			ti->y=(float)(ty*yres)/(float)sh + ti->h*.5f - .5f;
 			if(!load.vartex){
 				struct sdlimg *sdlimgscale2;
 				int fw=1,fh=1;
@@ -509,12 +514,10 @@ char ldcheck(){
 extern Uint32 paint_last;
 
 void *ldthread(void *arg){
-	pthread_mutex_init(&load.mutex,NULL);
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl.quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
-		panocheck();
 		sdlthreadcheck();
 	}
 	ldconceptfree();
