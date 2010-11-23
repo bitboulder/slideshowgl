@@ -39,27 +39,29 @@ void panovertex(double tx,double ty){
 	glVertex3d(x,y,z);
 }
 
-void panorenderpimg(struct itx *tx,struct ipano *ip){
-	glBindTexture(GL_TEXTURE_2D,tx->tex);
-	glBegin(GL_QUADS);
-	glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
-	glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
-	glTexCoord2i(1,1); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
-	glTexCoord2i(0,1); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
-	glEnd();
+void panodrawimg(struct itx *tx,struct ipano *ip){
+	for(;tx->tex;tx++){
+		glBindTexture(GL_TEXTURE_2D,tx->tex);
+		glBegin(GL_QUADS);
+		glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
+		glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
+		glTexCoord2i(1,1); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
+		glTexCoord2i(0,1); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
+		glEnd();
+	}
 }
 
 char panorender(){
 	int zoom;
 	struct img *img;
 	struct ipano *ip;
-	struct itx *tx;
+	GLuint dl;
 	struct ipos *ipos;
 	float perspect;
 	if((zoom=dplgetzoom())<=0) return 0;
 	if(!(img=imgget(dplgetimgi()))) return 0;
 	if(!(ip=imgldpano(img->ld))) return 0;
-	if(!(tx=imgldpanotex(img->ld))) return 0;
+	if(!(dl=imgldpanotex(img->ld))) return 0;
 	ipos=imgposcur(img->pos);
 	perspect=ip->gh*pow(1.25,(float)(1-zoom));
 	glEnable(GL_TEXTURE_2D);
@@ -72,7 +74,7 @@ char panorender(){
 	glRotatef(ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
 	glRotatef(ipos->x*ip->gw, 0.,1.,0.);
 	glColor4f(1.,1.,1.,1.);
-	for(;tx->tex;tx++) panorenderpimg(tx,ip);
+	glCallList(dl);
 	return 1;
 }
 

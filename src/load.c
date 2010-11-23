@@ -18,6 +18,7 @@
 #include "exif.h"
 #include "cfg.h"
 #include "act.h"
+#include "gl.h"
 
 #ifndef popen
 	extern FILE *popen (__const char *__command, __const char *__modes);
@@ -62,11 +63,12 @@ void ldcheckvartex(){
 
 struct itex {
 	struct itx *tx;
+	GLuint dl;
 	char loaded;
 	char loading;
 	char thumb;
 	char refresh;
-	char pano;
+	struct ipano *pano;
 };
 
 struct imgld {
@@ -91,6 +93,7 @@ void imgldfree(struct imgld *il){
 	int i;
 	struct itx *tx;
 	for(i=0;i<TEX_NUM;i++){
+		if(il->texs[i].dl) glDeleteLists(il->texs[i].dl,1);
 		if((tx=il->texs[i].tx)){
 			for(;tx->tex;tx++) glDeleteTextures(1,&tx->tex);
 			free(il->texs[i].tx);
@@ -103,16 +106,16 @@ void imgldfree(struct imgld *il){
 void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 
 /* thread: gl */
-struct itx *imgldtex(struct imgld *il,enum imgtex it){
+GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
-	for(i=it;i>=0;i--) if(il->texs[i].loaded) return il->texs[i].tx;
-	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded) return il->texs[i].tx;
-	return NULL;
+	for(i=it;i>=0;i--) if(il->texs[i].loaded) return il->texs[i].dl;
+	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded) return il->texs[i].dl;
+	return 0;
 }
 
-struct itx *imgldpanotex(struct imgld *il){
-	if(!il->texs[TEX_FULL].loaded) return NULL;
-	return il->texs[TEX_FULL].tx;
+GLuint imgldpanotex(struct imgld *il){
+	if(!il->texs[TEX_FULL].loaded) return 0;
+	return il->texs[TEX_FULL].dl;
 }
 
 /* thread: dpl, load, gl */
@@ -164,7 +167,7 @@ struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 struct texload {
 	struct itx *itx;
 	struct sdlimg *sdlimg;
-	char *loaded;
+	struct itex *itex;
 };
 #define TEXLOADNUM	16
 struct texloadbuf {
@@ -174,7 +177,7 @@ struct texloadbuf {
 	.wi=0,
 	.ri=0,
 };
-void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,char *loaded){
+void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
 	while(nwi==tlb.ri){
 		if(sdl.quit) return;
@@ -182,8 +185,17 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,char *loaded){
 	}
 	tlb.tl[tlb.wi].itx=itx;
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
-	tlb.tl[tlb.wi].loaded=loaded;
+	tlb.tl[tlb.wi].itex=itex;
 	tlb.wi=nwi;
+}
+
+/* thread: sdl */
+void ldgendl(struct itex *itex){
+	if(!itex->dl) itex->dl=glGenLists(1);
+	glNewList(itex->dl,GL_COMPILE);
+	if(itex->pano) panodrawimg(itex->tx,itex->pano);
+	else gldrawimg(itex->tx);
+	glEndList();
 }
 
 /* thread: sdl */
@@ -208,11 +220,14 @@ char ldtexload(){
 		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
 		sdlimg_unref(tl->sdlimg);
 		//timer(0,0);
-		if(tl->loaded) *tl->loaded=1;
+		if(tl->itex){
+			ldgendl(tl->itex);
+			tl->itex->loaded=1;
+		}
 	}else{
 		if(tl->itx->tex) glDeleteTextures(1,&tl->itx->tex);
 		tl->itx->tex=0;
-		if(tl->loaded) *tl->loaded=0;
+		if(tl->itex) tl->itex->loaded=0;
 	}
 	if((glerr=glGetError())){
 		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",tl->sdlimg?"load":"free",glerr);
@@ -273,8 +288,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 		struct itx *ti;
 		if(tex->loaded && !tex->refresh && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
-		if((tex->pano=(i==TEX_FULL && il->pano.enable)))
+		if(i==TEX_FULL && il->pano.enable){
+			tex->pano=&il->pano;
 			panores(il->img,&il->pano,il->w,il->h,&xres,&yres);
+		}else tex->pano=NULL;
 		tex->loading=1;
 		tex->loaded=0;
 		if(i!=TEX_FULL){
@@ -318,7 +335,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 					sdlimgscale=sdlimgscale2;
 				}
 			}
-			ldtexload_put(ti,sdlimgscale,tx==tw-1 && ty==th-1 ? &tex->loaded : NULL);
+			ldtexload_put(ti,sdlimgscale,tx==tw-1 && ty==th-1 ? tex : NULL);
 		}
 		tex->thumb=thumb;
 		tex->refresh=0;
@@ -340,7 +357,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 		if(il->texs[it].loading != il->texs[it].loaded) continue;
 		il->texs[it].loading=0;
 		debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
-		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? &il->texs[it].loaded : NULL);
+		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? il->texs+it : NULL);
 		ret=1;
 	}
 	return ret;

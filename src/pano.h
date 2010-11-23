@@ -1,8 +1,6 @@
 #ifndef _PANO_H
 #define _PANO_H
 
-#include "img.h"
-
 struct ipano {
 	char enable;
 	float gw;
@@ -11,7 +9,11 @@ struct ipano {
 	float rotinit;
 };
 
+#include "img.h"
+#include "load.h"
+
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres);
+void panodrawimg(struct itx *tx,struct ipano *ip);
 char panorender();
 void panorun();
 

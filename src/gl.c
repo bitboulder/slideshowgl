@@ -109,13 +109,13 @@ void glframerate(){
 	}
 }
 
-struct itx *glseltex(struct img *img,enum imgtex it,struct img **isc){
-	struct itx *tx;
+GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
+	GLuint dl;
 	*isc=img;
-	if((tx=imgldtex(img->ld,it))) return tx;
+	if((dl=imgldtex(img->ld,it))) return dl;
 	*isc=defimg;
-	if((tx=imgldtex(defimg->ld,it))) return tx;
-	return NULL;
+	if((dl=imgldtex(defimg->ld,it))) return dl;
+	return 0;
 }
 
 void glrendermark(struct ipos *ipos,float rot){
@@ -144,12 +144,12 @@ void glrenderimg(struct img *img,char back){
 	struct ipos *ipos;
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
-	struct itx  *tx;
+	GLuint dl;
 	float irat=imgldrat(img->ld);
 	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
-	if(!(tx=glseltex(img,iopt->tex,&isc))) return;
+	if(!(dl=glseltex(img,iopt->tex,&isc))) return;
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	glPushMatrix();
@@ -224,7 +224,7 @@ void glrenderimg(struct img *img,char back){
 	}
 #endif
 	// draw img
-	gldrawimg(tx);
+	glCallList(dl);
 #if HAVE_GLACTIVETEXTURE
 	if(icol->g || icol->b || icol->c){
 		glDisable(GL_TEXTURE_2D);
