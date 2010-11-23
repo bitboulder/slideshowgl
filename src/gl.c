@@ -109,16 +109,12 @@ void glframerate(){
 	}
 }
 
-struct img *glseltex(struct img *img,enum imgtex it){
-	GLuint tex;
-	if((tex=imgldtex(img->ld,it))){
-		glBindTexture(GL_TEXTURE_2D, tex);
-		return img;
-	}
-	if((tex=imgldtex(defimg->ld,it))){
-		glBindTexture(GL_TEXTURE_2D, tex);
-		return defimg;
-	}
+struct itx *glseltex(struct img *img,enum imgtex it,struct img **isc){
+	struct itx *tx;
+	*isc=img;
+	if((tx=imgldtex(img->ld,it))) return tx;
+	*isc=defimg;
+	if((tx=imgldtex(defimg->ld,it))) return tx;
 	return NULL;
 }
 
@@ -132,16 +128,28 @@ void glrendermark(struct ipos *ipos,float rot){
 	glEnable(GL_TEXTURE_2D);
 }
 
+void gldrawimg(struct itx *tx){
+	for(;tx->tex;tx++){
+		glPushMatrix();
+		glBindTexture(GL_TEXTURE_2D,tx->tex);
+		glTranslatef(tx->x,tx->y,0.f);
+		glScalef(tx->w,tx->h,1.f);
+		glCallList(gl.dls+DLS_IMG);
+		glPopMatrix();
+	}
+}
+
 void glrenderimg(struct img *img,char back){
 	struct img *isc;
 	struct ipos *ipos;
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
+	struct itx  *tx;
 	float irat=imgldrat(img->ld);
 	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
-	if(!(isc=glseltex(img,iopt->tex))) return;
+	if(!(tx=glseltex(img,iopt->tex,&isc))) return;
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	glPushMatrix();
@@ -216,7 +224,7 @@ void glrenderimg(struct img *img,char back){
 	}
 #endif
 	// draw img
-	glCallList(gl.dls+DLS_IMG);
+	gldrawimg(tx);
 #if HAVE_GLACTIVETEXTURE
 	if(icol->g || icol->b || icol->c){
 		glDisable(GL_TEXTURE_2D);

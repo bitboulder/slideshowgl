@@ -5,13 +5,19 @@
 #include "img.h"
 #include "pano.h"
 
+struct itx {
+	GLuint tex;
+	float x,y;
+	float w,h;
+};
+
 void ldmaxtexsize();
 void ldcheckvartex();
 
 struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
 void imgldsetimg(struct imgld *il,struct img *img);
-GLuint imgldtex(struct imgld *il,enum imgtex it);
+struct itx *imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
 void imgldrefresh(struct imgld *il);

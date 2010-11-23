@@ -8,7 +8,7 @@
 #endif
 
 SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height);
-SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor);
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh);
 void SDL_ColMod(SDL_Surface *Surface, float g, float b, float c);
 
 #if ! HAVE_STRSEP

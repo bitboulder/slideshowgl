@@ -65,23 +65,26 @@ SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 	return _ret;
 }
 
-SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor)
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh)
 {
-    if(!src || factor<2) return 0;
+    if(!src || !factor) return NULL;
 	Sint32 dw = src->w/factor;
 	Sint32 dh = src->h/factor;
+	if(xoff+fw>dw) fw=dw-xoff;
+	if(yoff+fh>dh) fh=dh-yoff;
+	if(factor<2 && fw==src->w && fh==src->h) return NULL;
 	Sint32 off = factor/2;
 	SDL_Surface *dst = SDL_CreateRGBSurface(
 			src->flags,
-			dw, dh,
+			fw, fh,
 			src->format->BitsPerPixel,
 			src->format->Rmask, src->format->Gmask,
 			src->format->Bmask, src->format->Amask
 	);
 
-	for(Sint32 y = 0; y < dh; y++)
-		for(Sint32 x = 0; x < dw; x++)
-			SDL_PutPixel(dst,x,y,SDL_GetPixel(src,x*factor+off,y*factor+off));
+	for(Sint32 y = 0; y < fh; y++)
+		for(Sint32 x = 0; x < fw; x++)
+			SDL_PutPixel(dst,x,y,SDL_GetPixel(src,(x+xoff)*factor+off,(y+yoff)*factor+off));
 	return dst;
 }
 

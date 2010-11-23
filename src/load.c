@@ -62,7 +62,8 @@ void ldcheckvartex(){
 /***************************** imgld ******************************************/
 
 struct itex {
-	GLuint tex;
+	struct itx *tx;
+	char loaded;
 	char loading;
 	char thumb;
 	char refresh;
@@ -88,7 +89,13 @@ struct imgld *imgldinit(struct img *img){
 /* thread: img */
 void imgldfree(struct imgld *il){
 	int i;
-	for(i=0;i<TEX_NUM;i++) if(il->texs[i].tex) glDeleteTextures(1,&il->texs[i].tex);
+	struct itx *tx;
+	for(i=0;i<TEX_NUM;i++){
+		if((tx=il->texs[i].tx)){
+			for(;tx->tex;tx++) glDeleteTextures(1,&tx->tex);
+			free(il->texs[i].tx);
+		}
+	}
 	free(il);
 }
 
@@ -96,10 +103,10 @@ void imgldfree(struct imgld *il){
 void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 
 /* thread: gl */
-GLuint imgldtex(struct imgld *il,enum imgtex it){
+struct itx *imgldtex(struct imgld *il,enum imgtex it){
 	int i;
-	for(i=it;i>=0;i--) if(il->texs[i].tex) return il->texs[i].tex;
-	for(i=it;i<TEX_NUM;i++) if(il->texs[i].tex) return il->texs[i].tex;
+	for(i=it;i>=0;i--) if(il->texs[i].loaded) return il->texs[i].tx;
+	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded) return il->texs[i].tx;
 	return 0;
 }
 
@@ -150,8 +157,9 @@ struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 /***************************** texload ****************************************/
 
 struct texload {
-	struct itex *itex;
+	struct itx *itx;
 	struct sdlimg *sdlimg;
+	char *loaded;
 };
 #define TEXLOADNUM	16
 struct texloadbuf {
@@ -161,16 +169,16 @@ struct texloadbuf {
 	.wi=0,
 	.ri=0,
 };
-void ldtexload_put(struct itex *itex,struct sdlimg *sdlimg){
+void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,char *loaded){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
 	pthread_mutex_lock(&load.mutex);
 	while(nwi==tlb.ri){
-		SDL_Delay(10);
 		if(sdl.quit) return;
+		SDL_Delay(10);
 	}
-	itex->loading=1;
-	tlb.tl[tlb.wi].itex=itex;
+	tlb.tl[tlb.wi].itx=itx;
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
+	tlb.tl[tlb.wi].loaded=loaded;
 	tlb.wi=nwi;
 	pthread_mutex_unlock(&load.mutex);
 }
@@ -184,25 +192,29 @@ char ldtexload(){
 	if(tl->sdlimg){
 		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
 		//timer(-1,0);
-		if(!tl->itex->tex) glGenTextures(1,&tl->itex->tex);
-		glBindTexture(GL_TEXTURE_2D, tl->itex->tex);
+		if(!tl->itx->tex) glGenTextures(1,&tl->itx->tex);
+		glBindTexture(GL_TEXTURE_2D, tl->itx->tex);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
 		// http://www.songho.ca/opengl/gl_pbo.html
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, tl->sdlimg->sf->w, tl->sdlimg->sf->h, 0, GL_RGB, GL_UNSIGNED_BYTE, tl->sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
 		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
 		sdlimg_unref(tl->sdlimg);
 		//timer(0,0);
+		if(tl->loaded) *tl->loaded=1;
 	}else{
-		if(tl->itex->tex) glDeleteTextures(1,&tl->itex->tex);
-		tl->itex->tex=0;
+		if(tl->itx->tex) glDeleteTextures(1,&tl->itx->tex);
+		tl->itx->tex=0;
+		if(tl->loaded) *tl->loaded=0;
 	}
 	if((glerr=glGetError())){
 		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",tl->sdlimg?"load":"free",glerr);
-		if(tl->sdlimg) tl->itex->tex=0;
+		if(tl->sdlimg) tl->itx->tex=0;
 	}
-	tl->itex->loading=0;
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
 	return 1;
 }
@@ -228,8 +240,8 @@ char ldfload(struct imgld *il,enum imgtex it){
 	int lastscale=0;
 	if(il->loadfail) return ld;
 	if(it<0) return ld;
-	if(il->texs[it].loading) return ld;
-	if(il->texs[it].tex && !il->texs[it].refresh) return ld;
+	if(il->texs[it].loading != il->texs[it].loaded) return ld;
+	if(il->texs[it].loaded && !il->texs[it].refresh) return ld;
 	if(it==TEX_FULL && il->pano.enable) return ld;
 	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn);
@@ -250,24 +262,61 @@ char ldfload(struct imgld *il,enum imgtex it){
 	else           { slim=il->h; wide=il->w; }
 
 	for(i=0;i<=it;i++){
-		struct sdlimg *sdlimgscale;
 		int scale=1;
-		if(il->texs[i].tex && !il->texs[i].refresh && (thumb || i!=TEX_SMALL || !il->texs[i].thumb)) continue;
-		if(il->texs[i].loading) continue;
+		float sw,sh;
+		int maxtex=load.maxtexsize;
+		int tw,th,tx,ty;
+		struct itex *tex = il->texs+i;
+		struct itx *ti;
+		if(tex->loaded && !tex->refresh && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
+		if(tex->loading != tex->loaded) continue;
+		tex->loading=1;
+		tex->loaded=0;
 		if(i!=TEX_FULL){
 			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
 			while(wide/scale>load.maximgwide[i]) scale++;
 		}
 		if(lastscale && lastscale==scale) continue;
 		lastscale=scale;
-		if(scale==1 || !(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale)))){
-			sdlimgscale=sdlimg;
-			sdlimg_ref(sdlimgscale);
+		sw=il->w/scale;
+		sh=il->h/scale;
+		tw=sw/maxtex; if(tw*maxtex<sw) tw++;
+		th=sh/maxtex; if(th*maxtex<sh) th++;
+		debug(DBG_DBG,"ld Loading to tex %s (%i: %ix%i -> t: %ix%i)",imgtex_str[i],scale,il->w/scale,il->h/scale,tw,th);
+		tx=0;
+		if(tex->tx){
+			while(tex->tx[tx].tex) tx++;
+			while(tx>tw*th){
+				tx--;
+				/* TODO: glDeleteTextures(tex->tx[tx] */
+			}
 		}
-		il->texs[i].thumb=thumb;
-		il->texs[i].refresh=0;
-		debug(DBG_DBG,"ld Loading to tex %s (%i: %ix%i)",imgtex_str[i],scale,sdlimgscale->sf->w,sdlimgscale->sf->h);
-		ldtexload_put(il->texs+i,sdlimgscale);
+		ti=tex->tx=realloc(tex->tx,sizeof(struct itx)*(tw*th+1));
+		for(;tx<=tw*th;tx++) tex->tx[tx].tex=0;
+		for(tx=0;tx<tw;tx++) for(ty=0;ty<th;ty++,ti++){
+			struct sdlimg *sdlimgscale;
+			if(!(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale,tx*maxtex,ty*maxtex,maxtex,maxtex)))){
+				sdlimgscale=sdlimg;
+				sdlimg_ref(sdlimgscale);
+			}
+			ti->w=(float)sdlimgscale->sf->w/(float)sw;
+			ti->h=(float)sdlimgscale->sf->h/(float)sh;
+			ti->x=(float)(tx*maxtex)/(float)sw + ti->w*.5f - .5f;
+			ti->y=(float)(ty*maxtex)/(float)sh + ti->h*.5f - .5f;
+			if(!load.vartex){
+				struct sdlimg *sdlimgscale2;
+				int fw=1,fh=1;
+				while(fw<sdlimgscale->sf->w) fw<<=1;
+				while(fh<sdlimgscale->sf->h) fh<<=1;
+				if((sdlimgscale2=sdlimg_gen(SDL_ScaleSurface(sdlimgscale->sf,fw,fh)))){
+					sdlimg_unref(sdlimgscale);
+					sdlimgscale=sdlimgscale2;
+				}
+			}
+			ldtexload_put(ti,sdlimgscale,tx==tw-1 && ty==th-1 ? &tex->loaded : NULL);
+		}
+		tex->thumb=thumb;
+		tex->refresh=0;
 		ld=1;
 	}
 	sdlimg_unref(sdlimg);
@@ -281,10 +330,12 @@ end:
 char ldffree(struct imgld *il,enum imgtex thold){
 	int it;
 	char ret=0;
-	for(it=thold+1;it<TEX_NUM;it++) if(il->texs[it].tex){
-		if(il->texs[it].loading) continue;
+	struct itx *tx;
+	for(it=thold+1;it<TEX_NUM;it++) if(il->texs[it].loaded){
+		if(il->texs[it].loading != il->texs[it].loaded) continue;
+		il->texs[it].loading=0;
 		debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
-		ldtexload_put(il->texs+it,NULL);
+		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? &il->texs[it].loaded : NULL);
 		ret=1;
 	}
 	return ret;
