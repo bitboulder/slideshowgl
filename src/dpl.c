@@ -610,15 +610,10 @@ void dplcheckev(){
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
 	if(dev.move.sx){
-		static Uint32 last=0.;
-		Uint32 now=SDL_GetTicks();
-		if(!last || now-last>250){
-			dplmovepos(dev.move.sx,dev.move.sy);
-			dev.move.sx=0.f;
-			dev.move.sy=0.f;
-			effinit(EFFREF_IMG,DE_MOVE);
-			last=now;
-		}
+		dplmovepos(dev.move.sx,dev.move.sy);
+		dev.move.sx=0.f;
+		dev.move.sy=0.f;
+		effinit(EFFREF_IMG,DE_MOVE);
 	}
 }
 
