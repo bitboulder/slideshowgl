@@ -3,6 +3,8 @@
 
 #include "load.h"
 
+void glsetbar(float bar);
+
 void glinit();
 void glfree();
 void glreshape();

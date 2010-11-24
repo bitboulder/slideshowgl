@@ -24,6 +24,7 @@ struct gl {
 #if HAVE_FTGL
 	FTGLfont *font;
 #endif
+	float bar;
 	struct glcfg {
 		float inputnum_lineh;
 		float stat_lineh;
@@ -31,11 +32,14 @@ struct gl {
 		float txt_fgcolor[4];
 	} cfg;
 } gl = {
+	.bar = 0.f,
 	.cfg.inputnum_lineh = 0.05f,
 	.cfg.stat_lineh     = 0.025f,
 	.cfg.txt_bgcolor = { 0.8f, 0.8f, 0.8f, 0.7f },
 	.cfg.txt_fgcolor = { 0.0f, 0.0f, 0.0f, 1.0f },
 };
+
+void glsetbar(float bar){ gl.bar=bar; }
 
 void glinit(){
 	ldmaxtexsize();
@@ -365,6 +369,21 @@ void glrenderstat(){
 #endif
 }
 
+void glrenderbar(){
+	if(!gl.bar) return;
+	glmode(GLM_2D);
+	glDisable(GL_TEXTURE_2D);
+	glPushMatrix();
+	glTranslatef(.5f,-.5f,0.f);
+	glScalef(-.1f,.1f,1.f);
+	glColor4f(.8f,.8f,.8f,.3f);
+	glRectf(0.f,0.f,1.f,1.f);
+	glColor4f(.8f,.8f,.8f,.7f);
+	glRectf(0.f,0.f,gl.bar,1.f);
+	glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
+}
+
 void glpaint(){
 	GLenum glerr;
 
@@ -372,6 +391,7 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!panorender()) glrenderimgs();
+	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
 	glrenderinputnum();

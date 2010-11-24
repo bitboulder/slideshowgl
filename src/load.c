@@ -169,6 +169,7 @@ struct texload {
 	struct itx *itx;
 	struct sdlimg *sdlimg;
 	struct itex *itex;
+	float bar;
 };
 #define TEXLOADNUM	16
 struct texloadbuf {
@@ -178,7 +179,7 @@ struct texloadbuf {
 	.wi=0,
 	.ri=0,
 };
-void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex){
+void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float bar){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
 	while(nwi==tlb.ri){
 		if(sdl.quit) return;
@@ -187,6 +188,7 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex){
 	tlb.tl[tlb.wi].itx=itx;
 	tlb.tl[tlb.wi].sdlimg=sdlimg;
 	tlb.tl[tlb.wi].itex=itex;
+	tlb.tl[tlb.wi].bar=bar;
 	tlb.wi=nwi;
 }
 
@@ -225,6 +227,7 @@ char ldtexload(){
 			ldgendl(tl->itex);
 			tl->itex->loaded=1;
 		}
+		glsetbar(tl->bar);
 	}else{
 		if(tl->itx->tex) glDeleteTextures(1,&tl->itx->tex);
 		tl->itx->tex=0;
@@ -343,7 +346,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 					sdlimgscale=sdlimgscale2;
 				}
 			}
-			ldtexload_put(ti,sdlimgscale,tx==tw-1 && ty==th-1 ? tex : NULL);
+			ldtexload_put(ti,sdlimgscale,
+					tx==tw-1 && ty==th-1 ? tex : NULL,
+					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
+				);
 		}
 		tex->thumb=thumb;
 		tex->refresh=0;
@@ -365,7 +371,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 		if(il->texs[it].loading != il->texs[it].loaded) continue;
 		il->texs[it].loading=0;
 		debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
-		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? il->texs+it : NULL);
+		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? il->texs+it : NULL,0.f);
 		ret=1;
 	}
 	return ret;
