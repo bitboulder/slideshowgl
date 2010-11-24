@@ -28,7 +28,7 @@ struct pano {
 	} cfg;
 } pano = {
 	.active     = NULL,
-	.cfg.defrot = 0.5f, /* screens per second */
+	.cfg.defrot = 0.250f, /* screens per second */
 	.cfg.minrot = 0.125f,
 };
 
@@ -53,6 +53,14 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	if(ix) *ix = sx/fitw;
 	if(iy) *iy = sy/fith;
 	return 1;
+}
+
+/* thread: dpl */
+char panoclipx(struct img *img){
+	struct ipano *ip;
+	if(img!=pano.active) return 1;
+	if(!(ip=imgldpano(img->ld))) return 1;
+	return ip->gw<360.f;
 }
 
 /* thread: gl */

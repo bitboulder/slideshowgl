@@ -16,6 +16,7 @@ char panoactive();
 
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
+char panoclipx(struct img *img);
 
 void panodrawimg(struct itx *tx,struct ipano *ip);
 char panorender();
