@@ -12,9 +12,17 @@ struct ipano {
 #include "img.h"
 #include "load.h"
 
+char panoactive();
+
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres);
+char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
+
 void panodrawimg(struct itx *tx,struct ipano *ip);
 char panorender();
+
+char panoplay();
+char panospeed(int dir);
+void panoflip(int dir);
 void panorun();
 
 #endif

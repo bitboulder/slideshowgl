@@ -112,6 +112,7 @@ char imgfit(struct img *img,float *fitw,float *fith){
 char imgspos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	float fitw,fith;
 	if(dpl.pos.zoom<0) return 0;
+	if(panospos2ipos(img,sx,sy,ix,iy)) return 1;
 	if(!imgfit(img,&fitw,&fith)) return 0;
 	fitw*=powf(2.f,(float)dpl.pos.zoom);
 	fith*=powf(2.f,(float)dpl.pos.zoom);
@@ -166,6 +167,10 @@ void effmove(struct ipos *ip,int i){
 		if(i!=dpl.pos.imgi) ip->s*=dpl.cfg.shrink;
 		ip->x*=dpl.maxfitw;
 		ip->y*=dpl.maxfith;
+	}else if(panoactive()){
+		ip->s=1.f;
+		ip->x=dpl.pos.x;
+		ip->y=dpl.pos.y;
 	}else{
 		float fitw,fith;
 		ip->s=powf(2.f,(float)dpl.pos.zoom);
@@ -260,10 +265,14 @@ void effinitimg(enum dplev ev,int i){
 		ip->opt.active=act;
 		return;
 	}
-	effwaytime(ip,dpl.cfg.efftime / (ev==DE_MOVE?10:1));
-	ip->wayact=act;
+	if(ev==DE_MOVE && act){
+		ip->cur=ip->way[1];
+	}else{
+		effwaytime(ip,dpl.cfg.efftime);
+		ip->wayact=act;
+		ip->eff=1;
+	}
 	ip->opt.active=1;
-	ip->eff=1;
 }
 
 char effmaxfit(){
@@ -296,15 +305,15 @@ void effinit(enum effrefresh effref,enum dplev ev){
 }
 
 void dplclippos(struct img *img){
-	float w,h;
+	float xb,yb;
 	float x[2],y[2];
-	if(!imgspos2ipos(img,.5f,.5f,&w,&h)) return;
-	x[0]=-.5f+w; x[1]= .5f-w;
-	y[0]=-.5f+h; y[1]= .5f-h;
+	if(!imgspos2ipos(img,.5f,.5f,&xb,&yb)) return;
+	x[0]=-.5f+xb; x[1]= .5f-xb;
+	y[0]=-.5f+yb; y[1]= .5f-yb;
 	if(x[1]<x[0]) x[0]=x[1]=0.f;
 	if(y[1]<y[0]) y[0]=y[1]=0.f;
-	if(dpl.pos.x<x[0]) dpl.pos.x=x[0];
-	if(dpl.pos.x>x[1]) dpl.pos.x=x[1];
+	if(dpl.pos.x<x[0]){ dpl.pos.x=x[0]; panoflip(-1); }
+	if(dpl.pos.x>x[1]){ dpl.pos.x=x[1]; panoflip( 1); }
 	if(dpl.pos.y<y[0]) dpl.pos.y=y[0];
 	if(dpl.pos.y>y[1]) dpl.pos.y=y[1];
 }
@@ -340,8 +349,10 @@ void dplmove(enum dplev ev,float x,float y){
 	switch(ev){
 	case DE_RIGHT:
 	case DE_LEFT:
-		if(dpl.pos.zoom<=0) dpl.pos.imgi+=dir;
-		else dplmovepos((float)dir*.25,0.f);
+		if(!panospeed(dir)){
+			if(dpl.pos.zoom<=0) dpl.pos.imgi+=dir;
+			else dplmovepos((float)dir*.25,0.f);
+		}
 	break;
 	case DE_UP:
 	case DE_DOWN:
@@ -504,7 +515,7 @@ struct dplevs {
 };
 
 /* thread: sdl */
-void dplevput(enum dplev ev,SDLKey key,float sx,float sy){
+void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
 	if(ev==DE_MOVE){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
@@ -584,7 +595,10 @@ void dplev(struct ev *ev){
 	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy); break;
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
-	case DE_PLAY: dpl.run=dpl.run ? 0 : -100000; break;
+	case DE_PLAY: 
+		if(!panoplay() && dpl.pos.zoom<=0)
+			dpl.run=dpl.run ? 0 : -100000;
+	break;
 	default: dplkey(ev->key); break;
 	}
 	if(ev->key) dplstaton(sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT));

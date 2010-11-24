@@ -17,15 +17,42 @@
 #endif
 
 struct pano {
+	struct img *active;
+	float perspectw;
+	float perspecth;
+	float rot;
 	char run;
+	struct panocfg {
+		float defrot;
+		float minrot;
+	} cfg;
 } pano = {
-	.run=1,
+	.active     = NULL,
+	.cfg.defrot = 0.5f, /* screens per second */
+	.cfg.minrot = 0.125f,
 };
+
+/* thread: dpl */
+char panoactive(){ return pano.active!=NULL; }
 
 /* thread: load */
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*5.f) *xres>>=1;
 	while(*yres>(float)h/ip->gh*5.f) *yres>>=1;
+}
+
+/* thread: dpl */
+char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
+	struct ipano *ip;
+	float fitw,fith;
+	if(img!=pano.active) return 0;
+	if(!(ip=imgldpano(img->ld))) return 0;
+	fitw = ip->gw/pano.perspectw;
+	fith = ip->gh/pano.perspecth;
+	/* TODO: decrease fitw for not vertical edges */
+	if(ix) *ix = sx/fitw;
+	if(iy) *iy = sy/fith;
+	return 1;
 }
 
 /* thread: gl */
@@ -54,6 +81,14 @@ void panodrawimg(struct itx *tx,struct ipano *ip){
 	}
 }
 
+void panoinitpos(struct ipano *ip){
+	float xpos = ip->rotinit<0.f ? .5f : -.5f;
+	dplevputx(DE_MOVE,0,xpos,0.f);
+	pano.rot=pano.cfg.defrot;
+	if(ip->rotinit<0.f) pano.rot*=-1.f;
+	pano.run=1;
+}
+
 /* thread: gl */
 char panorender(){
 	int zoom;
@@ -61,35 +96,76 @@ char panorender(){
 	struct ipano *ip;
 	GLuint dl;
 	struct ipos *ipos;
-	float perspect;
-	if((zoom=dplgetzoom())<=0) return 0;
-	if(!(img=imgget(dplgetimgi()))) return 0;
-	if(!(ip=imgldpano(img->ld))) return 0;
-	if(!(dl=imgldpanotex(img->ld))) return 0;
+	char ret=0;
+	if((zoom=dplgetzoom())<=0) goto end;
+	if(!(img=imgget(dplgetimgi()))) goto end;
+	if(!(ip=imgldpano(img->ld))) goto end;
+	if(!(dl=imgldpanotex(img->ld))) goto end;
 	ipos=imgposcur(img->pos);
-	perspect=ip->gh*pow(1.25,(float)(1-zoom));
+	pano.perspecth=ip->gh*powf(1.25,(float)(1-zoom));
+	pano.perspectw=pano.perspecth/(float)sdl.scr_h*(float)sdl.scr_w;
 	glEnable(GL_TEXTURE_2D);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(perspect, (float)sdl.scr_w/(float)sdl.scr_h, 0.1, 100.0);
+	gluPerspective(pano.perspecth, pano.perspectw/pano.perspecth, 0.1, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 	glRotatef(ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
-	glRotatef(ipos->x*ip->gw, 0.,1.,0.);
+	glRotatef(ipos->x*ip->gw, 0.,-1.,0.);
 	glColor4f(1.,1.,1.,1.);
 	glCallList(dl);
+	ret=1;
+end:
+	if(!pano.active && ret){
+		pano.active=img;
+		panoinitpos(ip);
+	}else if(pano.active && !ret) pano.active=NULL;
+	return ret;
+}
+
+/* thread: dpl */
+char panoplay(){
+	if(!pano.active) return 0;
+	pano.run=!pano.run;
 	return 1;
 }
 
 /* thread: dpl */
-void panorun(){
-	/* init-pos: rotinit<0 ? -border : +border */
-	/* rot-speed-right: rot>0 ? rot*=2 : rot<-1 ? rot/=2 : rot=-1 */
-	/* rotinit: °/s */
-#if 0
-	if(!pano.ip) return;
+char panospeed(int dir){
+	if(!pano.active) return 0;
+	if(!pano.run) return 0;
+	if(dir>0)
+		if(pano.rot>0.f) pano.rot*=2.f;
+		else if(pano.rot<-pano.cfg.minrot) pano.rot/=2.f;
+		else pano.rot*=-1.f;
+	else
+		if(pano.rot<0.f) pano.rot*=2.f;
+		else if(pano.rot>pano.cfg.minrot) pano.rot/=2.f;
+		else pano.rot*=-1.f;
+	return 1;
+}
+
+void panoflip(int dir){
+	if(!pano.active) return;
 	if(!pano.run) return;
-	pano.ipos->x+=.01f;
-#endif
+	if(pano.rot<0.f && dir<0) pano.rot*=-1.f;
+	if(pano.rot>0.f && dir>0) pano.rot*=-1.f;
+}
+
+/* thread: dpl */
+void panorun(){
+	static Uint32 last=0;
+	Uint32 now;
+	if(!pano.active) return;
+	if(!pano.run){ last=0; return; }
+	now=SDL_GetTicks();
+	if(last){
+		float sec=(float)(now-last)/1000.f;
+		float sx=pano.rot*sec;
+		float ix;
+		if(panospos2ipos(pano.active,sx,0.f,&ix,NULL))
+			dplevputx(DE_MOVE,0,ix,0.f);
+	}
+	last=now;
 }

@@ -65,7 +65,8 @@ void imgpossetmark(struct imgpos *ip);
 char imgposmark(struct imgpos *ip);
 
 void printixy(float sx,float sy);
-void dplevput(enum dplev ev,SDLKey key,float x,float y);
+#define dplevput(e,k)	dplevputx(e,k,0.f,0.f)
+void dplevputx(enum dplev ev,SDLKey key,float sx,float sy);
 void *dplthread(void *arg);
 
 #endif
