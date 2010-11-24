@@ -1,0 +1,51 @@
+diff -rNp ftgl-2.1.3~rc5.ori/configure ftgl-2.1.3~rc5.mod/configure
+*** ftgl-2.1.3~rc5.ori/configure	2010-11-18 14:10:30.000000000 +0100
+--- ftgl-2.1.3~rc5.mod/configure	2010-11-18 14:14:31.000000000 +0100
+*************** cat >>conftest.$ac_ext <<_ACEOF
+*** 22541,22554 ****
+  /* Override any GCC internal prototype to avoid an error.
+     Use char because int might match the return type of a GCC
+     builtin and then its argument prototype would still apply.  */
+! #ifdef __cplusplus
+! extern "C"
+! #endif
+! char glBegin ();
+  int
+  main ()
+  {
+! return glBegin ();
+    ;
+    return 0;
+  }
+--- 22541,22551 ----
+  /* Override any GCC internal prototype to avoid an error.
+     Use char because int might match the return type of a GCC
+     builtin and then its argument prototype would still apply.  */
+! #include <GL/gl.h>
+  int
+  main ()
+  {
+! glBegin (0);
+    ;
+    return 0;
+  }
+*************** cat >>conftest.$ac_ext <<_ACEOF
+*** 23011,23020 ****
+  /* Override any GCC internal prototype to avoid an error.
+     Use char because int might match the return type of a GCC
+     builtin and then its argument prototype would still apply.  */
+! #ifdef __cplusplus
+! extern "C"
+! #endif
+! char gluNewTess ();
+  int
+  main ()
+  {
+--- 23008,23014 ----
+  /* Override any GCC internal prototype to avoid an error.
+     Use char because int might match the return type of a GCC
+     builtin and then its argument prototype would still apply.  */
+! #include <GL/glu.h>
+  int
+  main ()
+  {
