@@ -218,6 +218,7 @@ void *sdlthread(void *arg){
 		timer(1,1);
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
+		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
 		timer(2,1);
 
 		glpaint();

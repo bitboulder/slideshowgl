@@ -19,6 +19,7 @@
 #include "cfg.h"
 #include "act.h"
 #include "gl.h"
+#include "ldjpg.h"
 
 #ifndef popen
 	extern FILE *popen (__const char *__command, __const char *__modes);
@@ -256,6 +257,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	struct icol *icol;
 	int wide,slim;
 	int lastscale=0;
+	char swap=0;
 	if(il->loadfail) return ld;
 	if(it<0) return ld;
 	if(il->texs[it].loading != il->texs[it].loaded) return ld;
@@ -265,14 +267,20 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
 	debug(DBG_DBG,"ld Loading img \"%s\"",fn);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
+	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
 	if(sdlimg->sf->format->BytesPerPixel!=3){ error(ERR_CONT,"Wrong pixelformat \"%s\"",fn); goto end; }
 
 	icol=imgposcol(il->img->pos);
 	if(icol->g) SDL_ColMod(sdlimg->sf,icol->g,0.f,0.f);
 
-	il->w=sdlimg->sf->w;
-	il->h=sdlimg->sf->h;
+	if(!swap){
+		il->w=sdlimg->sf->w;
+		il->h=sdlimg->sf->h;
+	}else{
+		il->w=sdlimg->sf->h;
+		il->h=sdlimg->sf->w;
+	}
 	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
 	effrefresh(EFFREF_FIT);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
@@ -317,7 +325,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		for(;tx<=tw*th;tx++) tex->tx[tx].tex=0;
 		for(tx=0;tx<tw;tx++) for(ty=0;ty<th;ty++,ti++){
 			struct sdlimg *sdlimgscale;
-			if(!(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale,tx*xres,ty*yres,xres,yres)))){
+			if(!(sdlimgscale = sdlimg_gen(SDL_ScaleSurfaceFactor(sdlimg->sf,scale,tx*xres,ty*yres,xres,yres,swap)))){
 				sdlimgscale=sdlimg;
 				sdlimg_ref(sdlimgscale);
 			}

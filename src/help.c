@@ -2,11 +2,12 @@
 #include <math.h>
 #include "help.h"
 
-Uint32 SDL_GetPixel(SDL_Surface *surface, int x, int y)
+#define SDL_GetPixel(a,b,c)		SDL_GetPixelSw(a,b,c,0)
+Uint32 SDL_GetPixelSw(SDL_Surface *surface, int x, int y, char swap)
 {
 	int bpp = surface->format->BytesPerPixel;
 	/* Here p is the address to the pixel we want to retrieve */
-	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	Uint8 *p = (Uint8 *)surface->pixels + y * (swap?surface->h*surface->format->BytesPerPixel:surface->pitch) + x * bpp;
 
 	switch(bpp) {
 	case 1: return *p;
@@ -65,14 +66,17 @@ SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 	return _ret;
 }
 
-SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh)
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh, char swap)
 {
+	int srcw,srch;
     if(!src || !factor) return NULL;
-	Sint32 dw = src->w/factor;
-	Sint32 dh = src->h/factor;
+	if(swap){ srcw=src->h; srch=src->w; }
+	else    { srcw=src->w; srch=src->h; }
+	Sint32 dw = srcw/factor;
+	Sint32 dh = srch/factor;
 	if(xoff+fw>dw) fw=dw-xoff;
 	if(yoff+fh>dh) fh=dh-yoff;
-	if(factor<2 && fw==src->w && fh==src->h) return NULL;
+	if(factor<2 && fw==srcw && fh==srch && !swap) return NULL;
 	Sint32 off = factor/2;
 	SDL_Surface *dst = SDL_CreateRGBSurface(
 			src->flags,
@@ -84,7 +88,7 @@ SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff
 
 	for(Sint32 y = 0; y < fh; y++)
 		for(Sint32 x = 0; x < fw; x++)
-			SDL_PutPixel(dst,x,y,SDL_GetPixel(src,(x+xoff)*factor+off,(y+yoff)*factor+off));
+			SDL_PutPixel(dst,x,y,SDL_GetPixelSw(src,(x+xoff)*factor+off,(y+yoff)*factor+off,swap));
 	return dst;
 }
 

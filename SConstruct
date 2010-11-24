@@ -73,6 +73,7 @@ if not env.GetOption('clean'):
 		conf.CheckLibMy('SDLmain',1,0)
 		conf.CheckLibMy('SDL',1,0)
 
+		env.Append(CPPPATH    = ['#/winlib/sdl_image/libjpeg/'])
 		env.Append(CPPPATH    = ['#/winlib/sdl_image/SDL_image-1.2.10/'])
 		env.Append(LIBPATH    = ['#/winlib/sdl_image/lib/'])
 		conf.CheckLibMy('SDL_image',1,0)
@@ -112,6 +113,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 
+	conf.CheckLibMy('jpeg',0,'JPEG')
 	conf.CheckFuncMy('glActiveTexture',0,'GLACTIVETEXTURE')
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')

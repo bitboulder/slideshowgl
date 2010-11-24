@@ -22,11 +22,13 @@ struct pano {
 	.run=1,
 };
 
+/* thread: load */
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*5.f) *xres>>=1;
 	while(*yres>(float)h/ip->gh*5.f) *yres>>=1;
 }
 
+/* thread: gl */
 void panovertex(double tx,double ty){
 	const float radius=10.f;
 	double xyradius,x,y,z;
@@ -39,6 +41,7 @@ void panovertex(double tx,double ty){
 	glVertex3d(x,y,z);
 }
 
+/* thread: gl */
 void panodrawimg(struct itx *tx,struct ipano *ip){
 	for(;tx->tex;tx++){
 		glBindTexture(GL_TEXTURE_2D,tx->tex);
@@ -51,6 +54,7 @@ void panodrawimg(struct itx *tx,struct ipano *ip){
 	}
 }
 
+/* thread: gl */
 char panorender(){
 	int zoom;
 	struct img *img;
@@ -78,7 +82,11 @@ char panorender(){
 	return 1;
 }
 
+/* thread: dpl */
 void panorun(){
+	/* init-pos: rotinit<0 ? -border : +border */
+	/* rot-speed-right: rot>0 ? rot*=2 : rot<-1 ? rot/=2 : rot=-1 */
+	/* rotinit: °/s */
 #if 0
 	if(!pano.ip) return;
 	if(!pano.run) return;
