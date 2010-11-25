@@ -12,13 +12,15 @@
 #include "cfg.h"
 #include "act.h"
 
+enum timer tim;
 #define TIMER_NUM	16
-void timer(int id,char reset){
+void timer(enum timer timer,int id,char reset){
 	static Uint32 timer_max[TIMER_NUM];
 	static Uint32 timer_sum[TIMER_NUM];
 	static Uint32 timer_cnt[TIMER_NUM];
 	static Uint32 last=0, lastp=0;
 	Uint32 now=SDL_GetTicks();
+	if(timer!=tim) return;
 	if(id>=0 && id<TIMER_NUM && last){
 		Uint32 diff=now-last;
 		if(timer_max[id]<diff) timer_max[id]=diff;
@@ -113,6 +115,7 @@ int main(int argc,char **argv){
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");
+	tim=cfggetint("main.timer");
 	ldgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	start_threads();

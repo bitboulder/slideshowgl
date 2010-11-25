@@ -378,6 +378,8 @@ void glrenderbar(){
 	glScalef(-.1f,.1f,1.f);
 	glColor4f(.8f,.8f,.8f,.3f);
 	glRectf(0.f,0.f,1.f,1.f);
+	glTranslatef(.05f,.05f,0.f);
+	glScalef(.9f,.9f,1.f);
 	glColor4f(.8f,.8f,.8f,.7f);
 	glRectf(0.f,0.f,gl.bar,1.f);
 	glPopMatrix();
@@ -391,6 +393,7 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!panorender()) glrenderimgs();
+	else glmode(GLM_2D); /* TODO remove */
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
@@ -398,7 +401,7 @@ void glpaint(){
 	glrenderhelp();
 	
 	glframerate();
-	timer(3,1);
+	timer(TI_SDL,3,1);
 	SDL_GL_SwapBuffers();
 
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);

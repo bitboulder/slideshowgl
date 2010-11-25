@@ -25,11 +25,15 @@ struct pano {
 	struct panocfg {
 		float defrot;
 		float minrot;
+		float texdegree;
+		float radius;
 	} cfg;
 } pano = {
 	.active     = NULL,
 	.cfg.defrot = 0.250f, /* screens per second */
 	.cfg.minrot = 0.125f,
+	.cfg.texdegree = 6.f,
+	.cfg.radius    = 10.f,
 };
 
 /* thread: dpl */
@@ -37,8 +41,8 @@ char panoactive(){ return pano.active!=NULL; }
 
 /* thread: load */
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
-	while(*xres>(float)w/ip->gw*5.f) *xres>>=1;
-	while(*yres>(float)h/ip->gh*5.f) *yres>>=1;
+	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
+	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
 }
 
 /* thread: dpl */
@@ -65,12 +69,11 @@ char panoclipx(struct img *img){
 
 /* thread: gl */
 void panovertex(double tx,double ty){
-	const float radius=10.f;
 	double xyradius,x,y,z;
 	tx*=M_PI/180.;
 	ty*=M_PI/180.;
-	xyradius=cos(ty)*radius;
-	y=sin(ty)*radius;
+	xyradius=cos(ty)*pano.cfg.radius;
+	y=sin(ty)*pano.cfg.radius;
 	x=sin(tx)*xyradius;
 	z=cos(tx)*xyradius;
 	glVertex3d(x,y,z);

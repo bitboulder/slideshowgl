@@ -20,6 +20,7 @@ struct cfg {
 	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0" },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0" },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
+	{ 't', "main.timer",          CT_INT, CM_INC,  "0" },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
 	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "0" },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500" },

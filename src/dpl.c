@@ -724,15 +724,21 @@ void *dplthread(void *arg){
 
 		dplcheckev();
 		if(dpl.run) dplrun();
+		timer(TI_DPL,0,0);
 		if(dpl.refresh!=EFFREF_NO){
 			effinit(dpl.refresh,0);
 			dpl.refresh=EFFREF_NO;
 		}
+		timer(TI_DPL,1,0);
 		effdo();
+		timer(TI_DPL,2,0);
 		panorun();
+		timer(TI_DPL,3,0);
 
 		sdlthreadcheck();
+		timer(TI_DPL,4,0);
 		sdldelay(&last,16);
+		timer(TI_DPL,5,0);
 	}
 	sdl.quit|=THR_DPL;
 	return NULL;

@@ -1,7 +1,9 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-void timer(int id,char reset);
+enum timer { TI_NONE=0, TI_SDL, TI_DPL, TI_LD };
+
+void timer(enum timer timer,int id,char reset);
 
 #define EDEBUG	E(NONE), E(STA), E(DBG)
 #define E(X)	DBG_##X

@@ -212,18 +212,18 @@ void *sdlthread(void *arg){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
-		timer(0,1);
+		timer(TI_SDL,0,1);
 		
 		if(!dplineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
-		timer(1,1);
+		timer(TI_SDL,1,1);
 
 		if(!sdl.sync) sdldelay(&paint_last,16);
 		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
-		timer(2,1);
+		timer(TI_SDL,2,1);
 
 		glpaint();
-		timer(4,1);
+		timer(TI_SDL,4,1);
 	}
 	sdl.quit=1;
 	switchdpms(1);

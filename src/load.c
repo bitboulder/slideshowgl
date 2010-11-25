@@ -32,12 +32,16 @@ struct load {
 	int  minimgslim[TEX_NUM];
 	int  maximgwide[TEX_NUM];
 	int  maxtexsize;
+	int  maxpanotexsize;
+	int  maxpanopixels;
 	char vartex;
 } load = {
 	.minimgslim = { 128, 384, 1024,    0, },
 	.maximgwide = { 512, 512, 2048, 8192, },
 	.vartex = 0,
 	.maxtexsize = 512,
+	.maxpanotexsize = 1024,
+	.maxpanopixels = 40*1000*1000,
 };
 
 /* thread: gl */
@@ -45,6 +49,7 @@ void ldmaxtexsize(){
 	GLint maxtex;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex);
 	if(maxtex<load.maxtexsize) load.maxtexsize=maxtex;
+	if(maxtex<load.maxpanotexsize) load.maxpanotexsize=maxtex;
 }
 
 /* thread: gl */
@@ -209,7 +214,7 @@ char ldtexload(){
 	tl=tlb.tl+tlb.ri;
 	if(tl->sdlimg){
 		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
-		//timer(-1,0);
+		timer(TI_LD,-1,0);
 		if(!tl->itx->tex) glGenTextures(1,&tl->itx->tex);
 		glBindTexture(GL_TEXTURE_2D, tl->itx->tex);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
@@ -220,9 +225,9 @@ char ldtexload(){
 		//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
-		//timer(MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
+		timer(TI_LD,MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
 		sdlimg_unref(tl->sdlimg);
-		//timer(0,0);
+		timer(TI_LD,0,0);
 		if(tl->itex){
 			ldgendl(tl->itex);
 			tl->itex->loaded=1;
@@ -269,6 +274,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
 	debug(DBG_DBG,"ld Loading img \"%s\"",fn);
+	if(it==TEX_FULL) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
@@ -301,7 +307,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 		if(tex->loading != tex->loaded) continue;
 		if(i==TEX_FULL && il->pano.enable){
 			tex->pano=&il->pano;
-			panores(il->img,&il->pano,il->w,il->h,&xres,&yres);
+			xres=load.maxpanotexsize;
+			yres=load.maxpanotexsize;
+			while(il->w/scale*il->h/scale>load.maxpanopixels) scale++;
+			panores(il->img,&il->pano,il->w/scale,il->h/scale,&xres,&yres);
 		}else tex->pano=NULL;
 		tex->loading=1;
 		tex->loaded=0;
