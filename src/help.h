@@ -6,6 +6,9 @@
 #ifndef MIN
 	#define MIN(a,b)	((a)<(b)?(a):(b))
 #endif
+#ifndef MAX
+	#define MAX(a,b)	((a)>(b)?(a):(b))
+#endif
 
 SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height);
 SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh, char swap);
