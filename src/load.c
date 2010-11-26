@@ -270,10 +270,9 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<0) return ld;
 	if(il->texs[it].loading != il->texs[it].loaded) return ld;
 	if(il->texs[it].loaded && !il->texs[it].refresh) return ld;
-	debug(DBG_STA,"ld loading img tex %s %s",imgtex_str[it],il->fn);
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
-	debug(DBG_DBG,"ld Loading img \"%s\"",fn);
+	debug(DBG_DBG,"ld loading img tex %s %s",imgtex_str[it],fn);
 	if(it==TEX_FULL) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
@@ -290,7 +289,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 		il->w=sdlimg->sf->h;
 		il->h=sdlimg->sf->w;
 	}
-	debug(DBG_DBG,"ld img size %ix%i \"%s\"",il->w,il->h,il->fn);
 	effrefresh(EFFREF_FIT);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
@@ -324,7 +322,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		sh=il->h/scale;
 		tw=sw/xres; if(tw*xres<sw) tw++;
 		th=sh/yres; if(th*yres<sh) th++;
-		debug(DBG_DBG,"ld Loading to tex %s (%i: %ix%i -> t: %ix%i)",imgtex_str[i],scale,il->w/scale,il->h/scale,tw,th);
+		debug(DBG_STA,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",imgtex_str[i],il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		tx=0;
 		if(tex->tx){
 			while(tex->tx[tx].tex) tx++;

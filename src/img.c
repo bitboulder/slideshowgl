@@ -58,7 +58,7 @@ void imgrandom(){
 	imgs=calloc(sizeof(struct img *),simg);
 	for(i=0;i<nimg;i++){
 		j=rand()%nimg;
-		while(imgs[j]->ld) j=(j+1)%nimg;
+		while(imgs[j]) j=(j+1)%nimg;
 		imgs[j]=oimgs[i];
 	}
 	free(oimgs);

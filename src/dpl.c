@@ -294,7 +294,7 @@ char effmaxfit(){
 
 void effinit(enum effrefresh effref,enum dplev ev){
 	int i;
-	debug(DBG_STA,"eff refresh%s%s",
+	debug(DBG_DBG,"eff refresh%s%s",
 		effref&EFFREF_IMG?" (img)":"",
 		effref&EFFREF_ALL?" (all)":"",
 		effref&EFFREF_FIT?" (fit)":"");
@@ -326,7 +326,7 @@ void dplmovepos(float sx,float sy){
 	dpl.pos.x+=ix;
 	dpl.pos.y+=iy;
 	dplclippos(img);
-	debug(DBG_STA,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+	debug(DBG_DBG,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 }
 
 void dplzoompos(int nzoom,float sx,float sy){
@@ -586,7 +586,7 @@ void dplkey(SDLKey key){
 	dpl.showhelp = !dpl.showhelp && key==SDLK_h;
 }
 
-void dplev(struct ev *ev){
+char dplev(struct ev *ev){
 	switch(ev->ev){
 	case DE_RIGHT:
 	case DE_LEFT:
@@ -600,14 +600,17 @@ void dplev(struct ev *ev){
 		if(!panoplay() && dpl.pos.zoom<=0)
 			dpl.run=dpl.run ? 0 : -100000;
 	break;
-	default: dplkey(ev->key); break;
+	case DE_KEY: dplkey(ev->key); break;
+	default: break;
 	}
-	if(ev->key) dplstaton(sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT));
+	return sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT);
 }
 
 void dplcheckev(){
+	char stat=-1;
 	while(dev.wi!=dev.ri){
-		dplev(dev.evs+dev.ri);
+		if(stat<0) stat=0;
+		stat|=dplev(dev.evs+dev.ri);
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
 	if(dev.move.sx){
@@ -616,6 +619,7 @@ void dplcheckev(){
 		dev.move.sy=0.f;
 		effinit(EFFREF_IMG,DE_MOVE);
 	}
+	if(stat>=0) dplstaton(stat);
 }
 
 /***************************** dpl run ****************************************/
@@ -625,6 +629,7 @@ void dplrun(){
 	if(time-dpl.run>dpl.cfg.displayduration){
 		dpl.run=time;
 		dplmove(DE_RIGHT,0.f,0.f);
+		dplstaton(0);
 	}
 }
 
@@ -687,6 +692,7 @@ void effstat(){
 void effdo(){
 	struct img *img;
 	char ineff=0;
+	if(!imgs) return;
 	for(img=*imgs;img;img=img->nxt) if(img->pos->eff){
 		effimg(img->pos);
 		ineff=1;

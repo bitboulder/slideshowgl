@@ -39,6 +39,7 @@ enum dplev {
 	DE_ROT2    = 0x100,
 	DE_PLAY    = 0x200,
 	DE_KEY     = 0x400,
+	DE_STAT    = 0x800,
 };
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)

@@ -49,7 +49,7 @@ void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	struct ipano *ip;
 	float fitw,fith;
-	if(img!=pano.active) return 0;
+	if(!img || img!=pano.active) return 0;
 	if(!(ip=imgldpano(img->ld))) return 0;
 	fitw = ip->gw/pano.perspectw;
 	fith = ip->gh/pano.perspecth;

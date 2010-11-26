@@ -114,6 +114,7 @@ void sdlkey(SDL_keysym key){
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN ,key.sym); break;
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT,key.sym); break;
 		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1,key.sym); break;
+		case SDLK_KP_ENTER:
 		case SDLK_SPACE:    dplevput(DE_PLAY   ,key.sym); break;
 		default:            dplevput(DE_KEY    ,key.sym); break;
 	}
@@ -152,6 +153,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdlmove(x,y);
+	else dplevput(DE_STAT,0);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
