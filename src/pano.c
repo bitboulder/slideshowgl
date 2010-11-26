@@ -123,8 +123,13 @@ char panorender(){
 	pano.perspectw=pano.perspecth*glmode(pano.plain?GLM_2D:GLM_3D, pano.perspecth);
 	glPushMatrix();
 	if(pano.plain){
+		float x=-ipos->x;
+		while(x<0.f) x+=1.f;
+		while(x>1.f) x-=1.f;
 		glScalef(ip->gw/pano.perspectw,ip->gh/pano.perspecth,1.f);
-		glTranslatef(-ipos->x,-ipos->y,0.f);
+		glTranslatef(x,-ipos->y,0.f);
+		gldrawimg(tx);
+		glTranslatef(-1.f,0.f,0.f);
 		gldrawimg(tx);
 	}else{
 		glRotatef(-ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
