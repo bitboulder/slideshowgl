@@ -6,6 +6,7 @@
 #include "cfg.h"
 #include "main.h"
 #include "sdl.h"
+#include "help.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT };
 enum cfgmode { CM_INC, CM_FLIP, CM_SET };

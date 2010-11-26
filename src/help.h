@@ -18,4 +18,9 @@ void SDL_ColMod(SDL_Surface *Surface, float g, float b, float c);
 char *strsep(char **stringp, const char *delim);
 #endif
 
+#include <strings.h>
+#ifndef strcasecmp
+int strcasecmp(const char *s1, const char *s2);
+#endif
+
 #endif
