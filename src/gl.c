@@ -99,20 +99,6 @@ void glreshape(){
 	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 }
 
-void glframerate(){
-	static Uint32 t_last = 0;
-	static Uint32 n = 0;
-	Uint32 t_now = SDL_GetTicks();
-	if(!t_last) t_last=t_now;
-	else n++;
-	if(t_now-t_last>1000){
-		float fr = n/(float)(t_now-t_last)*1000.;
-		debug(DBG_STA,"gl framerate %.1f fps",fr);
-		t_last=t_now;
-		n=0;
-	}
-}
-
 GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
 	GLuint dl;
 	*isc=img;
@@ -401,10 +387,6 @@ void glpaint(){
 	glrenderinputnum();
 	glrenderhelp();
 	
-	glframerate();
-	timer(TI_SDL,3,1);
-	SDL_GL_SwapBuffers();
-
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);
 }
 

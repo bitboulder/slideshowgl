@@ -2,6 +2,7 @@
 #define _CFG_H
 
 int cfggetint(char *name);
+int cfggetenum(char *name);
 float cfggetfloat(char *name);
 char *cfggetstr(char *name);
 void cfgparseargs(int argc,char **argv);

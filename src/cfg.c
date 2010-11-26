@@ -5,24 +5,27 @@
 #include <string.h>
 #include "cfg.h"
 #include "main.h"
+#include "sdl.h"
 
-enum cfgtype { CT_STR, CT_INT, CT_FLT };
+enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT };
 enum cfgmode { CM_INC, CM_FLIP, CM_SET };
 char *cfgmodestr[] = { "increase", "toggle", "set" };
 
+#define E(X)	#X
 struct cfg {
 	char opt;
 	char *name;
 	enum cfgtype type;
 	enum cfgmode mode;
 	char *val;
+	char *vals[16];
 } cfg[]={
 	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0" },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0" },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
-	{ 't', "main.timer",          CT_INT, CM_INC,  "0" },
+	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL } },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
-	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "0" },
+	{ 's', "sdl.sync",            CT_ENM, CM_SET,  "none", { ESYNC, NULL } },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500" },
 	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000" },
 	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000" },
@@ -38,6 +41,7 @@ struct cfg {
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1" },
 	{ 0,   NULL,                  0,      0,       NULL },
 };
+#undef E
 
 /* thread: all */
 struct cfg *cfgfind(char *name){
@@ -52,6 +56,17 @@ int cfggetint(char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_INT) return atoi(cfg->val);
 	error(ERR_CONT,"cfg not of type int '%s'",name);
+	return 0;
+}
+
+/* thread: all */
+int cfggetenum(char *name){
+	int i;
+	struct cfg *cfg=cfgfind(name);
+	if(cfg && cfg->type==CT_ENM){
+		for(i=0;cfg->vals[i];i++) if(!strcasecmp(cfg->val,cfg->vals[i])) return i;
+		error(ERR_CONT,"cfg enum with unknown value '%s': '%s'",name,cfg->val);
+	}else error(ERR_CONT,"cfg not of type enum '%s'",name);
 	return 0;
 }
 
@@ -98,12 +113,18 @@ void usage(char *fn){
 	version();
 	printf("Usage: %s [Options] {FILES|FILELISTS.flst}\n",fn);
 	printf("Options:\n");
-	for(i=0;cfg[i].name;i++) if(cfg[i].opt)
-		printf("  -%c  %s %s (%s)\n",
+	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
+		printf("  -%c  %s %s",
 			cfg[i].opt,
 			cfgmodestr[cfg[i].mode],
-			cfg[i].name,
-			cfg[i].val);
+			cfg[i].name);
+		if(cfg[i].type==CT_ENM){
+			int j;
+			for(j=0;cfg[i].vals[j];j++) printf("%s%s",j?",":" [",cfg[i].vals[j]);
+			printf("]");
+		}
+		printf(" - (%s)\n",cfg[i].val);
+	}
 	exit(0);
 }
 

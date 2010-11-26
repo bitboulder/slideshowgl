@@ -102,6 +102,7 @@ if not env.GetOption('clean'):
 
 		env['HAVE_X11'] = 0
 		env['HAVE_XEXT'] = 0
+		env['HAVE_GLX'] = 0
 	else:
 		conf.CheckCHeader('pthread.h')
 		conf.CheckLib('pthread')
@@ -113,6 +114,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('ftgl >= 2.1',0,'FTGL')
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
+		env['HAVE_GLX'] = 1
 
 	conf.CheckLibMy('jpeg',0,'JPEG')
 	conf.CheckFuncMy('glActiveTexture',0,'GLACTIVETEXTURE')

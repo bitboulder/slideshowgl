@@ -1,7 +1,10 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-enum timer { TI_NONE=0, TI_SDL, TI_DPL, TI_LD };
+#define ETIMER  E(NONE), E(SDL), E(DPL), E(LD)
+#define E(X)	TI_##X
+enum timer { ETIMER };
+#undef E
 
 void timer(enum timer timer,int id,char reset);
 

@@ -115,7 +115,7 @@ int main(int argc,char **argv){
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");
-	tim=cfggetint("main.timer");
+	tim=cfggetenum("main.timer");
 	ldgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	start_threads();

@@ -5,6 +5,11 @@
 	#include <X11/Xlib.h>
 	#include <X11/extensions/dpms.h>
 #endif
+#if HAVE_GLX
+	#include <GL/glx.h>
+	#include <GL/glxext.h>
+	#include <dlfcn.h>
+#endif
 #include "sdl.h"
 #include "gl.h"
 #include "main.h"
@@ -28,6 +33,10 @@ struct sdl sdl = {
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
 };
+
+#define E(X)	#X
+char *sdlsyncstr[]={ ESYNC };
+#undef E
 
 void switchdpms(char val){
 #if HAVE_X11 && HAVE_XEXT
@@ -91,18 +100,61 @@ void sdlresize(int w,int h){
 	effrefresh(EFFREF_FIT);
 }
 
+#if HAVE_GLX
+PFNGLXGETVIDEOSYNCSGIPROC  glxgetvideosync = NULL;
+PFNGLXWAITVIDEOSYNCSGIPROC glxwaitvideosync;
+#endif
+void glxwaitforsync(){
+#if HAVE_GLX
+	unsigned int retrace_cnt;
+	if(!glxgetvideosync) return;
+	(*glxgetvideosync)(&retrace_cnt);
+	(*glxwaitvideosync)(2,(retrace_cnt+1)%2,&retrace_cnt);
+#endif
+}
+
+void glxsync_init(){
+#if HAVE_GLX
+	// http://www-f9.ijs.si/~matevz/docs/007-2392-003/sgi_html/ch11.html
+	// http://www.inb.uni-luebeck.de/~boehme/xvideo_sync.html
+	Display *display;
+	int i;
+	void *dlhand;
+	if(sdl.sync!=SYNC_GLX) return;
+	if(glxgetvideosync) return;
+	if(!(display=XOpenDisplay(NULL))) return;
+	if(!glXQueryExtension(display,&i,&i)) goto end;
+	if(!strstr(glXQueryExtensionsString(display,DefaultScreen(display)),"GLX_SGI_video_sync")) goto end;
+	if(!(dlhand = dlopen (NULL, RTLD_LAZY))) goto end;
+	dlerror();
+	glxgetvideosync=dlsym(dlhand,"glXGetVideoSyncSGI");
+	if(dlerror()) glxgetvideosync=NULL;
+	glxwaitvideosync=dlsym(dlhand,"glXWaitVideoSyncSGI");
+	if(dlerror()) glxwaitvideosync=NULL;
+	if(!glxwaitvideosync) glxgetvideosync=NULL;
+	dlclose(dlhand);
+end:
+	XCloseDisplay(display);
+	sdl.sync = glxgetvideosync ? SYNC_GLX : SYNC_NONE;
+#else
+	sdl.sync=SYNC_NONE;
+#endif
+}
+
 void sdlinit(){
-	sdl.sync=cfggetint("sdl.sync");
+	int sync;
+	sdl.sync=cfggetenum("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
+	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync==SYNC_SDL);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
 	SDL_WM_SetCaption("Slideshowgl","slideshowgl");
-	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sdl.sync);
-	if(sdl.sync!=1) sdl.sync=0;
-	debug(DBG_STA,"sdl init (sync: %i)",sdl.sync);
+	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync);
+	if(sync!=1 && sdl.sync==SYNC_SDL) sdl.sync=SYNC_NONE;
 	glinit();
+	glxsync_init();
+	debug(DBG_STA,"sdl init (sync: %s)",sdlsyncstr[sdl.sync]);
 }
 
 void sdlkey(SDL_keysym key){
@@ -199,6 +251,20 @@ void sdldelay(Uint32 *last,Uint32 delay){
 	*last=SDL_GetTicks();
 }
 
+void sdlframerate(){
+	static Uint32 t_last = 0;
+	static Uint32 n = 0;
+	Uint32 t_now = SDL_GetTicks();
+	if(!t_last) t_last=t_now;
+	else n++;
+	if(t_now-t_last>1000){
+		float fr = n/(float)(t_now-t_last)*1000.;
+		debug(DBG_STA,"sdl framerate %.1f fps",fr);
+		t_last=t_now;
+		n=0;
+	}
+}
+
 	Uint32 paint_last=0;
 	/* thread: dpl, load */
 	/* TODO: remove */
@@ -211,21 +277,35 @@ void *sdlthread(void *arg){
 	int i;
 	switchdpms(0);
 	while(!sdl.quit){
+		int ld=0;
+
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		timer(TI_SDL,0,1);
 		
-		if(!dplineff()) ldtexload();
-		while(SDL_GetTicks()-paint_last < (dplineff()?6:12)) if(!ldtexload()) break;
+		if(!dplineff()) ld+=ldtexload();
+		while(ld<4 && SDL_GetTicks()-paint_last < (dplineff()?6:12))
+			if(!ldtexload()) break; else ld++;
 		timer(TI_SDL,1,1);
 
-		if(!sdl.sync) sdldelay(&paint_last,16);
-		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
+		glpaint();
 		timer(TI_SDL,2,1);
 
-		glpaint();
+		glFlush();
+		timer(TI_SDL,3,1);
+
+		glxwaitforsync();
 		timer(TI_SDL,4,1);
+
+		SDL_GL_SwapBuffers();
+		timer(TI_SDL,5,1);
+
+
+		sdlframerate();
+		if(sdl.sync==SYNC_NONE) sdldelay(&paint_last,16);
+		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
+		timer(TI_SDL,6,1);
 	}
 	sdl.quit=1;
 	switchdpms(1);
