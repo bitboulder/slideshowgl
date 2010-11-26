@@ -31,7 +31,7 @@ struct pano {
 	} cfg;
 } pano = {
 	.active     = NULL,
-	.cfg.defrot = 0.250f, /* screens per second */
+	.cfg.defrot = 0.500f, /* screens per second */
 	.cfg.minrot = 0.125f,
 	.cfg.texdegree = 6.f,
 	.cfg.radius    = 10.f,

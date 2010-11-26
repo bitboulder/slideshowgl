@@ -604,7 +604,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: break;
 	}
-	return sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT);
+	return sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi==nimg;
 }
 
 void dplcheckev(){
