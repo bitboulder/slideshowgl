@@ -118,8 +118,11 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 	return 0;
 }
 
-GLuint imgldpanotex(struct imgld *il){
-	if(il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading) return il->texs[TEX_FULL].dl;
+GLuint imgldpanotex(struct imgld *il,struct itx **tx){
+	if(il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading){
+		*tx=il->texs[TEX_FULL].tx;
+		return il->texs[TEX_FULL].dl;
+	}
 	return 0;
 }
 

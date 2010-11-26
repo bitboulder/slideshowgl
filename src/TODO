@@ -2,6 +2,7 @@
 - check for system data dir
 - thread priorities
 - panoinit without pano.pl or in pipe mode
+- panoplain
 
 # Fixes
 - fix sdlthreadcheck

@@ -2,7 +2,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 #include <math.h>
 #include "pano.h"
 #include "img.h"
@@ -11,6 +10,7 @@
 #include "main.h"
 #include "help.h"
 #include "sdl.h"
+#include "gl.h"
 
 #ifndef M_PI
 # define M_PI		3.14159265358979323846	/* pi */
@@ -22,6 +22,7 @@ struct pano {
 	float perspecth;
 	float rot;
 	char run;
+	char plain;
 	struct panocfg {
 		float defrot;
 		float minrot;
@@ -38,6 +39,7 @@ struct pano {
 
 /* thread: dpl */
 char panoactive(){ return pano.active!=NULL; }
+void panoplain(){ pano.plain=!pano.plain; }
 
 /* thread: load */
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
@@ -110,24 +112,27 @@ char panorender(){
 	GLuint dl;
 	struct ipos *ipos;
 	char ret=0;
+	struct itx *tx;
 	if((zoom=dplgetzoom())<=0) goto end;
 	if(!(img=imgget(dplgetimgi()))) goto end;
 	if(!(ip=imgldpano(img->ld))) goto end;
-	if(!(dl=imgldpanotex(img->ld))) goto end;
+	if(!(dl=imgldpanotex(img->ld,&tx))) goto end;
+	if(!pano.active) pano.plain=0;
 	ipos=imgposcur(img->pos);
 	pano.perspecth=ip->gh*powf(1.25,(float)(1-zoom));
-	pano.perspectw=pano.perspecth/(float)sdl.scr_h*(float)sdl.scr_w;
-	glEnable(GL_TEXTURE_2D);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(pano.perspecth, pano.perspectw/pano.perspecth, 0.1, 100.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
-	glRotatef(ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
-	glRotatef(ipos->x*ip->gw, 0.,-1.,0.);
-	glColor4f(1.,1.,1.,1.);
-	glCallList(dl);
+	pano.perspectw=pano.perspecth*glmode(pano.plain?GLM_2D:GLM_3D, pano.perspecth);
+	glPushMatrix();
+	if(pano.plain){
+		glScalef(ip->gw/pano.perspectw,ip->gh/pano.perspecth,1.f);
+		glTranslatef(-ipos->x,-ipos->y,0.f);
+		gldrawimg(tx);
+	}else{
+		glRotatef(-ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
+		glRotatef(ipos->x*ip->gw, 0.,-1.,0.);
+		glColor4f(1.,1.,1.,1.);
+		glCallList(dl);
+	}
+	glPopMatrix();
 	ret=1;
 end:
 	if(!pano.active && ret){

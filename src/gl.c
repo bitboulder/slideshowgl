@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <GL/gl.h>
+#include <GL/glu.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #if HAVE_FTGL
@@ -69,23 +70,23 @@ void glfree(){
 #endif
 }
 
-enum glmode { GLM_3D, GLM_2D, GLM_TXT };
-float glmode(enum glmode dst){
+float glmode(enum glmode dst,float h3d){
 	static enum glmode cur=-1;
+	static float cur_h3d;
+	static float cur_w;
 	float w = dst==GLM_TXT ? (float)sdl.scr_w/(float)sdl.scr_h : 1.f;
-	if(cur==dst) return w;
+	if(cur==dst && (dst!=GLM_3D || h3d==cur_h3d) && w==cur_w) return w;
 	cur=dst;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
-	case GLM_3D:  glFrustum(-1.0, 1.0, -sdl.scr_h, sdl.scr_h, 5.0, 60.0); break;
+	case GLM_3D:  gluPerspective(h3d, w, 0.1, 100.0); break;
 	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
 	case GLM_TXT: glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.); break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	if(dst==GLM_3D)
-		glTranslatef(0.0, 0.0, -40.0);
+	if(dst==GLM_3D) gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 	if(dst==GLM_TXT){
 		glDisable(GL_TEXTURE_2D);
 		glScalef(1.f/w,1.f,1.f);
@@ -231,7 +232,7 @@ void glrenderimg(struct img *img,char back){
 void glrenderimgs(){
 	struct img *img;
 	if(!imgs) return;
-	glmode(GLM_2D);
+	glmode(GLM_2D,0.f);
 	if(delimg) glrenderimg(delimg,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
@@ -267,7 +268,7 @@ void glrendertext(char *title,char *text){
 	lineh=ftglGetFontLineHeight(gl.font);
 	w=(maxw[0]+maxw[1])/.75f;
 	h=(float)lines*lineh/.8f;
-	winw=glmode(GLM_TXT);
+	winw=glmode(GLM_TXT,0.f);
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
@@ -311,7 +312,7 @@ void glrenderinputnum(){
 	float rect[6];
 	if(!i) return;
 	snprintf(txt,16,"%i",i);
-	glmode(GLM_TXT);
+	glmode(GLM_TXT,0.f);
 	glPushMatrix();
 	lineh=ftglGetFontLineHeight(gl.font);
 	glScalef(gl.cfg.inputnum_lineh/lineh,gl.cfg.inputnum_lineh/lineh,1.f);
@@ -336,7 +337,7 @@ void glrenderstat(){
 	float tw,th;
 	float bw,bh;
 	if(!stat->h) return;
-	winw=glmode(GLM_TXT);
+	winw=glmode(GLM_TXT,0.f);
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
 	lineh=ftglGetFontLineHeight(gl.font);
@@ -358,7 +359,7 @@ void glrenderstat(){
 
 void glrenderbar(){
 	if(!gl.bar) return;
-	glmode(GLM_2D);
+	glmode(GLM_2D,0.f);
 	glDisable(GL_TEXTURE_2D);
 	glPushMatrix();
 	glTranslatef(.5f,-.5f,0.f);
@@ -380,7 +381,6 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!panorender()) glrenderimgs();
-	else glmode(GLM_2D); /* TODO remove */
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();

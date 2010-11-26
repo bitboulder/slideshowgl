@@ -564,6 +564,7 @@ void dplkey(SDLKey key){
 		dpl.colmode=COL_NONE;
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
+	case SDLK_BACKSPACE:panoplain(); break;
 	case SDLK_q:        sdl.quit=1; break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        sdl.writemode=!sdl.writemode; effrefresh(EFFREF_ALL); break;
