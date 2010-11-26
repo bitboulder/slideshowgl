@@ -92,8 +92,10 @@ void panodrawimg(struct itx *tx,struct ipano *ip){
 	}
 }
 
+/* thread: gl */
 void panoinitpos(struct ipano *ip){
 	float xpos = ip->rotinit<0.f ? .5f : -.5f;
+	xpos*=ip->gw/pano.perspectw;
 	dplevputx(DE_MOVE,0,xpos,0.f);
 	pano.rot=pano.cfg.defrot;
 	if(ip->rotinit<0.f) pano.rot*=-1.f;

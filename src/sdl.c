@@ -232,16 +232,13 @@ void sdlframerate(){
 int sdlthread(void *arg){
 	switchdpms(0);
 	while(!sdl.quit){
-		int ld=0;
-
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
 		timer(TI_SDL,0,1);
 		
-		if(!dplineff()) ld+=ldtexload();
-		while(ld<4 && SDL_GetTicks()-paint_last < (dplineff()?6:12))
-			if(!ldtexload()) break; else ld++;
+		if(!dplineff()) ldtexload();
+		while(SDL_GetTicks()-paint_last < (dplineff()?6:20)) if(!ldtexload()) break;
 		timer(TI_SDL,1,1);
 
 		glpaint();

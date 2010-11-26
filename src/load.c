@@ -113,14 +113,14 @@ void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 /* thread: gl */
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
-	for(i=it;i>=0;i--) if(il->texs[i].loaded) return il->texs[i].dl;
-	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded) return il->texs[i].dl;
+	for(i=it;i>=0;i--) if(il->texs[i].loaded && il->texs[i].loading) return il->texs[i].dl;
+	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded && il->texs[i].loading) return il->texs[i].dl;
 	return 0;
 }
 
 GLuint imgldpanotex(struct imgld *il){
-	if(!il->texs[TEX_FULL].loaded) return 0;
-	return il->texs[TEX_FULL].dl;
+	if(il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading) return il->texs[TEX_FULL].dl;
+	return 0;
 }
 
 /* thread: dpl, load, gl */
