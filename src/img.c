@@ -62,7 +62,7 @@ void imgrandom(){
 		imgs[j]=oimgs[i];
 	}
 	free(oimgs);
-	for(i=1;i<nimg;i++) imgs[i-1]->nxt=imgs[i];
+	for(i=0;i<nimg;i++) imgs[i]->nxt = i<nimg ? imgs[i+1] : NULL;
 }
 
 struct img *imgdel(int i){
