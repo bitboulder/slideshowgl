@@ -4,7 +4,6 @@
 #include <string.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <pthread.h>
 #if HAVE_REALPATH
 	#include <sys/param.h>
 	#include <unistd.h>
@@ -551,7 +550,7 @@ char ldcheck(){
 
 extern Uint32 paint_last;
 
-void *ldthread(void *arg){
+int ldthread(void *arg){
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl.quit){
@@ -560,7 +559,7 @@ void *ldthread(void *arg){
 	}
 	ldconceptfree();
 	sdl.quit|=THR_LD;
-	return NULL;
+	return 0;
 }
 
 /***************************** load files init ********************************/

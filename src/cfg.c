@@ -25,7 +25,7 @@ struct cfg {
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL } },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
-	{ 's', "sdl.sync",            CT_ENM, CM_SET,  "none", { ESYNC, NULL } },
+	{ 's', "sdl.sync",            CT_ENM, CM_SET,  "sdl", { ESYNC, NULL } },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500" },
 	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000" },
 	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000" },

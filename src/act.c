@@ -113,7 +113,7 @@ char actpop(){
 	return 1;
 }
 
-void *actthread(void *arg){
+int actthread(void *arg){
 	actcfg.savemarks_delay = cfggetint("act.savemarks_delay");
 	actcfg.runcmd          = cfggetint("act.do");
 	while(!sdl.quit){
@@ -122,5 +122,5 @@ void *actthread(void *arg){
 	}
 	if(actcfg.savemarks) actsavemarks();
 	sdl.quit|=THR_ACT;
-	return NULL;
+	return 0;
 }

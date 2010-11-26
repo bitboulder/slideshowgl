@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <SDL.h>
-#include <pthread.h>
+#include <time.h>
 #include "main.h"
 #include "gl.h"
 #include "sdl.h"
@@ -11,6 +11,20 @@
 #include "dpl.h"
 #include "cfg.h"
 #include "act.h"
+
+#if 0
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+#include <pthread.h>
+typedef pthread_t SYS_ThreadHandle;
+struct SDL_Thread {
+	Uint32 threadid;
+	SYS_ThreadHandle handle;
+	int status;
+	//SDL_error errbuf;
+	//void *data;
+};
+#endif
+#endif
 
 enum timer tim;
 #define TIMER_NUM	16
@@ -74,19 +88,11 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	exit(1);
 }
 
-#ifdef __linux__
-	#define SCHED_PRIORITY	__sched_priority
-#elif defined __WIN32__
-	#define SCHED_PRIORITY	sched_priority
-#else
-	#error "Unsupported platform"
-#endif
-
 struct mainthread {
-	void *(*fnc)(void *);
+	int (*fnc)(void *);
 	int pri;
 	char init;
-	pthread_t pt;
+	SDL_Thread *pt;
 } mainthreads[] = {
 	{ &sdlthread, 15, 0 },
 	{ &dplthread, 10, 0 },
@@ -97,18 +103,28 @@ struct mainthread {
 
 void start_threads(){
 	struct mainthread *mt=mainthreads;
-	struct sched_param par;
-	mainthreads->pt=pthread_self();
+	mainthreads->pt=NULL;
 	mainthreads->init=1;
-	for(;mt->fnc;mt++){
-		if(!mt->init){
-			pthread_create(&mt->pt,NULL,mt->fnc,NULL);
-			mt->init=1;
-		}
-		par.SCHED_PRIORITY=mt->pri;
-		pthread_setschedparam(mt->pt,SCHED_RR,&par);
+	for(;mt->fnc;mt++) if(!mt->init){
+		mt->pt=SDL_CreateThread(mt->fnc,NULL);
+		mt->init=1;
 	}
+#if 0
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+	for(mt=mainthreads;mt->fnc;mt++){
+		struct sched_param par;
+		par.sched_priority=mt->pri;
+		pthread_setschedparam(mt->pt ? mt->pt->handle : pthread_self(),SCHED_RR,&par);
+	}
+#endif
+#endif
 	mainthreads->fnc(NULL);
+}
+
+char end_threads(){
+	int i;
+	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
+	return i;
 }
 
 int main(int argc,char **argv){
@@ -119,5 +135,12 @@ int main(int argc,char **argv){
 	ldgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	start_threads();
+	if(!end_threads())
+		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
+			(sdl.quit&THR_SDL)?"":" sdl",
+			(sdl.quit&THR_DPL)?"":" dpl",
+			(sdl.quit&THR_LD )?"":" ld",
+			(sdl.quit&THR_ACT)?"":" act");
+	else sdlquit();
 	return 0;
 }

@@ -157,6 +157,13 @@ void sdlinit(){
 	debug(DBG_STA,"sdl init (sync: %s)",sdlsyncstr[sdl.sync]);
 }
 
+void sdlquit(){
+	ldtexload();
+	imgfinalize();
+	glfree();
+	SDL_Quit();
+}
+
 void sdlkey(SDL_keysym key){
 	switch(key.sym){
 		case SDLK_RIGHT:    dplevput(DE_RIGHT  ,key.sym); break;
@@ -273,8 +280,7 @@ void sdlframerate(){
 			system("killall -9 slideshowgl");
 	}
 
-void *sdlthread(void *arg){
-	int i;
+int sdlthread(void *arg){
 	switchdpms(0);
 	while(!sdl.quit){
 		int ld=0;
@@ -307,21 +313,8 @@ void *sdlthread(void *arg){
 		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
 		timer(TI_SDL,6,1);
 	}
-	sdl.quit=1;
 	switchdpms(1);
-	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
-	if(!i){
-		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
-			(sdl.quit&THR_SDL)?"":" sdl",
-			(sdl.quit&THR_DPL)?"":" dpl",
-			(sdl.quit&THR_LD )?"":" ld",
-			(sdl.quit&THR_ACT)?"":" act");
-	}else{
-		ldtexload();
-		imgfinalize();
-		glfree();
-		SDL_Quit();
-	}
-	return NULL;
+	sdl.quit|=THR_SDL;
+	return 0;
 }
 

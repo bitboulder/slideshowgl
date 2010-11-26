@@ -34,8 +34,9 @@ extern struct sdl sdl;
 void sdlfullscreen();
 
 void sdlinit();
+void sdlquit();
 void sdldelay(Uint32 *last,Uint32 delay);
 void sdlthreadcheck();
-void *sdlthread(void *arg);
+int sdlthread(void *arg);
 
 #endif

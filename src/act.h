@@ -6,6 +6,6 @@
 enum act { ACT_LOADMARKS, ACT_SAVEMARKS, ACT_ROTATE, ACT_DELETE };
 
 void actadd(enum act act,struct img *img);
-void *actthread(void *arg);
+int actthread(void *arg);
 
 #endif

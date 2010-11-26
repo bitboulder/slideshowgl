@@ -28,7 +28,7 @@ struct ipano *imgldpano(struct imgld *il);
 char ldtexload();
 char ldffree(struct imgld *il,enum imgtex thold);
 
-void *ldthread(void *arg);
+int ldthread(void *arg);
 
 void ldgetfiles(int argc,char **argv);
 

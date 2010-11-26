@@ -78,10 +78,6 @@ if not env.GetOption('clean'):
 		env.Append(LIBPATH    = ['#/winlib/sdl_image/bin'])
 		conf.CheckLibMy('SDL_image',1,0)
 
-		env.Append(CPPPATH    = ['#/winlib/pthreads/include'])
-		env.Append(LIBPATH    = ['#/winlib/pthreads/bin'])
-		conf.CheckLibMy('pthreadGCE2',1,0)
-
 		env.Append(CPPPATH    = ['#/winlib/exif/include'])
 		env.Append(CPPPATH    = ['#/winlib/exif/include/libexif'])
 		env.Append(LIBPATH    = ['#/winlib/exif/lib'])
@@ -100,12 +96,13 @@ if not env.GetOption('clean'):
 		conf.CheckLibMy('glu32',1,0)
 		conf.CheckLibMy('stdc++',1,0)
 
+		env['HAVE_PTHREAD'] = 0
 		env['HAVE_X11'] = 0
 		env['HAVE_XEXT'] = 0
 		env['HAVE_GLX'] = 0
 	else:
 		conf.CheckCHeader('pthread.h')
-		conf.CheckLib('pthread')
+		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
 		conf.CheckPKG('sdl >= 1.2',1,0)

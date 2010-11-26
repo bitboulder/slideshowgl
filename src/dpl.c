@@ -722,7 +722,7 @@ void dplcfginit(){
 	dpl.cfg.stat_delay[STAT_FALL]=cfggetint("dpl.stat_fall");
 }
 
-void *dplthread(void *arg){
+int dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
 	dplstaton(1);
@@ -747,5 +747,5 @@ void *dplthread(void *arg){
 		timer(TI_DPL,5,0);
 	}
 	sdl.quit|=THR_DPL;
-	return NULL;
+	return 0;
 }
