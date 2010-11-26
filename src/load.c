@@ -272,7 +272,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
 	debug(DBG_DBG,"ld loading img tex %s %s",imgtex_str[it],fn);
-	if(it==TEX_FULL) glsetbar(0.0001f);
+	if(it==TEX_FULL && il->pano.enable) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end; }
@@ -354,7 +354,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 			}
 			ldtexload_put(ti,sdlimgscale,
 					tx==tw-1 && ty==th-1 ? tex : NULL,
-					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
+					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL && il->pano.enable ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
 				);
 		}
 		tex->thumb=thumb;
