@@ -9,9 +9,14 @@ Help("Type: 'scons prefix=$PREFIX install' to install with specific prefix.\n")
 
 mode = ARGUMENTS.get('mode')
 os   = ARGUMENTS.get('os')
+
 prefix = '/usr'
 if ARGUMENTS.get('prefix'):
 	prefix = ARGUMENTS.get('prefix')
+
+destdir = ''
+if ARGUMENTS.get('destdir'):
+	destdir = ARGUMENTS.get('destdir')
 
 def CheckPKGConfig(context, version):
 	context.Message( 'Checking for pkg-config... ' )
@@ -125,11 +130,10 @@ if mode == 'debug':
 	env.Append(CCFLAGS = ['-g'])
 else:
 	env.Append(CCFLAGS = ['-O2'])
-#env.Append(CCFLAGS = ['-g'])
-#env.Append(CCFLAGS = ['-O2'])
 
 Export('env')
 Export('prefix')
+Export('destdir')
 
 SConscript(build + '/src/SConscript')
 SConscript(build + '/data/SConscript')

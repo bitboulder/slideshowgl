@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,6 +87,21 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	if(lvl!=ERR_QUIT) return;
 	SDL_Quit();
 	exit(1);
+}
+
+char *finddatafile(char *fn){
+	int i;
+	static char ret[1024];
+	static char *dirs[]={".", "/", "data", "../data", DATADIR, NULL};
+	for(i=0;dirs[i];i++){
+		FILE *fd;
+		snprintf(ret,1024,"%s/%s",dirs[i],fn);
+		if(!(fd=fopen(ret,"rb"))) continue;
+		fclose(fd);
+		return ret;
+	}
+	error(ERR_CONT,"could not find data file: '%s'",fn);
+	return NULL;
 }
 
 struct mainthread {

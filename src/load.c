@@ -619,8 +619,10 @@ void ldaddflst(char *flst){
 }
 
 void ldgetfiles(int argc,char **argv){
+	char *defimgfn = finddatafile("defimg.png");
+	if(!defimgfn) defimgfn="";
 	defimg=imginit();
-	strncpy(defimg->ld->fn,"data/defimg.png",1024);
+	strncpy(defimg->ld->fn,defimgfn,1024);
 	for(;argc;argc--,argv++){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
 		else ldaddfile(argv[0]);

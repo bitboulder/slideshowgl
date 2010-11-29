@@ -43,6 +43,7 @@ struct gl {
 void glsetbar(float bar){ gl.bar=bar; }
 
 void glinit(){
+	char *fontfn;
 	ldmaxtexsize();
 	gl.dls=glGenLists(DLS_NUM);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
@@ -58,7 +59,8 @@ void glinit(){
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 #if HAVE_FTGL
-	gl.font = ftglCreateBufferFont(cfggetstr("gl.font"));
+	fontfn=finddatafile(cfggetstr("gl.font"));
+	gl.font=fontfn ? ftglCreateBufferFont(fontfn) : NULL;
 	if(gl.font) ftglSetFontFaceSize(gl.font, 24, 24);
 #endif
 	ldcheckvartex();

@@ -3,6 +3,7 @@
 
 #define APPNAME "%(APPNAME)s"
 #define VERSION "%(VERSION)s"
+#define DATADIR "%(DATADIR)s"
 
 #define HAVE_EXIF		%(HAVE_EXIF)i
 

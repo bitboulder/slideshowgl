@@ -19,7 +19,7 @@ clean:
 	scons -c
 
 install:
-	scons install mode=release prefix="$(DESTDIR)/usr"
+	scons install mode=release destdir="$(DESTDIR)"
 
 uninstall:
 	scons -c /

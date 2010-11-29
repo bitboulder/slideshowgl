@@ -1,5 +1,6 @@
 Import('env')
 Import('prefix')
+Import('destdir')
 
 def config_h_build(target, source, env):
 
@@ -33,7 +34,8 @@ objects = env.Object(sources)
 
 prog = env.Program('../slideshowgl', objects, install=True)
 
-env.Install(prefix + '/bin',prog)
-install_bin = env.Alias('install-bin',prefix + '/bin')
+bindir = destdir + prefix + '/bin'
+env.Install(bindir,prog)
+install_bin = env.Alias('install-bin',bindir)
 
 Export('install_bin')

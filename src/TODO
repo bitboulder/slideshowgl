@@ -1,5 +1,4 @@
 # Comfort
-- check for system data dir
 - thread priorities
 - panoinit without pano.pl or in pipe mode
 - DE_MOVE works only on x and y (for pano run+zoom)
