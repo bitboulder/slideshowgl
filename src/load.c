@@ -567,40 +567,72 @@ int ldthread(void *arg){
 
 /***************************** load files init ********************************/
 
-void ldpanoinit(struct imgld *il){
-	char cmd[1024];
-	FILE *fd;
-	snprintf(cmd,512,"/mnt/img/self/scriptz/pano.pl %s 2>/dev/null",il->fn);
-	if(!(fd=popen(cmd,"r"))) return;
-	il->pano.rotinit=4.f;
-	fscanf(fd,"%f %f %f %f",&il->pano.gw,&il->pano.gh,&il->pano.gyoff,&il->pano.rotinit);
-	pclose(fd);
-	il->pano.enable = il->pano.gw && il->pano.gh;
-}
-
-void ldfindthumb(struct img *img,char *fn){
+char ldfindfilesubdir1(char *dst,int len,char *subdir,char *ext){
 	int i;
 	FILE *fd;
-	for(i=strlen(fn)-1;i>=0;i--) if(fn[i]=='/'){
-		fn[i]='\0';
-		snprintf(img->ld->tfn,1024,"%s/thumb/%s",fn,fn+i+1);
-		fn[i]='/';
-		if((fd=fopen(img->ld->tfn,"rb"))){ fclose(fd); break; }
+	char fn[1024];
+	char *extpos = ext ? strrchr(dst,'.') : NULL;
+	if(extpos) extpos[0]='\0';
+	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/'){
+		dst[i]='\0';
+		snprintf(fn,1024,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
+		dst[i]='/';
+		if((fd=fopen(fn,"rb"))){
+			fclose(fd);
+			strncpy(dst,fn,len);
+			return 1;
+		}
+		if(subdir[0]=='\0') break;
 	}
-	if(i<0) img->ld->tfn[0]='\0';
+	if(extpos) extpos[0]='.';
+	return 0;
+}
+
+char ldfindfilesubdir(char *dst,char *subdir,char *ext){
+	if(ldfindfilesubdir1(dst,1024,subdir,ext)) return 1;
+#if HAVE_REALPATH
+	{
+		static char rfn[MAXPATHLEN];
+		if(realpath(dst,rfn) && ldfindfilesubdir1(rfn,MAXPATHLEN,subdir,ext)){
+			strncpy(dst,rfn,1024);
+			return 1;
+		}
+	}
+#endif
+	return 0;
+}
+
+void ldpanoinit(struct imgld *il){
+	char fn[1024];
+	FILE *fd;
+	il->pano.rotinit=4.f;
+	il->pano.gw=il->pano.gh=0.f;
+	strncpy(fn,il->fn,1024);
+	if(!ldfindfilesubdir(fn,"ori",".pano") && !ldfindfilesubdir(fn,"",".pano")) goto end;
+	if(!(fd=fopen(fn,"r"))) goto end;
+	fscanf(fd,"%f %f %f %f",&il->pano.gw,&il->pano.gh,&il->pano.gyoff,&il->pano.rotinit);
+	fclose(fd);
+end:
+	if((il->pano.enable = il->pano.gw && il->pano.gh))
+		debug(DBG_STA,"panoinit pano used: '%s'",fn);
+	else
+		debug(DBG_DBG,"panoinit no pano found for '%s'",il->fn);
+}
+
+void ldthumbinit(struct imgld *il){
+	strncpy(il->tfn,il->fn,1024);
+	if(!ldfindfilesubdir(il->tfn,"thumb",NULL)){
+		il->tfn[0]='\0';
+		debug(DBG_DBG,"thumbinit no thumb found for '%s'",il->fn);
+	}else
+		debug(DBG_DBG,"thumbinit thumb used: '%s'",il->tfn);
 }
 
 void ldaddfile(char *fn){
 	struct img *img=imgadd();
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	strncpy(img->ld->fn,fn,1024);
-	ldfindthumb(img,fn);
-#if HAVE_REALPATH
-	if(!img->ld->tfn[0]){
-		static char rfn[MAXPATHLEN];
-		if((fn=realpath(fn,rfn))) ldfindthumb(img,fn);
-	}
-#endif
+	ldthumbinit(img->ld);
 	ldpanoinit(img->ld);
 }
 

@@ -1,6 +1,4 @@
 # Comfort
-- thread priorities
-- panoinit without pano.pl or in pipe mode
 - DE_MOVE works only on x and y (for pano run+zoom)
 
 # Fixes
@@ -11,3 +9,4 @@
 
 # Want to have
 ? display loop imgs if zoom<0
+? thread priorities

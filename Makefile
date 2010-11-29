@@ -24,3 +24,5 @@ install:
 uninstall:
 	scons -c /
 
+deb:
+	debuild
