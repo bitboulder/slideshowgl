@@ -96,7 +96,7 @@ if not env.GetOption('clean'):
 		conf.CheckLibMy('glu32',1,0)
 		conf.CheckLibMy('stdc++',1,0)
 
-		env['HAVE_PTHREAD'] = 0
+#		env['HAVE_PTHREAD'] = 0
 		env['HAVE_X11'] = 0
 		env['HAVE_XEXT'] = 0
 	else:
