@@ -24,9 +24,9 @@ void runcmd(char *cmd){
 void actloadmarks(){
 	char *fn=cfggetstr("act.mark_fn");
 	FILE *fd;
-	char line[1024];
+	char line[FILELEN];
 	if(!(fd=fopen(fn,"r"))) return;
-	while(!feof(fd) && fgets(line,1024,fd)){
+	while(!feof(fd) && fgets(line,FILELEN,fd)){
 		struct img *img;
 		int len=strlen(line);
 		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
@@ -58,24 +58,24 @@ void acttrysavemarks(){
 void actrotate(struct img *img){
 	char *fn=imgldfn(img->ld);
 	float rot=imgexifrotf(img->exif);
-	char cmd[1024];
-	snprintf(cmd,1024,"myjpegtool -x %.0f -w \"%s\"",rot,fn);
+	char cmd[FILELEN+64];
+	snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -w \"%s\"",rot,fn);
 	runcmd(cmd);
 	debug(DBG_STA,"img rotated (%s)",fn);
 }
 
 void actdelete(struct img *img){
-	static char fn[1024];
-	static char cmd[2100];
+	static char fn[FILELEN];
+	static char cmd[FILELEN*2+16];
 	char *pos;
-	snprintf(fn,1020,imgldfn(img->ld));
+	snprintf(fn,FILELEN-4,imgldfn(img->ld));
 	if((pos=strrchr(fn,'/'))) pos++; else pos=fn;
 	memmove(pos+4,pos,strlen(pos)+1);
 	strcpy(pos,"del");
-	snprintf(cmd,2100,"mkdir -p \"%s\"",fn);
+	snprintf(cmd,FILELEN*2+16,"mkdir -p \"%s\"",fn);
 	runcmd(cmd);
 	pos[3]='/';
-	snprintf(cmd,2100,"mv \"%s\" \"%s\"",imgldfn(img->ld),fn);
+	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",imgldfn(img->ld),fn);
 	runcmd(cmd);
 	debug(DBG_STA,"img deleted (%s)",fn);
 }

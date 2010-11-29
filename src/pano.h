@@ -12,6 +12,8 @@ struct ipano {
 #include "img.h"
 #include "load.h"
 
+void panoinit();
+
 char panoactive();
 void panoplain();
 

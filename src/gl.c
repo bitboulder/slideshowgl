@@ -34,16 +34,16 @@ struct gl {
 	} cfg;
 } gl = {
 	.bar = 0.f,
-	.cfg.inputnum_lineh = 0.05f,
-	.cfg.stat_lineh     = 0.025f,
-	.cfg.txt_bgcolor = { 0.8f, 0.8f, 0.8f, 0.7f },
-	.cfg.txt_fgcolor = { 0.0f, 0.0f, 0.0f, 1.0f },
 };
 
 void glsetbar(float bar){ gl.bar=bar; }
 
 void glinit(){
 	char *fontfn;
+	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
+	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
+	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
+	cfggetcol("gl.txt_fgcolor",gl.cfg.txt_fgcolor);
 	ldmaxtexsize();
 	gl.dls=glGenLists(DLS_NUM);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
@@ -82,7 +82,7 @@ float glmode(enum glmode dst,float h3d){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
-	case GLM_3D:  gluPerspective(h3d, w, 0.1, 100.0); break;
+	case GLM_3D:  gluPerspective(h3d, w, 5., 15.); break;
 	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
 	case GLM_TXT: glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.); break;
 	}
@@ -219,7 +219,7 @@ void glrenderimg(struct img *img,char back){
 	// draw img
 	glCallList(dl);
 #if HAVE_GLACTIVETEXTURE
-	if(icol->g || icol->b || icol->c){
+	if(icol->b || icol->c){
 		glDisable(GL_TEXTURE_2D);
 		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
 		glActiveTexture(GL_TEXTURE0);

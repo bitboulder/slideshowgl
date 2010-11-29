@@ -8,7 +8,7 @@
 #include "sdl.h"
 #include "help.h"
 
-enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT };
+enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
 enum cfgmode { CM_INC, CM_FLIP, CM_SET };
 char *cfgmodestr[] = { "increase", "toggle", "set" };
 
@@ -26,14 +26,27 @@ struct cfg {
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL } },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
-	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1", },
+	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024" },
+	{ 'H', "sdl.height",          CT_INT, CM_SET,  "640" },
+	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1" },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500" },
 	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000" },
 	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000" },
 	{ 0,   "dpl.shrink",          CT_FLT, CM_SET,  "0.75" },
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0" },
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0" },
+	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512" },
+	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024" },
+	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "40000000" },
 	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf" },
+	{ 0,   "gl.inputnum_lineh",   CT_FLT, CM_SET,  "0.05" },
+	{ 0,   "gl.stat_lineh",       CT_FLT, CM_SET,  "0.025" },
+	{ 0,   "gl.txt_bgcolor",      CT_COL, CM_SET,  "0.8 0.8 0.8 0.7" },
+	{ 0,   "gl.txt_fgcolor",      CT_COL, CM_SET,  "0.0 0.0 0.0 1.0" },
+	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.5" }, /* screens per second */
+	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.125" },
+	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0" },
+	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0" },
 	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250"  },
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000" },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000" },
@@ -77,6 +90,15 @@ float cfggetfloat(char *name){
 	if(cfg && cfg->type==CT_FLT) return atof(cfg->val);
 	error(ERR_CONT,"cfg not of type float '%s'",name);
 	return 0.;
+}
+
+/* thread: all */
+void cfggetcol(char *name,float *col){
+	struct cfg *cfg=cfgfind(name);
+	if(cfg && cfg->type==CT_COL){
+		if(sscanf(cfg->val,"%f %f %f %f",col+0,col+1,col+2,col+3)!=4)
+			error(ERR_CONT,"cfg parse col error (%s)",cfg->val);
+	}else error(ERR_CONT,"cfg not of type col '%s'",name);
 }
 
 /* thread: all */

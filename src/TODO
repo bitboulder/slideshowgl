@@ -3,9 +3,10 @@
 
 # Fixes
 - fix sdlthreadcheck
-- optimize SDL_ScaleSurface
 - fix brightness for contrast<=0
-- fix gamma
+- fix gamma // SDL_SetGamma??
+- pano: decrease fitw for not vertical edges
+- load: delete texs for img size reduce
 
 # Want to have
 ? display loop imgs if zoom<0

@@ -91,11 +91,11 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 
 char *finddatafile(char *fn){
 	int i;
-	static char ret[1024];
+	static char ret[FILELEN];
 	static char *dirs[]={".", "/", "data", "../data", DATADIR, NULL};
 	for(i=0;dirs[i];i++){
 		FILE *fd;
-		snprintf(ret,1024,"%s/%s",dirs[i],fn);
+		snprintf(ret,FILELEN,"%s/%s",dirs[i],fn);
 		if(!(fd=fopen(ret,"rb"))) continue;
 		fclose(fd);
 		return ret;

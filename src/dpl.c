@@ -156,14 +156,14 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 
 void effmove(struct ipos *ip,int i){
 	ip->a = 1.f;
-	ip->m=(imgs[i]->pos->mark && sdl.writemode)?1.:0.;
+	ip->m=(imgs[i]->pos->mark && sdl.writemode)?1.f:0.f;
 	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dpl.pos.zoom<0){
 		ip->s=zoomtab[-dpl.pos.zoom].size;
 		ip->x=(i-dpl.pos.imgi)*ip->s;
 		ip->y=0.;
-		while(ip->x<-0.5){ ip->x+=1.0; ip->y-=ip->s; }
-		while(ip->x> 0.5){ ip->x-=1.0; ip->y+=ip->s; }
+		while(ip->x<-.5f){ ip->x+=1.f; ip->y-=ip->s; }
+		while(ip->x> .5f){ ip->x-=1.f; ip->y+=ip->s; }
 		if(i!=dpl.pos.imgi) ip->s*=dpl.cfg.shrink;
 		ip->x*=dpl.maxfitw;
 		ip->y*=dpl.maxfith;
@@ -257,8 +257,8 @@ void effinitimg(enum dplev ev,int i){
 	}else{
 		ip->way[0]=ip->cur;
 		if(act && dpl.pos.zoom<0 &&
-			(fabs(ip->way[0].x-ip->way[1].x)>.5 ||
-			 fabs(ip->way[0].y-ip->way[1].y)>.5)
+			(fabs(ip->way[0].x-ip->way[1].x)>.5f ||
+			 fabs(ip->way[0].y-ip->way[1].y)>.5f)
 			) ip->opt.back=1;
 	}
 	if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
@@ -266,26 +266,31 @@ void effinitimg(enum dplev ev,int i){
 		return;
 	}
 	if(ev==DE_MOVE && act){
-		ip->cur=ip->way[1];
-	}else{
+		ip->cur.x=ip->way[1].x;
+		ip->cur.y=ip->way[1].y;
+	}
+	if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
 		effwaytime(ip,dpl.cfg.efftime);
 		ip->wayact=act;
 		ip->eff=1;
+		ip->opt.active=1;
+	}else{
+		ip->eff=0;
+		ip->opt.active=act;
 	}
-	ip->opt.active=1;
 }
 
 char effmaxfit(){
 	int i;
-	float maxfitw=0.,maxfith=0.;
+	float maxfitw=0.f,maxfith=0.f;
 	for(i=0;i<nimg;i++) if(effact(i)){
 		float fitw,fith;
 		if(!imgfit(imgs[i],&fitw,&fith)) continue;
 		if(fitw>maxfitw) maxfitw=fitw;
 		if(fith>maxfith) maxfith=fith;
 	}
-	if(maxfitw==0.) maxfitw=1.;
-	if(maxfith==0.) maxfith=1.;
+	if(maxfitw==0.f) maxfitw=1.f;
+	if(maxfith==0.f) maxfith=1.f;
 	if(maxfitw==dpl.maxfitw && maxfith==dpl.maxfith) return 0;
 	dpl.maxfitw=maxfitw;
 	dpl.maxfith=maxfith;
@@ -352,14 +357,14 @@ void dplmove(enum dplev ev,float x,float y){
 	case DE_LEFT:
 		if(!panospeed(dir)){
 			if(dpl.pos.zoom<=0) dpl.pos.imgi+=dir;
-			else dplmovepos((float)dir*.25,0.f);
+			else dplmovepos((float)dir*.25f,0.f);
 		}
 	break;
 	case DE_UP:
 	case DE_DOWN:
 		if(dpl.pos.zoom<0)  dpl.pos.imgi-=dir*zoomtab[-dpl.pos.zoom].move;
 		if(dpl.pos.zoom==0) dpl.pos.imgi+=dir*zoomtab[-dpl.pos.zoom].move;
-		else dplmovepos(0.f,-(float)dir*.25);
+		else dplmovepos(0.f,-(float)dir*.25f);
 	break;
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT:
@@ -408,7 +413,7 @@ void dplrotate(enum dplev ev){
 
 void effdel(struct imgpos *ip){
 	ip->way[1]=ip->way[0]=ip->cur;
-	ip->way[1].s=0.;
+	ip->way[1].s=0.f;
 	effwaytime(ip,dpl.cfg.efftime);
 	ip->wayact=0;
 	ip->opt.active=1;
@@ -641,17 +646,17 @@ float effcalclin(float a,float b,float ef){
 }
 
 float effcalcrot(float a,float b,float ef){
-	while(b-a> 180.) b-=360.;
-	while(b-a<-180.) b+=360.;
+	while(b-a> 180.f) b-=360.f;
+	while(b-a<-180.f) b+=360.f;
 	return (b-a)*ef+a;
 }
 
-#define ECS_TIME	0.2
-#define ECS_SIZE	0.3
+#define ECS_TIME	0.2f
+#define ECS_SIZE	0.3f
 float effcalcshrink(float ef){
-	if(ef<ECS_TIME)         return 1.-ef/ECS_TIME*(1.-ECS_SIZE);
+	if(ef<ECS_TIME)         return 1.f-ef/ECS_TIME*(1.f-ECS_SIZE);
 	else if(ef<1.-ECS_TIME) return ECS_SIZE;
-	else                    return 1.-(1.-ef)/ECS_TIME*(1.-ECS_SIZE);
+	else                    return 1.f-(1.f-ef)/ECS_TIME*(1.f-ECS_SIZE);
 }
 
 void effimg(struct imgpos *ip){

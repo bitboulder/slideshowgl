@@ -20,8 +20,6 @@ struct sdl sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
 	.scr_h      = 0,
-	.scrnof_w   = 1024,
-	.scrnof_h   = 640,
 	.doresize   = 0,
 	.sync       = 0,
 	.writemode  = 0,
@@ -96,6 +94,8 @@ void sdlinit(){
 	sdl.sync=cfggetint("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
+	sdl.scrnof_w=cfggetint("sdl.width");
+	sdl.scrnof_h=cfggetint("sdl.height");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
@@ -103,6 +103,7 @@ void sdlinit(){
 	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync);
 	if(sync!=1) sdl.sync=0;
 	glinit();
+	panoinit();
 	debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
 }
 
@@ -153,7 +154,6 @@ void sdlmove(Uint16 x,Uint16 y){
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
 	}
-	// SDL_Wrap
 }
 
 void sdlmotion(Uint16 x,Uint16 y){

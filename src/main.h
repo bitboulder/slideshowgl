@@ -1,6 +1,8 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#define FILELEN		1024
+
 #define ETIMER  E(NONE), E(SDL), E(DPL), E(LD)
 #define E(X)	TI_##X
 enum timer { ETIMER };

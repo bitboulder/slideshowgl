@@ -38,14 +38,14 @@ struct load {
 	.minimgslim = { 128, 384, 1024,    0, },
 	.maximgwide = { 512, 512, 2048, 8192, },
 	.vartex = 0,
-	.maxtexsize = 512,
-	.maxpanotexsize = 1024,
-	.maxpanopixels = 40*1000*1000,
 };
 
 /* thread: gl */
 void ldmaxtexsize(){
 	GLint maxtex;
+	load.maxtexsize=cfggetint("ld.maxtexsize");
+	load.maxpanotexsize=cfggetint("ld.maxpanotexsize");
+	load.maxpanopixels=cfggetint("ld.maxpanopixels");
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex);
 	if(maxtex<load.maxtexsize) load.maxtexsize=maxtex;
 	if(maxtex<load.maxpanotexsize) load.maxpanotexsize=maxtex;
@@ -77,8 +77,8 @@ struct itex {
 };
 
 struct imgld {
-	char fn[1024];
-	char tfn[1024];
+	char fn[FILELEN];
+	char tfn[FILELEN];
 	char loadfail;
 	int w,h;
 	struct itex texs[TEX_NUM];
@@ -249,14 +249,6 @@ char ldtexload(){
 }
 
 /***************************** load + free img ********************************/
-
-int sizesel(int sdemand,int simg){
-	int size=64;
-	if(sdemand<simg) return sdemand;
-	if(load.vartex) return simg;
-	while(size<simg*0.95) size<<=1;
-	return size;
-}
 
 char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
@@ -570,12 +562,14 @@ int ldthread(void *arg){
 char ldfindfilesubdir1(char *dst,int len,char *subdir,char *ext){
 	int i;
 	FILE *fd;
-	char fn[1024];
+	char fn[FILELEN];
 	char *extpos = ext ? strrchr(dst,'.') : NULL;
+	if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
+	if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
 	if(extpos) extpos[0]='\0';
 	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/'){
 		dst[i]='\0';
-		snprintf(fn,1024,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
+		snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
 		dst[i]='/';
 		if((fd=fopen(fn,"rb"))){
 			fclose(fd);
@@ -589,12 +583,12 @@ char ldfindfilesubdir1(char *dst,int len,char *subdir,char *ext){
 }
 
 char ldfindfilesubdir(char *dst,char *subdir,char *ext){
-	if(ldfindfilesubdir1(dst,1024,subdir,ext)) return 1;
+	if(ldfindfilesubdir1(dst,FILELEN,subdir,ext)) return 1;
 #if HAVE_REALPATH
 	{
 		static char rfn[MAXPATHLEN];
 		if(realpath(dst,rfn) && ldfindfilesubdir1(rfn,MAXPATHLEN,subdir,ext)){
-			strncpy(dst,rfn,1024);
+			strncpy(dst,rfn,FILELEN);
 			return 1;
 		}
 	}
@@ -603,11 +597,11 @@ char ldfindfilesubdir(char *dst,char *subdir,char *ext){
 }
 
 void ldpanoinit(struct imgld *il){
-	char fn[1024];
+	char fn[FILELEN];
 	FILE *fd;
 	il->pano.rotinit=4.f;
 	il->pano.gw=il->pano.gh=0.f;
-	strncpy(fn,il->fn,1024);
+	strncpy(fn,il->fn,FILELEN);
 	if(!ldfindfilesubdir(fn,"ori",".pano") && !ldfindfilesubdir(fn,"",".pano")) goto end;
 	if(!(fd=fopen(fn,"r"))) goto end;
 	fscanf(fd,"%f %f %f %f",&il->pano.gw,&il->pano.gh,&il->pano.gyoff,&il->pano.rotinit);
@@ -620,7 +614,7 @@ end:
 }
 
 void ldthumbinit(struct imgld *il){
-	strncpy(il->tfn,il->fn,1024);
+	strncpy(il->tfn,il->fn,FILELEN);
 	if(!ldfindfilesubdir(il->tfn,"thumb",NULL)){
 		il->tfn[0]='\0';
 		debug(DBG_DBG,"thumbinit no thumb found for '%s'",il->fn);
@@ -631,18 +625,18 @@ void ldthumbinit(struct imgld *il){
 void ldaddfile(char *fn){
 	struct img *img=imgadd();
 	if(!strncmp(fn,"file://",7)) fn+=7;
-	strncpy(img->ld->fn,fn,1024);
+	strncpy(img->ld->fn,fn,FILELEN);
 	ldthumbinit(img->ld);
 	ldpanoinit(img->ld);
 }
 
 void ldaddflst(char *flst){
 	FILE *fd=fopen(flst,"r");
-	char buf[1024];
+	char buf[FILELEN];
 	if(!fd){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return; }
 	while(!feof(fd)){
 		int len;
-		if(!fgets(buf,1024,fd)) continue;
+		if(!fgets(buf,FILELEN,fd)) continue;
 		len=strlen(buf);
 		while(buf[len-1]=='\n' || buf[len-1]=='\r') buf[--len]='\0';
 		ldaddfile(buf);
@@ -654,7 +648,7 @@ void ldgetfiles(int argc,char **argv){
 	char *defimgfn = finddatafile("defimg.png");
 	if(!defimgfn) defimgfn="";
 	defimg=imginit();
-	strncpy(defimg->ld->fn,defimgfn,1024);
+	strncpy(defimg->ld->fn,defimgfn,FILELEN);
 	for(;argc;argc--,argv++){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
 		else ldaddfile(argv[0]);

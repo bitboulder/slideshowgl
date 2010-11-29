@@ -11,6 +11,7 @@
 #include "help.h"
 #include "sdl.h"
 #include "gl.h"
+#include "cfg.h"
 
 #ifndef M_PI
 # define M_PI		3.14159265358979323846	/* pi */
@@ -31,11 +32,15 @@ struct pano {
 	} cfg;
 } pano = {
 	.active     = NULL,
-	.cfg.defrot = 0.500f, /* screens per second */
-	.cfg.minrot = 0.125f,
-	.cfg.texdegree = 6.f,
-	.cfg.radius    = 10.f,
 };
+
+/* thread: sdl */
+void panoinit(){
+	pano.cfg.defrot=cfggetfloat("pano.defrot");
+	pano.cfg.minrot=cfggetfloat("pano.minrot");
+	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
+	pano.cfg.radius=cfggetfloat("pano.radius");
+}
 
 /* thread: dpl */
 char panoactive(){ return pano.active!=NULL; }
@@ -71,9 +76,9 @@ char panoclipx(struct img *img){
 
 /* thread: gl */
 void panovertex(double tx,double ty){
-	double xyradius,x,y,z;
-	tx*=M_PI/180.;
-	ty*=M_PI/180.;
+	float xyradius,x,y,z;
+	tx*=M_PI/180.f;
+	ty*=M_PI/180.f;
 	xyradius=cos(ty)*pano.cfg.radius;
 	y=sin(ty)*pano.cfg.radius;
 	x=sin(tx)*xyradius;
@@ -119,7 +124,7 @@ char panorender(){
 	if(!(dl=imgldpanotex(img->ld,&tx))) goto end;
 	if(!pano.active) pano.plain=0;
 	ipos=imgposcur(img->pos);
-	pano.perspecth=ip->gh*powf(1.25,(float)(1-zoom));
+	pano.perspecth=ip->gh*powf(1.25f,(float)(1-zoom));
 	pano.perspectw=pano.perspecth*glmode(pano.plain?GLM_2D:GLM_3D, pano.perspecth);
 	glPushMatrix();
 	if(pano.plain){

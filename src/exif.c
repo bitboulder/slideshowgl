@@ -41,12 +41,12 @@ char *imgexifinfo(struct imgexif *exif){ return exif->info; }
 /* thread: gl, dpl */
 float imgexifrotf(struct imgexif *exif){
 	switch(exif->rot){
-	case ROT_0:   return 0.;
-	case ROT_90:  return 90.;
-	case ROT_180: return 180.;
-	case ROT_270: return 270.;
+	case ROT_0:   return 0.f;
+	case ROT_90:  return 90.f;
+	case ROT_180: return 180.f;
+	case ROT_270: return 270.f;
 	}
-	return 0.;
+	return 0.f;
 }
 
 /* thread: img */
