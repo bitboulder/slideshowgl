@@ -100,8 +100,8 @@ if not env.GetOption('clean'):
 		env['HAVE_X11'] = 0
 		env['HAVE_XEXT'] = 0
 	else:
-		conf.CheckCHeader('pthread.h')
-		conf.CheckLibMy('pthread',0,'PTHREAD')
+#		conf.CheckCHeader('pthread.h')
+#		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
 		conf.CheckPKG('sdl >= 1.2',1,0)
