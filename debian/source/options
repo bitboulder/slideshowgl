@@ -1,0 +1,8 @@
+tar-ignore = ".svn"
+tar-ignore = "winlib"
+tar-ignore = "winbin"
+tar-ignore = "build"
+tar-ignore = "build-win"
+tar-ignore = ".sconf_temp"
+tar-ignore = ".sconsign.dblite"
+tar-ignore = "config.log"

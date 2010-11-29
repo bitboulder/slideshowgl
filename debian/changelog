@@ -1,0 +1,15 @@
+slideshowgl (2.0.0) unstable; urgency=low
+
+  * reimplementation
+
+ -- Frank Duckhorn <frank@bitboulder.net>  Mon, 29 Nov 2010 18:58:50 +0200
+
+slideshowgl (1.0.0) unstable; urgency=low
+
+  * init
+
+ -- Frank Duckhorn <frank@bitboulder.net>  Fri, 04 Jun 2010 18:58:50 +0200
+
+Local variables:
+mode: debian-changelog
+End:
