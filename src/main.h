@@ -16,10 +16,10 @@ enum debug { EDEBUG, ERR_QUIT, ERR_CONT };
 #undef E
 
 
-#define THR_SDL 0x1
-#define THR_DPL 0x2
-#define THR_LD  0x4
-#define THR_ACT 0x8
+#define THR_SDL 0x02
+#define THR_DPL 0x04
+#define THR_LD  0x08
+#define THR_ACT 0x10
 #define THR_OTH (THR_DPL|THR_LD|THR_ACT)
 
 #define debug(lvl,...)	debug_ex(lvl,__FILE__,__LINE__,__VA_ARGS__)

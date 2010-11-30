@@ -30,6 +30,7 @@ struct dpl {
 	char showinfo;
 	char showhelp;
 	int inputnum;
+	char writemode;
 	struct {
 		Uint32 efftime;
 		Uint32 displayduration;
@@ -53,6 +54,7 @@ struct dpl {
 	.showinfo = 0,
 	.showhelp = 0,
 	.inputnum = 0,
+	.writemode = 0,
 	.refresh = EFFREF_NO,
 	.stat.mode = STAT_OFF,
 	.stat.pos.h = 0.f,
@@ -99,13 +101,13 @@ char imgposmark(struct imgpos *ip){ return ip->mark; }
 
 char imgfit(struct img *img,float *fitw,float *fith){
 	float irat;
-	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
+	float srat=sdlrat();
 	enum rot rot;
 	if(!img || !(irat=imgldrat(img->ld))) return 0;
 	rot=imgexifrot(img->exif);
 	if(rot==ROT_90 || rot==ROT_270) irat=1./irat;
-	*fitw = srat<irat ? srat/irat : 1.;
-	*fith = srat<irat ? 1. : irat/srat;
+	*fitw = srat>irat ? irat/srat : 1.;
+	*fith = srat>irat ? 1. : srat/irat;
 	return 1;
 }
 
@@ -156,7 +158,7 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 
 void effmove(struct ipos *ip,int i){
 	ip->a = 1.f;
-	ip->m=(imgs[i]->pos->mark && sdl.writemode)?1.f:0.f;
+	ip->m=(imgs[i]->pos->mark && dpl.writemode)?1.f:0.f;
 	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dpl.pos.zoom<0){
 		ip->s=zoomtab[-dpl.pos.zoom].size;
@@ -195,7 +197,7 @@ char effonoff(struct ipos *ip,struct ipos *ipon,enum dplev ev){
 	if(dpl.pos.imgi>=nimg || dpl.pos.imgiold>=nimg){
 		ip->a=0.;
 	}else if(dpl.pos.zoom==0){
-		if(sdl.writemode) switch((int)ev){
+		if(dpl.writemode) switch((int)ev){
 			case DE_RIGHT: ip->x += 1.; break;
 			case DE_LEFT:  ip->x -= 1.; break;
 			case DE_UP:    ip->x += zoomtab[0].move; break;
@@ -222,7 +224,7 @@ char efffaston(struct imgpos *ip,enum dplev ev,int i){
 	ip->cur.s=1.;
 	ip->cur.x=((float)DE_DIR(ev) * zoomtab[0].move) - (float)diff;
 	ip->cur.y=0.;
-	ip->cur.m=(imgs[i]->pos->mark && sdl.writemode)?1.:0.;
+	ip->cur.m=(imgs[i]->pos->mark && dpl.writemode)?1.:0.;
 	ip->cur.r=imgexifrotf(imgs[i]->exif);
 	ip->eff=0;
 	return 1;
@@ -242,7 +244,7 @@ void effinitimg(enum dplev ev,int i){
 	ip=imgs[i]->pos;
 	act=effact(i);
 	if(!act && !ip->opt.active){
-		if(dpl.pos.zoom!=0 || (ev&DE_VER) || !sdl.writemode) return;
+		if(dpl.pos.zoom!=0 || (ev&DE_VER) || !dpl.writemode) return;
 		if(!efffaston(ip,ev,i)) return;
 	}
 	if(!act && ip->eff && !ip->wayact) return;
@@ -426,7 +428,7 @@ void dplrotate(enum dplev ev){
 	if(!img) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,0);
-	if(sdl.writemode) actadd(ACT_ROTATE,img);
+	if(dpl.writemode) actadd(ACT_ROTATE,img);
 }
 
 void effdel(struct imgpos *ip){
@@ -452,7 +454,7 @@ void dpldel(){
 	effdel(img->pos);
 	delimg=img;
 	effinit(EFFREF_ALL|EFFREF_FIT,1);
-	if(sdl.writemode) actadd(ACT_DELETE,img);
+	if(dpl.writemode) actadd(ACT_DELETE,img);
 }
 
 #define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
@@ -469,7 +471,7 @@ void dplstaton(char on){
 			case ROT_180: ADDTXT(" rotated-twice"); break;
 			case ROT_270: ADDTXT(" rotated-left"); break;
 		}
-		if(sdl.writemode){
+		if(dpl.writemode){
 			ADDTXT(" (write-mode)");
 			if(img->pos->mark) ADDTXT(" [MARK]");
 		}
@@ -588,16 +590,16 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_BACKSPACE:panoplain(); break;
-	case SDLK_q:        sdl.quit=1; break;
+	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_f:        sdlfullscreen(); break;
-	case SDLK_w:        sdl.writemode=!sdl.writemode; effrefresh(EFFREF_ALL); break;
-	case SDLK_m:        if(sdl.writemode) dplmark(); break;
+	case SDLK_w:        dpl.writemode=!dpl.writemode; effrefresh(EFFREF_ALL); break;
+	case SDLK_m:        if(dpl.writemode) dplmark(); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_g:        dpl.colmode=COL_G; break;
 	case SDLK_b:        dpl.colmode=COL_B; break;
 	case SDLK_c:        dpl.colmode=COL_C; break;
 	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
-	case SDLK_DELETE:   if(sdl.writemode) dpldel(); break;
+	case SDLK_DELETE:   if(dpl.writemode) dpldel(); break;
 	case SDLK_PLUS:     dplcol(1); break;
 	case SDLK_MINUS:    dplcol(-1); break;
 	default: break;
@@ -627,7 +629,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: break;
 	}
-	return sdl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi==nimg;
+	return dpl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi==nimg;
 }
 
 void dplcheckev(){
@@ -750,7 +752,7 @@ int dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
 	dplstaton(1);
-	while(!sdl.quit){
+	while(!sdl_quit){
 
 		dplcheckev();
 		if(dpl.run) dplrun();
@@ -770,6 +772,6 @@ int dplthread(void *arg){
 		sdldelay(&last,16);
 		timer(TI_DPL,5,0);
 	}
-	sdl.quit|=THR_DPL;
+	sdl_quit|=THR_DPL;
 	return 0;
 }

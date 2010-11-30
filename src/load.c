@@ -125,7 +125,7 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 
 /* thread: dpl, load, gl */
 float imgldrat(struct imgld *il){
-	return (!il->h || !il->w) ? 0. : (float)il->h/(float)il->w;
+	return (!il->h || !il->w) ? 0. : (float)il->w/(float)il->h;
 }
 
 /* thread: dpl, load */
@@ -186,7 +186,7 @@ struct texloadbuf {
 void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float bar){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
 	while(nwi==tlb.ri){
-		if(sdl.quit) return;
+		if(sdl_quit) return;
 		SDL_Delay(10);
 	}
 	tlb.tl[tlb.wi].itx=itx;
@@ -549,12 +549,12 @@ extern Uint32 paint_last;
 int ldthread(void *arg){
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
-	while(!sdl.quit){
+	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
 		sdlthreadcheck();
 	}
 	ldconceptfree();
-	sdl.quit|=THR_LD;
+	sdl_quit|=THR_LD;
 	return 0;
 }
 

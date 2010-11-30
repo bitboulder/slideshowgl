@@ -13,19 +13,40 @@
 #include "cfg.h"
 #include "pano.h"
 
+char sdl_quit = 0;
+
 SDL_Surface *screen;
 
-struct sdl sdl = {
-	.quit       = 0,
+struct sdlcfg {
+	Uint32 hidecursor;
+};
+
+struct sdlmove {
+	Uint16 base_x, base_y;
+	int pos_x, pos_y;
+};
+
+struct sdl {
+	struct sdlcfg cfg;
+	int scr_w, scr_h;
+	int scrnof_w, scrnof_h;
+	char fullscreen;
+	char doresize;
+	char sync;
+	Uint32 hidecursor;
+	struct sdlmove move;
+} sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
 	.scr_h      = 0,
 	.doresize   = 0,
 	.sync       = 0,
-	.writemode  = 0,
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
 };
+
+/* thread: gl */
+float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
 
 void switchdpms(char val){
 #if HAVE_X11 && HAVE_XEXT
@@ -85,7 +106,7 @@ void sdlresize(int w,int h){
 	sdl.scr_w=vi->current_w;
 	sdl.scr_h=vi->current_h;
 	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
-	glreshape();
+	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	effrefresh(EFFREF_FIT);
 }
 
@@ -231,7 +252,7 @@ void sdlframerate(){
 
 int sdlthread(void *arg){
 	switchdpms(0);
-	while(!sdl.quit){
+	while(!sdl_quit){
 		if(!sdlgetevent()) break;
 		if(sdl.doresize) sdlresize(0,0);
 		sdlhidecursor();
@@ -254,7 +275,7 @@ int sdlthread(void *arg){
 		timer(TI_SDL,4,1);
 	}
 	switchdpms(1);
-	sdl.quit|=THR_SDL;
+	sdl_quit|=THR_SDL;
 	return 0;
 }
 

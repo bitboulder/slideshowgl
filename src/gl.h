@@ -10,7 +10,6 @@ float glmode(enum glmode dst,float h3d);
 
 void glinit();
 void glfree();
-void glreshape();
 void glpaint();
 
 void gldrawimg(struct itx *tx);

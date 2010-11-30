@@ -56,7 +56,7 @@ void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
 /* thread: dpl, gl */
 void panoperspect(struct ipano *ip,float spos,float *perspectw,float *perspecth){
 	float tmp;
-	float srat=(float)sdl.scr_w/(float)sdl.scr_h;
+	float srat=sdlrat();
 	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
 	else spos=1.25f/powf(spos,logf(1.25f)/logf(2.f));
 	if(!perspecth) perspecth=&tmp;

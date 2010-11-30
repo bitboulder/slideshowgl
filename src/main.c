@@ -139,7 +139,7 @@ void start_threads(){
 
 char end_threads(){
 	int i;
-	for(i=500;(sdl.quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
+	for(i=500;(sdl_quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	return i;
 }
 
@@ -153,10 +153,10 @@ int main(int argc,char **argv){
 	start_threads();
 	if(!end_threads())
 		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
-			(sdl.quit&THR_SDL)?"":" sdl",
-			(sdl.quit&THR_DPL)?"":" dpl",
-			(sdl.quit&THR_LD )?"":" ld",
-			(sdl.quit&THR_ACT)?"":" act");
+			(sdl_quit&THR_SDL)?"":" sdl",
+			(sdl_quit&THR_DPL)?"":" dpl",
+			(sdl_quit&THR_LD )?"":" ld",
+			(sdl_quit&THR_ACT)?"":" act");
 	else sdlquit();
 	return 0;
 }

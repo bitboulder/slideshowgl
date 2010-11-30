@@ -76,7 +76,7 @@ float glmode(enum glmode dst,float h3d){
 	static enum glmode cur=-1;
 	static float cur_h3d;
 	static float cur_w;
-	float w = dst!=GLM_2D ? (float)sdl.scr_w/(float)sdl.scr_h : 1.f;
+	float w = dst!=GLM_2D ? sdlrat() : 1.f;
 	if(cur==dst && (dst!=GLM_3D || h3d==cur_h3d) && w==cur_w) return w;
 	cur=dst;
 	glMatrixMode(GL_PROJECTION);
@@ -96,10 +96,6 @@ float glmode(enum glmode dst,float h3d){
 		glEnable(GL_TEXTURE_2D);
 	}
 	return w;
-}
-
-void glreshape(){
-	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 }
 
 GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
@@ -139,7 +135,7 @@ void glrenderimg(struct img *img,char back){
 	struct icol *icol;
 	GLuint dl;
 	float irat=imgldrat(img->ld);
-	float srat=(float)sdl.scr_h/(float)sdl.scr_w;
+	float srat=sdlrat();
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
 	if(!(dl=glseltex(img,iopt->tex,&isc))) return;
@@ -151,11 +147,11 @@ void glrenderimg(struct img *img,char back){
 	iopt=imgposopt(isc->pos);
 	glColor4f(1.,1.,1.,ipos->a);
 	// rotate in real ratio
-	if(srat<irat) glScalef(srat,1.,1.);
-	else          glScalef(1.,1./srat,1.);
+	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
+	else          glScalef(1.f,     srat,1.f);
 	if(ipos->r) glRotatef(ipos->r,0.,0.,1.);
-	if(srat<irat) glScalef(1./irat,1.,1.);
-	else          glScalef(1.,irat,1.);
+	if(srat>irat) glScalef(irat,1.f,     1.f);
+	else          glScalef(1.f, 1.f/irat,1.f);
 	if(ipos->r){
 		// get rotation near to 90°/270°
 		float rot90 = ipos->r;
@@ -165,10 +161,10 @@ void glrenderimg(struct img *img,char back){
 		if(rot90<0.) rot90*=-1.;
 		rot90/=90.;
 		// correct size
-		if(srat>irat) if(srat>1.f/irat) schg=1.f/irat;
-		              else              schg=srat;
-		else          if(srat>1.f/irat) schg=1.f/srat;
-		              else              schg=irat;
+		if(srat<irat) if(srat<1.f/irat) schg=irat;
+		              else              schg=1.f/srat;
+		else          if(srat<1.f/irat) schg=srat;
+		              else              schg=1.f/irat;
 		schg=powf(schg,rot90);
 		glScalef(schg,schg,1.);
 	}
