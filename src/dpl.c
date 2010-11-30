@@ -208,6 +208,7 @@ char effonoff(struct ipos *ip,struct ipos *ipon,enum dplev ev){
 		switch((int)ev){
 		case DE_RIGHT:
 		case DE_LEFT:  ip->x += (ip->x<0.?-1.:1.) * zoomtab[-dpl.pos.zoom].size; break;
+		case DE_SEL:
 		case DE_UP:
 		case DE_DOWN:  ip->y += (ip->y<0.?-1.:1.) * zoomtab[-dpl.pos.zoom].size; break;
 		}
@@ -350,6 +351,16 @@ void dplzoompos(int nzoom,float sx,float sy){
 	if(img) dplclippos(img);
 }
 
+void dplclipimgi(){
+	if(dpl.cfg.loop){
+		while(dpl.pos.imgi<0)     dpl.pos.imgi+=nimg;
+		while(dpl.pos.imgi>=nimg) dpl.pos.imgi-=nimg;
+	}else{
+		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
+		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
+	}
+}
+
 void dplmove(enum dplev ev,float x,float y){
 	const static int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
@@ -396,16 +407,24 @@ void dplmove(enum dplev ev,float x,float y){
 	default: return;
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
-	if(dpl.cfg.loop){
-		while(dpl.pos.imgi<0)     dpl.pos.imgi+=nimg;
-		while(dpl.pos.imgi>=nimg) dpl.pos.imgi-=nimg;
-	}else{
-		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
-		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
-	}
+	dplclipimgi();
 	if(dpl.pos.zoom>0)    dpl.run=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev);
+}
+
+void dplsel(float sx,float sy){
+	int i,x,y;
+	if(dpl.pos.zoom>=0) return;
+	sx/=dpl.maxfitw; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
+	sy/=dpl.maxfith; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
+	x=floor(sx/zoomtab[-dpl.pos.zoom].size+.5f);
+	y=floor(sy/zoomtab[-dpl.pos.zoom].size+.5f);
+	i=floor((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
+	i+=x;
+	dpl.pos.imgi+=i;
+	dplclipimgi();
+	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL);
 }
 
 void dplmoveabs(int imgi){
@@ -620,6 +639,7 @@ char dplev(struct ev *ev){
 	case DE_DOWN:
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy); break;
+	case DE_SEL: dplsel(ev->sx,ev->sy); break;
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 

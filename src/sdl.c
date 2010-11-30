@@ -24,6 +24,8 @@ struct sdlcfg {
 struct sdlmove {
 	Uint16 base_x, base_y;
 	int pos_x, pos_y;
+	Uint8 btn;
+	Uint32 time;
 };
 
 struct sdl {
@@ -169,11 +171,26 @@ void sdlmove(Uint16 x,Uint16 y){
 		if(yd>sdl.move.pos_y*w+wthr){ ev=DE_DOWN;  sdl.move.pos_y++; }
 		if(ev) dplevput(ev,0);
 	}else{
-		dplevputx(DE_MOVE,0,
-			-(float)xd/(float)sdl.scr_w,
-			-(float)yd/(float)sdl.scr_h);
+		if(xd || yd)
+			dplevputx(DE_MOVE,0,
+				-(float)xd/(float)sdl.scr_w,
+				-(float)yd/(float)sdl.scr_h);
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
+	}
+}
+
+void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
+	int zoom=dplgetzoom();
+	float sx=(float)x/(float)sdl.scr_w-.5f;
+	float sy=(float)y/(float)sdl.scr_h-.5f;
+	if(zoom==0) switch(btn){
+		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT,0); break;
+		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT ,0); break;
+	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
+		dplevputx(DE_SEL,0,sx,sy);
+	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
+		dplevputx(DE_MOVE,0,sx,sy);
 	}
 }
 
@@ -188,6 +205,18 @@ void sdlmotion(Uint16 x,Uint16 y){
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
+	if(down){
+		switch(button){
+		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_RIGHT:
+			sdl.move.btn=button;
+			sdl.move.time=SDL_GetTicks();
+		}
+	}else if(button==sdl.move.btn && SDL_GetTicks()-sdl.move.time<200){
+		if(button==SDL_BUTTON_LEFT) sdl.move.base_x=0xffff;
+		sdlclick(button,x,y);
+		return;
+	}
 	if(down && button==SDL_BUTTON_WHEELUP) dplevputx(DE_ZOOMIN,0,fx,fy);
 	else if(down && button==SDL_BUTTON_WHEELDOWN) dplevputx(DE_ZOOMOUT,0,fx,fy);
 	else if(down && button==SDL_BUTTON_LEFT){
