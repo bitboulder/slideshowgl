@@ -18,9 +18,6 @@
 #endif
 
 struct pano {
-	struct img *active;
-	float perspectw;
-	float perspecth;
 	float rot;
 	char run;
 	char plain;
@@ -30,9 +27,7 @@ struct pano {
 		float texdegree;
 		float radius;
 	} cfg;
-} pano = {
-	.active     = NULL,
-};
+} pano;
 
 /* thread: sdl */
 void panoinit(){
@@ -43,7 +38,13 @@ void panoinit(){
 }
 
 /* thread: dpl */
-char panoactive(){ return pano.active!=NULL; }
+struct img *panoactive(){
+	struct img *img;
+	if(dplgetzoom()<=0) return NULL;
+	if(!(img=imgget(dplgetimgi()))) return NULL;
+	if(!imgldpano(img->ld)) return NULL;
+	return img;
+}
 void panoplain(){ pano.plain=!pano.plain; }
 
 /* thread: load */
@@ -52,14 +53,27 @@ void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
 	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
 }
 
+/* thread: dpl, gl */
+void panoperspect(struct ipano *ip,float spos,float *perspectw,float *perspecth){
+	float tmp;
+	float srat=(float)sdl.scr_w/(float)sdl.scr_h;
+	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
+	else spos=1.25f/powf(spos,logf(1.25f)/logf(2.f));
+	if(!perspecth) perspecth=&tmp;
+	*perspecth=ip->gh*spos;
+	if(perspectw) *perspectw=*perspecth*srat;
+}
+
 /* thread: dpl */
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	struct ipano *ip;
 	float fitw,fith;
-	if(!img || img!=pano.active) return 0;
+	float perspectw,perspecth;
+	if(!img || img!=panoactive()) return 0;
 	if(!(ip=imgldpano(img->ld))) return 0;
-	fitw = ip->gw/pano.perspectw;
-	fith = ip->gh/pano.perspecth;
+	panoperspect(ip,powf(2.f,(float)dplgetzoom()),&perspectw,&perspecth);
+	fitw = ip->gw/perspectw;
+	fith = ip->gh/perspecth;
 	/* TODO: decrease fitw for not vertical edges */
 	if(ix) *ix = sx/fitw;
 	if(iy) *iy = sy/fith;
@@ -69,10 +83,28 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 /* thread: dpl */
 char panoclipx(struct img *img){
 	struct ipano *ip;
-	if(img!=pano.active) return 1;
+	if(!img || img!=panoactive()) return 1;
 	if(!(ip=imgldpano(img->ld))) return 1;
 	return ip->gw<360.f;
 }
+
+/* thread: dpl */
+char panostart(float *x){
+	struct img *img;
+	struct ipano *ip;
+	float perspectw;
+	if(!(img=imgget(dplgetimgi()))) return 0;
+	if(!(ip=imgldpano(img->ld))) return 0;
+	pano.plain=0;
+	pano.run=0;
+	pano.rot=pano.cfg.defrot;
+	if(ip->rotinit<0.f) pano.rot*=-1.f;
+	panoperspect(ip,1.f,&perspectw,NULL);
+	*x  = ip->rotinit<0.f ? .5f : -.5f;
+	*x *= ip->gw/perspectw;
+	return 1;
+}
+
 
 /* thread: gl */
 void panovertex(double tx,double ty){
@@ -100,68 +132,50 @@ void panodrawimg(struct itx *tx,struct ipano *ip){
 }
 
 /* thread: gl */
-void panoinitpos(struct ipano *ip){
-	float xpos = ip->rotinit<0.f ? .5f : -.5f;
-	xpos*=ip->gw/pano.perspectw;
-	dplevputx(DE_MOVE,0,xpos,0.f);
-	pano.rot=pano.cfg.defrot;
-	if(ip->rotinit<0.f) pano.rot*=-1.f;
-	pano.run=1;
-}
-
-/* thread: gl */
 char panorender(){
-	int zoom;
 	struct img *img;
 	struct ipano *ip;
 	GLuint dl;
 	struct ipos *ipos;
-	char ret=0;
-	struct itx *tx;
-	if((zoom=dplgetzoom())<=0) goto end;
-	if(!(img=imgget(dplgetimgi()))) goto end;
-	if(!(ip=imgldpano(img->ld))) goto end;
-	if(!(dl=imgldpanotex(img->ld,&tx))) goto end;
-	if(!pano.active) pano.plain=0;
+	char plain=pano.plain;
+	float perspectw,perspecth;
+	if(!(img=panoactive())) return 0;
+	if(!(ip=imgldpano(img->ld))) return 0;
+	if(!plain && !(dl=imgldtex(img->ld,TEX_PANO))) plain=1;
+	if( plain && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
 	ipos=imgposcur(img->pos);
-	pano.perspecth=ip->gh*powf(1.25f,(float)(1-zoom));
-	pano.perspectw=pano.perspecth*glmode(pano.plain?GLM_2D:GLM_3D, pano.perspecth);
+	panoperspect(ip,ipos->s,&perspectw,&perspecth);
+	glmode(plain?GLM_2D:GLM_3D, perspecth);
 	glPushMatrix();
-	if(pano.plain){
-		float x=-ipos->x;
+	glColor4f(1.,1.,1.,ipos->a);
+	if(plain){
+		float x=ipos->x;
 		while(x<0.f) x+=1.f;
 		while(x>1.f) x-=1.f;
-		glScalef(ip->gw/pano.perspectw,ip->gh/pano.perspecth,1.f);
-		glTranslatef(x,-ipos->y,0.f);
-		gldrawimg(tx);
+		glScalef(ip->gw/perspectw,ip->gh/perspecth,1.f);
+		glTranslatef(x,ipos->y,0.f);
+		glCallList(dl);
 		glTranslatef(-1.f,0.f,0.f);
-		gldrawimg(tx);
+		glCallList(dl);
 	}else{
-		glRotatef(-ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
-		glRotatef(ipos->x*ip->gw, 0.,-1.,0.);
-		glColor4f(1.,1.,1.,1.);
+		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
+		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
 	}
 	glPopMatrix();
-	ret=1;
-end:
-	if(!pano.active && ret){
-		pano.active=img;
-		panoinitpos(ip);
-	}else if(pano.active && !ret) pano.active=NULL;
-	return ret;
+	return 1;
 }
 
 /* thread: dpl */
 char panoplay(){
-	if(!pano.active) return 0;
+	if(!panoactive()) return 0;
 	pano.run=!pano.run;
 	return 1;
 }
 
 /* thread: dpl */
 char panospeed(int dir){
-	if(!pano.active) return 0;
+	if(!panoactive()) return 0;
 	if(!pano.run) return 0;
 	if(dir>0)
 		if(pano.rot>0.f) pano.rot*=2.f;
@@ -175,7 +189,7 @@ char panospeed(int dir){
 }
 
 void panoflip(int dir){
-	if(!pano.active) return;
+	if(!panoactive()) return;
 	if(!pano.run) return;
 	if(pano.rot<0.f && dir<0) pano.rot*=-1.f;
 	if(pano.rot>0.f && dir>0) pano.rot*=-1.f;
@@ -185,14 +199,14 @@ void panoflip(int dir){
 void panorun(){
 	static Uint32 last=0;
 	Uint32 now;
-	if(!pano.active) return;
+	if(!panoactive()) return;
 	if(!pano.run){ last=0; return; }
 	now=SDL_GetTicks();
 	if(last){
 		float sec=(float)(now-last)/1000.f;
 		float sx=pano.rot*sec;
 		float ix;
-		if(panospos2ipos(pano.active,sx,0.f,&ix,NULL))
+		if(panospos2ipos(panoactive(),sx,0.f,&ix,NULL))
 			dplevputx(DE_MOVE,0,ix,0.f);
 	}
 	last=now;

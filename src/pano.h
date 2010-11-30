@@ -14,12 +14,15 @@ struct ipano {
 
 void panoinit();
 
-char panoactive();
+struct img *panoactive();
 void panoplain();
 
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
 char panoclipx(struct img *img);
+
+char panostart(float *x);
+char panoend(float *x);
 
 void panodrawimg(struct itx *tx,struct ipano *ip);
 char panorender();

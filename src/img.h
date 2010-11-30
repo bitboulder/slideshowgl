@@ -8,6 +8,7 @@ enum imgtex {
 	TEX_BIG   =  2,
 	TEX_FULL  =  3,
 	TEX_NUM   =  4,
+	TEX_PANO  = -2,
 };
 
 extern char *imgtex_str[];

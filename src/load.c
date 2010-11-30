@@ -69,6 +69,7 @@ void ldcheckvartex(){
 struct itex {
 	struct itx *tx;
 	GLuint dl;
+	GLuint dlpano;
 	char loaded;
 	char loading;
 	char thumb;
@@ -98,7 +99,8 @@ void imgldfree(struct imgld *il){
 	int i;
 	struct itx *tx;
 	for(i=0;i<TEX_NUM;i++){
-		if(il->texs[i].dl) glDeleteLists(il->texs[i].dl,1);
+		if(il->texs[i].dl)     glDeleteLists(il->texs[i].dl,1);
+		if(il->texs[i].dlpano) glDeleteLists(il->texs[i].dlpano,1);
 		if((tx=il->texs[i].tx)){
 			for(;tx->tex;tx++) glDeleteTextures(1,&tx->tex);
 			free(il->texs[i].tx);
@@ -113,16 +115,11 @@ void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 /* thread: gl */
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
+	if(it==TEX_PANO) return il->texs[TEX_FULL].pano &&
+				il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading ?
+			il->texs[TEX_FULL].dlpano : 0;
 	for(i=it;i>=0;i--) if(il->texs[i].loaded && il->texs[i].loading) return il->texs[i].dl;
 	for(i=it;i<TEX_NUM;i++) if(il->texs[i].loaded && il->texs[i].loading) return il->texs[i].dl;
-	return 0;
-}
-
-GLuint imgldpanotex(struct imgld *il,struct itx **tx){
-	if(il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading){
-		*tx=il->texs[TEX_FULL].tx;
-		return il->texs[TEX_FULL].dl;
-	}
 	return 0;
 }
 
@@ -203,8 +200,12 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float
 void ldgendl(struct itex *itex){
 	if(!itex->dl) itex->dl=glGenLists(1);
 	glNewList(itex->dl,GL_COMPILE);
-	if(itex->pano) panodrawimg(itex->tx,itex->pano);
-	else gldrawimg(itex->tx);
+	gldrawimg(itex->tx);
+	glEndList();
+	if(!itex->pano) return;
+	if(!itex->dlpano) itex->dlpano=glGenLists(1);
+	glNewList(itex->dlpano,GL_COMPILE);
+	panodrawimg(itex->tx,itex->pano);
 	glEndList();
 }
 

@@ -76,7 +76,7 @@ float glmode(enum glmode dst,float h3d){
 	static enum glmode cur=-1;
 	static float cur_h3d;
 	static float cur_w;
-	float w = dst==GLM_TXT ? (float)sdl.scr_w/(float)sdl.scr_h : 1.f;
+	float w = dst!=GLM_2D ? (float)sdl.scr_w/(float)sdl.scr_h : 1.f;
 	if(cur==dst && (dst!=GLM_3D || h3d==cur_h3d) && w==cur_w) return w;
 	cur=dst;
 	glMatrixMode(GL_PROJECTION);

@@ -1,6 +1,3 @@
-# Comfort
-- DE_MOVE works only on x and y (for pano run+zoom)
-
 # Fixes
 - fix sdlthreadcheck
 - fix brightness for contrast<=0

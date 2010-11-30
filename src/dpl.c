@@ -168,9 +168,9 @@ void effmove(struct ipos *ip,int i){
 		ip->x*=dpl.maxfitw;
 		ip->y*=dpl.maxfith;
 	}else if(panoactive()){
-		ip->s=1.f;
-		ip->x=dpl.pos.x;
-		ip->y=dpl.pos.y;
+		ip->s=powf(2.f,(float)dpl.pos.zoom);
+		ip->x=-dpl.pos.x;
+		ip->y=-dpl.pos.y;
 	}else{
 		float fitw,fith;
 		ip->s=powf(2.f,(float)dpl.pos.zoom);
@@ -268,8 +268,8 @@ void effinitimg(enum dplev ev,int i){
 	if(ev==DE_MOVE && act){
 		ip->cur.x=ip->way[1].x;
 		ip->cur.y=ip->way[1].y;
-	}
-	if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
+		ip->opt.active=1;
+	}else if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
 		effwaytime(ip,dpl.cfg.efftime);
 		ip->wayact=act;
 		ip->eff=1;
@@ -368,10 +368,28 @@ void dplmove(enum dplev ev,float x,float y){
 	break;
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT:
-		if(dpl.pos.zoom+dir<=0){
+	{
+		float x;
+		if(dpl.pos.zoom==0 && dir>0 && panostart(&x)){
+			struct img *img=imgget(dpl.pos.imgi);
+			dpl.pos.x=x;
+			dpl.pos.zoom+=dir;
+			dplclippos(img);
+		}else if(dpl.pos.zoom+dir<=0){
+			if(dpl.pos.zoom==1 && panoactive()){
+				struct img *img=imgget(dpl.pos.imgi);
+				float fitw,fith;
+				img->pos->cur.x*=2.f;
+				img->pos->cur.y*=2.f;
+				if(imgfit(img,&fitw,&fith)){
+					img->pos->cur.x/=fitw;
+					img->pos->cur.y/=fith;
+				}
+			}
 			dpl.pos.x=dpl.pos.y=0.;
 			dpl.pos.zoom+=dir;
 		}else dplzoompos(dpl.pos.zoom+dir,x,y);
+	}
 	break;
 	default: return;
 	}
@@ -491,7 +509,7 @@ void dplcol(int d){
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
 	if(*val> 1.f) *val= 1.f;
-	if(dpl.colmode==COL_G) imgldrefresh(img->ld);
+	//if(dpl.colmode==COL_G) imgldrefresh(img->ld); /* TODO: check */
 }
 
 /***************************** dpl action *************************************/
