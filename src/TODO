@@ -2,7 +2,6 @@
 - fix sdlthreadcheck
 - fix brightness for contrast<=0
 - fix gamma // SDL_SetGamma??
-- pano: decrease fitw for not vertical edges
 - load: delete texs for img size reduce
 
 # Want to have

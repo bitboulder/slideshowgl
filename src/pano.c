@@ -90,19 +90,15 @@ char panoclipx(struct img *img,float *xb){
 	if(!img || img!=panoactive()) return 1;
 	if(!(ip=imgldpano(img->ld))) return 1;
 	panoperspect(ip,powf(2.f,(float)dplgetzoom()),&xs,&ys);
-	printf("g %.2fx%.2f - %.2f s %.2fx%.2f ",ip->gw,ip->gh,ip->gyoff,xs,ys);
 	ymax=(ip->gh-ys)/2.f;
 	yr=abs(ip->gyoff)+ymax;
 	yp=ys/2.f;
 	a=ys/2.f/TAN(ys/2.f);
 	c=yp*COS(yr)+a*SIN(yr);
-	printf("=> yr %.2f yp %.2f a %.2f c %.2f ",yr,yp,a,c);
 	xrotmax=xs/2;
 	xpmax=sqrtf((yp*yp+a*a-c*c)/(1/SIN(xrotmax)/SIN(xrotmax)-1));
 	xdec=xrotmax-xpmax;
-	printf("=> xrot %.2f xp %.2f => xdec %.2f (xb %.2f) ",xrotmax,xpmax,xdec,*xb);
 	if(xdec>=0.f) *xb+=xdec/ip->gw;
-	printf("=> xb %.2f\n",*xb);
 	return ip->gw<360.f;
 }
 
