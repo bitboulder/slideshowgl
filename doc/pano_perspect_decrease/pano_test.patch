@@ -1,0 +1,55 @@
+Index: pano.c
+===================================================================
+--- pano.c	(Revision 139)
++++ pano.c	(Arbeitskopie)
+@@ -131,6 +131,34 @@
+ 	}
+ }
+ 
++void rect(float xs,float ys){
++
++	//float tx1=0.f, tx2=10.f, ty1=-10.f, ty2=-ys/2.f, rx=0.f, ry=0.f; /* top */
++	//float tx1=10.f, tx2=xs/2.f/512.f*486.f, ty1=-10.f, ty2=10.f, rx=0.f, ry=0.f; /* right */
++	//float tx1=10.f, tx2=xs/2.f/512.f*486.f, ty1=-10.f, ty2=-ys/2.f/320.f*284.f, rx=0.f, ry=0.f; /* top-right */
++
++	float tx1=10.f, tx2=xs/2.f/512.f*570.f, ty1=-10.f, ty2=ys/2.f/320.f*235.f, rx=0.f, ry=20.f; /* bottom-right */
++	//float tx1=10.f, tx2=xs/2.f/512.f*465.f, ty1=-ys/2.f/320.f*322.f, ty2=10.f, rx=0.f, ry=20.f; /* top-right */
++
++	float r=pano.cfg.radius;
++	pano.cfg.radius=9.f;
++	glDisable(GL_TEXTURE_2D);
++	glPushMatrix();
++	glRotatef(ry,1.f,0.f,0.f); ty1+=ry; ty2+=ry;
++	glRotatef(rx,0.f,1.f,0.f); tx1-=rx; tx2-=rx;
++	//glColor4f(0.f,0.f,0.f,1.f);
++	glColor4f(1.f,1.f,1.f,1.f);
++	glBegin(GL_QUADS);
++	panovertex(tx1,ty1);
++	panovertex(tx2,ty1);
++	panovertex(tx2,ty2);
++	panovertex(tx1,ty2);
++	glEnd();
++	glPopMatrix();
++	pano.cfg.radius=r;
++	glEnable(GL_TEXTURE_2D);
++}
++
+ /* thread: gl */
+ char panorender(){
+ 	struct img *img;
+@@ -143,6 +171,7 @@
+ 	if(!(ip=imgldpano(img->ld))) return 0;
+ 	if(!plain && !(dl=imgldtex(img->ld,TEX_PANO))) plain=1;
+ 	if( plain && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
++	plain=0;
+ 	ipos=imgposcur(img->pos);
+ 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
+ 	glmode(plain?GLM_2D:GLM_3D, perspecth);
+@@ -163,6 +192,7 @@
+ 		glCallList(dl);
+ 	}
+ 	glPopMatrix();
++	if(!plain) rect(perspectw,perspecth);
+ 	return 1;
+ }
+ 

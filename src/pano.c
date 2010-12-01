@@ -16,6 +16,9 @@
 #ifndef M_PI
 # define M_PI		3.14159265358979323846	/* pi */
 #endif
+#define SIN(x)		sin((x)/180.f*M_PI)
+#define COS(x)		cos((x)/180.f*M_PI)
+#define TAN(x)		tan((x)/180.f*M_PI)
 
 struct pano {
 	float rot;
@@ -81,10 +84,25 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 }
 
 /* thread: dpl */
-char panoclipx(struct img *img){
+char panoclipx(struct img *img,float *xb){
 	struct ipano *ip;
+	float xs,ys,ymax,yr,yp,a,c,xrotmax,xpmax,xdec;
 	if(!img || img!=panoactive()) return 1;
 	if(!(ip=imgldpano(img->ld))) return 1;
+	panoperspect(ip,powf(2.f,(float)dplgetzoom()),&xs,&ys);
+	printf("g %.2fx%.2f - %.2f s %.2fx%.2f ",ip->gw,ip->gh,ip->gyoff,xs,ys);
+	ymax=(ip->gh-ys)/2.f;
+	yr=abs(ip->gyoff)+ymax;
+	yp=ys/2.f;
+	a=ys/2.f/TAN(ys/2.f);
+	c=yp*COS(yr)+a*SIN(yr);
+	printf("=> yr %.2f yp %.2f a %.2f c %.2f ",yr,yp,a,c);
+	xrotmax=xs/2;
+	xpmax=sqrtf((yp*yp+a*a-c*c)/(1/SIN(xrotmax)/SIN(xrotmax)-1));
+	xdec=xrotmax-xpmax;
+	printf("=> xrot %.2f xp %.2f => xdec %.2f (xb %.2f) ",xrotmax,xpmax,xdec,*xb);
+	if(xdec>=0.f) *xb+=xdec/ip->gw;
+	printf("=> xb %.2f\n",*xb);
 	return ip->gw<360.f;
 }
 
@@ -109,12 +127,10 @@ char panostart(float *x){
 /* thread: gl */
 void panovertex(double tx,double ty){
 	float xyradius,x,y,z;
-	tx*=M_PI/180.f;
-	ty*=M_PI/180.f;
-	xyradius=cos(ty)*pano.cfg.radius;
-	y=sin(ty)*pano.cfg.radius;
-	x=sin(tx)*xyradius;
-	z=cos(tx)*xyradius;
+	xyradius=COS(ty)*pano.cfg.radius;
+	y=SIN(ty)*pano.cfg.radius;
+	x=SIN(tx)*xyradius;
+	z=COS(tx)*xyradius;
 	glVertex3d(x,y,z);
 }
 

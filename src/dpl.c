@@ -315,12 +315,14 @@ void effinit(enum effrefresh effref,enum dplev ev){
 void dplclippos(struct img *img){
 	float xb,yb;
 	float x[2],y[2];
+	char clipx;
 	if(!imgspos2ipos(img,.5f,.5f,&xb,&yb)) return;
+	clipx=panoclipx(img,&xb);
 	y[0]=-.5f+yb; y[1]= .5f-yb;
 	if(y[1]<y[0]) y[0]=y[1]=0.f;
 	if(dpl.pos.y<y[0]) dpl.pos.y=y[0];
 	if(dpl.pos.y>y[1]) dpl.pos.y=y[1];
-	if(!panoclipx(img)) return;
+	if(!clipx) return;
 	x[0]=-.5f+xb; x[1]= .5f-xb;
 	if(x[1]<x[0]) x[0]=x[1]=0.f;
 	if(dpl.pos.x<x[0]){ dpl.pos.x=x[0]; panoflip(-1); }
