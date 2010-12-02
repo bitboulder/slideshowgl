@@ -132,8 +132,8 @@ void panovertex(double tx,double ty){
 
 /* thread: gl */
 void panodrawimg(struct itx *tx,struct ipano *ip){
-	for(;tx->tex;tx++){
-		glBindTexture(GL_TEXTURE_2D,tx->tex);
+	for(;tx->tex[0];tx++){
+		glBindTexture(GL_TEXTURE_2D,tx->tex[0]);
 		glBegin(GL_QUADS);
 		glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
 		glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);

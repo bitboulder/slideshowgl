@@ -17,7 +17,7 @@ struct dplpos {
 };
 
 enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
-enum colmode { COL_NONE=-1, COL_G=0, COL_B=1, COL_C=2 };
+enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 char *colmodestr[]={"G","B","C"};
 
@@ -300,7 +300,7 @@ char effmaxfit(){
 	return 1;
 }
 
-void effinit(enum effrefresh effref,enum dplev ev){
+void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	debug(DBG_DBG,"eff refresh%s%s",
 		effref&EFFREF_IMG?" (img)":"",
@@ -308,7 +308,7 @@ void effinit(enum effrefresh effref,enum dplev ev){
 		effref&EFFREF_FIT?" (fit)":"");
 	if(effref&EFFREF_FIT) if(dpl.pos.zoom<0 && effmaxfit()) effref|=EFFREF_ALL;
 	if(effref&EFFREF_ALL) for(i=0;i<nimg;i++) effinitimg(ev,i);
-	else if(effref&EFFREF_IMG) effinitimg(ev,dpl.pos.imgi);
+	else if(effref&EFFREF_IMG) effinitimg(ev,imgi<0?dpl.pos.imgi:imgi);
 	
 }
 
@@ -412,34 +412,33 @@ void dplmove(enum dplev ev,float x,float y){
 	dplclipimgi();
 	if(dpl.pos.zoom>0)    dpl.run=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
-	effinit(EFFREF_ALL|EFFREF_FIT,ev);
+	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 }
 
-void dplsel(float sx,float sy){
+int dplclickimg(float sx,float sy){
 	int i,x,y;
-	if(dpl.pos.zoom>=0) return;
+	if(dpl.pos.zoom>=0) return dpl.pos.imgi;
 	sx/=dpl.maxfitw; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=dpl.maxfith; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=floor(sx/zoomtab[-dpl.pos.zoom].size+.5f);
 	y=floor(sy/zoomtab[-dpl.pos.zoom].size+.5f);
 	i=floor((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
 	i+=x;
-	dpl.pos.imgi+=i;
-	dplclipimgi();
-	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL);
+	return dpl.pos.imgi+i;
 }
 
-void dplmoveabs(int imgi){
-	if(imgi<0 || imgi>nimg) return;
+void dplsel(int imgi){
 	dpl.pos.imgi=imgi;
-	effinit(EFFREF_ALL|EFFREF_FIT,0);
+	dplclipimgi();
+	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL,-1);
 }
 
-void dplmark(){
-	struct img *img=imgget(dpl.pos.imgi);
-	if(!img) return;
+void dplmark(int imgi){
+	struct img *img;
+	if(!dpl.writemode) return;
+	if(!(img=imgget(imgi))) return;
 	img->pos->mark=!img->pos->mark;
-	effinit(EFFREF_IMG,0);
+	effinit(EFFREF_IMG,DE_MARK,imgi);
 	actadd(ACT_SAVEMARKS,NULL);
 }
 
@@ -448,7 +447,7 @@ void dplrotate(enum dplev ev){
 	int r=DE_DIR(ev);
 	if(!img) return;
 	exifrotate(img->exif,r);
-	effinit(EFFREF_IMG|EFFREF_FIT,0);
+	effinit(EFFREF_IMG|EFFREF_FIT,ev,-1);
 	if(dpl.writemode) actadd(ACT_ROTATE,img);
 }
 
@@ -474,7 +473,7 @@ void dpldel(){
 	if(!img->pos->opt.active) return;
 	effdel(img->pos);
 	delimg=img;
-	effinit(EFFREF_ALL|EFFREF_FIT,1);
+	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 	if(dpl.writemode) actadd(ACT_DELETE,img);
 }
 
@@ -496,10 +495,10 @@ void dplstaton(char on){
 			ADDTXT(" (write-mode)");
 			if(img->pos->mark) ADDTXT(" [MARK]");
 		}
-		if(dpl.colmode!=COL_NONE || img->pos->col.b || img->pos->col.b || img->pos->col.c){
+		if(dpl.colmode!=COL_NONE || img->pos->col.g || img->pos->col.c || img->pos->col.b){
 			ADDTXT(" G:%.1f",img->pos->col.g);
-			ADDTXT(" B:%.1f",img->pos->col.b);
 			ADDTXT(" C:%.1f",img->pos->col.c);
+			ADDTXT(" B:%.1f",img->pos->col.b);
 		}
 		if(dpl.colmode!=COL_NONE) ADDTXT(" [%s]",colmodestr[dpl.colmode]);
 	}
@@ -532,7 +531,6 @@ void dplcol(int d){
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
 	if(*val> 1.f) *val= 1.f;
-	//if(dpl.colmode==COL_G) imgldrefresh(img->ld); /* TODO: check */
 }
 
 /***************************** dpl action *************************************/
@@ -614,12 +612,12 @@ void dplkey(SDLKey key){
 	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.writemode=!dpl.writemode; effrefresh(EFFREF_ALL); break;
-	case SDLK_m:        if(dpl.writemode) dplmark(); break;
+	case SDLK_m:        dplmark(dpl.pos.imgi); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_g:        dpl.colmode=COL_G; break;
-	case SDLK_b:        dpl.colmode=COL_B; break;
 	case SDLK_c:        dpl.colmode=COL_C; break;
-	case SDLK_RETURN:   dplmoveabs(dpl.inputnum-1); break;
+	case SDLK_b:        dpl.colmode=COL_B; break;
+	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.writemode) dpldel(); break;
 	case SDLK_PLUS:     dplcol(1); break;
 	case SDLK_MINUS:    dplcol(-1); break;
@@ -641,7 +639,8 @@ char dplev(struct ev *ev){
 	case DE_DOWN:
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy); break;
-	case DE_SEL: dplsel(ev->sx,ev->sy); break;
+	case DE_SEL:  dplsel(dplclickimg(ev->sx,ev->sy)); break;
+	case DE_MARK: dplmark(dplclickimg(ev->sx,ev->sy)); break;
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
@@ -665,7 +664,7 @@ void dplcheckev(){
 		dplmovepos(dev.move.sx,dev.move.sy);
 		dev.move.sx=0.f;
 		dev.move.sy=0.f;
-		effinit(EFFREF_IMG,DE_MOVE);
+		effinit(EFFREF_IMG,DE_MOVE,-1);
 	}
 	if(stat>=0) dplstaton(stat);
 }
@@ -780,7 +779,7 @@ int dplthread(void *arg){
 		if(dpl.run) dplrun();
 		timer(TI_DPL,0,0);
 		if(dpl.refresh!=EFFREF_NO){
-			effinit(dpl.refresh,0);
+			effinit(dpl.refresh,0,-1);
 			dpl.refresh=EFFREF_NO;
 		}
 		timer(TI_DPL,1,0);

@@ -3,7 +3,7 @@
 
 #define FILELEN		1024
 
-#define ETIMER  E(NONE), E(SDL), E(DPL), E(LD)
+#define ETIMER  E(NONE), E(SDL), E(DPL), E(LD), E(COL)
 #define E(X)	TI_##X
 enum timer { ETIMER };
 #undef E

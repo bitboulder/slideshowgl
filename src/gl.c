@@ -118,9 +118,9 @@ void glrendermark(struct ipos *ipos,float rot){
 }
 
 void gldrawimg(struct itx *tx){
-	for(;tx->tex;tx++){
+	for(;tx->tex[0];tx++){
 		glPushMatrix();
-		glBindTexture(GL_TEXTURE_2D,tx->tex);
+		glBindTexture(GL_TEXTURE_2D,tx->tex[0]);
 		glTranslatef(tx->x,tx->y,0.f);
 		glScalef(tx->w,tx->h,1.f);
 		glCallList(gl.dls+DLS_IMG);
@@ -168,61 +168,8 @@ void glrenderimg(struct img *img,char back){
 		schg=powf(schg,rot90);
 		glScalef(schg,schg,1.);
 	}
-#if HAVE_GLACTIVETEXTURE
-	// collor correction
-	if(icol->b || icol->c){
-		/* http://stackoverflow.com/questions/1506299/applying-brightness-and-contrast-with-opengl-es
-		 * http://www.opengl.org/sdk/docs/man/xhtml/glGetTexEnv.xml
-		 * http://www.opengl.org/sdk/docs/man/xhtml/glTexEnv.xml
-		 */
-		float b,c;
-		GLint op1,op2;
-		b=icol->b;
-		c=-logf((1.f-icol->c)/2.f)/logf(2.f);
-		if(icol->c>=0.f){
-			b=b-.5f+.5f/c;
-			op1 = b<0.f ? GL_SUBTRACT : GL_ADD;
-			op2 = GL_MODULATE;
-			b=fabs(b);
-		}else{
-			b=(b-.5f)*c+.5f;
-			op1 = GL_MODULATE;
-			op2 = b<0.f ? GL_SUBTRACT : GL_ADD;
-			b=fabs(b);
-		}
-		glColor4f(b,b,b,c);
-
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,op1);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_RGB,GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC1_RGB,GL_PRIMARY_COLOR);
-		if(c<=1.f) glTexEnvi(GL_TEXTURE_ENV,GL_OPERAND1_RGB,GL_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_ALPHA,GL_TEXTURE);
-
-		glActiveTexture(GL_TEXTURE1);
-		glEnable(GL_TEXTURE_2D);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,op2);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_RGB,GL_PREVIOUS);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC1_RGB,GL_PRIMARY_COLOR);
-		if(c>1.f) glTexEnvi(GL_TEXTURE_ENV,GL_OPERAND1_RGB,GL_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_ALPHA,GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV,GL_SRC0_ALPHA,GL_PREVIOUS);
-	}
-#endif
 	// draw img
 	glCallList(dl);
-#if HAVE_GLACTIVETEXTURE
-	if(icol->b || icol->c){
-		glDisable(GL_TEXTURE_2D);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-	}
-#endif
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
 	glPopMatrix();
 }

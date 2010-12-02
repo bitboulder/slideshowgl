@@ -117,7 +117,6 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')
-	conf.CheckFuncMy('glActiveTexture',0,'GLACTIVETEXTURE')
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)

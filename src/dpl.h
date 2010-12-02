@@ -22,7 +22,7 @@ struct istat {
 };
 
 struct icol {
-	float g,b,c;
+	float g,c,b;
 };
 
 enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
@@ -41,6 +41,7 @@ enum dplev {
 	DE_KEY     = 0x0400,
 	DE_STAT    = 0x0800,
 	DE_SEL     = 0x1000,
+	DE_MARK    = 0x2000,
 };
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)

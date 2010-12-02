@@ -184,7 +184,9 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
 	int zoom=dplgetzoom();
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
-	if(zoom==0) switch(btn){
+	if(btn==SDL_BUTTON_MIDDLE){
+		dplevputx(DE_MARK,0,sx,sy);
+	}else if(zoom==0) switch(btn){
 		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT,0); break;
 		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT ,0); break;
 	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
@@ -208,6 +210,7 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	if(down){
 		switch(button){
 		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_MIDDLE:
 		case SDL_BUTTON_RIGHT:
 			sdl.move.btn=button;
 			sdl.move.time=SDL_GetTicks();
