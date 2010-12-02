@@ -18,6 +18,8 @@
 #include "exif.h"
 #include "pano.h"
 
+int glversion=0;
+
 enum dls { DLS_IMG, DLS_NUM };
 
 struct gl {
@@ -40,6 +42,8 @@ void glsetbar(float bar){ gl.bar=bar; }
 
 void glinit(){
 	char *fontfn;
+	int v[2];
+	if(sscanf((const char *)glGetString(GL_VERSION),"%i.%i",v+0,v+1)==2) glversion=v[0]*100+v[1];
 	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
 	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
 	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);

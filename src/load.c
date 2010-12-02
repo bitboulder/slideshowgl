@@ -177,75 +177,99 @@ struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 
 /* thread: sdl */
 void ldcolmodpx(GLubyte *px,GLint n,struct icol *ic){
-	float g = -logf((1.f+ic->g)/2.f)/logf(2.f);
-	float c = -logf((1.f-ic->c)/2.f)/logf(2.f);
-	float b = ic->b;
 	GLint i;
-	for(i=0;i<n;i++){
-		float v = (float)px[i]/255.f;
-		if(ic->g) v = ic->g>-1.f ? powf(v,g)     : 0.f;
-		if(ic->c) v = ic->c< 1.f ? (v-.5f)*c+.5f : (v<.5f ? 0.f : 1.f);
-		if(ic->b) v+= b;
-		v = v*255.f+.5f;
-		if(v<0.f)   v=0.f;
-		if(v>255.f) v=255.f;
-		px[i]=v;
+	static GLubyte tab[256];
+	static struct icol icl={0.f,0.f,0.f};
+	if(ic->g!=icl.g ||ic->c!=icl.c || ic->b!=icl.b){
+		float g = -logf((1.f+ic->g)/2.f)/logf(2.f);
+		float c = -logf((1.f-ic->c)/2.f)/logf(2.f);
+		float b = ic->b;
+		for(i=0;i<256;i++){
+			float v = (float)i/255.f;
+			if(ic->g) v = ic->g>-1.f ? powf(v,g)     : 0.f;
+			if(ic->c) v = ic->c< 1.f ? (v-.5f)*c+.5f : (v<.5f ? 0.f : 1.f);
+			if(ic->b) v+= b;
+			v = v*255.f+.5f;
+			if(v<0.f)   v=0.f;
+			if(v>255.f) v=255.f;
+			tab[i]=v;
+		}
+		icl=*ic;
 	}
+	for(i=0;i<n;i++) px[i]=tab[px[i]];
 }
 
 /* thread: sdl */
 void ldcolmod(struct itx *itx,struct icol *ic){
 	int src = itx->tex[1]?1:0;
-	GLint w,h;
-	GLint ex=0;
-	printf("%i: %.2f(%.2f) %.2f(%.2f) %.2f\n",src,ic->g,-logf((1.f+ic->g)/2.f)/logf(2.f),ic->c,-logf((1.f-ic->c)/2.f)/logf(2.f),ic->b);
-	timer(TI_COL,-1,0);
+	GLint w,h,i;
+	GLint ex;
+	timer(TI_COL,-1,1);
 	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_WIDTH,&w);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_HEIGHT,&h);
-	/* TODO: formel */
-	/* 466x349 => 233 */
-	/* 171x128 => 128 */
-	if(h%2) ex+=(w+1)/2;
-	if(w%2) ex+=(h+1)/2;
-#if 1
-	GLuint pbo;
-	GLubyte *ptr=NULL;
-	glGenBuffers(1,&pbo);
-	if(!src) glGenTextures(1,itx->tex+1);
-	glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
-	glBindBuffer(GL_PIXEL_PACK_BUFFER,pbo);
-	glBufferData(GL_PIXEL_PACK_BUFFER,(w*h+ex)*3,NULL,GL_STREAM_COPY);
-	glGetTexImage(GL_TEXTURE_2D,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-	/* TODO: Check error */
-	if(!src){
-		timer(TI_COL,0,0);
-		glBindTexture(GL_TEXTURE_2D,itx->tex[1]);
+	/* doc/colmod_ex_calc.ods */
+	ex=h*(w%4)/3;
+	if(ex*3<h*(w%4)) ex++;
+#ifdef GL_VERSION_1_5
+	if(glversion>=105){
+		GLuint pbo;
+		GLubyte *ptr=NULL;
+		GLenum glerr;
+		glGenBuffers(1,&pbo);
+		if(!src) glGenTextures(1,itx->tex+1);
+		glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER,pbo);
+		for(i=0;i<1100;i++,ex++){
+			glBufferData(GL_PIXEL_PACK_BUFFER,(w*h+ex)*3,NULL,GL_STREAM_COPY);
+			glGetTexImage(GL_TEXTURE_2D,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+			if(!(glerr=glGetError())) break;
+		}
+		if(i==1100){
+			error(ERR_CONT,"ldcolmod pbo get failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
+			goto fallback0;
+		}
+		if(i>0) error(ERR_CONT,"ldcolmod pbo get solved %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
+		if(!src){
+			timer(TI_COL,0,1);
+			glBindTexture(GL_TEXTURE_2D,itx->tex[1]);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,pbo);
+			glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,0);
+			if((glerr=glGetError())){
+				error(ERR_CONT,"ldcolmod pbo copy failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
+				goto fallback0;
+			}
+			timer(TI_COL,1,1);
+		}
+		if(ic->g || ic->c || ic->b){
+			ptr=glMapBuffer(GL_PIXEL_PACK_BUFFER,GL_READ_WRITE);
+			if(!ptr){
+				error(ERR_CONT,"ldcolmod pbo map failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
+				goto fallback1;
+			}
+			ldcolmodpx(ptr,w*h*3,ic);
+			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+		}
+		glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
+		glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,pbo);
 		glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+		if((glerr=glGetError())){
+			error(ERR_CONT,"ldcolmod pbo put failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
+			goto fallback1;
+		}
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,0);
-		timer(TI_COL,1,0);
+		glDeleteBuffers(1,&pbo);
+		timer(TI_COL,0,1);
+		return;
+fallback1:
+		//src=1; /* TODO: on eaksw3: src copy don't work */
+fallback0:
+		glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
+		glDeleteBuffers(1,&pbo);
+		timer(TI_COL,0,1);
 	}
-	if(ic->g || ic->c || ic->b){
-		ptr=glMapBuffer(GL_PIXEL_PACK_BUFFER,GL_READ_WRITE);
-		if(!ptr) goto fallback;
-		ldcolmodpx(ptr,w*h*3,ic);
-		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-	}
-	glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
-	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER,pbo);
-	glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-	/* TODO: Check error */
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER,0);
-	glDeleteBuffers(1,&pbo);
-	timer(TI_COL,0,0);
-	return;
-fallback:
-	glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
-	glDeleteBuffers(1,&pbo);
-	//src=1; /* TODO: on eaksw3: src copy don't work */
-	timer(TI_COL,0,0);
 #endif
 	GLubyte *pixels;
 	pixels=malloc((w*h+ex)*3);
@@ -254,16 +278,16 @@ fallback:
 	glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
 	glGetTexImage(GL_TEXTURE_2D,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
 	if(!src){
-		timer(TI_COL,2,0);
+		timer(TI_COL,2,1);
 		glBindTexture(GL_TEXTURE_2D,itx->tex[1]);
 		glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
-		timer(TI_COL,3,0);
+		timer(TI_COL,3,1);
 	}
 	if(ic->g || ic->c || ic->b) ldcolmodpx(pixels,w*h*3,ic);
 	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
 	glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
 	free(pixels);
-	timer(TI_COL,2,0);
+	timer(TI_COL,2,1);
 }
 
 /***************************** texload ****************************************/
@@ -365,7 +389,7 @@ char ldfcol(struct imgld *il,enum imgtex it){
 	for(;it>=0;it--){
 		struct itx *tx;
 		if(!il->texs[it].loading || !il->texs[it].loaded) continue;
-		if(!memcmp(&il->texs[it].ic,ic,sizeof(struct icol))) continue;
+		if(il->texs[it].ic.g==ic->g && il->texs[it].ic.c==ic->c && il->texs[it].ic.b==ic->b) continue;
 		for(tx=il->texs[it].tx;tx->tex[0];tx++)
 			ldtexload_put(tx,NULL,ic,NULL,0.f);
 		il->texs[it].ic=*ic;
