@@ -77,7 +77,6 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	panoperspect(ip,powf(2.f,(float)dplgetzoom()),&perspectw,&perspecth);
 	fitw = ip->gw/perspectw;
 	fith = ip->gh/perspecth;
-	/* TODO: decrease fitw for not vertical edges */
 	if(ix) *ix = sx/fitw;
 	if(iy) *iy = sy/fith;
 	return 1;

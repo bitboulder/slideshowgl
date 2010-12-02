@@ -1,7 +1,5 @@
 # Fixes
 - fix sdlthreadcheck
-- fix brightness for contrast<=0
-- fix gamma // SDL_SetGamma??
 - load: delete texs for img size reduce
 
 # Want to have

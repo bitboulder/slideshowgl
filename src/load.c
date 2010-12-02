@@ -1,4 +1,4 @@
-#define GL_GLEXT_PROTOTYPES /* TODO: >scons */
+#define GL_GLEXT_PROTOTYPES
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,7 +63,7 @@ void ldcheckvartex(){
 	glBindTexture(GL_TEXTURE_2D,tex);
 	glTexImage2D(GL_TEXTURE_2D,0,3,VT_W,VT_H,0,GL_RGB,GL_UNSIGNED_BYTE,dat);
 	glDeleteTextures(1,&tex);
-	load.vartex=!glGetError(); /* TODO: does not work with colmod */
+	load.vartex=!glGetError();
 }
 
 /***************************** imgld ******************************************/
@@ -202,7 +202,7 @@ void ldcolmodpx(GLubyte *px,GLint n,struct icol *ic){
 /* thread: sdl */
 void ldcolmod(struct itx *itx,struct icol *ic){
 	int src = itx->tex[1]?1:0;
-	GLint w,h,i;
+	GLint w,h;
 	GLint ex;
 	timer(TI_COL,-1,1);
 	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
@@ -216,6 +216,7 @@ void ldcolmod(struct itx *itx,struct icol *ic){
 		GLuint pbo;
 		GLubyte *ptr=NULL;
 		GLenum glerr;
+		GLint i;
 		glGenBuffers(1,&pbo);
 		if(!src) glGenTextures(1,itx->tex+1);
 		glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
@@ -264,7 +265,7 @@ void ldcolmod(struct itx *itx,struct icol *ic){
 		timer(TI_COL,0,1);
 		return;
 fallback1:
-		//src=1; /* TODO: on eaksw3: src copy don't work */
+		src=1;
 fallback0:
 		glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
 		glDeleteBuffers(1,&pbo);
