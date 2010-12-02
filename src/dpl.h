@@ -3,6 +3,7 @@
 
 #include <GL/gl.h>
 #include <SDL.h>
+#include <limits.h>
 #include "img.h"
 
 struct ipos {

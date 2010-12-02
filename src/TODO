@@ -3,5 +3,4 @@
 - load: delete texs for img size reduce
 
 # Want to have
-? display loop imgs if zoom<0
 ? thread priorities

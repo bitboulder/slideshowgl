@@ -9,6 +9,9 @@
 #include "exif.h"
 #include "act.h"
 
+#define IMGI_START	INT_MIN
+#define IMGI_END	INT_MAX
+
 struct dplpos {
 	int imgi;
 	int imgiold;
@@ -45,7 +48,7 @@ struct dpl {
 	} stat;
 	enum colmode colmode;
 } dpl = {
-	.pos.imgi = -1,
+	.pos.imgi = IMGI_START,
 	.pos.zoom = 0,
 	.pos.x = 0.,
 	.pos.y = 0.,
@@ -65,7 +68,11 @@ struct dpl {
 
 /* thread: all */
 void effrefresh(enum effrefresh val){ dpl.refresh|=val; }
-int dplgetimgi(){ return dpl.pos.imgi; }
+int dplgetimgi(){
+	if(dpl.pos.imgi==IMGI_START) return -1;
+	if(dpl.pos.imgi==IMGI_END) return nimg;
+	return dpl.pos.imgi;
+}
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplineff(){ return dpl.ineff; }
 char dplshowinfo(){ return dpl.showinfo; }
@@ -149,7 +156,11 @@ struct zoomtab {
 char effact(int i){
 	if(dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) return 0;
 	if(i==dpl.pos.imgi) return 1;
-	return dpl.pos.zoom<0 && abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc;
+	if(dpl.pos.zoom>=0) return 0;
+	if(abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc) return 1;
+	if(!dpl.cfg.loop) return 0;
+	if(nimg-abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc) return 1;
+	return 0;
 }
 
 void effwaytime(struct imgpos *ip,Uint32 len){
@@ -161,8 +172,11 @@ void effmove(struct ipos *ip,int i){
 	ip->m=(imgs[i]->pos->mark && dpl.writemode)?1.f:0.f;
 	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dpl.pos.zoom<0){
+		int diff=i-dpl.pos.imgi;
+		if(dpl.cfg.loop && diff> nimg/2) diff-=nimg;
+		if(dpl.cfg.loop && diff<-nimg/2) diff+=nimg;
 		ip->s=zoomtab[-dpl.pos.zoom].size;
-		ip->x=(i-dpl.pos.imgi)*ip->s;
+		ip->x=diff*ip->s;
 		ip->y=0.;
 		while(ip->x<-.5f){ ip->x+=1.f; ip->y-=ip->s; }
 		while(ip->x> .5f){ ip->x-=1.f; ip->y+=ip->s; }
@@ -218,6 +232,8 @@ char effonoff(struct ipos *ip,struct ipos *ipon,enum dplev ev){
 
 char efffaston(struct imgpos *ip,enum dplev ev,int i){
 	int diff=dpl.pos.imgi-i;
+	if(dpl.pos.imgi<0) diff=i+1;
+	if(dpl.pos.imgi>=nimg) diff=nimg-i;
 	if((ev!=DE_DOWN || diff>=0 || diff<=-zoomtab[0].move) &&
 	   (ev!=DE_UP   || diff<=0 || diff>= zoomtab[0].move)) return 0;
 	ip->opt.active=2;
@@ -249,7 +265,6 @@ void effinitimg(enum dplev ev,int i){
 		if(!efffaston(ip,ev,i)) return;
 	}
 	if(!act && ip->eff && !ip->wayact) return;
-	/*printf("%i %3s\n",i,act?"on":"off");*/
 	ip->opt.tex=imgseltex(ip,i);
 	ip->opt.back=0;
 	if(act) effmove(ip->way+1,i);
@@ -260,8 +275,8 @@ void effinitimg(enum dplev ev,int i){
 	}else{
 		ip->way[0]=ip->cur;
 		if(act && dpl.pos.zoom<0 &&
-			(fabs(ip->way[0].x-ip->way[1].x)>.5f ||
-			 fabs(ip->way[0].y-ip->way[1].y)>.5f)
+			(fabs(ip->way[0].x-ip->way[1].x)/dpl.maxfitw/ip->way[1].s>1.5f ||
+			 fabs(ip->way[0].y-ip->way[1].y)/dpl.maxfith/ip->way[1].s>1.5f)
 			) ip->opt.back=1;
 	}
 	if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
@@ -353,14 +368,23 @@ void dplzoompos(int nzoom,float sx,float sy){
 	if(img) dplclippos(img);
 }
 
-void dplclipimgi(){
+void dplclipimgi(int *imgi){
+	int i = imgi ? *imgi : dpl.pos.imgi;
 	if(dpl.cfg.loop){
-		while(dpl.pos.imgi<0)     dpl.pos.imgi+=nimg;
-		while(dpl.pos.imgi>=nimg) dpl.pos.imgi-=nimg;
-	}else{
-		if(dpl.pos.imgi<0)    dpl.pos.imgi=0;
-		if(dpl.pos.imgi>nimg) dpl.pos.imgi=nimg;
+		if(i==IMGI_START) i=0;
+		if(i==IMGI_END)   i=nimg-1;
+		while(i<0)     i+=nimg;
+		while(i>=nimg) i-=nimg;
+	}else if(imgi){
+		/* no change for dplmark without loop */
+	}else if(dpl.pos.zoom<0){
+		if(i<0)     i=0;
+		if(i>=nimg) i=nimg-1;
+	}else if(i!=IMGI_START && i!=IMGI_END){
+		if(i<0)     i=0;
+		if(i>=nimg) i=IMGI_END;
 	}
+	if(imgi) *imgi=i; else dpl.pos.imgi=i;
 }
 
 void dplmove(enum dplev ev,float x,float y){
@@ -409,15 +433,17 @@ void dplmove(enum dplev ev,float x,float y){
 	default: return;
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
-	dplclipimgi();
 	if(dpl.pos.zoom>0)    dpl.run=0;
+	dplclipimgi(NULL);
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 }
 
 int dplclickimg(float sx,float sy){
 	int i,x,y;
-	if(dpl.pos.zoom>=0) return dpl.pos.imgi;
+	if(dpl.pos.imgi<0)     return 0;
+	if(dpl.pos.imgi>=nimg) return nimg-1;
+	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
 	sx/=dpl.maxfitw; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=dpl.maxfith; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=floor(sx/zoomtab[-dpl.pos.zoom].size+.5f);
@@ -429,13 +455,14 @@ int dplclickimg(float sx,float sy){
 
 void dplsel(int imgi){
 	dpl.pos.imgi=imgi;
-	dplclipimgi();
+	dplclipimgi(NULL);
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL,-1);
 }
 
 void dplmark(int imgi){
 	struct img *img;
 	if(!dpl.writemode) return;
+	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
 	img->pos->mark=!img->pos->mark;
 	effinit(EFFREF_IMG,DE_MARK,imgi);
@@ -475,6 +502,17 @@ void dpldel(){
 	delimg=img;
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 	if(dpl.writemode) actadd(ACT_DELETE,img);
+}
+
+void dplcol(int d){
+	struct img *img;
+	float *val;
+	if(dpl.colmode==COL_NONE) return;
+	if(!(img=imgget(dpl.pos.imgi))) return;
+	val=((float*)&img->pos->col)+dpl.colmode;
+	*val+=.1f*(float)d;
+	if(*val<-1.f) *val=-1.f;
+	if(*val> 1.f) *val= 1.f;
 }
 
 #define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
@@ -520,17 +558,6 @@ void dplstaton(char on){
 		break;
 		default: break;
 	}
-}
-
-void dplcol(int d){
-	struct img *img;
-	float *val;
-	if(dpl.colmode==COL_NONE) return;
-	if(!(img=imgget(dpl.pos.imgi))) return;
-	val=((float*)&img->pos->col)+dpl.colmode;
-	*val+=.1f*(float)d;
-	if(*val<-1.f) *val=-1.f;
-	if(*val> 1.f) *val= 1.f;
 }
 
 /***************************** dpl action *************************************/
@@ -650,7 +677,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: break;
 	}
-	return dpl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi==nimg;
+	return dpl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi>=nimg;
 }
 
 void dplcheckev(){
