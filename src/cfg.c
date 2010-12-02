@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#if HAVE_GETTEXT
+	#include <libintl.h>
+#endif
 #include "cfg.h"
 #include "main.h"
 #include "sdl.h"
@@ -10,7 +13,6 @@
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
 enum cfgmode { CM_INC, CM_FLIP, CM_SET };
-char *cfgmodestr[] = { "increase", "toggle", "set" };
 
 #define E(X)	#X
 struct cfg {
@@ -20,40 +22,41 @@ struct cfg {
 	enum cfgmode mode;
 	char *val;
 	char *vals[16];
+	char *help;
 } cfg[]={
-	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0" },
-	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0" },
-	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0" },
-	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL } },
-	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0" },
-	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024" },
-	{ 'H', "sdl.height",          CT_INT, CM_SET,  "640" },
-	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1" },
-	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500" },
-	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000" },
-	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000" },
-	{ 0,   "dpl.shrink",          CT_FLT, CM_SET,  "0.75" },
-	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0" },
-	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0" },
-	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512" },
-	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024" },
-	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "40000000" },
-	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf" },
-	{ 0,   "gl.inputnum_lineh",   CT_FLT, CM_SET,  "0.05" },
-	{ 0,   "gl.stat_lineh",       CT_FLT, CM_SET,  "0.025" },
-	{ 0,   "gl.txt_bgcolor",      CT_COL, CM_SET,  "0.8 0.8 0.8 0.7" },
-	{ 0,   "gl.txt_fgcolor",      CT_COL, CM_SET,  "0.0 0.0 0.0 1.0" },
-	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.5" }, /* screens per second */
-	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.125" },
-	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0" },
-	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0" },
-	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250"  },
-	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000" },
-	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000" },
-	{ 'm', "act.mark_fn",         CT_STR, CM_SET,  ".mark" },
-	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "10000" },
-	{ 'n', "act.do",              CT_INT, CM_FLIP, "1" },
-	{ 0,   NULL,                  0,      0,       NULL },
+	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0", {NULL}, "Print this usage" },
+	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0", {NULL}, NULL },
+	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0", {NULL}, NULL },
+	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL }, NULL },
+	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0", {NULL}, NULL },
+	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024", {NULL}, NULL },
+	{ 'H', "sdl.height",          CT_INT, CM_SET,  "640", {NULL}, NULL },
+	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1", {NULL}, NULL },
+	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500", {NULL}, NULL },
+	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000", {NULL}, NULL },
+	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000", {NULL}, NULL },
+	{ 0,   "dpl.shrink",          CT_FLT, CM_SET,  "0.75", {NULL}, NULL },
+	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0", {NULL}, NULL },
+	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0", {NULL}, NULL },
+	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512", {NULL}, NULL },
+	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024", {NULL}, NULL },
+	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "40000000", {NULL}, NULL },
+	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf", {NULL}, NULL },
+	{ 0,   "gl.inputnum_lineh",   CT_FLT, CM_SET,  "0.05", {NULL}, NULL },
+	{ 0,   "gl.stat_lineh",       CT_FLT, CM_SET,  "0.025", {NULL}, NULL },
+	{ 0,   "gl.txt_bgcolor",      CT_COL, CM_SET,  "0.8 0.8 0.8 0.7", {NULL}, NULL },
+	{ 0,   "gl.txt_fgcolor",      CT_COL, CM_SET,  "0.0 0.0 0.0 1.0", {NULL}, NULL },
+	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.5", {NULL}, NULL }, /* screens per second */
+	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.125", {NULL}, NULL },
+	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0", {NULL}, NULL },
+	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0", {NULL}, NULL },
+	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250", {NULL}, NULL  },
+	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000", {NULL}, NULL },
+	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000", {NULL}, NULL },
+	{ 'm', "act.mark_fn",         CT_STR, CM_SET,  ".mark", {NULL}, NULL },
+	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "10000", {NULL}, NULL },
+	{ 'n', "act.do",              CT_INT, CM_FLIP, "1", {NULL}, NULL },
+	{ 0,   NULL,                  0,      0,       NULL, {NULL}, NULL },
 };
 #undef E
 
@@ -135,12 +138,9 @@ void usage(char *fn){
 	int i;
 	version();
 	printf("Usage: %s [Options] {FILES|FILELISTS.flst}\n",fn);
-	printf("Options:\n");
+	printf("%s:\n",_("Options"));
 	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
-		printf("  -%c  %s %s",
-			cfg[i].opt,
-			cfgmodestr[cfg[i].mode],
-			cfg[i].name);
+		printf("  -%c  %s",cfg[i].opt,_(cfg[i].help?cfg[i].help:cfg[i].name));
 		if(cfg[i].type==CT_ENM){
 			int j;
 			for(j=0;cfg[i].vals[j];j++) printf("%s%s",j?",":" [",cfg[i].vals[j]);
@@ -165,6 +165,11 @@ char *cfgcompileopt(){
 
 void cfgparseargs(int argc,char **argv){
 	int c,i;
+#if HAVE_GETTEXT
+	setlocale(LC_ALL,"");
+	bindtextdomain(APPNAME,LOCALEDIR);
+	textdomain(APPNAME);
+#endif
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
 		for(i=0;cfg[i].name;i++) if(cfg[i].opt==c) cfgset(cfg+i,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0]);

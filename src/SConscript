@@ -1,3 +1,5 @@
+import os
+
 Import('env')
 Import('prefix')
 Import('destdir')
@@ -34,7 +36,7 @@ objects = env.Object(sources)
 
 prog = env.Program('../slideshowgl', objects, install=True)
 
-bindir = destdir + prefix + '/bin'
+bindir = destdir + os.path.join(prefix,'bin')
 env.Install(bindir,prog)
 install_bin = env.Alias('install-bin',bindir)
 

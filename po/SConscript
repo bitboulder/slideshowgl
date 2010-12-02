@@ -1,0 +1,28 @@
+import SCons
+import os
+
+Import('env')
+Import('prefix')
+Import('destdir')
+
+sources = """
+	de.po
+""".split()
+
+#env['DATADIR'] = prefix + '/share/' + env['APPNAME'] + '/'
+#datadir = destdir + env['DATADIR']
+#env.Install(datadir, [data])
+#install_data = env.Alias('install-data', datadir)
+
+env['LOCALEDIR'] = os.path.join(prefix,'share','locale')
+podir = destdir + env['LOCALEDIR']
+
+for po in sources:
+	base, ext = SCons.Util.splitext(po)
+	mo = base + '.mo'
+	dst = os.path.join(podir,base,'LC_MESSAGES',env['APPNAME']+'.mo')
+	mo = env.Command(mo, po, "msgfmt -o $TARGET $SOURCE")
+	install_po = env.Alias('install-po', env.InstallAs(dst,mo))
+
+Export('install_po')
+

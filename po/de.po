@@ -1,0 +1,18 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-11-03 12:10+0100\n"
+"PO-Revision-Date: 2009-11-03 09:03+0100\n"
+"Last-Translator: Sebastian Noack <sebastian.noack@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Options"
+msgstr "Optionen"
+
+msgid "Print this usage"
+msgstr "Diese Hilfe ausgeben"
+

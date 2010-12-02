@@ -1,3 +1,5 @@
+import os
+
 Import('env')
 Import('prefix')
 Import('destdir')
@@ -7,7 +9,7 @@ data = """
 	FreeSans.ttf
 """.split()
 
-env['DATADIR'] = prefix + '/share/' + env['APPNAME'] + '/'
+env['DATADIR'] = os.path.join(prefix,'share',env['APPNAME'])
 datadir = destdir + env['DATADIR']
 env.Install(datadir, [data])
 install_data = env.Alias('install-data', datadir)

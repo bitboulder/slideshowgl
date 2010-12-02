@@ -120,6 +120,7 @@ if not env.GetOption('clean'):
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
+	conf.CheckFuncMy('gettext',0,'GETTEXT')
 
 	env = conf.Finish()
 
@@ -136,8 +137,10 @@ Export('destdir')
 
 SConscript(build + '/src/SConscript')
 SConscript(build + '/data/SConscript')
+SConscript(build + '/po/SConscript')
 
 Import('install_bin')
 Import('install_data')
+Import('install_po')
 
-env.Alias('install', [install_bin, install_data])
+env.Alias('install', [install_bin, install_data, install_po])

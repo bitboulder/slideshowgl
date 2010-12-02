@@ -4,6 +4,7 @@
 #define APPNAME "%(APPNAME)s"
 #define VERSION "%(VERSION)s"
 #define DATADIR "%(DATADIR)s"
+#define LOCALEDIR "%(LOCALEDIR)s"
 
 #define HAVE_EXIF		%(HAVE_EXIF)i
 
@@ -16,6 +17,7 @@
 
 #define HAVE_STRSEP		%(HAVE_STRSEP)i
 #define HAVE_REALPATH	%(HAVE_REALPATH)i
+#define HAVE_GETTEXT	%(HAVE_GETTEXT)i
 
 /*#define HAVE_PTHREAD*/
 
