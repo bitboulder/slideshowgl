@@ -89,12 +89,24 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	exit(1);
 }
 
+char *progpath=NULL;
+
 char *finddatafile(char *fn){
 	int i;
 	static char ret[FILELEN];
-	static char *dirs[]={".", "/", "data", "../data", DATADIR, NULL};
-	/* TODO: relative to program */
-	for(i=0;dirs[i];i++){
+	static char *dirs[]={NULL, NULL, ".", "data", "../data", DATADIR, NULL};
+	if(progpath && !dirs[0]){
+		for(i=strlen(progpath)-1;i>=0;i--) if(progpath[i]=='/' || progpath[i]=='\\'){
+			dirs[0]=malloc(i+1);
+			dirs[1]=malloc(i+6);
+			memcpy(dirs[0],progpath,i);
+			memcpy(dirs[1],progpath,i+1);
+			dirs[0][i]='\0';
+			strcpy(dirs[1]+i+1,"data");
+			break;
+		}
+	}
+	for(i=0;i<2 || dirs[i];i++) if(dirs[i]){
 		FILE *fd;
 		snprintf(ret,FILELEN,"%s/%s",dirs[i],fn);
 		if(!(fd=fopen(ret,"rb"))) continue;
@@ -145,6 +157,7 @@ char end_threads(){
 }
 
 int main(int argc,char **argv){
+	if(argc) progpath=argv[0];
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");

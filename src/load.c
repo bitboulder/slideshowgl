@@ -719,10 +719,11 @@ char ldfindfilesubdir1(char *dst,int len,char *subdir,char *ext){
 	if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
 	if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
 	if(extpos) extpos[0]='\0';
-	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/'){
+	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/' || dst[i]=='\\'){
+		char dsti=dst[i];
 		dst[i]='\0';
 		snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
-		dst[i]='/';
+		dst[i]=dsti;
 		if((fd=fopen(fn,"rb"))){
 			fclose(fd);
 			strncpy(dst,fn,len);
