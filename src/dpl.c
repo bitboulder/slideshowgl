@@ -635,8 +635,6 @@ char *dplhelp(){
 
 void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
-	if(key!=SDLK_PLUS && key!=SDLK_MINUS)
-		dpl.colmode=COL_NONE;
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_BACKSPACE:panoplain(); break;
@@ -663,6 +661,7 @@ void dplkey(SDLKey key){
 }
 
 char dplev(struct ev *ev){
+	if(ev->ev!=DE_KEY || (ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS)) dpl.colmode=COL_NONE;
 	switch(ev->ev){
 	case DE_RIGHT:
 	case DE_LEFT:
