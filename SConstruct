@@ -97,6 +97,10 @@ if not env.GetOption('clean'):
 		env.Append(LIBPATH    = ['#/winlib/freetype/lib'])
 		conf.CheckLibMy('freetype',0,0)
 
+		env.Append(CPPPATH    = ['#/winlib/gettext/include'])
+		env.Append(LIBPATH    = ['#/winlib/gettext/lib'])
+		conf.CheckLibMy('intl',0,0)
+
 		conf.CheckLibMy('opengl32',1,0)
 		conf.CheckLibMy('glu32',1,0)
 		conf.CheckLibMy('stdc++',1,0)

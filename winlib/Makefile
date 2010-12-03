@@ -1,5 +1,5 @@
 
-SUBDIRS=exif freetype ftgl sdl sdl_image
+SUBDIRS=exif freetype ftgl sdl sdl_image gettext
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done

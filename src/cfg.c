@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include "cfg.h"
@@ -162,9 +163,16 @@ char *cfgcompileopt(){
 void cfgparseargs(int argc,char **argv){
 	int c,i;
 #if HAVE_GETTEXT
+	struct stat st;
 	setlocale(LC_ALL,"");
 	setlocale(LC_NUMERIC,"C");
-	bindtextdomain(APPNAME,LOCALEDIR);
+	if(!stat(LOCALEDIR,&st)) bindtextdomain(APPNAME,LOCALEDIR); else if(argc){
+		for(i=strlen(argv[0])-1;i>=0;i--) if(argv[0][i]=='/' || argv[0][i]=='\\') break;
+		char buf[FILELEN];
+		snprintf(buf,FILELEN,argv[0]);
+		snprintf(buf+i+1,FILELEN-i-1,"locale");
+		bindtextdomain(APPNAME,buf);
+	}
 	textdomain(APPNAME);
 #endif
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
