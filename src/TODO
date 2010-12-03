@@ -1,7 +1,6 @@
 # Fixes
 - fix sdlthreadcheck
 - load: delete texs for img size reduce
-- fix gettext on win (latin1 -> utf-8)
 
 # Want to have
 ? thread priorities

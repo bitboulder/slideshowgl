@@ -174,6 +174,7 @@ void cfgparseargs(int argc,char **argv){
 		bindtextdomain(APPNAME,buf);
 	}
 	textdomain(APPNAME);
+	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
 		for(i=0;cfg[i].name;i++) if(cfg[i].opt==c) cfgset(cfg+i,optarg);

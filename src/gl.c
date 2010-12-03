@@ -191,41 +191,10 @@ void glrenderimgs(){
 }
 
 #if HAVE_FTGL
-char *glfontrecode(char *text){
-#ifdef __WIN32__
-	/* TODO: fix gettext latin1 -> utf-8 */
-	int i,j;
-	static char buf[1024];
-	unsigned char *tu=(unsigned char *)text;
-	for(i=j=0;text[i] && j<1023;j++,i++)
-		     if(tu[i]==0xc4){ strcpy(buf+(j++),"Ä"); }
-		else if(tu[i]==0xd6){ strcpy(buf+(j++),"Ö"); }
-		else if(tu[i]==0xdc){ strcpy(buf+(j++),"Ü"); }
-		else if(tu[i]==0xe4){ strcpy(buf+(j++),"ä"); }
-		else if(tu[i]==0xf6){ strcpy(buf+(j++),"ö"); }
-		else if(tu[i]==0xfc){ strcpy(buf+(j++),"ü"); }
-		else if(tu[i]==0xdf){ strcpy(buf+(j++),"ß"); }
-		else if(tu[i]>=0x80){ j+=sprintf(buf+j,"%02x",tu[i])-1; }
-		else buf[j]=text[i];
-	buf[j]='\0';
-	return buf;
-#else
-	return text;
-#endif
-}
-
-void glrenderfont(char *text){
-	ftglRenderFont(gl.font,glfontrecode(text),FTGL_RENDER_ALL);
-}
-
-float glgetfontadvance(char *text){
-	return ftglGetFontAdvance(gl.font,glfontrecode(text));
-}
-
 void gltextout(char *text,float x,float y){
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
-	glrenderfont(text);
+	ftglRenderFont(gl.font,text,FTGL_RENDER_ALL);
 	glPopMatrix();
 }
 #endif
@@ -245,7 +214,7 @@ void glrendertext(char *title,char *text){
 	float tw,tx;
 	if(!gl.font) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1){
-		float len=glgetfontadvance( _(t));
+		float len=ftglGetFontAdvance(gl.font,_(t));
 		if(len>maxw[j]) maxw[j]=len;
 	}
 	lineh=ftglGetFontLineHeight(gl.font);
@@ -260,7 +229,7 @@ void glrendertext(char *title,char *text){
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
 	y=.4*h-lineh;
-	tw=glgetfontadvance(title);
+	tw=ftglGetFontAdvance(gl.font,title);
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
@@ -306,7 +275,7 @@ void glrenderinputnum(){
 	glColor4fv(gl.cfg.txt_bgcolor);
 	glRectf(rect[0]-lineh,rect[1]-lineh,rect[3]+lineh,rect[4]+lineh);
 	glColor4fv(gl.cfg.txt_fgcolor);
-	glrenderfont(txt);
+	ftglRenderFont(gl.font,txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
 }
@@ -335,7 +304,7 @@ void glrenderstat(){
 	glRectf(0.f,0.f,bw,bh);
 	glColor4fv(gl.cfg.txt_fgcolor);
 	glTranslatef(-rect[0]+lineh*0.2f,-rect[1]+lineh*0.2f,0.f);
-	glrenderfont(stat->txt);
+	ftglRenderFont(gl.font,stat->txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
 }
