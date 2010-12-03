@@ -3,9 +3,10 @@
 #include "load.h"
 #include "dpl.h"
 #include "exif.h"
+#include "cfg.h"
 
 char *imgtex_str[]={
-	"TINY", "SMALL","BIG","FULL",
+	__("TINY"), __("SMALL"),__("BIG"),__("FULL"),
 };
 
 struct img **imgs = NULL;

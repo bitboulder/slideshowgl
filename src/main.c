@@ -81,7 +81,7 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	if(err) fprintf(fout,"ERROR   : ");
 	else    fprintf(fout,"dbg-%-4s: ",dbgstr[lvl]);
 	va_start(ap,txt);
-	vfprintf(fout,txt,ap);
+	vfprintf(fout,_(txt),ap);
 	va_end(ap);
 	fprintf(fout,"\n");
 	if(lvl!=ERR_QUIT) return;
@@ -93,6 +93,7 @@ char *finddatafile(char *fn){
 	int i;
 	static char ret[FILELEN];
 	static char *dirs[]={".", "/", "data", "../data", DATADIR, NULL};
+	/* TODO: relative to program */
 	for(i=0;dirs[i];i++){
 		FILE *fd;
 		snprintf(ret,FILELEN,"%s/%s",dirs[i],fn);

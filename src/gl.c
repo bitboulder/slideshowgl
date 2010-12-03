@@ -211,7 +211,7 @@ void glrendertext(char *title,char *text){
 	float tw,tx;
 	if(!gl.font) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1){
-		float len=ftglGetFontAdvance(gl.font, t);
+		float len=ftglGetFontAdvance(gl.font, _(t));
 		if(len>maxw[j]) maxw[j]=len;
 	}
 	lineh=ftglGetFontLineHeight(gl.font);
@@ -234,7 +234,7 @@ void glrendertext(char *title,char *text){
 	gltextout(title,tx,y);
 	y-=lineh*2;
 	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1)
-		gltextout(t,x[j],y);
+		gltextout(_(t),x[j],y);
 	glPopMatrix();
 #endif
 }
@@ -245,12 +245,12 @@ void glrenderinfo(){
 	if(!dplshowinfo()) return;
 	if(!(img=imgget(dplgetimgi()))) return;
 	if(!(info=imgexifinfo(img->exif))) return;
-	glrendertext("Image info",info);
+	glrendertext(_("Image info"),info);
 }
 
 void glrenderhelp(){
 	char *help;
-	if((help=dplhelp())) glrendertext("Keyboardlayout:",help);
+	if((help=dplhelp())) glrendertext(_("Keyboardlayout:"),help);
 }
 
 void glrenderinputnum(){

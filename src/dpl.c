@@ -517,21 +517,21 @@ void dplcol(int d){
 
 #define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
 void dplstaton(char on){
-	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,"ANFANG");
-	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,"ENDE");
+	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("BEGIN"));
+	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("END"));
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		char *txt=dpl.stat.pos.txt;
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgldfn(img->ld));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
-			case ROT_90:  ADDTXT(" rotated-right"); break;
-			case ROT_180: ADDTXT(" rotated-twice"); break;
-			case ROT_270: ADDTXT(" rotated-left"); break;
+			case ROT_90:  ADDTXT(_(" rotated-right")); break;
+			case ROT_180: ADDTXT(_(" rotated-twice")); break;
+			case ROT_270: ADDTXT(_(" rotated-left")); break;
 		}
 		if(dpl.writemode){
-			ADDTXT(" (write-mode)");
-			if(img->pos->mark) ADDTXT(" [MARK]");
+			ADDTXT(_(" (write-mode)"));
+			if(img->pos->mark) ADDTXT(_(" [MARK]"));
 		}
 		if(dpl.colmode!=COL_NONE || img->pos->col.g || img->pos->col.c || img->pos->col.b){
 			ADDTXT(" G:%.1f",img->pos->col.g);
@@ -602,26 +602,30 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
 }
 
 char *keyboardlayout=
-	"space\0"       "stop/play\0"
-	"right\0"       "forward (zoom: shift right)\0"
-	"left\0"        "backward (zoom: shift left)\0"
-	"up\0"          "fast forward (zoom: shift up)\0"
-	"down\0"        "fast backward (zoom: shift down)\0"
-	"page-up\0"     "zoom in\0"
-	"page-down\0"   "zoom out\0"
-	"[0-9]+enter\0" "goto image with number\0"
-	"[0-9]+d\0"     "displayduration [s/ms]\0"
-	"f\0"           "switch fullscreen\0"
-	"r/R\0"         "rotate image\0"
-	"w\0"           "switch writing mode\0"
-	"g/b/c\0"       "+/- mode: gamma/brightness/contrase\0"
-	"+/-\0"         "increase/decrease selected\0"
-	"p\0"           "panorama\0"
-	"Del\0"         "move image to del/ and remove from dpl-list (only in writing mode)\0"
-	"m\0"           "toggle mark (only in writing mode)\0"
-	"i\0"           "show image info\0"
-	"h\0"           "show help\0"
-	"q/esc\0"       "quit\0"
+	__("Mouse left drag")"\0"     __("Move")"\0"
+	__("Mouse left button")"\0"   __("Goto image / Forward")"\0"
+	__("Mouse middle button")"\0" __("Toggle mark (only in writing mode)")"\0"
+	__("Mouse right button")"\0"  __("Backward")"\0"
+	__("Mouse scroll")"\0"        __("Zoom in/out")"\0"
+	__("Space")"\0"               __("Stop/Play")"\0"
+	__("Right")"\0"               __("Forward (Zoom: shift right)")"\0"
+	__("Left")"\0"                __("Backward (Zoom: shift left)")"\0"
+	__("Up")"\0"                  __("Fast forward (Zoom: shift up)")"\0"
+	__("Down")"\0"                __("Fast backward (Zoom: shift down)")"\0"
+	__("Pageup")"\0"              __("Zoom in")"\0"
+	__("Pagedown")"\0"            __("Zoom out")"\0"
+	__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
+	__("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
+	__("f")"\0"                   __("Switch fullscreen")"\0"
+	__("r/R")"\0"                 __("Rotate image")"\0"
+	__("w")"\0"                   __("Switch writing mode")"\0"
+	__("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase")"\0"
+	__("+/-")"\0"                 __("Increase/decrease selected")"\0"
+	__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
+	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
+	__("i")"\0"                   __("Show image info")"\0"
+	__("h")"\0"                   __("Show help")"\0"
+	__("q/Esc")"\0"               __("Quit")"\0"
 	"\0"
 ;
 

@@ -1,6 +1,11 @@
 #ifndef _CFG_H
 #define _CFG_H
 
+#include "config.h"
+#if HAVE_GETTEXT
+	#include <libintl.h>
+#endif
+
 #ifndef _
 	#if HAVE_GETTEXT
 		#define _(X)	gettext(X)
@@ -8,6 +13,7 @@
 		#define _(X)	(X)
 	#endif
 #endif
+#define __(X)	X
 
 int cfggetint(char *name);
 int cfggetenum(char *name);

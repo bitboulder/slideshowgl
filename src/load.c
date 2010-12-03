@@ -415,7 +415,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(il->texs[it].loaded && !il->texs[it].refresh) goto end1;
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
-	debug(DBG_DBG,"ld loading img tex %s %s",imgtex_str[it],fn);
+	debug(DBG_DBG,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && il->pano.enable) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
@@ -465,7 +465,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		sh=il->h/scale;
 		tw=sw/xres; if(tw*xres<sw) tw++;
 		th=sh/yres; if(th*yres<sh) th++;
-		debug(DBG_STA,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",imgtex_str[i],il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
+		debug(DBG_STA,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		tx=0;
 		if(tex->tx){
 			while(tex->tx[tx].tex[0]) tx++;
@@ -523,7 +523,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 	for(it=thold+1;it<TEX_NUM;it++) if(il->texs[it].loaded){
 		if(il->texs[it].loading != il->texs[it].loaded) continue;
 		il->texs[it].loading=0;
-		debug(DBG_STA,"ld freeing img tex %s %s",imgtex_str[it],il->fn);
+		debug(DBG_STA,"ld freeing img tex %s %s",_(imgtex_str[it]),il->fn);
 		for(tx=il->texs[it].tx;tx && tx->tex[0];tx++) ldtexload_put(tx,NULL,NULL,!tx[1].tex[0] ? il->texs+it : NULL,0.f);
 		ret=1;
 	}

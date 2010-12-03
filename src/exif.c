@@ -6,24 +6,25 @@
 #include <exif-data.h>
 #endif
 #include "exif.h"
+#include "cfg.h"
 
 #if HAVE_EXIF
 struct exifinfo {
 	char *name;
 	ExifTag tag[5];
 } exifinfo[]={
-	{"Datum", {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
-	{"Kamara", {EXIF_TAG_MODEL,0}},
-	{"Auflösung", {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
-	{"Empfindlichkeit", {EXIF_TAG_ISO_SPEED_RATINGS,0}},
-	{"Brennweite", {EXIF_TAG_FOCAL_LENGTH,0}},
-	{"Belichtungszeit", {EXIF_TAG_EXPOSURE_TIME,0}},
-	{"Blende", {EXIF_TAG_FNUMBER,0}},
-	{"Belichtunskorrektur", {EXIF_TAG_EXPOSURE_BIAS_VALUE,0}},
-	{"Blitz", {EXIF_TAG_FLASH,0}},
-	{"Belichtungsprogramm", {EXIF_TAG_EXPOSURE_PROGRAM,0}},
-	{"Belichtungsmodus", {EXIF_TAG_EXPOSURE_MODE,0}},
-	{"Weißabgleich", {EXIF_TAG_WHITE_BALANCE,0}},
+	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
+	{__("Model"), {EXIF_TAG_MODEL,0}},
+	{__("Resolution"), {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
+	{__("ISO speed rating"), {EXIF_TAG_ISO_SPEED_RATINGS,0}},
+	{__("Focal length"), {EXIF_TAG_FOCAL_LENGTH,0}},
+	{__("Exposure time"), {EXIF_TAG_EXPOSURE_TIME,0}},
+	{__("Fnumber"), {EXIF_TAG_FNUMBER,0}},
+	{__("Exposure bias value"), {EXIF_TAG_EXPOSURE_BIAS_VALUE,0}},
+	{__("Flash"), {EXIF_TAG_FLASH,0}},
+	{__("Exposure program"), {EXIF_TAG_EXPOSURE_PROGRAM,0}},
+	{__("Exposure mode"), {EXIF_TAG_EXPOSURE_MODE,0}},
+	{__("White blanace"), {EXIF_TAG_WHITE_BALANCE,0}},
 	{NULL, {0}},
 };
 #endif

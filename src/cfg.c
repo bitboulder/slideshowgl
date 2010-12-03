@@ -1,11 +1,7 @@
-#include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#if HAVE_GETTEXT
-	#include <libintl.h>
-#endif
 #include "cfg.h"
 #include "main.h"
 #include "sdl.h"
@@ -24,20 +20,20 @@ struct cfg {
 	char *vals[16];
 	char *help;
 } cfg[]={
-	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0", {NULL}, "Print this usage" },
-	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0", {NULL}, NULL },
-	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0", {NULL}, NULL },
-	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL }, NULL },
-	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0", {NULL}, NULL },
-	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024", {NULL}, NULL },
-	{ 'H', "sdl.height",          CT_INT, CM_SET,  "640", {NULL}, NULL },
-	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1", {NULL}, NULL },
+	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0", {NULL}, __("Print this usage") },
+	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0", {NULL}, __("Print version") },
+	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0", {NULL}, __("Increase debug level") },
+	{ 't', "main.timer",          CT_ENM, CM_SET,  "none", { ETIMER, NULL }, __("Activate time measurement") },
+	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "0", {NULL}, __("Toggle fullscreen") },
+	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024", {NULL}, __("Set window width") },
+	{ 'H', "sdl.height",          CT_INT, CM_SET,  "640", {NULL}, __("Set window height") },
+	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1", {NULL}, __("Toggle video sync") },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500", {NULL}, NULL },
-	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000", {NULL}, NULL },
-	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000", {NULL}, NULL },
+	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "7000", {NULL}, __("Set display duration") },
+	{ 'D', "dpl.efftime",         CT_INT, CM_SET,  "1000", {NULL}, __("Set effect duration") },
 	{ 0,   "dpl.shrink",          CT_FLT, CM_SET,  "0.75", {NULL}, NULL },
-	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0", {NULL}, NULL },
-	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0", {NULL}, NULL },
+	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0", {NULL}, __("Toggle image loop") },
+	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0", {NULL}, __("Toggle image random") },
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512", {NULL}, NULL },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024", {NULL}, NULL },
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "40000000", {NULL}, NULL },
@@ -53,9 +49,9 @@ struct cfg {
 	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250", {NULL}, NULL  },
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000", {NULL}, NULL },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000", {NULL}, NULL },
-	{ 'm', "act.mark_fn",         CT_STR, CM_SET,  ".mark", {NULL}, NULL },
+	{ 'm', "act.mark_fn",         CT_STR, CM_SET,  ".mark", {NULL}, __("Set mark file") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "10000", {NULL}, NULL },
-	{ 'n', "act.do",              CT_INT, CM_FLIP, "1", {NULL}, NULL },
+	{ 'n', "act.do",              CT_INT, CM_FLIP, "1", {NULL}, __("Toggle actions") },
 	{ 0,   NULL,                  0,      0,       NULL, {NULL}, NULL },
 };
 #undef E
@@ -131,22 +127,22 @@ void cfgset(struct cfg *cfg, char *val){
 }
 
 void version(){
-	printf("%s version %s\n",APPNAME,VERSION);
+	printf(_("%s version %s\n"),APPNAME,VERSION);
 }
 
 void usage(char *fn){
 	int i;
 	version();
-	printf("Usage: %s [Options] {FILES|FILELISTS.flst}\n",fn);
+	printf(_("Usage: %s [Options] {FILES|FILELISTS.flst}\n"),fn);
 	printf("%s:\n",_("Options"));
 	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
-		printf("  -%c  %s",cfg[i].opt,_(cfg[i].help?cfg[i].help:cfg[i].name));
+		printf("  -%c %s  %s",cfg[i].opt,cfg[i].mode==CM_FLIP?" ":"X",_(cfg[i].help?cfg[i].help:cfg[i].name));
 		if(cfg[i].type==CT_ENM){
 			int j;
 			for(j=0;cfg[i].vals[j];j++) printf("%s%s",j?",":" [",cfg[i].vals[j]);
 			printf("]");
 		}
-		printf(" - (%s)\n",cfg[i].val);
+		printf(" (%s: %s)\n",_("cur"),cfg[i].mode==CM_FLIP?(atoi(cfg[i].val)?"on":"off"):cfg[i].val);
 	}
 	exit(0);
 }
@@ -167,6 +163,7 @@ void cfgparseargs(int argc,char **argv){
 	int c,i;
 #if HAVE_GETTEXT
 	setlocale(LC_ALL,"");
+	setlocale(LC_NUMERIC,"C");
 	bindtextdomain(APPNAME,LOCALEDIR);
 	textdomain(APPNAME);
 #endif
