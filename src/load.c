@@ -10,6 +10,11 @@
 	#include <sys/param.h>
 	#include <unistd.h>
 #endif
+#ifdef __WIN32__
+	/* opengl 1.2 in glext */
+	#include <GL/gl.h>
+	#include <GL/glext.h>
+#endif
 #include "load.h"
 #include "sdl.h"
 #include "main.h"
@@ -385,8 +390,13 @@ char ldtexload(){
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+		if(glversion>=102){
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+		}else{
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+		}
 		timer(TI_LD,MAX(sdlimg->sf->w,sdlimg->sf->h)/256,0);
 		sdlimg_unref(sdlimg);
 		timer(TI_LD,0,0);
