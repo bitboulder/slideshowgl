@@ -387,6 +387,12 @@ void dplclipimgi(int *imgi){
 	if(imgi) *imgi=i; else dpl.pos.imgi=i;
 }
 
+void dplchgimgi(int dir){
+	if(dpl.pos.imgi<0)     dpl.pos.imgi=-1;
+	if(dpl.pos.imgi>=nimg) dpl.pos.imgi=nimg;
+	dpl.pos.imgi+=dir;
+}
+
 void dplmove(enum dplev ev,float x,float y){
 	const static int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
@@ -395,14 +401,14 @@ void dplmove(enum dplev ev,float x,float y){
 	case DE_RIGHT:
 	case DE_LEFT:
 		if(!panospeed(dir)){
-			if(dpl.pos.zoom<=0) dpl.pos.imgi+=dir;
+			if(dpl.pos.zoom<=0) dplchgimgi(dir);
 			else dplmovepos((float)dir*.25f,0.f);
 		}
 	break;
 	case DE_UP:
 	case DE_DOWN:
-		if(dpl.pos.zoom<0)  dpl.pos.imgi-=dir*zoomtab[-dpl.pos.zoom].move;
-		if(dpl.pos.zoom==0) dpl.pos.imgi+=dir*zoomtab[-dpl.pos.zoom].move;
+		if(dpl.pos.zoom<0)  dplchgimgi(dir*zoomtab[-dpl.pos.zoom].move);
+		if(dpl.pos.zoom==0) dplchgimgi(dir*zoomtab[-dpl.pos.zoom].move);
 		else dplmovepos(0.f,-(float)dir*.25f);
 	break;
 	case DE_ZOOMIN:
@@ -435,6 +441,7 @@ void dplmove(enum dplev ev,float x,float y){
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 	if(dpl.pos.zoom>0)    dpl.run=0;
 	dplclipimgi(NULL);
+	if((dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) && dpl.pos.zoom>0) dpl.pos.zoom=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 }

@@ -2,7 +2,7 @@ Source: slideshowgl
 Section: graphics
 Priority: optional
 Maintainer: Frank Duckhorn <frank@bitboulder.net>
-Build-Depends: libgl-dev, libglu-dev, libsdl1.2-dev, libsdl-image1.2-dev, libexif-dev, libftgl-dev, libx11-dev, libjpeg-dev, libxext-dev
+Build-Depends: scons, libgl-dev, libglu-dev, libsdl1.2-dev, libsdl-image1.2-dev, libexif-dev, libftgl-dev, libx11-dev, libjpeg-dev, libxext-dev
 Standards-Version: 2.0.0
 
 Package: slideshowgl
