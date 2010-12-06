@@ -118,6 +118,17 @@ char panostart(float *x){
 	return 1;
 }
 
+/* thread: dpl */
+char panoend(float *s){
+	struct img *img;
+	struct ipano *ip;
+	float perspecth;
+	if(!(img=panoactive())) return 0;
+	if(!(ip=imgldpano(img->ld))) return 0;
+	panoperspect(ip,*s,NULL,&perspecth);
+	*s=ip->gh/perspecth;
+	return 1;
+}
 
 /* thread: gl */
 void panovertex(double tx,double ty){

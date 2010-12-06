@@ -421,16 +421,14 @@ void dplmove(enum dplev ev,float x,float y){
 			dpl.pos.zoom+=dir;
 			dplclippos(img);
 		}else if(dpl.pos.zoom+dir<=0){
-			if(dpl.pos.zoom==1 && panoactive()){
-				struct img *img=imgget(dpl.pos.imgi);
-				float fitw,fith;
-				if(img && imgfit(img,&fitw,&fith)){
-					img->pos->cur.s=1.f/fith;
-					while(img->pos->cur.x<-.5f) img->pos->cur.x+=1.f;
-					while(img->pos->cur.x> .5f) img->pos->cur.x-=1.f;
-					img->pos->cur.x*=img->pos->cur.s;
-					img->pos->cur.y*=img->pos->cur.s;
-				}
+			struct img *img;
+			float fitw,fith;
+			if(dpl.pos.zoom==1 && imgfit(img=imgget(dpl.pos.imgi),&fitw,&fith) && panoend(&img->pos->cur.s)){
+				img->pos->cur.s/=fith;
+				while(img->pos->cur.x<-.5f) img->pos->cur.x+=1.f;
+				while(img->pos->cur.x> .5f) img->pos->cur.x-=1.f;
+				img->pos->cur.x*=img->pos->cur.s;
+				img->pos->cur.y*=img->pos->cur.s;
 			}
 			dpl.pos.x=dpl.pos.y=0.;
 			dpl.pos.zoom+=dir;
