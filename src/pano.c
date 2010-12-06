@@ -131,13 +131,13 @@ char panoend(float *s){
 }
 
 /* thread: gl */
-void panovertex(double tx,double ty){
+void panovertex(float tx,float ty){
 	float xyradius,x,y,z;
 	xyradius=COS(ty)*pano.cfg.radius;
 	y=SIN(ty)*pano.cfg.radius;
 	x=SIN(tx)*xyradius;
 	z=COS(tx)*xyradius;
-	glVertex3d(x,y,z);
+	glVertex3f(x,y,z);
 }
 
 /* thread: gl */
@@ -145,10 +145,10 @@ void panodrawimg(struct itx *tx,struct ipano *ip){
 	for(;tx->tex[0];tx++){
 		glBindTexture(GL_TEXTURE_2D,tx->tex[0]);
 		glBegin(GL_QUADS);
-		glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
-		glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y-tx->h/2.)*ip->gh-ip->gyoff);
-		glTexCoord2i(1,1); panovertex((tx->x+tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
-		glTexCoord2i(0,1); panovertex((tx->x-tx->w/2.)*ip->gw,(tx->y+tx->h/2.)*ip->gh-ip->gyoff);
+		glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.f)*ip->gw,(tx->y-tx->h/2.f)*ip->gh-ip->gyoff);
+		glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.f)*ip->gw,(tx->y-tx->h/2.f)*ip->gh-ip->gyoff);
+		glTexCoord2i(1,1); panovertex((tx->x+tx->w/2.f)*ip->gw,(tx->y+tx->h/2.f)*ip->gh-ip->gyoff);
+		glTexCoord2i(0,1); panovertex((tx->x-tx->w/2.f)*ip->gw,(tx->y+tx->h/2.f)*ip->gh-ip->gyoff);
 		glEnd();
 	}
 }
