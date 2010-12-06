@@ -407,8 +407,8 @@ void dplmove(enum dplev ev,float x,float y){
 	break;
 	case DE_UP:
 	case DE_DOWN:
-		if(dpl.pos.zoom<0)  dplchgimgi(dir*zoomtab[-dpl.pos.zoom].move);
-		if(dpl.pos.zoom==0) dplchgimgi(dir*zoomtab[-dpl.pos.zoom].move);
+		if(dpl.pos.zoom<0)  dplchgimgi(-dir*zoomtab[-dpl.pos.zoom].move);
+		if(dpl.pos.zoom==0) dplchgimgi( dir*zoomtab[-dpl.pos.zoom].move);
 		else dplmovepos(0.f,-(float)dir*.25f);
 	break;
 	case DE_ZOOMIN:
@@ -644,8 +644,8 @@ void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
-	case SDLK_BACKSPACE:panoplain(); break;
 	case SDLK_q:        sdl_quit=1; break;
+	case SDLK_BACKSPACE:panoplain(); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.writemode=!dpl.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;
