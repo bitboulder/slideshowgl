@@ -22,7 +22,6 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
 char panoclipx(struct img *img,float *xb);
 
 char panostart(float *x);
-char panoend(float *x);
 
 void panodrawimg(struct itx *tx,struct ipano *ip);
 char panorender();

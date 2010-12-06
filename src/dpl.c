@@ -424,11 +424,12 @@ void dplmove(enum dplev ev,float x,float y){
 			if(dpl.pos.zoom==1 && panoactive()){
 				struct img *img=imgget(dpl.pos.imgi);
 				float fitw,fith;
-				img->pos->cur.x*=2.f;
-				img->pos->cur.y*=2.f;
-				if(imgfit(img,&fitw,&fith)){
-					img->pos->cur.x/=fitw;
-					img->pos->cur.y/=fith;
+				if(img && imgfit(img,&fitw,&fith)){
+					img->pos->cur.s=1.f/fith;
+					while(img->pos->cur.x<-.5f) img->pos->cur.x+=1.f;
+					while(img->pos->cur.x> .5f) img->pos->cur.x-=1.f;
+					img->pos->cur.x*=img->pos->cur.s;
+					img->pos->cur.y*=img->pos->cur.s;
 				}
 			}
 			dpl.pos.x=dpl.pos.y=0.;
