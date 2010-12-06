@@ -211,6 +211,7 @@ void ldcolmod(struct itx *itx,struct icol *ic){
 	/* doc/colmod_ex_calc.ods */
 	ex=h*(w%4)/3;
 	if(ex*3<h*(w%4)) ex++;
+#if 0
 #ifdef GL_VERSION_1_5
 	if(glversion>=105){
 		GLuint pbo;
@@ -271,6 +272,7 @@ fallback0:
 		glDeleteBuffers(1,&pbo);
 		timer(TI_COL,0,1);
 	}
+#endif
 #endif
 	GLubyte *pixels;
 	pixels=malloc((w*h+ex)*3);
