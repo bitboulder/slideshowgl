@@ -293,13 +293,30 @@ fallback0:
 
 /***************************** texload ****************************************/
 
+#define TEXLOADMODE	E(IMG), E(COL), E(FREE)
+#define E(X)	#X
+char *texloadmodestr[]={TEXLOADMODE};
+#undef E
+
+#define E(X)	TLM_##X
 struct texload {
 	struct itx *itx;
-	struct sdlimg *sdlimg;
-	struct icol *ic;
-	struct itex *itex;
-	float bar;
+	enum texloadmode {TEXLOADMODE} mode;
+	union texloaddat {
+		struct {
+			struct sdlimg *sdlimg;
+			struct itex *itex;
+			float bar;
+		} img;
+		struct {
+			struct icol ic;
+		} col;
+		struct {
+			struct itex *itex;
+		} free;
+	} dat;
 };
+#undef E
 #define TEXLOADNUM	16
 struct texloadbuf {
 	struct texload tl[TEXLOADNUM];
@@ -315,10 +332,22 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct icol *ic,struct 
 		SDL_Delay(10);
 	}
 	tlb.tl[tlb.wi].itx=itx;
-	tlb.tl[tlb.wi].sdlimg=sdlimg;
-	tlb.tl[tlb.wi].ic=ic;
-	tlb.tl[tlb.wi].itex=itex;
-	tlb.tl[tlb.wi].bar=bar;
+	if(sdlimg)  tlb.tl[tlb.wi].mode=TLM_IMG;
+	else if(ic) tlb.tl[tlb.wi].mode=TLM_COL;
+	else        tlb.tl[tlb.wi].mode=TLM_FREE;
+	switch(tlb.tl[tlb.wi].mode){
+	case TLM_IMG:
+		tlb.tl[tlb.wi].dat.img.sdlimg=sdlimg;
+		tlb.tl[tlb.wi].dat.img.itex=itex;
+		tlb.tl[tlb.wi].dat.img.bar=bar;
+	break;
+	case TLM_COL:
+		tlb.tl[tlb.wi].dat.col.ic=*ic;
+	break;
+	case TLM_FREE:
+		tlb.tl[tlb.wi].dat.free.itex=itex;
+	break;
+	}
 	tlb.wi=nwi;
 }
 
@@ -341,41 +370,48 @@ char ldtexload(){
 	struct texload *tl;
 	if(tlb.wi==tlb.ri) return 0;
 	tl=tlb.tl+tlb.ri;
-	if(tl->sdlimg){
-		if(dplineff() && (tl->sdlimg->sf->w>=1024 || tl->sdlimg->sf->h>=1024)) return 0;
+	switch(tl->mode){
+	case TLM_IMG: {
+		struct sdlimg *sdlimg=tl->dat.img.sdlimg;
+		if(dplineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
 		timer(TI_LD,-1,0);
 		if(!tl->itx->tex[0]) glGenTextures(1,tl->itx->tex+0);
 		glBindTexture(GL_TEXTURE_2D,tl->itx->tex[0]);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
 		// http://www.songho.ca/opengl/gl_pbo.html
-		glTexImage2D(GL_TEXTURE_2D,0,3,tl->sdlimg->sf->w,tl->sdlimg->sf->h,0,GL_RGB,GL_UNSIGNED_BYTE,tl->sdlimg->sf->pixels);
+		glTexImage2D(GL_TEXTURE_2D,0,3,sdlimg->sf->w,sdlimg->sf->h,0,GL_RGB,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
-		timer(TI_LD,MAX(tl->sdlimg->sf->w,tl->sdlimg->sf->h)/256,0);
-		sdlimg_unref(tl->sdlimg);
+		timer(TI_LD,MAX(sdlimg->sf->w,sdlimg->sf->h)/256,0);
+		sdlimg_unref(sdlimg);
 		timer(TI_LD,0,0);
-		if(tl->itex){
-			ldgendl(tl->itex);
-			tl->itex->loaded=1;
+		if(tl->dat.img.itex){
+			ldgendl(tl->dat.img.itex);
+			tl->dat.img.itex->loaded=1;
 		}
-		glsetbar(tl->bar);
-	}else if(tl->ic) ldcolmod(tl->itx,tl->ic);
-	else{
+		glsetbar(tl->dat.img.bar);
+	}
+	break;
+	case TLM_COL:
+		ldcolmod(tl->itx,&tl->dat.col.ic);
+	break;
+	case TLM_FREE:
 		if(tl->itx->tex[0]){
 			glDeleteTextures(1,tl->itx->tex+0);
 			tl->itx->tex[0]=0;
 		}
-		if(tl->itex) tl->itex->loaded=0;
+		if(tl->dat.free.itex) tl->dat.free.itex->loaded=0;
+	break;
 	}
-	if(!tl->ic && tl->itx->tex[1]){
+	if(tl->mode!=TLM_COL && tl->itx->tex[1]){
 		glDeleteTextures(1,tl->itx->tex+1);
 		tl->itx->tex[1]=0;
 	}
 	if((glerr=glGetError())){
-		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",tl->sdlimg?"load":(tl->ic?"col":"free"),glerr);
+		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",texloadmodestr[tl->mode],glerr);
 		tl->itx->tex[0]=tl->itx->tex[1]=0;
 	}
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
@@ -385,15 +421,17 @@ char ldtexload(){
 /***************************** load + free img ********************************/
 
 char ldfcol(struct imgld *il,enum imgtex it){
-	struct icol *ic = imgposcol(il->img->pos);
+	struct icol ic = *imgposcol(il->img->pos);
 	char ld=0;
 	for(;it>=0;it--){
 		struct itx *tx;
 		if(!il->texs[it].loading || !il->texs[it].loaded) continue;
-		if(il->texs[it].ic.g==ic->g && il->texs[it].ic.c==ic->c && il->texs[it].ic.b==ic->b) continue;
+		if(il->texs[it].ic.g==ic.g && il->texs[it].ic.c==ic.c && il->texs[it].ic.b==ic.b) continue;
+
+		debug(DBG_DBG,"ld colmod img tex %s (%.2f,%.2f,%.2f) %s",_(imgtex_str[it]),ic.g,ic.c,ic.b,il->fn);
 		for(tx=il->texs[it].tx;tx->tex[0];tx++)
-			ldtexload_put(tx,NULL,ic,NULL,0.f);
-		il->texs[it].ic=*ic;
+			ldtexload_put(tx,NULL,&ic,NULL,0.f);
+		il->texs[it].ic=ic;
 		ld=1;
 	}
 	return ld;
@@ -405,7 +443,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 	char ld=0;
 	char *fn = il->fn;
 	char thumb=0;
-	struct icol *icol;
 	int wide,slim;
 	int lastscale=0;
 	char swap=0;
@@ -421,9 +458,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
 	if(sdlimg->sf->format->BytesPerPixel!=3){ error(ERR_CONT,"Wrong pixelformat \"%s\"",fn); goto end3; }
-
-	icol=imgposcol(il->img->pos);
-	if(icol->g) SDL_ColMod(sdlimg->sf,icol->g,0.f,0.f);
 
 	if(!swap){
 		il->w=sdlimg->sf->w;
@@ -525,6 +559,9 @@ char ldffree(struct imgld *il,enum imgtex thold){
 		il->texs[it].loading=0;
 		debug(DBG_STA,"ld freeing img tex %s %s",_(imgtex_str[it]),il->fn);
 		for(tx=il->texs[it].tx;tx && tx->tex[0];tx++) ldtexload_put(tx,NULL,NULL,!tx[1].tex[0] ? il->texs+it : NULL,0.f);
+		il->texs[it].ic.g=0.f;
+		il->texs[it].ic.c=0.f;
+		il->texs[it].ic.b=0.f;
 		ret=1;
 	}
 	return ret;

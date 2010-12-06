@@ -540,11 +540,10 @@ void dplstaton(char on){
 			if(img->pos->mark) ADDTXT(_(" [MARK]"));
 		}
 		if(dpl.colmode!=COL_NONE || img->pos->col.g || img->pos->col.c || img->pos->col.b){
-			ADDTXT(" G:%.1f",img->pos->col.g);
-			ADDTXT(" C:%.1f",img->pos->col.c);
-			ADDTXT(" B:%.1f",img->pos->col.b);
+			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",img->pos->col.g,dpl.colmode==COL_G?"]":"");
+			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",img->pos->col.c,dpl.colmode==COL_C?"]":"");
+			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",img->pos->col.b,dpl.colmode==COL_B?"]":"");
 		}
-		if(dpl.colmode!=COL_NONE) ADDTXT(" [%s]",colmodestr[dpl.colmode]);
 	}
 	if(!on) return;
 	switch(dpl.stat.mode){
@@ -667,7 +666,8 @@ void dplkey(SDLKey key){
 }
 
 char dplev(struct ev *ev){
-	if(ev->ev!=DE_KEY || (ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS)) dpl.colmode=COL_NONE;
+	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
+	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS) dpl.colmode=COL_NONE;
 	switch(ev->ev){
 	case DE_RIGHT:
 	case DE_LEFT:
