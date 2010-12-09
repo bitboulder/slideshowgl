@@ -16,7 +16,7 @@ my %ignore=(
 ## img* var
 	"imgexifrot"=>1,"imgexifrotf"=>1,"imgexifinfo"=>1, # imgexif
 	"imgposopt"=>1,"imgposcur"=>1,"imgposcol"=>1,"imgposmark"=>1, # imgpos
-	"imgldrat"=>1,"imgldtex"=>1,"imgldfn"=>1,"imgldpano"=>1, # imgld
+	"imgldrat"=>1,"imgldtex"=>1, # imgld
 	"imgfilefn"=>1,"imgfiletfn"=>1, # imgfile
 	"imgpanoenable"=>1, # imgpano
 ## global var
