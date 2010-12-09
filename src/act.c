@@ -7,6 +7,7 @@
 #include "cfg.h"
 #include "dpl.h"
 #include "exif.h"
+#include "file.h"
 
 struct actcfg {
 	Uint32 savemarks_delay;
@@ -31,7 +32,7 @@ void actloadmarks(){
 		int len=strlen(line);
 		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
 		for(img=*imgs;img;img=img->nxt)
-			if(!strcmp(imgldfn(img->ld),line))
+			if(!strcmp(imgfilefn(img->file),line))
 				*imgposmark(img->pos)=1;
 	}
 	fclose(fd);
@@ -44,7 +45,7 @@ void actsavemarks(){
 	struct img *img;
 	if(!(fd=fopen(fn,"w"))) return;
 	for(img=*imgs;img;img=img->nxt) if(*imgposmark(img->pos))
-		fprintf(fd,"%s\n",imgldfn(img->ld));
+		fprintf(fd,"%s\n",imgfilefn(img->file));
 	fclose(fd);
 	debug(DBG_STA,"marks saved");
 }
@@ -56,7 +57,7 @@ void acttrysavemarks(){
 }
 
 void actrotate(struct img *img){
-	char *fn=imgldfn(img->ld);
+	char *fn=imgfilefn(img->file);
 	float rot=imgexifrotf(img->exif);
 	char cmd[FILELEN+64];
 	snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -w \"%s\"",rot,fn);
@@ -68,14 +69,14 @@ void actdelete(struct img *img){
 	static char fn[FILELEN];
 	static char cmd[FILELEN*2+16];
 	char *pos;
-	snprintf(fn,FILELEN-4,imgldfn(img->ld));
+	snprintf(fn,FILELEN-4,imgfilefn(img->file));
 	if((pos=strrchr(fn,'/'))) pos++; else pos=fn;
 	memmove(pos+4,pos,strlen(pos)+1);
 	strcpy(pos,"del");
 	snprintf(cmd,FILELEN*2+16,"mkdir -p \"%s\"",fn);
 	runcmd(cmd);
 	pos[3]='/';
-	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",imgldfn(img->ld),fn);
+	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",imgfilefn(img->file),fn);
 	runcmd(cmd);
 	debug(DBG_STA,"img deleted (%s)",fn);
 }

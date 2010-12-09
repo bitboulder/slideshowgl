@@ -12,6 +12,7 @@
 #include "dpl.h"
 #include "cfg.h"
 #include "act.h"
+#include "file.h"
 
 #if 0
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -162,7 +163,7 @@ int main(int argc,char **argv){
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");
 	tim=cfggetenum("main.timer");
-	ldgetfiles(argc-optind,argv+optind);
+	fgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	start_threads();
 	if(!end_threads())

@@ -1,15 +1,9 @@
 #define GL_GLEXT_PROTOTYPES
-#include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <math.h>
-#if HAVE_REALPATH
-	#include <sys/param.h>
-	#include <unistd.h>
-#endif
 #ifdef __WIN32__
 	/* opengl 1.2 in glext */
 	#include <GL/gl.h>
@@ -26,6 +20,7 @@
 #include "act.h"
 #include "gl.h"
 #include "ldjpg.h"
+#include "file.h"
 
 #ifndef popen
 	extern FILE *popen (__const char *__command, __const char *__modes);
@@ -81,17 +76,14 @@ struct itex {
 	char loading;
 	struct icol ic;
 	char thumb;
-	struct ipano *pano;
+	struct imgpano *pano;
 };
 
 struct imgld {
-	char fn[FILELEN];
-	char tfn[FILELEN];
 	char loadfail;
 	int w,h;
 	struct itex texs[TEX_NUM];
 	struct img *img;
-	struct ipano pano;
 };
 
 /* thread: img */
@@ -137,12 +129,6 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 float imgldrat(struct imgld *il){
 	return (!il->h || !il->w) ? 0. : (float)il->w/(float)il->h;
 }
-
-/* thread: dpl, load */
-char *imgldfn(struct imgld *il){ return il->fn; }
-
-/* thread: gl */
-struct ipano *imgldpano(struct imgld *il){ return il->pano.enable ? &il->pano : NULL; }
 
 /***************************** sdlimg *****************************************/
 
@@ -434,7 +420,7 @@ char ldfcol(struct imgld *il,enum imgtex it){
 		if(!il->texs[it].loading || !il->texs[it].loaded) continue;
 		if(il->texs[it].ic.g==ic.g && il->texs[it].ic.c==ic.c && il->texs[it].ic.b==ic.b) continue;
 
-		debug(DBG_DBG,"ld colmod img tex %s (%.2f,%.2f,%.2f) %s",_(imgtex_str[it]),ic.g,ic.c,ic.b,il->fn);
+		debug(DBG_DBG,"ld colmod img tex %s (%.2f,%.2f,%.2f) %s",_(imgtex_str[it]),ic.g,ic.c,ic.b,imgfilefn(il->img->file));
 		for(tx=il->texs[it].tx;tx->tex[0];tx++)
 			ldtexload_put(tx,NULL,&ic,NULL,0.f);
 		il->texs[it].ic=ic;
@@ -447,19 +433,20 @@ char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
-	char *fn = il->fn;
+	char *fn = imgfilefn(il->img->file);
 	char thumb=0;
 	int wide,slim;
 	int lastscale=0;
 	char swap=0;
+	char panoenable=0;
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
 	if(il->texs[it].loaded) goto end1;
-	imgexifload(il->img->exif,il->fn);
-	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
+	imgexifload(il->img->exif,fn);
+	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_DBG,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
-	if(it==TEX_FULL && il->pano.enable) glsetbar(0.0001f);
+	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
@@ -486,12 +473,12 @@ char ldfload(struct imgld *il,enum imgtex it){
 		struct itx *ti;
 		if(tex->loaded && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
-		if(i==TEX_FULL && il->pano.enable){
-			tex->pano=&il->pano;
+		if(i==TEX_FULL && panoenable){
+			tex->pano=il->img->pano;
 			xres=load.maxpanotexsize;
 			yres=load.maxpanotexsize;
 			while(il->w/scale*il->h/scale>load.maxpanopixels) scale++;
-			panores(il->img,&il->pano,il->w/scale,il->h/scale,&xres,&yres);
+			panores(il->img,tex->pano,il->w/scale,il->h/scale,&xres,&yres);
 		}else tex->pano=NULL;
 		tex->loading=1;
 		tex->loaded=0;
@@ -538,7 +525,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 			}
 			ldtexload_put(ti,sdlimgscale,NULL,
 					tx==tw-1 && ty==th-1 ? tex : NULL,
-					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL && il->pano.enable ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
+					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL && panoenable ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
 				);
 		}
 		tex->thumb=thumb;
@@ -563,7 +550,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 	for(it=thold+1;it<TEX_NUM;it++) if(il->texs[it].loaded){
 		if(il->texs[it].loading != il->texs[it].loaded) continue;
 		il->texs[it].loading=0;
-		debug(DBG_STA,"ld freeing img tex %s %s",_(imgtex_str[it]),il->fn);
+		debug(DBG_STA,"ld freeing img tex %s %s",_(imgtex_str[it]),imgfilefn(il->img->file));
 		for(tx=il->texs[it].tx;tx && tx->tex[0];tx++) ldtexload_put(tx,NULL,NULL,!tx[1].tex[0] ? il->texs+it : NULL,0.f);
 		il->texs[it].ic.g=0.f;
 		il->texs[it].ic.c=0.f;
@@ -752,103 +739,3 @@ int ldthread(void *arg){
 	return 0;
 }
 
-/***************************** load files init ********************************/
-
-char ldfindfilesubdir1(char *dst,int len,char *subdir,char *ext){
-	int i;
-	FILE *fd;
-	char fn[FILELEN];
-	char *extpos = ext ? strrchr(dst,'.') : NULL;
-	if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
-	if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
-	if(extpos) extpos[0]='\0';
-	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/' || dst[i]=='\\'){
-		char dsti=dst[i];
-		dst[i]='\0';
-		snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
-		dst[i]=dsti;
-		if((fd=fopen(fn,"rb"))){
-			fclose(fd);
-			strncpy(dst,fn,len);
-			return 1;
-		}
-		if(subdir[0]=='\0') break;
-	}
-	if(extpos) extpos[0]='.';
-	return 0;
-}
-
-char ldfindfilesubdir(char *dst,char *subdir,char *ext){
-	if(ldfindfilesubdir1(dst,FILELEN,subdir,ext)) return 1;
-#if HAVE_REALPATH
-	{
-		static char rfn[MAXPATHLEN];
-		if(realpath(dst,rfn) && ldfindfilesubdir1(rfn,MAXPATHLEN,subdir,ext)){
-			strncpy(dst,rfn,FILELEN);
-			return 1;
-		}
-	}
-#endif
-	return 0;
-}
-
-void ldpanoinit(struct imgld *il){
-	char fn[FILELEN];
-	FILE *fd;
-	il->pano.rotinit=4.f;
-	il->pano.gw=il->pano.gh=0.f;
-	strncpy(fn,il->fn,FILELEN);
-	if(!ldfindfilesubdir(fn,"ori",".pano") && !ldfindfilesubdir(fn,"",".pano")) goto end;
-	if(!(fd=fopen(fn,"r"))) goto end;
-	fscanf(fd,"%f %f %f %f",&il->pano.gw,&il->pano.gh,&il->pano.gyoff,&il->pano.rotinit);
-	fclose(fd);
-end:
-	if((il->pano.enable = il->pano.gw && il->pano.gh))
-		debug(DBG_STA,"panoinit pano used: '%s'",fn);
-	else
-		debug(DBG_DBG,"panoinit no pano found for '%s'",il->fn);
-}
-
-void ldthumbinit(struct imgld *il){
-	strncpy(il->tfn,il->fn,FILELEN);
-	if(!ldfindfilesubdir(il->tfn,"thumb",NULL)){
-		il->tfn[0]='\0';
-		debug(DBG_DBG,"thumbinit no thumb found for '%s'",il->fn);
-	}else
-		debug(DBG_DBG,"thumbinit thumb used: '%s'",il->tfn);
-}
-
-void ldaddfile(char *fn){
-	struct img *img=imgadd();
-	if(!strncmp(fn,"file://",7)) fn+=7;
-	strncpy(img->ld->fn,fn,FILELEN);
-	ldthumbinit(img->ld);
-	ldpanoinit(img->ld);
-}
-
-void ldaddflst(char *flst){
-	FILE *fd=fopen(flst,"r");
-	char buf[FILELEN];
-	if(!fd){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return; }
-	while(!feof(fd)){
-		int len;
-		if(!fgets(buf,FILELEN,fd)) continue;
-		len=strlen(buf);
-		while(buf[len-1]=='\n' || buf[len-1]=='\r') buf[--len]='\0';
-		ldaddfile(buf);
-	}
-	fclose(fd);
-}
-
-void ldgetfiles(int argc,char **argv){
-	char *defimgfn = finddatafile("defimg.png");
-	if(!defimgfn) defimgfn="";
-	defimg=imginit();
-	strncpy(defimg->ld->fn,defimgfn,FILELEN);
-	for(;argc;argc--,argv++){
-		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) ldaddflst(argv[0]);
-		else ldaddfile(argv[0]);
-	}
-	if(cfggetint("ld.random")) imgrandom();
-	actadd(ACT_LOADMARKS,NULL);
-}

@@ -28,6 +28,7 @@ sources = """
 	act.c
 	pano.c
 	ldjpg.c
+	file.c
 """.split()
 
 env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))

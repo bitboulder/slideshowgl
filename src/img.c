@@ -4,6 +4,8 @@
 #include "dpl.h"
 #include "exif.h"
 #include "cfg.h"
+#include "file.h"
+#include "pano.h"
 
 char *imgtex_str[]={
 	__("TINY"), __("SMALL"),__("BIG"),__("FULL"),
@@ -28,6 +30,8 @@ struct img *imginit(){
 	img->ld=imgldinit(img);
 	img->pos=imgposinit();
 	img->exif=imgexifinit();
+	img->file=imgfileinit();
+	img->pano=imgpanoinit();
 	return img;
 }
 
@@ -35,6 +39,8 @@ void imgfree(struct img *img){
 	imgldfree(img->ld);
 	imgposfree(img->pos);
 	imgexiffree(img->exif);
+	imgfilefree(img->file);
+	imgpanofree(img->pano);
 	free(img);
 }
 

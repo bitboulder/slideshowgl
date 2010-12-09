@@ -8,6 +8,7 @@
 #include "main.h"
 #include "exif.h"
 #include "act.h"
+#include "file.h"
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
@@ -533,7 +534,7 @@ void dplstaton(char on){
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		char *txt=dpl.stat.pos.txt;
-		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgldfn(img->ld));
+		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
 			case ROT_90:  ADDTXT(_(" rotated-right")); break;

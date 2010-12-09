@@ -18,6 +18,8 @@ struct img {
 	struct imgld *ld;
 	struct imgpos *pos;
 	struct imgexif *exif;
+	struct imgfile *file;
+	struct imgpano *pano;
 };
 extern struct img **imgs;
 extern struct img *defimg;
