@@ -15,7 +15,6 @@ struct ipano {
 void panoinit();
 
 struct img *panoactive();
-void panoplain();
 
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
@@ -30,6 +29,8 @@ char panorender();
 char panoplay();
 char panospeed(int dir);
 void panoflip(int dir);
+void panoplain();
+
 void panorun();
 
 #endif

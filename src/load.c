@@ -81,7 +81,6 @@ struct itex {
 	char loading;
 	struct icol ic;
 	char thumb;
-	char refresh;
 	struct ipano *pano;
 };
 
@@ -141,11 +140,6 @@ float imgldrat(struct imgld *il){
 
 /* thread: dpl, load */
 char *imgldfn(struct imgld *il){ return il->fn; }
-
-void imgldrefresh(struct imgld *il){
-	int i;
-	for(i=0;i<TEX_NUM;i++) il->texs[i].refresh=1;
-}
 
 /* thread: gl */
 struct ipano *imgldpano(struct imgld *il){ return il->pano.enable ? &il->pano : NULL; }
@@ -461,7 +455,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
-	if(il->texs[it].loaded && !il->texs[it].refresh) goto end1;
+	if(il->texs[it].loaded) goto end1;
 	imgexifload(il->img->exif,il->fn);
 	if(it<TEX_BIG && il->tfn[0]){ fn=il->tfn; thumb=1; }
 	debug(DBG_DBG,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
@@ -490,7 +484,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		int tw,th,tx,ty;
 		struct itex *tex = il->texs+i;
 		struct itx *ti;
-		if(tex->loaded && !tex->refresh && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
+		if(tex->loaded && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
 		if(i==TEX_FULL && il->pano.enable){
 			tex->pano=&il->pano;
@@ -548,7 +542,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 				);
 		}
 		tex->thumb=thumb;
-		tex->refresh=0;
 		ld=1;
 	}
 	goto end2;
@@ -562,6 +555,7 @@ end0:
 	return ld;
 }
 
+/* thread: load, dpl */
 char ldffree(struct imgld *il,enum imgtex thold){
 	int it;
 	char ret=0;

@@ -32,7 +32,7 @@ void actloadmarks(){
 		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
 		for(img=*imgs;img;img=img->nxt)
 			if(!strcmp(imgldfn(img->ld),line))
-				imgpossetmark(img->pos);
+				*imgposmark(img->pos)=1;
 	}
 	fclose(fd);
 	debug(DBG_STA,"marks loaded");
@@ -43,7 +43,7 @@ void actsavemarks(){
 	FILE *fd;
 	struct img *img;
 	if(!(fd=fopen(fn,"w"))) return;
-	for(img=*imgs;img;img=img->nxt) if(imgposmark(img->pos))
+	for(img=*imgs;img;img=img->nxt) if(*imgposmark(img->pos))
 		fprintf(fd,"%s\n",imgldfn(img->ld));
 	fclose(fd);
 	debug(DBG_STA,"marks saved");

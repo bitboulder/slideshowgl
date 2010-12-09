@@ -12,6 +12,12 @@
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
 
+#define DE_HOR		(DE_RIGHT|DE_LEFT)
+#define DE_VER  	(DE_UP|DE_DOWN)
+#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
+#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
+#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev)))
+
 struct dplpos {
 	int imgi;
 	int imgiold;
@@ -102,9 +108,8 @@ struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
 struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
 struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
 
-/* thread: load */
-void imgpossetmark(struct imgpos *ip){ ip->mark=1; }
-char imgposmark(struct imgpos *ip){ return ip->mark; }
+/* thread: act */
+char *imgposmark(struct imgpos *ip){ return &ip->mark; }
 
 char imgfit(struct img *img,float *fitw,float *fith){
 	float irat;

@@ -48,7 +48,6 @@ struct img *panoactive(){
 	if(!imgldpano(img->ld)) return NULL;
 	return img;
 }
-void panoplain(){ pano.plain=!pano.plain; }
 
 /* thread: load */
 void panores(struct img *img,struct ipano *ip,int w,int h,int *xres,int *yres){
@@ -210,11 +209,17 @@ char panospeed(int dir){
 	return 1;
 }
 
+/* thread: dpl */
 void panoflip(int dir){
 	if(!panoactive()) return;
 	if(!pano.run) return;
 	if(pano.rot<0.f && dir<0) pano.rot*=-1.f;
 	if(pano.rot>0.f && dir>0) pano.rot*=-1.f;
+}
+
+/* thread: dpl */
+void panoplain(){
+	pano.plain=!pano.plain;
 }
 
 /* thread: dpl */

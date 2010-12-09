@@ -17,11 +17,9 @@ void ldcheckvartex();
 
 struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
-void imgldsetimg(struct imgld *il,struct img *img);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
 char *imgldfn(struct imgld *il);
-void imgldrefresh(struct imgld *il);
 struct ipano *imgldpano(struct imgld *il);
 
 char ldtexload();
