@@ -118,8 +118,8 @@ void dplclippos(struct img *img){
 	if(!clipx) return;
 	x[0]=-.5f+xb; x[1]= .5f-xb;
 	if(x[1]<x[0]) x[0]=x[1]=0.f;
-	if(dpl.pos.x<x[0]){ dpl.pos.x=x[0]; panoflip(-1); }
-	if(dpl.pos.x>x[1]){ dpl.pos.x=x[1]; panoflip( 1); }
+	if(dpl.pos.x<x[0]){ dpl.pos.x=x[0]; panoev(PE_FLIPRIGHT); }
+	if(dpl.pos.x>x[1]){ dpl.pos.x=x[1]; panoev(PE_FLIPLEFT); }
 }
 
 void dplmovepos(float sx,float sy){
@@ -178,7 +178,7 @@ void dplmove(enum dplev ev,float x,float y){
 	switch(ev){
 	case DE_RIGHT:
 	case DE_LEFT:
-		if(!panospeed(dir)){
+		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
 			if(dpl.pos.zoom<=0) dplchgimgi(dir);
 			else dplmovepos((float)dir*.25f,0.f);
 		}
@@ -387,7 +387,7 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:panoplain(); break;
+	case SDLK_BACKSPACE:panoev(PE_PLAIN); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;
@@ -425,7 +425,7 @@ char dplev(struct ev *ev){
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
-		if(!panoplay() && dpl.pos.zoom<=0)
+		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0)
 			dpl.run=dpl.run ? 0 : -100000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;

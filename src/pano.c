@@ -216,38 +216,33 @@ char panorender(){
 }
 
 /* thread: dpl */
-char panoplay(){
+char panoev(enum panoev pe){
 	if(!panoactive()) return 0;
-	pano.run=!pano.run;
-	return 1;
-}
-
-/* thread: dpl */
-char panospeed(int dir){
-	if(!panoactive()) return 0;
-	if(!pano.run) return 0;
-	if(dir>0)
+	switch(pe){
+	case PE_PLAY: pano.run=!pano.run; break;
+	case PE_SPEEDRIGHT:
+		if(!pano.run) return 0;
 		if(pano.rot>0.f) pano.rot*=2.f;
 		else if(pano.rot<-pano.cfg.minrot) pano.rot/=2.f;
 		else pano.rot*=-1.f;
-	else
+	break;
+	case PE_SPEEDLEFT:
+		if(!pano.run) return 0;
 		if(pano.rot<0.f) pano.rot*=2.f;
 		else if(pano.rot>pano.cfg.minrot) pano.rot/=2.f;
 		else pano.rot*=-1.f;
+	break;
+	case PE_FLIPRIGHT:
+		if(!pano.run) return 0;
+		if(pano.rot<0.f) pano.rot*=-1.f;
+	break;
+	case PE_FLIPLEFT:
+		if(!pano.run) return 0;
+		if(pano.rot>0.f) pano.rot*=-1.f;
+	break;
+	case PE_PLAIN: pano.plain=!pano.plain; break;
+	}
 	return 1;
-}
-
-/* thread: dpl */
-void panoflip(int dir){
-	if(!panoactive()) return;
-	if(!pano.run) return;
-	if(pano.rot<0.f && dir<0) pano.rot*=-1.f;
-	if(pano.rot>0.f && dir>0) pano.rot*=-1.f;
-}
-
-/* thread: dpl */
-void panoplain(){
-	pano.plain=!pano.plain;
 }
 
 /* thread: dpl */

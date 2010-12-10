@@ -23,10 +23,8 @@ char panoend(float *s);
 void panodrawimg(struct itx *tx,struct imgpano *ip);
 char panorender();
 
-char panoplay();
-char panospeed(int dir);
-void panoflip(int dir);
-void panoplain();
+enum panoev { PE_PLAY, PE_SPEEDRIGHT, PE_SPEEDLEFT, PE_FLIPRIGHT, PE_FLIPLEFT, PE_PLAIN };
+char panoev(enum panoev pe);
 
 void panorun();
 
