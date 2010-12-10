@@ -139,16 +139,16 @@ void sdlquit(){
 
 void sdlkey(SDL_keysym key){
 	switch(key.sym){
-		case SDLK_RIGHT:    dplevput(DE_RIGHT  ,key.sym); break;
-		case SDLK_LEFT:     dplevput(DE_LEFT   ,key.sym); break;
-		case SDLK_UP:       dplevput(DE_UP     ,key.sym); break;
-		case SDLK_DOWN:     dplevput(DE_DOWN   ,key.sym); break;
-		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN ,key.sym); break;
-		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT,key.sym); break;
-		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1,key.sym); break;
+		case SDLK_RIGHT:    dplevput(DE_RIGHT);   break;
+		case SDLK_LEFT:     dplevput(DE_LEFT);    break;
+		case SDLK_UP:       dplevput(DE_UP);      break;
+		case SDLK_DOWN:     dplevput(DE_DOWN);    break;
+		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
+		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
+		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1); break;
 		case SDLK_KP_ENTER:
-		case SDLK_SPACE:    dplevput(DE_PLAY   ,key.sym); break;
-		default:            dplevput(DE_KEY    ,key.sym); break;
+		case SDLK_SPACE:    dplevput(DE_PLAY);    break;
+		default:            dplevputk(key.sym);   break;
 	}
 }
 
@@ -169,10 +169,10 @@ void sdlmove(Uint16 x,Uint16 y){
 		if(xd>sdl.move.pos_x*w+wthr){ ev=DE_RIGHT; sdl.move.pos_x++; }
 		if(yd<sdl.move.pos_y*w-wthr){ ev=DE_UP;    sdl.move.pos_y--; }
 		if(yd>sdl.move.pos_y*w+wthr){ ev=DE_DOWN;  sdl.move.pos_y++; }
-		if(ev) dplevput(ev,0);
+		if(ev) dplevput(ev);
 	}else{
 		if(xd || yd)
-			dplevputx(DE_MOVE,0,
+			dplevputp(DE_MOVE,
 				-(float)xd/(float)sdl.scr_w,
 				-(float)yd/(float)sdl.scr_h);
 		sdl.move.base_x=x;
@@ -185,14 +185,14 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
 	if(btn==SDL_BUTTON_MIDDLE){
-		dplevputx(DE_MARK,0,sx,sy);
+		dplevputp(DE_MARK,sx,sy);
 	}else if(zoom==0) switch(btn){
-		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT,0); break;
-		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT ,0); break;
+		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT); break;
+		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT); break;
 	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
-		dplevputx(DE_SEL,0,sx,sy);
+		dplevputp(DE_SEL,sx,sy);
 	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
-		dplevputx(DE_MOVE,0,sx,sy);
+		dplevputp(DE_MOVE,sx,sy);
 	}
 }
 
@@ -201,7 +201,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdlmove(x,y);
-	else dplevput(DE_STAT,0);
+	else dplevput(DE_STAT);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
@@ -220,8 +220,8 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 		sdlclick(button,x,y);
 		return;
 	}
-	if(down && button==SDL_BUTTON_WHEELUP) dplevputx(DE_ZOOMIN,0,fx,fy);
-	else if(down && button==SDL_BUTTON_WHEELDOWN) dplevputx(DE_ZOOMOUT,0,fx,fy);
+	if(down && button==SDL_BUTTON_WHEELUP) dplevputp(DE_ZOOMIN,fx,fy);
+	else if(down && button==SDL_BUTTON_WHEELDOWN) dplevputp(DE_ZOOMOUT,fx,fy);
 	else if(down && button==SDL_BUTTON_LEFT){
 		sdl.move.pos_x=0;
 		sdl.move.pos_y=0;

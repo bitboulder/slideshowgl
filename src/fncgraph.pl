@@ -29,7 +29,7 @@ my %ignore=(
 ## interfaces
 	"sdldelay"=>1, # sdl
 	"actadd"=>1, # act
-	"dplevput"=>1,"dplevputx"=>1, # dplev
+	"dplevput"=>1,"dplevputp"=>1,"dplevputk"=>1, # dplev
 	"finddatafile"=>1, # main
 );
 

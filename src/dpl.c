@@ -528,7 +528,7 @@ void dplcol(int d){
 }
 
 #define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
-void dplstaton(char on){
+void dplstatupdate(){
 	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("END"));
 	else{
@@ -551,7 +551,9 @@ void dplstaton(char on){
 			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",img->pos->col.b,dpl.colmode==COL_B?"]":"");
 		}
 	}
-	if(!on) return;
+}
+
+void dplstaton(){
 	switch(dpl.stat.mode){
 		case STAT_OFF:
 			dpl.stat.mode=STAT_RISE;
@@ -672,6 +674,7 @@ void dplkey(SDLKey key){
 }
 
 char dplev(struct ev *ev){
+	char ret=1;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS) dpl.colmode=COL_NONE;
 	switch(ev->ev){
@@ -690,15 +693,15 @@ char dplev(struct ev *ev){
 			dpl.run=dpl.run ? 0 : -100000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
-	default: break;
+	default: ret=0; break;
 	}
-	return dpl.writemode || (dpl.pos.zoom<=0 && ev->key!=SDLK_RIGHT) || dpl.pos.imgi>=nimg;
+	if(dpl.writemode || (dpl.pos.zoom<=0 && ev->ev!=DE_RIGHT) || dpl.pos.imgi>=nimg) ret|=2;
+	return ret;
 }
 
 void dplcheckev(){
-	char stat=-1;
+	char stat=0;
 	while(dev.wi!=dev.ri){
-		if(stat<0) stat=0;
 		stat|=dplev(dev.evs+dev.ri);
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
@@ -708,7 +711,8 @@ void dplcheckev(){
 		dev.move.sy=0.f;
 		effinit(EFFREF_IMG,DE_MOVE,-1);
 	}
-	if(stat>=0) dplstaton(stat);
+	if(stat&1) dplstatupdate(stat);
+	if(stat&2) dplstaton(stat);
 }
 
 /***************************** dpl run ****************************************/
@@ -717,8 +721,7 @@ void dplrun(){
 	Uint32 time=SDL_GetTicks();
 	if(time-dpl.run>dpl.cfg.displayduration){
 		dpl.run=time;
-		dplmove(DE_RIGHT,0.f,0.f);
-		dplstaton(0);
+		dplevput(DE_RIGHT);
 	}
 }
 
@@ -814,7 +817,8 @@ void dplcfginit(){
 int dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
-	dplstaton(1);
+	dplstatupdate();
+	dplstaton();
 	while(!sdl_quit){
 
 		dplcheckev();
