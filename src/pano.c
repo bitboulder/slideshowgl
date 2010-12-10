@@ -262,7 +262,7 @@ void panorun(){
 		float sx=pano.rot*sec;
 		float ix;
 		if(panospos2ipos(panoactive(),sx,0.f,&ix,NULL))
-			dplevputx(DE_MOVE,0,ix,0.f);
+			dplevputp(DE_MOVE,ix,0.f);
 	}
 	last=now;
 }
