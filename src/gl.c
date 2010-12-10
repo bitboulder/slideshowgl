@@ -17,6 +17,7 @@
 #include "cfg.h"
 #include "exif.h"
 #include "pano.h"
+#include "eff.h"
 
 int glversion=0;
 
@@ -282,7 +283,7 @@ void glrenderinputnum(){
 
 void glrenderstat(){
 #if HAVE_FTGL
-	struct istat *stat=dplstat();
+	struct istat *stat=effstat();
 	float winw;
 	float lineh;
 	float rect[6];

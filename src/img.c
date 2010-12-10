@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include "img.h"
 #include "load.h"
-#include "dpl.h"
 #include "exif.h"
 #include "cfg.h"
 #include "file.h"
 #include "pano.h"
+#include "eff.h"
 
 char *imgtex_str[]={
 	__("TINY"), __("SMALL"),__("BIG"),__("FULL"),

@@ -9,108 +9,54 @@
 #include "exif.h"
 #include "act.h"
 #include "file.h"
+#include "eff.h"
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
 
-#define DE_HOR		(DE_RIGHT|DE_LEFT)
-#define DE_VER  	(DE_UP|DE_DOWN)
-#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
-#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
-#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev)))
-
-struct dplpos {
-	int imgi;
-	int imgiold;
-	int zoom;
-	float x,y;
-};
-
-enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 char *colmodestr[]={"G","B","C"};
 
 struct dpl {
 	struct dplpos pos;
-	float maxfitw,maxfith;
 	Uint32 run;
-	enum effrefresh refresh;
-	char ineff;
 	char showinfo;
 	char showhelp;
 	int inputnum;
-	char writemode;
 	struct {
-		Uint32 efftime;
 		Uint32 displayduration;
-		float shrink;
 		char loop;
-		Uint32 stat_delay[STAT_NUM];
 	} cfg;
-	struct stat {
-		enum statmode mode;
-		Uint32 in,out;
-		struct istat pos;
-	} stat;
 	enum colmode colmode;
 } dpl = {
 	.pos.imgi = IMGI_START,
 	.pos.zoom = 0,
 	.pos.x = 0.,
 	.pos.y = 0.,
+	.pos.writemode = 0,
 	.run = 0,
-	.ineff = 0,
 	.showinfo = 0,
 	.showhelp = 0,
 	.inputnum = 0,
-	.writemode = 0,
-	.refresh = EFFREF_NO,
-	.stat.mode = STAT_OFF,
-	.stat.pos.h = 0.f,
 	.colmode = COL_NONE,
 };
 
 /***************************** dpl interface **********************************/
 
 /* thread: all */
-void effrefresh(enum effrefresh val){ dpl.refresh|=val; }
+struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetimgi(){
 	if(dpl.pos.imgi==IMGI_START) return -1;
 	if(dpl.pos.imgi==IMGI_END) return nimg;
 	return dpl.pos.imgi;
 }
 int dplgetzoom(){ return dpl.pos.zoom; }
-char dplineff(){ return dpl.ineff; }
 char dplshowinfo(){ return dpl.showinfo; }
 int dplinputnum(){ return dpl.inputnum; }
 char dplloop(){ return dpl.cfg.loop; }
-struct istat *dplstat(){ return &dpl.stat.pos; }
 
-/***************************** dpl imgpos *************************************/
-
-struct imgpos {
-	char eff;
-	char mark;
-	struct iopt opt;
-	struct ipos cur;
-	struct ipos way[2];
-	Uint32 waytime[2];
-	char   wayact;
-	struct icol col;
-};
-
-/* thread: img */
-struct imgpos *imgposinit(){ return calloc(1,sizeof(struct imgpos)); }
-void imgposfree(struct imgpos *ip){ free(ip); }
-
-/* thread: gl */
-struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
-struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
-struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
-
-/* thread: act */
-char *imgposmark(struct imgpos *ip){ return &ip->mark; }
+/***************************** imgfit *****************************************/
 
 char imgfit(struct img *img,float *fitw,float *fith){
 	float irat;
@@ -158,180 +104,6 @@ struct zoomtab {
 	{ .move=5, .size=1./5., .inc=12, .texcur=TEX_SMALL, .texoth=TEX_TINY,  },
 	{ .move=7, .size=1./7., .inc=24, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
 };
-
-char effact(int i){
-	if(dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) return 0;
-	if(i==dpl.pos.imgi) return 1;
-	if(dpl.pos.zoom>=0) return 0;
-	if(abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc) return 1;
-	if(!dpl.cfg.loop) return 0;
-	if(nimg-abs(i-dpl.pos.imgi)<=zoomtab[-dpl.pos.zoom].inc) return 1;
-	return 0;
-}
-
-void effwaytime(struct imgpos *ip,Uint32 len){
-	ip->waytime[1]=(ip->waytime[0]=SDL_GetTicks())+len;
-}
-
-void effmove(struct ipos *ip,int i){
-	ip->a = 1.f;
-	ip->m=(imgs[i]->pos->mark && dpl.writemode)?1.f:0.f;
-	ip->r=imgexifrotf(imgs[i]->exif);
-	if(dpl.pos.zoom<0){
-		int diff=i-dpl.pos.imgi;
-		if(dpl.cfg.loop && diff> nimg/2) diff-=nimg;
-		if(dpl.cfg.loop && diff<-nimg/2) diff+=nimg;
-		ip->s=zoomtab[-dpl.pos.zoom].size;
-		ip->x=diff*ip->s;
-		ip->y=0.;
-		while(ip->x<-.5f){ ip->x+=1.f; ip->y-=ip->s; }
-		while(ip->x> .5f){ ip->x-=1.f; ip->y+=ip->s; }
-		if(i!=dpl.pos.imgi) ip->s*=dpl.cfg.shrink;
-		ip->x*=dpl.maxfitw;
-		ip->y*=dpl.maxfith;
-	}else if(panoactive()){
-		ip->s=powf(2.f,(float)dpl.pos.zoom);
-		ip->x=-dpl.pos.x;
-		ip->y=-dpl.pos.y;
-	}else{
-		float fitw,fith;
-		ip->s=powf(2.f,(float)dpl.pos.zoom);
-		ip->x=-dpl.pos.x*ip->s;
-		ip->y=-dpl.pos.y*ip->s;
-		if(imgfit(imgs[i],&fitw,&fith)){
-			ip->x*=fitw;
-			ip->y*=fith;
-		}
-	}
-	/*printf("=> %.2f %.2f %.2f %.2f\n",ip->a,ip->s,ip->x,ip->y);*/
-}
-
-char effonoff(struct ipos *ip,struct ipos *ipon,enum dplev ev){
-	if(dpl.pos.zoom>0 || (ev&DE_ZOOM)){
-		memset(ip,0,sizeof(struct ipos));
-		ip->m=ipon->m;
-		ip->r=ipon->r;
-		return 1;
-	}
-	*ip=*ipon;
-	if(dpl.pos.imgi>=nimg || dpl.pos.imgiold>=nimg){
-		ip->a=0.;
-	}else if(dpl.pos.zoom==0){
-		if(dpl.writemode) switch((int)ev){
-			case DE_RIGHT: ip->x += 1.; break;
-			case DE_LEFT:  ip->x -= 1.; break;
-			case DE_UP:    ip->x += zoomtab[0].move; break;
-			case DE_DOWN:  ip->x -= zoomtab[0].move; break;
-		}else ip->a=0.;
-	}else{
-		ip->a=0.;
-		switch((int)ev){
-		case DE_RIGHT:
-		case DE_LEFT:  ip->x += (ip->x<0.?-1.:1.) * zoomtab[-dpl.pos.zoom].size; break;
-		case DE_SEL:
-		case DE_UP:
-		case DE_DOWN:  ip->y += (ip->y<0.?-1.:1.) * zoomtab[-dpl.pos.zoom].size; break;
-		}
-	}
-	return 0;
-}
-
-char efffaston(struct imgpos *ip,enum dplev ev,int i){
-	int diff=dpl.pos.imgi-i;
-	if(dpl.pos.imgi<0) diff=i+1;
-	if(dpl.pos.imgi>=nimg) diff=nimg-i;
-	if((ev!=DE_DOWN || diff>=0 || diff<=-zoomtab[0].move) &&
-	   (ev!=DE_UP   || diff<=0 || diff>= zoomtab[0].move)) return 0;
-	ip->opt.active=2;
-	ip->cur.a=1.;
-	ip->cur.s=1.;
-	ip->cur.x=((float)DE_DIR(ev) * zoomtab[0].move) - (float)diff;
-	ip->cur.y=0.;
-	ip->cur.m=(imgs[i]->pos->mark && dpl.writemode)?1.:0.;
-	ip->cur.r=imgexifrotf(imgs[i]->exif);
-	ip->eff=0;
-	return 1;
-}
-
-enum imgtex imgseltex(struct imgpos *ip,int i){
-	if(dpl.pos.zoom>0)  return TEX_FULL;
-	if(dpl.pos.imgi==i) return zoomtab[-dpl.pos.zoom].texcur;
-	else if(ip->opt.active==2) return TEX_SMALL;
-	else return zoomtab[-dpl.pos.zoom].texoth;
-}
-
-void effinitimg(enum dplev ev,int i){
-	struct imgpos *ip;
-	char act;
-	if(i<0 || i>=nimg) return;
-	ip=imgs[i]->pos;
-	act=effact(i);
-	if(!act && !ip->opt.active){
-		if(dpl.pos.zoom!=0 || (ev&DE_VER) || !dpl.writemode) return;
-		if(!efffaston(ip,ev,i)) return;
-	}
-	if(!act && ip->eff && !ip->wayact) return;
-	ip->opt.tex=imgseltex(ip,i);
-	ip->opt.back=0;
-	if(act) effmove(ip->way+1,i);
-	else  ip->opt.back|=effonoff(ip->way+1,&ip->cur,DE_NEG(ev));
-	if(!ip->opt.active){
-		ip->opt.back|=effonoff(ip->way+0,ip->way+1,ev);
-		ip->cur=ip->way[0];
-	}else{
-		ip->way[0]=ip->cur;
-		if(act && dpl.pos.zoom<0 &&
-			(fabs(ip->way[0].x-ip->way[1].x)/dpl.maxfitw/ip->way[1].s>1.5f ||
-			 fabs(ip->way[0].y-ip->way[1].y)/dpl.maxfith/ip->way[1].s>1.5f)
-			) ip->opt.back=1;
-	}
-	if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
-		ip->opt.active=act;
-		return;
-	}
-	if(ev==DE_MOVE && act){
-		ip->cur.x=ip->way[1].x;
-		ip->cur.y=ip->way[1].y;
-		ip->opt.active=1;
-	}else if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
-		effwaytime(ip,dpl.cfg.efftime);
-		ip->wayact=act;
-		ip->eff=1;
-		ip->opt.active=1;
-	}else{
-		ip->eff=0;
-		ip->opt.active=act;
-	}
-}
-
-char effmaxfit(){
-	int i;
-	float maxfitw=0.f,maxfith=0.f;
-	for(i=0;i<nimg;i++) if(effact(i)){
-		float fitw,fith;
-		if(!imgfit(imgs[i],&fitw,&fith)) continue;
-		if(fitw>maxfitw) maxfitw=fitw;
-		if(fith>maxfith) maxfith=fith;
-	}
-	if(maxfitw==0.f) maxfitw=1.f;
-	if(maxfith==0.f) maxfith=1.f;
-	if(maxfitw==dpl.maxfitw && maxfith==dpl.maxfith) return 0;
-	dpl.maxfitw=maxfitw;
-	dpl.maxfith=maxfith;
-	return 1;
-}
-
-void effinit(enum effrefresh effref,enum dplev ev,int imgi){
-	int i;
-	debug(DBG_DBG,"eff refresh%s%s",
-		effref&EFFREF_IMG?" (img)":"",
-		effref&EFFREF_ALL?" (all)":"",
-		effref&EFFREF_FIT?" (fit)":"");
-	if(effref&EFFREF_FIT) if(dpl.pos.zoom<0 && effmaxfit()) effref|=EFFREF_ALL;
-	if(effref&EFFREF_ALL) for(i=0;i<nimg;i++) effinitimg(ev,i);
-	else if(effref&EFFREF_IMG) effinitimg(ev,imgi<0?dpl.pos.imgi:imgi);
-	
-}
 
 void dplclippos(struct img *img){
 	float xb,yb;
@@ -427,15 +199,7 @@ void dplmove(enum dplev ev,float x,float y){
 			dpl.pos.zoom+=dir;
 			dplclippos(img);
 		}else if(dpl.pos.zoom+dir<=0){
-			struct img *img;
-			float fitw,fith;
-			if(dpl.pos.zoom==1 && imgfit(img=imgget(dpl.pos.imgi),&fitw,&fith) && panoend(&img->pos->cur.s)){
-				img->pos->cur.s/=fith;
-				while(img->pos->cur.x<-.5f) img->pos->cur.x+=1.f;
-				while(img->pos->cur.x> .5f) img->pos->cur.x-=1.f;
-				img->pos->cur.x*=img->pos->cur.s;
-				img->pos->cur.y*=img->pos->cur.s;
-			}
+			if(dpl.pos.zoom==1) effpanoend(dpl.pos.imgi);
 			dpl.pos.x=dpl.pos.y=0.;
 			dpl.pos.zoom+=dir;
 		}else dplzoompos(dpl.pos.zoom+dir,x,y);
@@ -456,8 +220,8 @@ int dplclickimg(float sx,float sy){
 	if(dpl.pos.imgi<0)     return 0;
 	if(dpl.pos.imgi>=nimg) return nimg-1;
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
-	sx/=dpl.maxfitw; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
-	sy/=dpl.maxfith; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
+	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
+	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=floor(sx/zoomtab[-dpl.pos.zoom].size+.5f);
 	y=floor(sy/zoomtab[-dpl.pos.zoom].size+.5f);
 	i=floor((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
@@ -473,10 +237,12 @@ void dplsel(int imgi){
 
 void dplmark(int imgi){
 	struct img *img;
-	if(!dpl.writemode) return;
+	char *mark;
+	if(!dpl.pos.writemode) return;
 	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
-	img->pos->mark=!img->pos->mark;
+	mark=imgposmark(img->pos);
+	*mark=!*mark;
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	actadd(ACT_SAVEMARKS,NULL);
 }
@@ -487,17 +253,7 @@ void dplrotate(enum dplev ev){
 	if(!img) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,ev,-1);
-	if(dpl.writemode) actadd(ACT_ROTATE,img);
-}
-
-void effdel(struct imgpos *ip){
-	ip->way[1]=ip->way[0]=ip->cur;
-	ip->way[1].s=0.f;
-	effwaytime(ip,dpl.cfg.efftime);
-	ip->wayact=0;
-	ip->opt.active=1;
-	ip->opt.back=1;
-	ip->eff=1;
+	if(dpl.pos.writemode) actadd(ACT_ROTATE,img);
 }
 
 void dpldel(){
@@ -509,11 +265,9 @@ void dpldel(){
 		delimg=NULL;
 		ldffree(tmp->ld,TEX_NONE);
 	}
-	if(!img->pos->opt.active) return;
 	effdel(img->pos);
 	delimg=img;
-	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
-	if(dpl.writemode) actadd(ACT_DELETE,img);
+	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
 }
 
 void dplcol(int d){
@@ -521,19 +275,21 @@ void dplcol(int d){
 	float *val;
 	if(dpl.colmode==COL_NONE) return;
 	if(!(img=imgget(dpl.pos.imgi))) return;
-	val=((float*)&img->pos->col)+dpl.colmode;
+	val=((float*)imgposcol(img->pos))+dpl.colmode;
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
 	if(*val> 1.f) *val= 1.f;
 }
 
-#define ADDTXT(...)	txt+=snprintf(txt,dpl.stat.pos.txt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
+#define ADDTXT(...)	txt+=snprintf(txt,dsttxt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
 void dplstatupdate(){
-	if(dpl.pos.imgi<0) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("BEGIN"));
-	else if(dpl.pos.imgi>=nimg) snprintf(dpl.stat.pos.txt,ISTAT_TXTSIZE,_("END"));
+	char *dsttxt=effstat()->txt;
+	if(dpl.pos.imgi<0) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
+	else if(dpl.pos.imgi>=nimg) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
-		char *txt=dpl.stat.pos.txt;
+		struct icol *ic=imgposcol(img->pos);
+		char *txt=dsttxt;
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
@@ -541,35 +297,15 @@ void dplstatupdate(){
 			case ROT_180: ADDTXT(_(" rotated-twice")); break;
 			case ROT_270: ADDTXT(_(" rotated-left")); break;
 		}
-		if(dpl.writemode){
+		if(dpl.pos.writemode){
 			ADDTXT(_(" (write-mode)"));
-			if(img->pos->mark) ADDTXT(_(" [MARK]"));
+			if(*imgposmark(img->pos)) ADDTXT(_(" [MARK]"));
 		}
-		if(dpl.colmode!=COL_NONE || img->pos->col.g || img->pos->col.c || img->pos->col.b){
-			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",img->pos->col.g,dpl.colmode==COL_G?"]":"");
-			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",img->pos->col.c,dpl.colmode==COL_C?"]":"");
-			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",img->pos->col.b,dpl.colmode==COL_B?"]":"");
+		if(dpl.colmode!=COL_NONE || ic->g || ic->c || ic->b){
+			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",ic->g,dpl.colmode==COL_G?"]":"");
+			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",ic->c,dpl.colmode==COL_C?"]":"");
+			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",ic->b,dpl.colmode==COL_B?"]":"");
 		}
-	}
-}
-
-void dplstaton(){
-	switch(dpl.stat.mode){
-		case STAT_OFF:
-			dpl.stat.mode=STAT_RISE;
-			dpl.stat.in=SDL_GetTicks();
-			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[STAT_RISE];
-		break;
-		case STAT_ON:
-			dpl.stat.out=SDL_GetTicks()+dpl.cfg.stat_delay[STAT_ON];
-		break;
-		case STAT_FALL:
-			dpl.stat.mode=STAT_RISE;
-			dpl.stat.in=SDL_GetTicks();
-			dpl.stat.in-=(dpl.stat.out-dpl.stat.in)*dpl.cfg.stat_delay[STAT_RISE]/dpl.cfg.stat_delay[STAT_FALL];
-			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[STAT_RISE];
-		break;
-		default: break;
 	}
 }
 
@@ -653,14 +389,14 @@ void dplkey(SDLKey key){
 	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_BACKSPACE:panoplain(); break;
 	case SDLK_f:        sdlfullscreen(); break;
-	case SDLK_w:        dpl.writemode=!dpl.writemode; effrefresh(EFFREF_ALL); break;
+	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
 	case SDLK_g:        dpl.colmode=COL_G; break;
 	case SDLK_c:        dpl.colmode=COL_C; break;
 	case SDLK_b:        dpl.colmode=COL_B; break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
-	case SDLK_DELETE:   if(dpl.writemode) dpldel(); break;
+	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_PLUS:     dplcol(1); break;
 	case SDLK_MINUS:    dplcol(-1); break;
 	default: break;
@@ -695,7 +431,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
 	}
-	if(dpl.writemode || (dpl.pos.zoom<=0 && ev->ev!=DE_RIGHT) || dpl.pos.imgi>=nimg) ret|=2;
+	if(dpl.pos.writemode || (dpl.pos.zoom<=0 && ev->ev!=DE_RIGHT) || dpl.pos.imgi>=nimg) ret|=2;
 	return ret;
 }
 
@@ -712,7 +448,7 @@ void dplcheckev(){
 		effinit(EFFREF_IMG,DE_MOVE,-1);
 	}
 	if(stat&1) dplstatupdate(stat);
-	if(stat&2) dplstaton(stat);
+	if(stat&2) effstaton(stat);
 }
 
 /***************************** dpl run ****************************************/
@@ -725,119 +461,33 @@ void dplrun(){
 	}
 }
 
-/***************************** eff do *****************************************/
-
-float effcalclin(float a,float b,float ef){
-	return (b-a)*ef+a;
-}
-
-float effcalcrot(float a,float b,float ef){
-	while(b-a> 180.f) b-=360.f;
-	while(b-a<-180.f) b+=360.f;
-	return (b-a)*ef+a;
-}
-
-#define ECS_TIME	0.2f
-#define ECS_SIZE	0.3f
-float effcalcshrink(float ef){
-	if(ef<ECS_TIME)         return 1.f-ef/ECS_TIME*(1.f-ECS_SIZE);
-	else if(ef<1.-ECS_TIME) return ECS_SIZE;
-	else                    return 1.f-(1.f-ef)/ECS_TIME*(1.f-ECS_SIZE);
-}
-
-void effimg(struct imgpos *ip){
-	Uint32 time=SDL_GetTicks();
-	if(time>=ip->waytime[1]){
-		ip->eff=0;
-		ip->cur=ip->way[1];
-		ip->opt.active=ip->wayact;
-	}else if(time>ip->waytime[0]){
-		float ef = (float)(time-ip->waytime[0]) / (float)(ip->waytime[1]-ip->waytime[0]);
-		if(ip->way[0].a!=ip->way[1].a) ip->cur.a=effcalclin(ip->way[0].a,ip->way[1].a,ef);
-		if(ip->way[0].s!=ip->way[1].s) ip->cur.s=effcalclin(ip->way[0].s,ip->way[1].s,ef); else ip->cur.s=ip->way[0].s;
-		if(ip->way[0].x!=ip->way[1].x) ip->cur.x=effcalclin(ip->way[0].x,ip->way[1].x,ef);
-		if(ip->way[0].y!=ip->way[1].y) ip->cur.y=effcalclin(ip->way[0].y,ip->way[1].y,ef);
-		if(ip->way[0].m!=ip->way[1].m) ip->cur.m=effcalclin(ip->way[0].m,ip->way[1].m,ef);
-		if(ip->way[0].r!=ip->way[1].r) ip->cur.r=effcalcrot(ip->way[0].r,ip->way[1].r,ef);
-		if(ip->opt.back) ip->cur.s*=effcalcshrink(ef);
-	}
-	/*printf("%i %i %i %g\n",ip->waytime[0],ip->waytime[1],time,ip->cur.a);*/
-}
-
-void effstat(){
-	float ef=(float)(SDL_GetTicks()-dpl.stat.in)/(float)(dpl.stat.out-dpl.stat.in);
-	if(dpl.stat.mode!=STAT_OFF && ef>=1.f){
-		if(dpl.stat.mode!=STAT_ON || dpl.pos.imgi<nimg){
-			dpl.stat.mode=(dpl.stat.mode+1)%STAT_NUM;
-			dpl.stat.in=dpl.stat.out;
-			dpl.stat.out=dpl.stat.in+dpl.cfg.stat_delay[dpl.stat.mode];
-		}
-	}
-	switch(dpl.stat.mode){
-		case STAT_RISE: dpl.stat.pos.h=effcalclin(0.f,1.f,ef); break;
-		case STAT_FALL: dpl.stat.pos.h=effcalclin(1.f,0.f,ef); break;
-		case STAT_ON:   dpl.stat.pos.h=1.f; break;
-		default:        dpl.stat.pos.h=0.f; break;
-	}
-}
-
-void effdo(){
-	struct img *img;
-	char ineff=0;
-	if(!imgs) return;
-	for(img=*imgs;img;img=img->nxt) if(img->pos->eff){
-		effimg(img->pos);
-		ineff=1;
-	}
-	if(delimg){
-		if(delimg->pos->eff) effimg(delimg->pos);
-		if(!delimg->pos->eff){
-			struct img *tmp=delimg;
-			delimg=NULL;
-			ldffree(tmp->ld,TEX_NONE);
-		}
-	}
-	effstat();
-	dpl.ineff=ineff;
-}
-
 /***************************** dpl thread *************************************/
 
 void dplcfginit(){
-	dpl.cfg.efftime=cfggetint("dpl.efftime");
 	dpl.cfg.displayduration=cfggetint("dpl.displayduration");
-	dpl.cfg.shrink=cfggetfloat("dpl.shrink");
 	dpl.cfg.loop=cfggetint("dpl.loop");
-	dpl.cfg.stat_delay[STAT_OFF] = 0;
-	dpl.cfg.stat_delay[STAT_RISE]=cfggetint("dpl.stat_rise");
-	dpl.cfg.stat_delay[STAT_ON]  =cfggetint("dpl.stat_on");
-	dpl.cfg.stat_delay[STAT_FALL]=cfggetint("dpl.stat_fall");
 }
 
 int dplthread(void *arg){
 	Uint32 last=0;
 	dplcfginit();
+	effcfginit();
 	dplstatupdate();
-	dplstaton();
+	effstaton();
 	while(!sdl_quit){
 
 		dplcheckev();
 		if(dpl.run) dplrun();
 		timer(TI_DPL,0,0);
-		if(dpl.refresh!=EFFREF_NO){
-			effinit(dpl.refresh,0,-1);
-			dpl.refresh=EFFREF_NO;
-		}
-		timer(TI_DPL,1,0);
 		effdo();
-		timer(TI_DPL,2,0);
+		timer(TI_DPL,1,0);
 		panorun();
-		timer(TI_DPL,3,0);
+		timer(TI_DPL,2,0);
 
 		sdlthreadcheck();
-		timer(TI_DPL,4,0);
+		timer(TI_DPL,3,0);
 		sdldelay(&last,16);
-		timer(TI_DPL,5,0);
+		timer(TI_DPL,4,0);
 	}
 	sdl_quit|=THR_DPL;
 	return 0;

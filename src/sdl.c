@@ -12,6 +12,7 @@
 #include "dpl.h"
 #include "cfg.h"
 #include "pano.h"
+#include "eff.h"
 
 char sdl_quit = 0;
 
@@ -290,8 +291,8 @@ int sdlthread(void *arg){
 		sdlhidecursor();
 		timer(TI_SDL,0,1);
 		
-		if(!dplineff()) ldtexload();
-		while(SDL_GetTicks()-paint_last < (dplineff()?6:20)) if(!ldtexload()) break;
+		if(!effineff()) ldtexload();
+		while(SDL_GetTicks()-paint_last < (effineff()?6:20)) if(!ldtexload()) break;
 		timer(TI_SDL,1,1);
 
 		glpaint();

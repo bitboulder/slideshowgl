@@ -26,7 +26,13 @@ struct icol {
 	float g,c,b;
 };
 
-enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
+struct dplpos {
+	int imgi;
+	int imgiold;
+	int zoom;
+	float x,y;
+	char writemode;
+};
 
 enum dplev {
 	DE_MOVE    = 0x0001,
@@ -44,25 +50,23 @@ enum dplev {
 	DE_SEL     = 0x1000,
 	DE_MARK    = 0x2000,
 };
+#define DE_HOR		(DE_RIGHT|DE_LEFT)
+#define DE_VER  	(DE_UP|DE_DOWN)
+#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
+#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
+#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev)))
 
-void effrefresh(enum effrefresh val);
+struct dplpos *dplgetpos();
 int dplgetimgi();
 int dplgetzoom();
-char dplineff();
 char dplshowinfo();
 int dplinputnum();
 char *dplhelp();
 char dplloop();
-struct istat *dplstat();
 
-struct imgpos *imgposinit();
-void imgposfree(struct imgpos * ip);
-struct iopt *imgposopt(struct imgpos *ip);
-struct ipos *imgposcur(struct imgpos *ip);
-struct icol *imgposcol(struct imgpos *ip);
-char *imgposmark(struct imgpos *ip);
-
+char imgfit(struct img *img,float *fitw,float *fith);
 void printixy(float sx,float sy);
+
 #define dplevput(e)			dplevputx(e,0,0.f,0.f)
 #define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f)
 #define dplevputp(e,x,y)	dplevputx(e,0,x,y)

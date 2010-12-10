@@ -21,8 +21,9 @@ my %ignore=(
 	"imgpanoenable"=>1, # imgpano
 ## global var
 	"sdlrat"=>1, # sdl
-	"dplgetimgi"=>1,"dplgetzoom"=>1,"dplineff"=>1,"dplshowinfo"=>1, # dpl
-	"dplinputnum"=>1,"dplhelp"=>1,"dplloop"=>1,"dplstat"=>1, # dpl
+	"dplgetpos"=>1,"dplgetimgi"=>1,"dplgetzoom"=>1,"dplshowinfo"=>1, # dpl
+	"dplinputnum"=>1,"dplhelp"=>1,"dplloop"=>1, # dpl
+	"effstat"=>1,"effmaxfit"=>1,"effineff"=>1, # eff
 	"glsetbar"=>1, # gl
 	"imgget"=>1, # img
 	"panoactive"=>1, # pano

@@ -5,7 +5,6 @@
 #include <math.h>
 #include "pano.h"
 #include "img.h"
-#include "dpl.h"
 #include "load.h"
 #include "main.h"
 #include "help.h"
@@ -13,6 +12,7 @@
 #include "gl.h"
 #include "cfg.h"
 #include "file.h"
+#include "eff.h"
 
 #ifndef M_PI
 # define M_PI		3.14159265358979323846	/* pi */

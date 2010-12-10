@@ -21,6 +21,7 @@
 #include "gl.h"
 #include "ldjpg.h"
 #include "file.h"
+#include "eff.h"
 
 #ifndef popen
 	extern FILE *popen (__const char *__command, __const char *__modes);
@@ -360,7 +361,7 @@ char ldtexload(){
 	switch(tl->mode){
 	case TLM_IMG: {
 		struct sdlimg *sdlimg=tl->dat.img.sdlimg;
-		if(dplineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
+		if(effineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
 		timer(TI_LD,-1,0);
 		if(!tl->itx->tex[0]) glGenTextures(1,tl->itx->tex+0);
 		glBindTexture(GL_TEXTURE_2D,tl->itx->tex[0]);
@@ -731,7 +732,7 @@ int ldthread(void *arg){
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl_quit){
-		if(!ldcheck()) SDL_Delay(100); else if(dplineff()) SDL_Delay(20);
+		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		sdlthreadcheck();
 	}
 	ldconceptfree();

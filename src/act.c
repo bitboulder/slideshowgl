@@ -5,9 +5,9 @@
 #include "sdl.h"
 #include "load.h"
 #include "cfg.h"
-#include "dpl.h"
 #include "exif.h"
 #include "file.h"
+#include "eff.h"
 
 struct actcfg {
 	Uint32 savemarks_delay;
