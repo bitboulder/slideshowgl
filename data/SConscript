@@ -7,6 +7,8 @@ Import('destdir')
 data = """
 	defimg.png
 	FreeSans.ttf
+	vs_fish.c
+	fs.c
 """.split()
 
 env['DATADIR'] = os.path.join(prefix,'share',env['APPNAME'])

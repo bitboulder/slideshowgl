@@ -118,6 +118,22 @@ char *finddatafile(char *fn){
 	return NULL;
 }
 
+char *textload(char *fn){
+	FILE *fd;
+	long len;
+	char *buf;
+	if(!fn) return NULL;
+	if(!(fd=fopen(fn,"r"))) return NULL;
+	fseek(fd,0,SEEK_END);
+	len=ftell(fd);
+	fseek(fd,0,SEEK_SET);
+	buf=malloc(len+1);
+	fread(buf,1,len,fd);
+	fclose(fd);
+	buf[len]='\0';
+	return buf;
+}
+
 struct mainthread {
 	int (*fnc)(void *);
 	int pri;

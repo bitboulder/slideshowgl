@@ -7,11 +7,13 @@
 #include "main.h"
 #include "sdl.h"
 #include "help.h"
+#include "pano.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
 enum cfgmode { CM_INC, CM_FLIP, CM_SET };
 
 #define E(X)	#X
+#define E2(X,N)	#X
 struct cfg {
 	char opt;
 	char *name;
@@ -47,6 +49,7 @@ struct cfg {
 	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.125", {NULL}, NULL },
 	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0", {NULL}, NULL },
 	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0", {NULL}, NULL },
+	{ 0,   "pano.fishmode",       CT_ENM, CM_SET,  "angle", {PANOFM}, NULL },
 	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250", {NULL}, NULL  },
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000", {NULL}, NULL },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000", {NULL}, NULL },
@@ -55,6 +58,7 @@ struct cfg {
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1", {NULL}, __("Toggle actions") },
 	{ 0,   NULL,                  0,      0,       NULL, {NULL}, NULL },
 };
+#undef E2
 #undef E
 
 /* thread: all */

@@ -28,5 +28,6 @@ enum debug { EDEBUG, ERR_QUIT, ERR_CONT };
 void debug_ex(enum debug lvl,char *file,int line,char *txt,...);
 
 char *finddatafile(char *fn);
+char *textload(char *fn);
 
 #endif

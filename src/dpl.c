@@ -110,7 +110,7 @@ void dplclippos(struct img *img){
 	float x[2],y[2];
 	char clipx;
 	if(!imgspos2ipos(img,.5f,.5f,&xb,&yb)) return;
-	clipx=panoclipx(img,&xb);
+	clipx=panoclip(img,&xb,&yb);
 	y[0]=-.5f+yb; y[1]= .5f-yb;
 	if(y[1]<y[0]) y[0]=y[1]=0.f;
 	if(dpl.pos.y<y[0]) dpl.pos.y=y[0];
@@ -387,7 +387,8 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:panoev(PE_PLAIN); break;
+	case SDLK_BACKSPACE:panoev(PE_MODE); break;
+	case SDLK_y:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;

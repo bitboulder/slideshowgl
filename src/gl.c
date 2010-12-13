@@ -80,28 +80,44 @@ void glfree(){
 #endif
 }
 
-float glmode(enum glmode dst,float h3d){
+float glmodex(enum glmode dst,float h3d,int fm){
 	static enum glmode cur=-1;
 	static float cur_h3d;
 	static float cur_w;
+	static int cur_fm;
 	float w = dst!=GLM_2D ? sdlrat() : 1.f;
-	if(cur==dst && (dst!=GLM_3D || h3d==cur_h3d) && w==cur_w) return w;
+	if(cur==dst && (dst!=GLM_3D || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w)
+		return w;
 	cur=dst;
+	cur_h3d=h3d;
+	cur_fm=fm;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
-	case GLM_3D:  gluPerspective(h3d, w, 5., 15.); break;
+	case GLM_3D:  
+		if(fm>=0) panoperspective(h3d,fm,w);
+		else gluPerspective(h3d, w, 1., 15.);
+	break;
 	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
 	case GLM_TXT: glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.); break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	if(dst==GLM_3D) gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
-	if(dst==GLM_TXT){
-		glDisable(GL_TEXTURE_2D);
-		glScalef(1.f/w,1.f,1.f);
-	}else{
+	switch(dst){
+	case GLM_3D:
+		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
+		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
+	break;
+	case GLM_2D:
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_TEXTURE_2D);
+	break;
+	case GLM_TXT:
+		glScalef(1.f/w,1.f,1.f);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_TEXTURE_2D);
+	break;
 	}
 	return w;
 }
@@ -185,7 +201,7 @@ void glrenderimg(struct img *img,char back){
 void glrenderimgs(){
 	struct img *img;
 	if(!imgs) return;
-	glmode(GLM_2D,0.f);
+	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,1);
 	for(img=*imgs;img;img=img->nxt) glrenderimg(img,0);
@@ -221,7 +237,7 @@ void glrendertext(char *title,char *text){
 	lineh=ftglGetFontLineHeight(gl.font);
 	w=(maxw[0]+maxw[1])/.75f;
 	h=(float)lines*lineh/.8f;
-	winw=glmode(GLM_TXT,0.f);
+	winw=glmode(GLM_TXT);
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
@@ -265,7 +281,7 @@ void glrenderinputnum(){
 	float rect[6];
 	if(!i) return;
 	snprintf(txt,16,"%i",i);
-	glmode(GLM_TXT,0.f);
+	glmode(GLM_TXT);
 	glPushMatrix();
 	lineh=ftglGetFontLineHeight(gl.font);
 	glScalef(gl.cfg.inputnum_lineh/lineh,gl.cfg.inputnum_lineh/lineh,1.f);
@@ -290,7 +306,7 @@ void glrenderstat(){
 	float tw,th;
 	float bw,bh;
 	if(!stat->h) return;
-	winw=glmode(GLM_TXT,0.f);
+	winw=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
 	lineh=ftglGetFontLineHeight(gl.font);
@@ -312,7 +328,7 @@ void glrenderstat(){
 
 void glrenderbar(){
 	if(!gl.bar) return;
-	glmode(GLM_2D,0.f);
+	glmode(GLM_2D);
 	glDisable(GL_TEXTURE_2D);
 	glPushMatrix();
 	glTranslatef(.5f,-.5f,0.f);
