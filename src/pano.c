@@ -1,9 +1,7 @@
-#define GL_GLEXT_PROTOTYPES
 #include <stdlib.h>
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
 #include <math.h>
 #include "pano.h"
 #include "img.h"
@@ -78,9 +76,8 @@ void panoinit(){
 	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
 	pano.cfg.radius=cfggetfloat("pano.radius");
 	pano.cfg.fm=cfggetenum("pano.fishmode");
-#ifdef GL_VERSION_2_0
-	if(glversion>=200){
-		pano.pfish=0;
+	pano.pfish=0;
+	if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader){
 		char *vstxt,*fstxt;
 		if(!(vstxt=textload(finddatafile("vs_fish.c")))){ error(ERR_CONT,"loading vertex shader file failed"); return; }
 		if(!(fstxt=textload(finddatafile("fs.c")))){ error(ERR_CONT,"loading fragment shader file failed"); return; }
@@ -97,7 +94,6 @@ void panoinit(){
 		glAttachShader(pano.pfish,fs);
 		glLinkProgram(pano.pfish);
 	}
-#endif
 }
 
 /* thread: dpl */
@@ -165,7 +161,7 @@ char panostart(float *x){
 	float perspectw;
 	if(!(img=imgget(dplgetimgi()))) return 0;
 	if(!img->pano->enable) return 0;
-	pano.mode = img->pano->gh>90.f ? PM_FISHEYE : PM_NORMAL;
+	pano.mode = img->pano->gh>90.f && pano.pfish ? PM_FISHEYE : PM_NORMAL;
 	pano.run=0;
 	pano.rot=pano.cfg.defrot;
 	if(img->pano->rotinit<0.f) pano.rot*=-1.f;
@@ -236,7 +232,7 @@ char panorender(){
 	ipos=imgposcur(img->pos);
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
 	if(ip->gh>=180.f){ perspecth*=2.f; perspectw*=2.f; }
-	if(mode==PM_NORMAL && perspecth>90.f) mode=PM_FISHEYE;
+	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
 	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?pano.cfg.fm:-1);
 	glPushMatrix();
 	glColor4f(1.,1.,1.,ipos->a);
@@ -252,8 +248,7 @@ char panorender(){
 	}else{
 		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
 		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
-#ifdef GL_VERSION_2_0
-		if(glversion>=200 && mode==PM_FISHEYE){
+		if(mode==PM_FISHEYE){
 			GLenum glerr;
 			glUseProgram(pano.pfish);
 			if((glerr=glGetError())){
@@ -261,11 +256,8 @@ char panorender(){
 				pano.pfish=0;
 			}
 		}
-#endif
 		glCallList(dl);
-#ifdef GL_VERSION_2_0
-		if(glversion>=200) glUseProgram(0);
-#endif
+		if(mode==PM_FISHEYE) glUseProgram(0);
 	}
 	glPopMatrix();
 	return 1;
@@ -296,7 +288,11 @@ char panoev(enum panoev pe){
 		if(!pano.run) return 0;
 		if(pano.rot>0.f) pano.rot*=-1.f;
 	break;
-	case PE_MODE:     pano.mode = (pano.mode+1)%PM_NUM; break;
+	case PE_MODE:     
+		pano.mode = (pano.mode+1)%PM_NUM;
+		if(!pano.pfish && pano.mode==PM_FISHEYE)
+			pano.mode = (pano.mode+1)%PM_NUM;
+	break;
 	case PE_FISHMODE: pano.cfg.fm = (pano.cfg.fm+1)%3;  break;
 	}
 	return 1;

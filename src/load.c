@@ -1,14 +1,9 @@
-#define GL_GLEXT_PROTOTYPES
 #include <stdlib.h>
 #include <stdio.h>
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <math.h>
-#ifdef __WIN32__
-	/* opengl 1.2 in glext */
-	#include <GL/gl.h>
-	#include <GL/glext.h>
-#endif
 #include "load.h"
 #include "sdl.h"
 #include "main.h"
@@ -58,6 +53,7 @@ void ldmaxtexsize(){
 #define VT_W	67
 #define VT_H	75
 void ldcheckvartex(){
+#ifndef __WIN32__
 	GLuint tex=0;
 	char dat[3*VT_W*VT_H];
 	glGenTextures(1,&tex);
@@ -65,6 +61,7 @@ void ldcheckvartex(){
 	glTexImage2D(GL_TEXTURE_2D,0,3,VT_W,VT_H,0,GL_RGB,GL_UNSIGNED_BYTE,dat);
 	glDeleteTextures(1,&tex);
 	load.vartex=!glGetError();
+#endif
 }
 
 /***************************** imgld ******************************************/
@@ -198,8 +195,7 @@ void ldcolmod(struct itx *itx,struct icol *ic){
 	ex=h*(w%4)/3;
 	if(ex*3<h*(w%4)) ex++;
 #if 0
-#ifdef GL_VERSION_1_5
-	if(glversion>=105){
+	if(GLEW_EXT_pixel_buffer_object){
 		GLuint pbo;
 		GLubyte *ptr=NULL;
 		GLenum glerr;
@@ -258,7 +254,6 @@ fallback0:
 		glDeleteBuffers(1,&pbo);
 		timer(TI_COL,0,1);
 	}
-#endif
 #endif
 	GLubyte *pixels;
 	pixels=malloc((w*h+ex)*3);
@@ -371,7 +366,7 @@ char ldtexload(){
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
-		if(glversion>=102){
+		if(GLEW_EXT_texture_edge_clamp){
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 		}else{

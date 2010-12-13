@@ -1,8 +1,7 @@
 #include "config.h"
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #if HAVE_FTGL
@@ -18,8 +17,6 @@
 #include "exif.h"
 #include "pano.h"
 #include "eff.h"
-
-int glversion=0;
 
 enum dls { DLS_IMG, DLS_NUM };
 
@@ -43,8 +40,7 @@ void glsetbar(float bar){ gl.bar=bar; }
 
 void glinit(){
 	char *fontfn;
-	int v[2];
-	if(sscanf((const char *)glGetString(GL_VERSION),"%i.%i",v+0,v+1)==2) glversion=v[0]*100+v[1];
+	glewInit();
 	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
 	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
 	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);

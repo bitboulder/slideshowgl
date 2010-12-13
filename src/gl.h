@@ -3,8 +3,6 @@
 
 #include "load.h"
 
-extern int glversion;
-
 void glsetbar(float bar);
 
 enum glmode { GLM_3D, GLM_2D, GLM_TXT };

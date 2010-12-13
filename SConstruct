@@ -103,6 +103,11 @@ if not env.GetOption('clean'):
 
 		conf.CheckLibMy('opengl32',1,0)
 		conf.CheckLibMy('glu32',1,0)
+
+		env.Append(CPPPATH    = ['#/winlib/glew/include/'])
+		env.Append(LIBPATH    = ['#/winlib/glew/lib/'])
+		conf.CheckLibMy('glew32',1,0)
+
 		conf.CheckLibMy('stdc++',1,0)
 
 #		env['HAVE_PTHREAD'] = 0
@@ -113,6 +118,7 @@ if not env.GetOption('clean'):
 #		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
+		conf.CheckPKG('glew >= 1.5',1,0)
 		conf.CheckPKG('sdl >= 1.2',1,0)
 		conf.CheckPKG('SDL_image >= 1.2',1,0)
 		conf.CheckPKG('libexif >= 0.6',0,'EXIF')

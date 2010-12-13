@@ -1,7 +1,7 @@
 #ifndef _LOAD_H
 #define _LOAD_H
 
-#include <GL/gl.h>
+#include <GL/glew.h>
 
 struct itx {
 	GLuint tex[2];

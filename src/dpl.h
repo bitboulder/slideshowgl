@@ -1,7 +1,6 @@
 #ifndef _DPL_H
 #define _DPL_H
 
-#include <GL/gl.h>
 #include <SDL.h>
 #include <limits.h>
 #include "img.h"
