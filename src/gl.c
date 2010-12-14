@@ -103,6 +103,11 @@ info_log:
 
 void glinit(){
 	char *fontfn;
+	if(cfggetint("cfg.version")){
+		const char *str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+		mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
+		mprintf("GLSL-Version: %s\n",str?str:"NONE");
+	}
 	if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
 	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");

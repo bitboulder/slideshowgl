@@ -98,7 +98,6 @@ int mprintf(const char *format,...){
 	va_start(ap,format);
 	ret=vfprintf(fdout?fdout:stdout,format,ap);
 	va_end(ap);
-	fflush(fdout?fdout:stdout);
 	return ret;
 }
 
