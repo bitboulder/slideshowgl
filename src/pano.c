@@ -219,9 +219,11 @@ char panorender(){
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
 	if(ip->gh>=180.f){ perspecth*=2.f; perspectw*=2.f; }
 	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
+	if(mode==PM_FISHEYE && !pano.pfish) mode=PM_NORMAL;
 	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?pano.cfg.fm:-1);
 	glPushMatrix();
-	glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
+	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
+	else glColor4f(1.f,1.f,1.f,ipos->a);
 	if(mode==PM_PLAIN){
 		float x=ipos->x;
 		while(x<0.f) x+=1.f;

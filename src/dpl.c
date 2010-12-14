@@ -10,6 +10,7 @@
 #include "act.h"
 #include "file.h"
 #include "eff.h"
+#include "gl.h"
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
@@ -368,7 +369,7 @@ char *keyboardlayout=
 	__("f")"\0"                   __("Switch fullscreen")"\0"
 	__("r/R")"\0"                 __("Rotate image")"\0"
 	__("w")"\0"                   __("Switch writing mode")"\0"
-	__("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase")"\0"
+	__("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
 	__("+/-")"\0"                 __("Increase/decrease selected")"\0"
 	__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
 	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
@@ -393,9 +394,9 @@ void dplkey(SDLKey key){
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;
 	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
-	case SDLK_g:        dpl.colmode=COL_G; break;
-	case SDLK_c:        dpl.colmode=COL_C; break;
-	case SDLK_b:        dpl.colmode=COL_B; break;
+	case SDLK_g:        if(glprg()) dpl.colmode=COL_G; break;
+	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
+	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_PLUS:     dplcol(1); break;

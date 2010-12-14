@@ -38,6 +38,7 @@ struct gl {
 };
 
 void glsetbar(float bar){ gl.bar=bar; }
+char glprg(){ return !!gl.prg; }
 
 char *textload(char *fn){
 	FILE *fd;
@@ -58,28 +59,51 @@ char *textload(char *fn){
 
 GLuint glprgload(char *vs_fn,char *fs_fn){
 	char *vstxt,*fstxt;
-	GLuint prg;
+	GLuint prg=0,vs=0,fs=0,info;
+	int ret;
 	if(!GLEW_ARB_vertex_shader || !GLEW_ARB_fragment_shader) return 0;
-	if(!(vstxt=textload(finddatafile(vs_fn)))){ error(ERR_CONT,"loading vertex shader file failed"); return 0; }
-	if(!(fstxt=textload(finddatafile(fs_fn)))){ error(ERR_CONT,"loading fragment shader file failed"); return 0; }
-	GLuint vs=glCreateShader(GL_VERTEX_SHADER);
-	GLuint fs=glCreateShader(GL_FRAGMENT_SHADER);
+	if(!(vstxt=textload(finddatafile(vs_fn)))){ error(ERR_CONT,"loading vertex shader file %s failed",vs_fn); return 0; }
+	if(!(fstxt=textload(finddatafile(fs_fn)))){ error(ERR_CONT,"loading fragment shader file %s failed",fs_fn); return 0; }
+	vs=glCreateShader(GL_VERTEX_SHADER);
+	fs=glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(vs,1,(const GLchar **)&vstxt,NULL);
 	glShaderSource(fs,1,(const GLchar **)&fstxt,NULL);
 	free((void*)vstxt);
 	free((void*)fstxt);
 	glCompileShader(vs);
 	glCompileShader(fs);
+	glGetShaderiv(vs,GL_COMPILE_STATUS,&ret);
+	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",vs_fn); info=vs; goto info_log; }
+	glGetShaderiv(fs,GL_COMPILE_STATUS,&ret);
+	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",fs_fn); info=fs; goto info_log; }
 	prg=glCreateProgram();
 	glAttachShader(prg,vs);
 	glAttachShader(prg,fs);
 	glLinkProgram(prg);
+	glGetProgramiv(prg,GL_LINK_STATUS,&ret);
+	if(ret!=GL_TRUE){ error(ERR_CONT,"linking program (%s,%s) failed",vs_fn,fs_fn); info=prg; goto info_log; }
 	return prg;
+info_log:
+	glGetObjectParameterivARB(info,GL_INFO_LOG_LENGTH,&ret);
+	if(ret>0){
+		char *buf=malloc(ret);
+		glGetInfoLogARB(info,ret,&ret,buf);
+		printf("%s\n",buf);
+		free(buf);
+	}
+	if(prg){
+		glDetachShader(prg,vs);
+		glDetachShader(prg,fs);
+		glDeleteProgram(prg);
+	}
+	if(vs) glDeleteShader(vs);
+	if(fs) glDeleteShader(fs);
+	return 0;
 }
 
 void glinit(){
 	char *fontfn;
-	glewInit();
+	if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
 	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
 	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
@@ -213,7 +237,8 @@ void glrenderimg(struct img *img,char back){
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
 	iopt=imgposopt(isc->pos);
-	glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
+	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
+	else glColor4f(1.f,1.f,1.f,ipos->a);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);
@@ -371,10 +396,11 @@ void glrenderstat(){
 }
 
 void glrenderbar(){
+	float w;
 	if(!gl.bar) return;
-	glmode(GLM_2D);
-	glDisable(GL_TEXTURE_2D);
+	w=glmode(GLM_TXT);
 	glPushMatrix();
+	glScalef(w,-1.f,1.f);
 	glTranslatef(.5f,-.5f,0.f);
 	glScalef(-.1f,.1f,1.f);
 	glColor4f(.8f,.8f,.8f,.3f);
@@ -384,7 +410,6 @@ void glrenderbar(){
 	glColor4f(.8f,.8f,.8f,.7f);
 	glRectf(0.f,0.f,gl.bar,1.f);
 	glPopMatrix();
-	glEnable(GL_TEXTURE_2D);
 }
 
 void glpaint(){
