@@ -88,7 +88,7 @@ info_log:
 	if(ret>0){
 		char *buf=malloc(ret);
 		glGetInfoLogARB(info,ret,&ret,buf);
-		printf("%s\n",buf);
+		error(ERR_CONT,"InfoLog: %s",buf);
 		free(buf);
 	}
 	if(prg){

@@ -68,10 +68,12 @@ enum debug dbg = DBG_NONE;
 char *dbgstr[] = { EDEBUG };
 #undef E
 
+FILE *fdout=NULL;
+
 void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	va_list ap;
 	char err = lvl==ERR_QUIT || lvl==ERR_CONT;
-	FILE *fout = err ? stderr : stdout;
+	FILE *fout = fdout ? fdout : (err ? stderr : stdout);
 	char fcp[5];
 	char *pos;
 	if(!err && lvl>dbg) return;
@@ -90,6 +92,17 @@ void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
 	exit(1);
 }
 
+int mprintf(const char *format,...){
+	va_list ap;
+	int ret;
+	va_start(ap,format);
+	ret=vfprintf(fdout?fdout:stdout,format,ap);
+	va_end(ap);
+	fflush(fdout?fdout:stdout);
+	return ret;
+}
+
+
 char *progpath=NULL;
 
 char *finddatafile(char *fn){
@@ -97,15 +110,14 @@ char *finddatafile(char *fn){
 	static char ret[FILELEN];
 	static char *dirs[]={NULL, NULL, ".", "data", "../data", DATADIR, NULL};
 	if(progpath && !dirs[0]){
-		for(i=strlen(progpath)-1;i>=0;i--) if(progpath[i]=='/' || progpath[i]=='\\'){
-			dirs[0]=malloc(i+1);
-			dirs[1]=malloc(i+6);
-			memcpy(dirs[0],progpath,i);
-			memcpy(dirs[1],progpath,i+1);
-			dirs[0][i]='\0';
-			strcpy(dirs[1]+i+1,"data");
-			break;
-		}
+		int l=strlen(progpath);
+		dirs[0]=malloc(l);
+		dirs[1]=malloc(l+5);
+		strncpy(dirs[0],progpath,l-1);
+		dirs[0][l-1]='\0';
+		strncpy(dirs[1],progpath,l);
+		strncpy(dirs[1]+l,"data",4);
+		dirs[1][l+4]='\0';
 	}
 	for(i=0;i<2 || dirs[i];i++) if(dirs[i]){
 		FILE *fd;
@@ -157,8 +169,38 @@ char end_threads(){
 	return i;
 }
 
+void setprogpath(char *pfn){
+	int i;
+	for(i=strlen(pfn)-1;i>=0;i--) if(pfn[i]=='/' || pfn[i]=='\\'){
+		progpath=malloc(i+1);
+		memcpy(progpath,pfn,i+1);
+		progpath[i+1]='\0';
+		break;
+	}
+}
+
+void fileoutput(char open){
+#ifdef __WIN32__
+	if(open){
+		char *fn;
+		int l=0;
+		if(progpath) l=strlen(progpath);
+		fn=malloc(l+8);
+		if(progpath) strncpy(fn,progpath,l);
+		strncpy(fn+l,"log.txt",7);
+		fn[l+7]='\0';
+		fdout=fopen(fn,"w");
+		free(fn);
+	}else if(fdout){
+		fclose(fdout);
+		fdout=NULL;
+	}
+#endif
+}
+
 int main(int argc,char **argv){
-	if(argc) progpath=argv[0];
+	if(argc) setprogpath(argv[0]);
+	fileoutput(1);
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	dbg=cfggetint("main.dbg");
@@ -173,5 +215,6 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_LD )?"":" ld",
 			(sdl_quit&THR_ACT)?"":" act");
 	else sdlquit();
+	fileoutput(0);
 	return 0;
 }

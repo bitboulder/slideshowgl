@@ -132,22 +132,22 @@ void cfgset(struct cfg *cfg, char *val){
 }
 
 void version(){
-	printf(_("%s version %s\n"),APPNAME,VERSION);
+	mprintf(_("%s version %s\n"),APPNAME,VERSION);
 }
 
 void usage(char *fn){
 	int i;
 	version();
-	printf(_("Usage: %s [Options] {FILES|FILELISTS.flst}\n"),fn);
-	printf("%s:\n",_("Options"));
+	mprintf(_("Usage: %s [Options] {FILES|FILELISTS.flst}\n"),fn);
+	mprintf("%s:\n",_("Options"));
 	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
-		printf("  -%c %s  %s",cfg[i].opt,cfg[i].mode==CM_FLIP?" ":"X",_(cfg[i].help?cfg[i].help:cfg[i].name));
+		mprintf("  -%c %s  %s",cfg[i].opt,cfg[i].mode==CM_FLIP?" ":"X",_(cfg[i].help?cfg[i].help:cfg[i].name));
 		if(cfg[i].type==CT_ENM){
 			int j;
-			for(j=0;cfg[i].vals[j];j++) printf("%s%s",j?",":" [",cfg[i].vals[j]);
-			printf("]");
+			for(j=0;cfg[i].vals[j];j++) mprintf("%s%s",j?",":" [",cfg[i].vals[j]);
+			mprintf("]");
 		}
-		printf(" (%s: %s)\n",_("cur"),cfg[i].mode==CM_FLIP?(atoi(cfg[i].val)?"on":"off"):cfg[i].val);
+		mprintf(" (%s: %s)\n",_("cur"),cfg[i].mode==CM_FLIP?(atoi(cfg[i].val)?"on":"off"):cfg[i].val);
 	}
 	exit(0);
 }
