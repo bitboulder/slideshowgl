@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 
 struct itx {
-	GLuint tex[2];
+	GLuint tex;
 	float x,y;
 	float w,h;
 };

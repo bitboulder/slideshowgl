@@ -76,24 +76,7 @@ void panoinit(){
 	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
 	pano.cfg.radius=cfggetfloat("pano.radius");
 	pano.cfg.fm=cfggetenum("pano.fishmode");
-	pano.pfish=0;
-	if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader){
-		char *vstxt,*fstxt;
-		if(!(vstxt=textload(finddatafile("vs_fish.c")))){ error(ERR_CONT,"loading vertex shader file failed"); return; }
-		if(!(fstxt=textload(finddatafile("fs.c")))){ error(ERR_CONT,"loading fragment shader file failed"); return; }
-		GLuint vs=glCreateShader(GL_VERTEX_SHADER);
-		GLuint fs=glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(vs,1,(const GLchar **)&vstxt,NULL);
-		glShaderSource(fs,1,(const GLchar **)&fstxt,NULL);
-		free((void*)vstxt);
-		free((void*)fstxt);
-		glCompileShader(vs);
-		glCompileShader(fs);
-		pano.pfish=glCreateProgram();
-		glAttachShader(pano.pfish,vs);
-		glAttachShader(pano.pfish,fs);
-		glLinkProgram(pano.pfish);
-	}
+	pano.pfish=glprgload("vs_fish.c","fs.c");
 }
 
 /* thread: dpl */
@@ -194,8 +177,8 @@ void panovertex(float tx,float ty){
 
 /* thread: gl */
 void panodrawimg(struct itx *tx,struct imgpano *ip){
-	for(;tx->tex[0];tx++){
-		glBindTexture(GL_TEXTURE_2D,tx->tex[0]);
+	for(;tx->tex;tx++){
+		glBindTexture(GL_TEXTURE_2D,tx->tex);
 		glBegin(GL_QUADS);
 		glTexCoord2i(0,0); panovertex((tx->x-tx->w/2.f)*ip->gw,(tx->y-tx->h/2.f)*ip->gh-ip->gyoff);
 		glTexCoord2i(1,0); panovertex((tx->x+tx->w/2.f)*ip->gw,(tx->y-tx->h/2.f)*ip->gh-ip->gyoff);
@@ -214,6 +197,7 @@ void panoperspective(float h3d,int fm,float w){
 	mat[ 5]=0.5f/sin(h3d/4.f/180.f*M_PI);
 	mat[10]=fm;
 	glMultMatrixf(mat);
+	glUseProgram(pano.pfish);
 }
 
 /* thread: gl */
@@ -222,6 +206,7 @@ char panorender(){
 	struct imgpano *ip;
 	GLuint dl;
 	struct ipos *ipos;
+	struct icol *icol;
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
 	if(!(img=panoactive())) return 0;
@@ -230,12 +215,13 @@ char panorender(){
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
 	ipos=imgposcur(img->pos);
+	icol=imgposcol(img->pos);
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
 	if(ip->gh>=180.f){ perspecth*=2.f; perspectw*=2.f; }
 	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
 	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?pano.cfg.fm:-1);
 	glPushMatrix();
-	glColor4f(1.,1.,1.,ipos->a);
+	glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	if(mode==PM_PLAIN){
 		float x=ipos->x;
 		while(x<0.f) x+=1.f;
@@ -250,14 +236,12 @@ char panorender(){
 		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
 		if(mode==PM_FISHEYE){
 			GLenum glerr;
-			glUseProgram(pano.pfish);
 			if((glerr=glGetError())){
 				error(ERR_CONT,"using shader program failed (0x%04x)",glerr);
 				pano.pfish=0;
 			}
 		}
 		glCallList(dl);
-		if(mode==PM_FISHEYE) glUseProgram(0);
 	}
 	glPopMatrix();
 	return 1;

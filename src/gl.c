@@ -22,6 +22,7 @@ enum dls { DLS_IMG, DLS_NUM };
 
 struct gl {
 	GLuint dls;
+	GLuint prg;
 #if HAVE_FTGL
 	FTGLfont *font;
 #endif
@@ -37,6 +38,44 @@ struct gl {
 };
 
 void glsetbar(float bar){ gl.bar=bar; }
+
+char *textload(char *fn){
+	FILE *fd;
+	long len;
+	char *buf;
+	if(!fn) return NULL;
+	if(!(fd=fopen(fn,"r"))) return NULL;
+	fseek(fd,0,SEEK_END);
+	len=ftell(fd);
+	fseek(fd,0,SEEK_SET);
+	buf=malloc(len+1);
+	fread(buf,1,len,fd);
+	fclose(fd);
+	buf[len]='\0';
+	return buf;
+}
+
+
+GLuint glprgload(char *vs_fn,char *fs_fn){
+	char *vstxt,*fstxt;
+	GLuint prg;
+	if(!GLEW_ARB_vertex_shader || !GLEW_ARB_fragment_shader) return 0;
+	if(!(vstxt=textload(finddatafile(vs_fn)))){ error(ERR_CONT,"loading vertex shader file failed"); return 0; }
+	if(!(fstxt=textload(finddatafile(fs_fn)))){ error(ERR_CONT,"loading fragment shader file failed"); return 0; }
+	GLuint vs=glCreateShader(GL_VERTEX_SHADER);
+	GLuint fs=glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(vs,1,(const GLchar **)&vstxt,NULL);
+	glShaderSource(fs,1,(const GLchar **)&fstxt,NULL);
+	free((void*)vstxt);
+	free((void*)fstxt);
+	glCompileShader(vs);
+	glCompileShader(fs);
+	prg=glCreateProgram();
+	glAttachShader(prg,vs);
+	glAttachShader(prg,fs);
+	glLinkProgram(prg);
+	return prg;
+}
 
 void glinit(){
 	char *fontfn;
@@ -68,6 +107,7 @@ void glinit(){
 	}
 #endif
 	ldcheckvartex();
+	gl.prg=glprgload("vs.c","fs.c");
 }
 
 void glfree(){
@@ -91,11 +131,19 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:  
-		if(fm>=0) panoperspective(h3d,fm,w);
-		else gluPerspective(h3d, w, 1., 15.);
+		if(fm>=0) panoperspective(h3d,fm,w); else{
+			gluPerspective(h3d, w, 1., 15.);
+			if(gl.prg) glUseProgram(gl.prg);
+		}
 	break;
-	case GLM_2D:  glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.); break;
-	case GLM_TXT: glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.); break;
+	case GLM_2D:
+		glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.);
+		if(gl.prg) glUseProgram(gl.prg);
+	break;
+	case GLM_TXT:
+		glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.);
+		if(gl.prg) glUseProgram(0);
+	break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -138,9 +186,9 @@ void glrendermark(struct ipos *ipos,float rot){
 }
 
 void gldrawimg(struct itx *tx){
-	for(;tx->tex[0];tx++){
+	for(;tx->tex;tx++){
 		glPushMatrix();
-		glBindTexture(GL_TEXTURE_2D,tx->tex[0]);
+		glBindTexture(GL_TEXTURE_2D,tx->tex);
 		glTranslatef(tx->x,tx->y,0.f);
 		glScalef(tx->w,tx->h,1.f);
 		glCallList(gl.dls+DLS_IMG);
@@ -165,7 +213,7 @@ void glrenderimg(struct img *img,char back){
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
 	iopt=imgposopt(isc->pos);
-	glColor4f(1.,1.,1.,ipos->a);
+	glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);

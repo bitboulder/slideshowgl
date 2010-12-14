@@ -2,8 +2,10 @@
 #define _GL_H
 
 #include "load.h"
+#include <GL/glew.h>
 
 void glsetbar(float bar);
+GLuint glprgload(char *vs_fn,char *fs_fn);
 
 enum glmode { GLM_3D, GLM_2D, GLM_TXT };
 #define glmode(A)	glmodex(A,0.f,0)

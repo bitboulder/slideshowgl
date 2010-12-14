@@ -72,7 +72,6 @@ struct itex {
 	GLuint dlpano;
 	char loaded;
 	char loading;
-	struct icol ic;
 	char thumb;
 	struct imgpano *pano;
 };
@@ -99,10 +98,7 @@ void imgldfree(struct imgld *il){
 		if(il->texs[i].dl)     glDeleteLists(il->texs[i].dl,1);
 		if(il->texs[i].dlpano) glDeleteLists(il->texs[i].dlpano,1);
 		if((tx=il->texs[i].tx)){
-			for(;tx->tex[0];tx++){
-				glDeleteTextures(1,tx->tex+0);
-				if(tx->tex[1]) glDeleteTextures(1,tx->tex+1);
-			}
+			for(;tx->tex;tx++) glDeleteTextures(1,&tx->tex);
 			free(il->texs[i].tx);
 		}
 	}
@@ -156,127 +152,9 @@ struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 	return sdlimg;
 }
 
-/***************************** colmod *****************************************/
-
-/* thread: sdl */
-void ldcolmodpx(GLubyte *px,GLint n,struct icol *ic){
-	GLint i;
-	static GLubyte tab[256];
-	static struct icol icl={0.f,0.f,0.f};
-	if(ic->g!=icl.g ||ic->c!=icl.c || ic->b!=icl.b){
-		float g = -logf((1.f+ic->g)/2.f)/logf(2.f);
-		float c = -logf((1.f-ic->c)/2.f)/logf(2.f);
-		float b = ic->b;
-		for(i=0;i<256;i++){
-			float v = (float)i/255.f;
-			if(ic->g) v = ic->g>-1.f ? powf(v,g)     : 0.f;
-			if(ic->c) v = ic->c< 1.f ? (v-.5f)*c+.5f : (v<.5f ? 0.f : 1.f);
-			if(ic->b) v+= b;
-			v = v*255.f+.5f;
-			if(v<0.f)   v=0.f;
-			if(v>255.f) v=255.f;
-			tab[i]=v;
-		}
-		icl=*ic;
-	}
-	for(i=0;i<n;i++) px[i]=tab[px[i]];
-}
-
-/* thread: sdl */
-void ldcolmod(struct itx *itx,struct icol *ic){
-	int src = itx->tex[1]?1:0;
-	GLint w,h;
-	GLint ex;
-	timer(TI_COL,-1,1);
-	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_WIDTH,&w);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_HEIGHT,&h);
-	/* doc/colmod_ex_calc.ods */
-	ex=h*(w%4)/3;
-	if(ex*3<h*(w%4)) ex++;
-#if 0
-	if(GLEW_EXT_pixel_buffer_object){
-		GLuint pbo;
-		GLubyte *ptr=NULL;
-		GLenum glerr;
-		GLint i;
-		glGenBuffers(1,&pbo);
-		if(!src) glGenTextures(1,itx->tex+1);
-		glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
-		glBindBuffer(GL_PIXEL_PACK_BUFFER,pbo);
-		for(i=0;i<1100;i++,ex++){
-			glBufferData(GL_PIXEL_PACK_BUFFER,(w*h+ex)*3,NULL,GL_STREAM_COPY);
-			glGetTexImage(GL_TEXTURE_2D,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-			if(!(glerr=glGetError())) break;
-		}
-		if(i==1100){
-			error(ERR_CONT,"ldcolmod pbo get failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
-			goto fallback0;
-		}
-		if(i>0) error(ERR_CONT,"ldcolmod pbo get solved %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
-		if(!src){
-			timer(TI_COL,0,1);
-			glBindTexture(GL_TEXTURE_2D,itx->tex[1]);
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,pbo);
-			glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,0);
-			if((glerr=glGetError())){
-				error(ERR_CONT,"ldcolmod pbo copy failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
-				goto fallback0;
-			}
-			timer(TI_COL,1,1);
-		}
-		if(ic->g || ic->c || ic->b){
-			ptr=glMapBuffer(GL_PIXEL_PACK_BUFFER,GL_READ_WRITE);
-			if(!ptr){
-				error(ERR_CONT,"ldcolmod pbo map failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
-				goto fallback1;
-			}
-			ldcolmodpx(ptr,w*h*3,ic);
-			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-		}
-		glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
-		glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,pbo);
-		glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-		if((glerr=glGetError())){
-			error(ERR_CONT,"ldcolmod pbo put failed %ix%i +%i (gl-err: %d)",w,h,ex,glerr);
-			goto fallback1;
-		}
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER,0);
-		glDeleteBuffers(1,&pbo);
-		timer(TI_COL,0,1);
-		return;
-fallback1:
-		src=1;
-fallback0:
-		glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
-		glDeleteBuffers(1,&pbo);
-		timer(TI_COL,0,1);
-	}
-#endif
-	GLubyte *pixels;
-	pixels=malloc((w*h+ex)*3);
-	if(!pixels) return;
-	if(!src) glGenTextures(1,itx->tex+1);
-	glBindTexture(GL_TEXTURE_2D,itx->tex[src]);
-	glGetTexImage(GL_TEXTURE_2D,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
-	if(!src){
-		timer(TI_COL,2,1);
-		glBindTexture(GL_TEXTURE_2D,itx->tex[1]);
-		glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
-		timer(TI_COL,3,1);
-	}
-	if(ic->g || ic->c || ic->b) ldcolmodpx(pixels,w*h*3,ic);
-	glBindTexture(GL_TEXTURE_2D,itx->tex[0]);
-	glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
-	free(pixels);
-	timer(TI_COL,2,1);
-}
-
 /***************************** texload ****************************************/
 
-#define TEXLOADMODE	E(IMG), E(COL), E(FREE)
+#define TEXLOADMODE	E(IMG), E(FREE)
 #define E(X)	#X
 char *texloadmodestr[]={TEXLOADMODE};
 #undef E
@@ -292,9 +170,6 @@ struct texload {
 			float bar;
 		} img;
 		struct {
-			struct icol ic;
-		} col;
-		struct {
 			struct itex *itex;
 		} free;
 	} dat;
@@ -308,7 +183,7 @@ struct texloadbuf {
 	.wi=0,
 	.ri=0,
 };
-void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct icol *ic,struct itex *itex,float bar){
+void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float bar){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
 	while(nwi==tlb.ri){
 		if(sdl_quit) return;
@@ -316,16 +191,12 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct icol *ic,struct 
 	}
 	tlb.tl[tlb.wi].itx=itx;
 	if(sdlimg)  tlb.tl[tlb.wi].mode=TLM_IMG;
-	else if(ic) tlb.tl[tlb.wi].mode=TLM_COL;
 	else        tlb.tl[tlb.wi].mode=TLM_FREE;
 	switch(tlb.tl[tlb.wi].mode){
 	case TLM_IMG:
 		tlb.tl[tlb.wi].dat.img.sdlimg=sdlimg;
 		tlb.tl[tlb.wi].dat.img.itex=itex;
 		tlb.tl[tlb.wi].dat.img.bar=bar;
-	break;
-	case TLM_COL:
-		tlb.tl[tlb.wi].dat.col.ic=*ic;
 	break;
 	case TLM_FREE:
 		tlb.tl[tlb.wi].dat.free.itex=itex;
@@ -358,8 +229,8 @@ char ldtexload(){
 		struct sdlimg *sdlimg=tl->dat.img.sdlimg;
 		if(effineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
 		timer(TI_LD,-1,0);
-		if(!tl->itx->tex[0]) glGenTextures(1,tl->itx->tex+0);
-		glBindTexture(GL_TEXTURE_2D,tl->itx->tex[0]);
+		if(!tl->itx->tex) glGenTextures(1,&tl->itx->tex);
+		glBindTexture(GL_TEXTURE_2D,tl->itx->tex);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
 		// http://www.songho.ca/opengl/gl_pbo.html
 		glTexImage2D(GL_TEXTURE_2D,0,3,sdlimg->sf->w,sdlimg->sf->h,0,GL_RGB,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
@@ -383,47 +254,23 @@ char ldtexload(){
 		glsetbar(tl->dat.img.bar);
 	}
 	break;
-	case TLM_COL:
-		ldcolmod(tl->itx,&tl->dat.col.ic);
-	break;
 	case TLM_FREE:
-		if(tl->itx->tex[0]){
-			glDeleteTextures(1,tl->itx->tex+0);
-			tl->itx->tex[0]=0;
+		if(tl->itx->tex){
+			glDeleteTextures(1,&tl->itx->tex);
+			tl->itx->tex=0;
 		}
 		if(tl->dat.free.itex) tl->dat.free.itex->loaded=0;
 	break;
 	}
-	if(tl->mode!=TLM_COL && tl->itx->tex[1]){
-		glDeleteTextures(1,tl->itx->tex+1);
-		tl->itx->tex[1]=0;
-	}
 	if((glerr=glGetError())){
 		error(ERR_CONT,"glTexImage2D %s failed (gl-err: %d)",texloadmodestr[tl->mode],glerr);
-		tl->itx->tex[0]=tl->itx->tex[1]=0;
+		tl->itx->tex=0;
 	}
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
 	return 1;
 }
 
 /***************************** load + free img ********************************/
-
-char ldfcol(struct imgld *il,enum imgtex it){
-	struct icol ic = *imgposcol(il->img->pos);
-	char ld=0;
-	for(;it>=0;it--){
-		struct itx *tx;
-		if(!il->texs[it].loading || !il->texs[it].loaded) continue;
-		if(il->texs[it].ic.g==ic.g && il->texs[it].ic.c==ic.c && il->texs[it].ic.b==ic.b) continue;
-
-		debug(DBG_DBG,"ld colmod img tex %s (%.2f,%.2f,%.2f) %s",_(imgtex_str[it]),ic.g,ic.c,ic.b,imgfilefn(il->img->file));
-		for(tx=il->texs[it].tx;tx->tex[0];tx++)
-			ldtexload_put(tx,NULL,&ic,NULL,0.f);
-		il->texs[it].ic=ic;
-		ld=1;
-	}
-	return ld;
-}
 
 char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
@@ -438,7 +285,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
-	if(il->texs[it].loaded) goto end1;
+	if(il->texs[it].loaded) goto end0;
 	imgexifload(il->img->exif,fn);
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_DBG,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
@@ -491,7 +338,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		debug(DBG_STA,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		tx=0;
 		if(tex->tx){
-			while(tex->tx[tx].tex[0]) tx++;
+			while(tex->tx[tx].tex) tx++;
 			while(tx>tw*th){
 				tx--;
 				/* TODO: glDeleteTextures(tex->tx[tx] */
@@ -519,7 +366,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 					sdlimgscale=sdlimgscale2;
 				}
 			}
-			ldtexload_put(ti,sdlimgscale,NULL,
+			ldtexload_put(ti,sdlimgscale,
 					tx==tw-1 && ty==th-1 ? tex : NULL,
 					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL && panoenable ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
 				);
@@ -532,8 +379,6 @@ end3:
 	il->loadfail=1;
 end2:
 	sdlimg_unref(sdlimg);
-end1:
-	ld+=ldfcol(il,it);
 end0:
 	return ld;
 }
@@ -547,10 +392,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 		if(il->texs[it].loading != il->texs[it].loaded) continue;
 		il->texs[it].loading=0;
 		debug(DBG_STA,"ld freeing img tex %s %s",_(imgtex_str[it]),imgfilefn(il->img->file));
-		for(tx=il->texs[it].tx;tx && tx->tex[0];tx++) ldtexload_put(tx,NULL,NULL,!tx[1].tex[0] ? il->texs+it : NULL,0.f);
-		il->texs[it].ic.g=0.f;
-		il->texs[it].ic.c=0.f;
-		il->texs[it].ic.b=0.f;
+		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? il->texs+it : NULL,0.f);
 		ret=1;
 	}
 	return ret;
