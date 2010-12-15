@@ -114,6 +114,7 @@ void sdlresize(int w,int h){
 }
 
 void sdlinit(){
+	GLenum glerr;
 	int sync;
 	sdl.sync=cfggetint("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
@@ -133,6 +134,7 @@ void sdlinit(){
 	glinit();
 	panoinit();
 	debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
+	if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
 }
 
 void sdlquit(){

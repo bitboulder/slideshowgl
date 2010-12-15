@@ -104,7 +104,9 @@ info_log:
 void glinit(){
 	char *fontfn;
 	if(cfggetint("cfg.version")){
-		const char *str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+		const char *str=NULL;
+		if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
+			str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
 		mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
 		mprintf("GLSL-Version: %s\n",str?str:"NONE");
 	}
