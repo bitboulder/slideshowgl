@@ -97,7 +97,11 @@ char *imgexifgetinfo(ExifData *exdat){
 			exif_entry_get_value(exet,imginfo+iipos,end-iipos);
 			iipos+=strlen(imginfo+iipos);
 		}
-		iipos+=strlen(imginfo+iipos)+1;
+		if(iipos && imginfo[iipos-1]=='\0'){
+			snprintf(imginfo+iipos,end-iipos,_("(unknown)"));
+			iipos+=strlen(imginfo+iipos);
+		}
+		iipos++;
 	}
 	if(imginfo) imginfo[iipos]='\0';
 	return imginfo;
