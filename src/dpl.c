@@ -412,12 +412,18 @@ void dplkey(SDLKey key){
 }
 
 char dplev(struct ev *ev){
+	static struct ev lastev;
+	static Uint32 nxttime=0;
+	Uint32 time=SDL_GetTicks();
 	char ret=1;
+	if(nxttime && time<nxttime && !memcmp(ev,&lastev,sizeof(struct ev))) return 0;
+	lastev=*ev;
+	nxttime=0;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS) dpl.colmode=COL_NONE;
 	switch(ev->ev){
 	case DE_RIGHT:
-	case DE_LEFT:
+	case DE_LEFT: nxttime=time+1000;
 	case DE_UP:
 	case DE_DOWN:
 	case DE_ZOOMIN:
