@@ -397,7 +397,6 @@ msgid "Show help"
 msgstr "Hilfe anzeigen"
 
 #: src/dpl.c:378
-#, fuzzy
 msgid "Back"
 msgstr "Zurück"
 

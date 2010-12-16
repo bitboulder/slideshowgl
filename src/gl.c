@@ -103,6 +103,7 @@ info_log:
 
 void glinit(){
 	char *fontfn;
+	if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 	if(cfggetint("cfg.version")){
 		const char *str=NULL;
 		if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
@@ -110,7 +111,6 @@ void glinit(){
 		mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
 		mprintf("GLSL-Version: %s\n",str?str:"NONE");
 	}
-	if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
 	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
 	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
