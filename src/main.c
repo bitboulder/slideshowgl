@@ -181,15 +181,21 @@ void setprogpath(char *pfn){
 void fileoutput(char open){
 #ifdef __WIN32__
 	if(open){
-		char *fn;
-		int l=0;
-		if(progpath) l=strlen(progpath);
-		fn=malloc(l+8);
-		if(progpath) strncpy(fn,progpath,l);
-		strncpy(fn+l,"log.txt",7);
-		fn[l+7]='\0';
-		fdout=fopen(fn,"w");
-		free(fn);
+		char *paths[2];
+		int i;
+		paths[0]=progpath;
+		paths[1]=getenv("TEMP");
+		for(i=0;!fdout && i<2;i++) if(paths[i]){
+			char *fn;
+			int l=0;
+			l=strlen(paths[i]);
+			fn=malloc(l+9);
+			strncpy(fn,paths[i],l);
+			strncpy(fn+l,"\\log.txt",8);
+			fn[l+8]='\0';
+			fdout=fopen(fn,"w");
+			free(fn);
+		}
 	}else if(fdout){
 		fclose(fdout);
 		fdout=NULL;

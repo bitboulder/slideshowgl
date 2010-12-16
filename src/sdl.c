@@ -124,7 +124,9 @@ void sdlinit(){
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	if(cfggetint("cfg.version")){
 		const SDL_version* v = SDL_Linked_Version();
-		mprintf("SDL-Version: %i.%i.%i\n",v->major,v->minor,v->patch);
+		char buf[32];
+		mprintf("SDL-Version: %i.%i.%i (video: %s)\n",v->major,v->minor,v->patch,
+				SDL_VideoDriverName(buf,32)?buf:_("(unknown)"));
 	}
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
