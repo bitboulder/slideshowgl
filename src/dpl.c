@@ -375,6 +375,8 @@ char *keyboardlayout=
 	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 	__("i")"\0"                   __("Show image info")"\0"
 	__("h")"\0"                   __("Show help")"\0"
+	__("Back")"\0"                __("Toggle panorama mode (spherical,plain,fisheye)")"\0"
+	__("e")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
 	__("q/Esc")"\0"               __("Quit")"\0"
 	"\0"
 ;
@@ -389,7 +391,7 @@ void dplkey(SDLKey key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_BACKSPACE:panoev(PE_MODE); break;
-	case SDLK_y:        panoev(PE_FISHMODE); break;
+	case SDLK_e:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case SDLK_m:        dplmark(dpl.pos.imgi); break;
@@ -399,7 +401,9 @@ void dplkey(SDLKey key){
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
+	case SDLK_RIGHTBRACKET: /* TODO: fix keymap for win32 */
 	case SDLK_PLUS:     dplcol(1); break;
+	case SDLK_SLASH: /* TODO: fix keymap for win32 */
 	case SDLK_MINUS:    dplcol(-1); break;
 	default: break;
 	}

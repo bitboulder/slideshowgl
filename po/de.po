@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-14 17:37+0100\n"
+"POT-Creation-Date: 2010-12-16 14:32+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -355,7 +355,9 @@ msgstr ""
 
 #: src/dpl.c:372
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
-msgstr "+/- Modus: Gamma/Helligkeit/Kontrast (nur mit Unterstützung für OpenGL Shader)"
+msgstr ""
+"+/- Modus: Gamma/Helligkeit/Kontrast"
+"(nur mit Unterstützung für OpenGL Shader)"
 
 #: src/dpl.c:373
 msgid "+/-"
@@ -395,14 +397,31 @@ msgid "Show help"
 msgstr "Hilfe anzeigen"
 
 #: src/dpl.c:378
+#, fuzzy
+msgid "Back"
+msgstr "Zurück"
+
+#: src/dpl.c:378
+msgid "Toggle panorama mode (spherical,plain,fisheye)"
+msgstr "Panorama-Modus ändern (kugel,flach,fischauge)"
+
+#: src/dpl.c:379
+msgid "e"
+msgstr ""
+
+#: src/dpl.c:379
+msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
+msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
+
+#: src/dpl.c:380
 msgid "q/Esc"
 msgstr ""
 
-#: src/dpl.c:378
+#: src/dpl.c:380
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl.c:387
+#: src/dpl.c:389
 #, c-format
 msgid "dpl key %i"
 msgstr ""
@@ -460,7 +479,7 @@ msgstr "Belichtungsmodus"
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:101
+#: src/exif.c:101 src/sdl.c:129
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -505,19 +524,19 @@ msgstr ""
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:111
+#: src/gl.c:113
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:342
+#: src/gl.c:344
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:347
+#: src/gl.c:349
 msgid "Keyboardlayout:"
 msgstr "Bedienung"
 
-#: src/gl.c:433
+#: src/gl.c:435
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -612,7 +631,7 @@ msgstr ""
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:211
+#: src/main.c:218
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s"
 msgstr ""
@@ -658,16 +677,21 @@ msgstr ""
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:123
+#: src/sdl.c:124
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:135
+#: src/sdl.c:138
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:276
+#: src/sdl.c:139
+#, c-format
+msgid "in sdlinit (gl-err: %d)"
+msgstr ""
+
+#: src/sdl.c:280
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
