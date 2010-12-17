@@ -92,18 +92,35 @@ struct img *panoactive(){
 void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
 	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
+	if(!pano.pfish && *xres<32) *xres=32;
+	if(!pano.pfish && *yres<32) *yres=32;
+}
+
+/* thread: dpl, gl */
+float panoclipgh(struct imgpano *ip){
+	if(!pano.pfish && ip->gh>90.f) return 90.f;
+	if( pano.pfish && ip->gh>=180.f) return 360.f;
+	return ip->gh;
 }
 
 /* thread: dpl, gl */
 void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspecth){
-	float tmp;
+	float gh=panoclipgh(ip);
 	float srat=sdlrat();
 	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
 	else spos=1.25f/powf(spos,logf(1.25f)/logf(2.f));
-	if(!perspecth) perspecth=&tmp;
-	*perspecth=ip->gh*spos;
-	if(perspectw) *perspectw=*perspecth*srat;
+	if(perspecth) *perspecth=gh*spos;
+	if(perspectw) *perspectw=gh*spos*srat;
 }
+
+/* thread: dpl */
+float panoperspectrev(struct imgpano *ip,float perspectw){
+	float spos=perspectw/panoclipgh(ip)/sdlrat();
+	if(spos>1.f) spos=2.f-logf(spos)/logf(ip->gw/ip->gh/sdlrat());
+	else spos=powf(1.25f/spos,logf(2.f)/logf(1.25f));
+	return spos;
+}
+
 
 /* thread: dpl */
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
@@ -139,18 +156,25 @@ char panoclip(struct img *img,float *xb,float *yb){
 }
 
 /* thread: dpl */
-char panostart(float *x){
-	struct img *img;
+char panostart(struct img *img,float *x){
 	float perspectw;
-	if(!(img=imgget(dplgetimgi()))) return 0;
+	struct imgpano *ip;
+	float spos;
+	float fitw;
+	if(!img) return 0;
 	if(!img->pano->enable) return 0;
-	pano.mode = img->pano->gh>90.f && pano.pfish ? PM_FISHEYE : PM_NORMAL;
+	if(!imgfit(img,&fitw,NULL)) return 0;
+	ip=img->pano;
+	pano.mode = ip->gh>90.f && pano.pfish ? PM_FISHEYE : PM_NORMAL;
 	pano.run=0;
 	pano.rot=pano.cfg.defrot;
-	if(img->pano->rotinit<0.f) pano.rot*=-1.f;
-	panoperspect(img->pano,1.f,&perspectw,NULL);
-	*x  = img->pano->rotinit<0.f ? .5f : -.5f;
-	*x *= img->pano->gw/perspectw;
+	if(ip->rotinit<0.f) pano.rot*=-1.f;
+	panoperspect(ip,1.f,&perspectw,NULL);
+	*x  = ip->rotinit<0.f ? .5f : -.5f;
+	*x *= ip->gw/perspectw;
+	while(*x> .5f) *x-=1.f;
+	while(*x<-.5f) *x+=1.f;
+	imgposcur(img->pos)->s = panoperspectrev(ip,ip->gw*fitw);
 	return 1;
 }
 
@@ -217,7 +241,6 @@ char panorender(){
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
-	if(ip->gh>=180.f){ perspecth*=2.f; perspectw*=2.f; }
 	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !pano.pfish) mode=PM_NORMAL;
 	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?pano.cfg.fm:-1);

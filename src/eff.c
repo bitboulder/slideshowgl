@@ -285,10 +285,9 @@ void effstaton(){
 	}
 }
 
-void effpanoend(int imgi){
-	struct img *img;
+void effpanoend(struct img *img){
 	float fitw,fith;
-	if(!(img=imgget(imgi))) return;
+	if(!img) return;
 	if(!imgfit(img,&fitw,&fith)) return;
 	if(!panoend(&img->pos->cur.s)) return;
 	img->pos->cur.s/=fith;

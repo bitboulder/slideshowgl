@@ -20,7 +20,7 @@ void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres)
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
 char panoclip(struct img *img,float *xb,float *yb);
 
-char panostart(float *x);
+char panostart(struct img *img,float *x);
 char panoend(float *s);
 
 void panodrawimg(struct itx *tx,struct imgpano *ip);

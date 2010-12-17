@@ -39,7 +39,7 @@ struct cfg {
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0", {NULL}, __("Toggle image random") },
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512", {NULL}, NULL },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024", {NULL}, NULL },
-	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "40000000", {NULL}, NULL },
+	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000", {NULL}, NULL },
 	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf", {NULL}, NULL },
 	{ 0,   "gl.inputnum_lineh",   CT_FLT, CM_SET,  "0.05", {NULL}, NULL },
 	{ 0,   "gl.stat_lineh",       CT_FLT, CM_SET,  "0.025", {NULL}, NULL },

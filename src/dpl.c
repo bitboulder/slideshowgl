@@ -66,8 +66,8 @@ char imgfit(struct img *img,float *fitw,float *fith){
 	if(!img || !(irat=imgldrat(img->ld))) return 0;
 	rot=imgexifrot(img->exif);
 	if(rot==ROT_90 || rot==ROT_270) irat=1./irat;
-	*fitw = srat>irat ? irat/srat : 1.;
-	*fith = srat>irat ? 1. : srat/irat;
+	if(fitw) *fitw = srat>irat ? irat/srat : 1.;
+	if(fith) *fith = srat>irat ? 1. : srat/irat;
 	return 1;
 }
 
@@ -194,13 +194,13 @@ void dplmove(enum dplev ev,float x,float y){
 	case DE_ZOOMOUT:
 	{
 		float x;
-		if(dpl.pos.zoom==0 && dir>0 && panostart(&x)){
-			struct img *img=imgget(dpl.pos.imgi);
+		struct img *img=imgget(dpl.pos.imgi);
+		if(dpl.pos.zoom==0 && dir>0 && panostart(img,&x)){
 			dpl.pos.x=x;
 			dpl.pos.zoom+=dir;
 			dplclippos(img);
 		}else if(dpl.pos.zoom+dir<=0){
-			if(dpl.pos.zoom==1) effpanoend(dpl.pos.imgi);
+			if(dpl.pos.zoom==1) effpanoend(img);
 			dpl.pos.x=dpl.pos.y=0.;
 			dpl.pos.zoom+=dir;
 		}else dplzoompos(dpl.pos.zoom+dir,x,y);

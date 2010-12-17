@@ -24,7 +24,7 @@ struct istat *effstat();
 void effinit(enum effrefresh effref,enum dplev ev,int imgi);
 void effdel(struct imgpos *ip);
 void effstaton();
-void effpanoend();
+void effpanoend(struct img *img);
 
 void effdo();
 void effcfginit();
