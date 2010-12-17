@@ -178,7 +178,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	ip=imgs[i]->pos;
 	act=effact(dp,i);
 	if(!act && !ip->opt.active){
-		if(dp->zoom!=0 || (ev&DE_VER) || !dp->writemode) return;
+		if(dp->zoom!=0 || !(ev&DE_VER) || !dp->writemode) return;
 		if(!efffaston(dp,ip,ev,i)) return;
 	}
 	if(!act && ip->eff && !ip->wayact) return;
