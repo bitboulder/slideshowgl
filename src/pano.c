@@ -159,7 +159,6 @@ char panoclip(struct img *img,float *xb,float *yb){
 char panostart(struct img *img,float *x){
 	float perspectw;
 	struct imgpano *ip;
-	float spos;
 	float fitw;
 	if(!img) return 0;
 	if(!img->pano->enable) return 0;
