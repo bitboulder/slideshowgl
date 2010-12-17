@@ -84,6 +84,16 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 	ip->waytime[1]=(ip->waytime[0]=SDL_GetTicks())+len;
 }
 
+int effdiff(struct dplpos *dp,int *pi1,int *pi2){
+	int i1=dp->imgiold;
+	int i2=dp->imgi;
+	if(i1<0) i1=-1; if(i1>nimg) i1=nimg;
+	if(i2<0) i2=-1; if(i2>nimg) i2=nimg;
+	if(pi1) *pi1=i1;
+	if(pi2) *pi2=i2;
+	return i2-i1;
+}
+
 void effmove(struct dplpos *dp,struct ipos *ip,int i){
 	ip->a = 1.f;
 	ip->m=(imgs[i]->pos->mark && dp->writemode)?1.f:0.f;
@@ -117,7 +127,8 @@ void effmove(struct dplpos *dp,struct ipos *ip,int i){
 	/*printf("=> %.2f %.2f %.2f %.2f\n",ip->a,ip->s,ip->x,ip->y);*/
 }
 
-char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev){
+char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev,char neg){
+	if(neg) ev=DE_NEG(ev);
 	if(dp->zoom>0 || (ev&DE_ZOOM)){
 		memset(ip,0,sizeof(struct ipos));
 		ip->m=ipon->m;
@@ -125,15 +136,11 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 		return 1;
 	}
 	*ip=*ipon;
-	if(dp->imgi>=nimg || dp->imgiold>=nimg){
+	if(dp->zoom==0){
+		if(dp->writemode) ip->x += effdiff(dp,NULL,NULL) * (neg?-1:1);
+		else ip->a=0.;
+	}else if(dp->imgi>=nimg || dp->imgiold>=nimg){
 		ip->a=0.;
-	}else if(dp->zoom==0){
-		if(dp->writemode) switch((int)ev){
-			case DE_RIGHT: ip->x += 1.; break;
-			case DE_LEFT:  ip->x -= 1.; break;
-			case DE_UP:    ip->x += zoomtab[0].move; break;
-			case DE_DOWN:  ip->x -= zoomtab[0].move; break;
-		}else ip->a=0.;
 	}else{
 		ip->a=0.;
 		switch((int)ev){
@@ -147,16 +154,16 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 	return 0;
 }
 
-char efffaston(struct dplpos *dp,struct imgpos *ip,enum dplev ev,int i){
-	int diff=dp->imgi-i;
-	if(dp->imgi<0) diff=i+1;
-	if(dp->imgi>=nimg) diff=nimg-i;
-	if((ev!=DE_DOWN || diff>=0 || diff<=-zoomtab[0].move) &&
-	   (ev!=DE_UP   || diff<=0 || diff>= zoomtab[0].move)) return 0;
+char efffaston(struct dplpos *dp,struct imgpos *ip,int i){
+	int i1,i2;
+	int diff=effdiff(dp,&i1,&i2);
+	if(!diff) return 0;
+	if(diff<0 && (i<=i2 || i>=i1)) return 0;
+	if(diff>0 && (i<=i1 || i>=i2)) return 0;
 	ip->opt.active=2;
 	ip->cur.a=1.;
 	ip->cur.s=1.;
-	ip->cur.x=((float)DE_DIR(ev) * zoomtab[0].move) - (float)diff;
+	ip->cur.x=(float)(i-i1);
 	ip->cur.y=0.;
 	ip->cur.m=(imgs[i]->pos->mark && dp->writemode)?1.:0.;
 	ip->cur.r=imgexifrotf(imgs[i]->exif);
@@ -179,15 +186,15 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	act=effact(dp,i);
 	if(!act && !ip->opt.active){
 		if(dp->zoom!=0 || !(ev&DE_VER) || !dp->writemode) return;
-		if(!efffaston(dp,ip,ev,i)) return;
+		if(!efffaston(dp,ip,i)) return;
 	}
 	if(!act && ip->eff && !ip->wayact) return;
 	ip->opt.tex=imgseltex(dp,ip,i);
 	ip->opt.back=0;
 	if(act) effmove(dp,ip->way+1,i);
-	else  ip->opt.back|=effonoff(dp,ip->way+1,&ip->cur,DE_NEG(ev));
+	else  ip->opt.back|=effonoff(dp,ip->way+1,&ip->cur,ev,1);
 	if(!ip->opt.active){
-		ip->opt.back|=effonoff(dp,ip->way+0,ip->way+1,ev);
+		ip->opt.back|=effonoff(dp,ip->way+0,ip->way+1,ev,0);
 		ip->cur=ip->way[0];
 	}else{
 		ip->way[0]=ip->cur;
