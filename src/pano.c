@@ -108,7 +108,7 @@ void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspect
 	float gh=panoclipgh(ip);
 	float srat=sdlrat();
 	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
-	else spos=1.25f/powf(spos,logf(1.25f)/logf(2.f));
+	else spos=sqrt(2.f)/powf(spos,0.5f);
 	if(perspecth) *perspecth=gh*spos;
 	if(perspectw) *perspectw=gh*spos*srat;
 }
@@ -117,7 +117,7 @@ void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspect
 float panoperspectrev(struct imgpano *ip,float perspectw){
 	float spos=perspectw/panoclipgh(ip)/sdlrat();
 	if(spos>1.f) spos=2.f-logf(spos)/logf(ip->gw/ip->gh/sdlrat());
-	else spos=powf(1.25f/spos,logf(2.f)/logf(1.25f));
+	else spos=powf(sqrt(2.f)/spos,1.f/0.5f);
 	return spos;
 }
 
@@ -310,13 +310,17 @@ char panoev(enum panoev pe){
 void panorun(){
 	static Uint32 last=0;
 	Uint32 now;
-	if(!panoactive()) return;
+	struct img *img;
+	if(!(img=panoactive())) return;
 	if(!pano.run){ last=0; return; }
 	now=SDL_GetTicks();
 	if(last){
 		float sec=(float)(now-last)/1000.f;
 		float sx=pano.rot*sec;
 		float ix;
+		float perspectw;
+		panoperspect(img->pano,powf(2.f,(float)dplgetzoom()),&perspectw,NULL);
+		if(perspectw>90.f) sx/=perspectw/90.f;
 		if(panospos2ipos(panoactive(),sx,0.f,&ix,NULL))
 			dplevputp(DE_MOVE,ix,0.f);
 	}
