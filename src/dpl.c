@@ -338,7 +338,7 @@ struct dplevs {
 
 /* thread: sdl */
 void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
-	if(ev==DE_MOVE){
+	if(ev&DE_MOVE){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
 	}else{
@@ -453,11 +453,14 @@ void dplcheckev(){
 		stat|=dplev(dev.evs+dev.ri);
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
-	if(dev.move.sx){
+	if(dev.move.sx || dev.move.sy){
+		enum dplev ev=0;
+		if(dev.move.sx) ev|=DE_MOVEX;
+		if(dev.move.sy) ev|=DE_MOVEY;
 		dplmovepos(dev.move.sx,dev.move.sy);
 		dev.move.sx=0.f;
 		dev.move.sy=0.f;
-		effinit(EFFREF_IMG,DE_MOVE,-1);
+		effinit(EFFREF_IMG,ev,-1);
 	}
 	if(stat&1) dplstatupdate(stat);
 	if(stat&2) effstaton(stat);

@@ -34,21 +34,23 @@ struct dplpos {
 };
 
 enum dplev {
-	DE_MOVE    = 0x0001,
-	DE_RIGHT   = 0x0002,
-	DE_LEFT    = 0x0004,
-	DE_UP      = 0x0008,
-	DE_DOWN    = 0x0010,
-	DE_ZOOMIN  = 0x0020,
-	DE_ZOOMOUT = 0x0040,
-	DE_ROT1    = 0x0080,
-	DE_ROT2    = 0x0100,
-	DE_PLAY    = 0x0200,
-	DE_KEY     = 0x0400,
-	DE_STAT    = 0x0800,
-	DE_SEL     = 0x1000,
-	DE_MARK    = 0x2000,
+	DE_MOVEX   = 0x0001,
+	DE_MOVEY   = 0x0002,
+	DE_RIGHT   = 0x0004,
+	DE_LEFT    = 0x0008,
+	DE_UP      = 0x0010,
+	DE_DOWN    = 0x0020,
+	DE_ZOOMIN  = 0x0040,
+	DE_ZOOMOUT = 0x0080,
+	DE_ROT1    = 0x0100,
+	DE_ROT2    = 0x0200,
+	DE_PLAY    = 0x0400,
+	DE_KEY     = 0x0800,
+	DE_STAT    = 0x1000,
+	DE_SEL     = 0x2000,
+	DE_MARK    = 0x4000,
 };
+#define DE_MOVE		(DE_MOVEX|DE_MOVEY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)
 #define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
