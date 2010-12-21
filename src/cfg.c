@@ -50,6 +50,7 @@ struct cfg {
 	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0", {NULL}, NULL },
 	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0", {NULL}, NULL },
 	{ 0,   "pano.fishmode",       CT_ENM, CM_SET,  "angle", {PANOFM}, NULL },
+	{ 0,   "pano.maxfishangle",   CT_FLT, CM_SET,  "300.", {NULL}, NULL },
 	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250", {NULL}, NULL  },
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000", {NULL}, NULL },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000", {NULL}, NULL },

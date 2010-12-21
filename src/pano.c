@@ -65,6 +65,7 @@ struct pano {
 		float texdegree;
 		float radius;
 		enum panofm fm;
+		float maxfishangle;
 	} cfg;
 	GLuint pfish;
 } pano;
@@ -76,6 +77,7 @@ void panoinit(){
 	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
 	pano.cfg.radius=cfggetfloat("pano.radius");
 	pano.cfg.fm=cfggetenum("pano.fishmode");
+	pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
 	pano.pfish=glprgload("vs_fish.c","fs.c");
 }
 
@@ -217,8 +219,13 @@ void panoperspective(float h3d,int fm,float w){
 	int i;
 	for(i=0;i<16;i++) mat[i]=0.f;
 	mat[ 0]=w;
-	mat[ 5]=0.5f/sin(h3d/4.f/180.f*M_PI);
 	mat[10]=fm;
+	switch(fm){
+	case FM_ANGLE: mat[ 5]=0.5f/tan(MIN(h3d,pano.cfg.maxfishangle)/4.f/180.f*M_PI); break;
+	case FM_ADIST: mat[ 5]=1.f/(h3d/2.f/180.f*M_PI); break;
+	case FM_PLANE: mat[ 5]=0.5f/sin(h3d/4.f/180.f*M_PI); break;
+	case FM_ORTHO: break;
+	}
 	glMultMatrixf(mat);
 	glUseProgram(pano.pfish);
 }
