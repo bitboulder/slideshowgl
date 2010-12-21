@@ -63,6 +63,7 @@ struct pano {
 		float defrot;
 		float minrot;
 		float texdegree;
+		int mintexsize;
 		float radius;
 		enum panofm fm;
 		float maxfishangle;
@@ -75,6 +76,7 @@ void panoinit(){
 	pano.cfg.defrot=cfggetfloat("pano.defrot");
 	pano.cfg.minrot=cfggetfloat("pano.minrot");
 	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
+	pano.cfg.mintexsize=cfggetint("pano.mintexsize");
 	pano.cfg.radius=cfggetfloat("pano.radius");
 	pano.cfg.fm=cfggetenum("pano.fishmode");
 	pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
@@ -94,8 +96,10 @@ struct img *panoactive(){
 void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
 	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
-	if(!pano.pfish && *xres<32) *xres=32;
-	if(!pano.pfish && *yres<32) *yres=32;
+	if(!pano.pfish){
+		*xres=MAX(pano.cfg.mintexsize,*xres);
+		*yres=MAX(pano.cfg.mintexsize,*yres);
+	}
 }
 
 /* thread: dpl, gl */
@@ -106,9 +110,11 @@ float panoclipgh(struct imgpano *ip){
 }
 
 /* thread: dpl, gl */
+#define PSPOS_DPL	-1e10
 void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspecth){
 	float gh=panoclipgh(ip);
 	float srat=sdlrat();
+	if(spos==PSPOS_DPL) spos=powf(2.f,(float)dplgetzoom());
 	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
 	else spos=sqrt(2.f)/powf(spos,0.5f);
 	if(perspecth) *perspecth=gh*spos;
@@ -129,8 +135,7 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	float fitw,fith;
 	float perspectw,perspecth;
 	if(!img || img!=panoactive()) return 0;
-	if(!img->pano->enable) return 0;
-	panoperspect(img->pano,powf(2.f,(float)dplgetzoom()),&perspectw,&perspecth);
+	panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
 	fitw = img->pano->gw/perspectw;
 	fith = img->pano->gh/perspecth;
 	if(ix) *ix = sx/fitw;
@@ -142,8 +147,7 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 char panoclip(struct img *img,float *xb,float *yb){
 	float xs,ys,ymax,yr,yp,a,c,xrotmax,xpmax,xdec;
 	if(!img || img!=panoactive()) return 1;
-	if(!img->pano->enable) return 1;
-	panoperspect(img->pano,powf(2.f,(float)dplgetzoom()),&xs,&ys);
+	panoperspect(img->pano,PSPOS_DPL,&xs,&ys);
 	ymax=(img->pano->gh-ys)/2.f;
 	yr=abs(img->pano->gyoff)+ymax;
 	yp=ys/2.f;
@@ -155,6 +159,16 @@ char panoclip(struct img *img,float *xb,float *yb){
 	if(xdec>=0.f) *xb+=xdec/img->pano->gw;
 	if(img->pano->gh>=180.f) *yb=0.f;
 	return img->pano->gw<360.f;
+}
+
+/* thread: dpl */
+void panotrimmovepos(struct img *img,float *ix,float *iy){
+	float perspectw,perspecth;
+	if(!img || img!=panoactive()) return;
+	panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
+	printf("%.2f %.2f\n",perspectw,perspecth);
+	if(ix && perspectw>90.f) *ix/=perspectw/90.f;
+	if(iy && perspecth>90.f) *iy/=perspecth/90.f;
 }
 
 /* thread: dpl */
@@ -184,7 +198,6 @@ char panoend(float *s){
 	struct img *img;
 	float perspecth;
 	if(!(img=panoactive())) return 0;
-	if(!img->pano->enable) return 0;
 	panoperspect(img->pano,*s,NULL,&perspecth);
 	*s=img->pano->gh/perspecth;
 	return 1;
@@ -240,7 +253,6 @@ char panorender(){
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
 	if(!(img=panoactive())) return 0;
-	if(!img->pano->enable) return 0;
 	ip=img->pano;
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
@@ -323,13 +335,7 @@ void panorun(){
 	now=SDL_GetTicks();
 	if(last){
 		float sec=(float)(now-last)/1000.f;
-		float sx=pano.rot*sec;
-		float ix;
-		float perspectw;
-		panoperspect(img->pano,powf(2.f,(float)dplgetzoom()),&perspectw,NULL);
-		if(perspectw>90.f) sx/=perspectw/90.f;
-		if(panospos2ipos(panoactive(),sx,0.f,&ix,NULL))
-			dplevputp(DE_MOVE,ix,0.f);
+		dplevputp(DE_MOVE,pano.rot*sec,0.f);
 	}
 	last=now;
 }

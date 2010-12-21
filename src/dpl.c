@@ -78,8 +78,8 @@ char imgspos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	if(!imgfit(img,&fitw,&fith)) return 0;
 	fitw*=powf(2.f,(float)dpl.pos.zoom);
 	fith*=powf(2.f,(float)dpl.pos.zoom);
-	*ix = sx/fitw;
-	*iy = sy/fith;
+	if(ix) *ix = sx/fitw;
+	if(iy) *iy = sy/fith;
 	return 1;
 }
 
@@ -127,6 +127,7 @@ void dplmovepos(float sx,float sy){
 	float ix,iy;
 	struct img *img=imgget(dpl.pos.imgi);
 	if(!img || !imgspos2ipos(img,sx,sy,&ix,&iy)) return;
+	panotrimmovepos(img,&ix,&iy);
 	dpl.pos.x+=ix;
 	dpl.pos.y+=iy;
 	dplclippos(img);

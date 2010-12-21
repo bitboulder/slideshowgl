@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-16 14:32+0100\n"
+"POT-Creation-Date: 2010-12-21 11:16+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -88,83 +88,87 @@ msgstr "Bildschleife umschalten"
 msgid "Toggle image random"
 msgstr "Zufällige Bildfolge umschalten"
 
-#: src/cfg.c:56
+#: src/cfg.c:51
+msgid "Set minimal texture size for panorama mode"
+msgstr "Minimale Texturgröße im Panoramamodus setzen"
+
+#: src/cfg.c:58
 msgid "Set mark file"
 msgstr "Mark-Datei setzen"
 
-#: src/cfg.c:58
+#: src/cfg.c:60
 msgid "Toggle actions"
 msgstr "Aktionen (de-)aktivieren"
 
-#: src/cfg.c:68
+#: src/cfg.c:70
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:76
+#: src/cfg.c:78
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:86
+#: src/cfg.c:88
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:87
+#: src/cfg.c:89
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:95
+#: src/cfg.c:97
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:104
+#: src/cfg.c:106
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:105
+#: src/cfg.c:107
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:112
+#: src/cfg.c:114
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:121
+#: src/cfg.c:123
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:128
+#: src/cfg.c:130
 #, c-format
 msgid "cfgset no arg for CM_SET '%s'"
 msgstr ""
 
-#: src/cfg.c:135
+#: src/cfg.c:137
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:141
+#: src/cfg.c:143
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:142
+#: src/cfg.c:144
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:150
+#: src/cfg.c:152
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:159
+#: src/cfg.c:161
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
@@ -173,259 +177,258 @@ msgstr ""
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:133
+#: src/dpl.c:134
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:215
+#: src/dpl.c:216
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:288
+#: src/dpl.c:289
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:289
+#: src/dpl.c:290
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:297
+#: src/dpl.c:298
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:298
+#: src/dpl.c:299
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:299
+#: src/dpl.c:300
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:302
+#: src/dpl.c:303
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:303
+#: src/dpl.c:304
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:355
+#: src/dpl.c:356
 msgid "Mouse left drag"
 msgstr "Maus links ziehen"
 
-#: src/dpl.c:355
+#: src/dpl.c:356
 msgid "Move"
 msgstr "Bewegen"
 
-#: src/dpl.c:356
+#: src/dpl.c:357
 msgid "Mouse left button"
 msgstr "Maus Linksclick"
 
-#: src/dpl.c:356
+#: src/dpl.c:357
 msgid "Goto image / Forward"
 msgstr "Gehe zu Bild / Vorwärts"
 
-#: src/dpl.c:357
+#: src/dpl.c:358
 msgid "Mouse middle button"
 msgstr "Maus Mittelclick"
 
-#: src/dpl.c:357 src/dpl.c:375
+#: src/dpl.c:358 src/dpl.c:376
 msgid "Toggle mark (only in writing mode)"
 msgstr "Bildmarkierung umschalten (nur im Schreibmodus)"
 
-#: src/dpl.c:358
+#: src/dpl.c:359
 msgid "Mouse right button"
 msgstr "Maus Rechtsclick"
 
-#: src/dpl.c:358
+#: src/dpl.c:359
 msgid "Backward"
 msgstr "Zurück"
 
-#: src/dpl.c:359
+#: src/dpl.c:360
 msgid "Mouse scroll"
 msgstr "Maus scrollen"
 
-#: src/dpl.c:359
+#: src/dpl.c:360
 msgid "Zoom in/out"
 msgstr "Herein-/Herauszoomen"
 
-#: src/dpl.c:360
+#: src/dpl.c:361
 msgid "Space"
 msgstr "Leer"
 
-#: src/dpl.c:360
+#: src/dpl.c:361
 msgid "Stop/Play"
 msgstr "Stop/Play"
 
-#: src/dpl.c:361
+#: src/dpl.c:362
 msgid "Right"
 msgstr "Rechts"
 
-#: src/dpl.c:361
+#: src/dpl.c:362
 msgid "Forward (Zoom: shift right)"
 msgstr "Weiter (Zoom: rechts schieben)"
 
-#: src/dpl.c:362
+#: src/dpl.c:363
 msgid "Left"
 msgstr "Links"
 
-#: src/dpl.c:362
+#: src/dpl.c:363
 msgid "Backward (Zoom: shift left)"
 msgstr "Zurück (Zoom: links schieben)"
 
-#: src/dpl.c:363
+#: src/dpl.c:364
 msgid "Up"
 msgstr "Hoch"
 
-#: src/dpl.c:363
+#: src/dpl.c:364
 msgid "Fast forward (Zoom: shift up)"
 msgstr "Schnell weiter (Zoom: hoch schieben)"
 
-#: src/dpl.c:364
+#: src/dpl.c:365
 msgid "Down"
 msgstr "Runter"
 
-#: src/dpl.c:364
+#: src/dpl.c:365
 msgid "Fast backward (Zoom: shift down)"
 msgstr "Schnell zurück (Zoom: runter schieben)"
 
-#: src/dpl.c:365
+#: src/dpl.c:366
 msgid "Pageup"
 msgstr "Bild hoch"
 
-#: src/dpl.c:365
+#: src/dpl.c:366
 msgid "Zoom in"
 msgstr "Hereinzoomen"
 
-#: src/dpl.c:366
+#: src/dpl.c:367
 msgid "Pagedown"
 msgstr "Bild runter"
 
-#: src/dpl.c:366
+#: src/dpl.c:367
 msgid "Zoom out"
 msgstr "Herauszoomen"
 
-#: src/dpl.c:367
+#: src/dpl.c:368
 msgid "[0-9]+Enter"
 msgstr "[0-9]+Enter"
 
-#: src/dpl.c:367
+#: src/dpl.c:368
 msgid "Goto image with number"
 msgstr "Gehe zu Bild mit Nummer"
 
-#: src/dpl.c:368
+#: src/dpl.c:369
 msgid "[0-9]+d"
 msgstr "[0-9]+d"
 
-#: src/dpl.c:368
+#: src/dpl.c:369
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl.c:369
+#: src/dpl.c:370
 msgid "f"
 msgstr ""
 
-#: src/dpl.c:369
+#: src/dpl.c:370
 msgid "Switch fullscreen"
 msgstr "Vollbildmodus umschalten"
 
-#: src/dpl.c:370
+#: src/dpl.c:371
 msgid "r/R"
 msgstr ""
 
-#: src/dpl.c:370
+#: src/dpl.c:371
 msgid "Rotate image"
 msgstr "Bild drehen"
 
-#: src/dpl.c:371
+#: src/dpl.c:372
 msgid "w"
 msgstr ""
 
-#: src/dpl.c:371
+#: src/dpl.c:372
 msgid "Switch writing mode"
 msgstr "Schreibmodus umschalten"
 
-#: src/dpl.c:372
+#: src/dpl.c:373
 msgid "g/b/c"
 msgstr ""
 
-#: src/dpl.c:372
+#: src/dpl.c:373
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
-"+/- Modus: Gamma/Helligkeit/Kontrast"
-"(nur mit Unterstützung für OpenGL Shader)"
+"+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl.c:373
+#: src/dpl.c:374
 msgid "+/-"
 msgstr ""
 
-#: src/dpl.c:373
+#: src/dpl.c:374
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl.c:374
+#: src/dpl.c:375
 msgid "Del"
 msgstr ""
 
-#: src/dpl.c:374
+#: src/dpl.c:375
 msgid "Move image to del/ and remove from dpl-list (only in writing mode)"
 msgstr ""
 "Bild nach 'del' verschieben und nicht mehr anzeigen (nur im Schreibmodus)"
 
-#: src/dpl.c:375
+#: src/dpl.c:376
 msgid "m"
 msgstr ""
 
-#: src/dpl.c:376
+#: src/dpl.c:377
 msgid "i"
 msgstr ""
 
-#: src/dpl.c:376
+#: src/dpl.c:377
 msgid "Show image info"
 msgstr "Bildinformationen anzeigen"
 
-#: src/dpl.c:377
+#: src/dpl.c:378
 msgid "h"
 msgstr ""
 
-#: src/dpl.c:377
+#: src/dpl.c:378
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl.c:378
+#: src/dpl.c:379
 msgid "Back"
 msgstr "Zurück"
 
-#: src/dpl.c:378
+#: src/dpl.c:379
 msgid "Toggle panorama mode (spherical,plain,fisheye)"
 msgstr "Panorama-Modus ändern (kugel,flach,fischauge)"
 
-#: src/dpl.c:379
+#: src/dpl.c:380
 msgid "e"
 msgstr ""
 
-#: src/dpl.c:379
+#: src/dpl.c:380
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
 
-#: src/dpl.c:380
+#: src/dpl.c:381
 msgid "q/Esc"
 msgstr ""
 
-#: src/dpl.c:380
+#: src/dpl.c:381
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl.c:389
+#: src/dpl.c:390
 #, c-format
 msgid "dpl key %i"
 msgstr ""
 
-#: src/eff.c:238
+#: src/eff.c:245
 #, c-format
 msgid "eff refresh%s%s"
 msgstr ""
@@ -523,7 +526,7 @@ msgstr ""
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:113
+#: src/gl.c:106
 msgid "glew init failed"
 msgstr ""
 
@@ -645,7 +648,7 @@ msgstr ""
 msgid "panoinit no pano found for '%s'"
 msgstr ""
 
-#: src/pano.c:242
+#: src/pano.c:281
 #, c-format
 msgid "using shader program failed (0x%04x)"
 msgstr ""
