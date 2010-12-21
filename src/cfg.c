@@ -45,8 +45,8 @@ struct cfg {
 	{ 0,   "gl.stat_lineh",       CT_FLT, CM_SET,  "0.025", {NULL}, NULL },
 	{ 0,   "gl.txt_bgcolor",      CT_COL, CM_SET,  "0.8 0.8 0.8 0.7", {NULL}, NULL },
 	{ 0,   "gl.txt_fgcolor",      CT_COL, CM_SET,  "0.0 0.0 0.0 1.0", {NULL}, NULL },
-	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.5", {NULL}, NULL }, /* screens per second */
-	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.125", {NULL}, NULL },
+	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.125", {NULL}, NULL }, /* screens per second */
+	{ 0,   "pano.minrot",         CT_FLT, CM_SET,  "0.0625", {NULL}, NULL },
 	{ 0,   "pano.texdegree",      CT_FLT, CM_SET,  "6.0", {NULL}, NULL },
 	{ 'p', "pano.mintexsize",     CT_INT, CM_SET,  "16", {NULL}, __("Set minimal texture size for panorama mode") },
 	{ 0,   "pano.radius",         CT_FLT, CM_SET,  "10.0", {NULL}, NULL },
