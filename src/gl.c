@@ -101,20 +101,22 @@ info_log:
 	return 0;
 }
 
-void glinit(){
+void glinit(char done){
 	char *fontfn;
-	if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
-	if(cfggetint("cfg.version")){
-		const char *str=NULL;
-		if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
-			str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-		mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
-		mprintf("GLSL-Version: %s\n",str?str:"NONE");
+	if(!done){
+		if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
+		if(cfggetint("cfg.version")){
+			const char *str=NULL;
+			if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
+				str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+			mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
+			mprintf("GLSL-Version: %s\n",str?str:"NONE");
+		}
+		gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
+		gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
+		cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
+		cfggetcol("gl.txt_fgcolor",gl.cfg.txt_fgcolor);
 	}
-	gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
-	gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
-	cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
-	cfggetcol("gl.txt_fgcolor",gl.cfg.txt_fgcolor);
 	ldmaxtexsize();
 	gl.dls=glGenLists(DLS_NUM);
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);

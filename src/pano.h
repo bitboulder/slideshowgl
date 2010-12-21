@@ -12,7 +12,7 @@ void imgpanofree(struct imgpano *ip);
 char imgpanoenable(struct imgpano *ip);
 void imgpanoload(struct imgpano *ip,char *fn);
 
-void panoinit();
+void panoinit(char done);
 
 struct img *panoactive();
 char *panostattxt();

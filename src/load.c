@@ -32,10 +32,12 @@ struct load {
 	int  maxpanotexsize;
 	int  maxpanopixels;
 	char vartex;
+	char reset;
 } load = {
 	.minimgslim = { 128, 384, 1024,    0, },
 	.maximgwide = { 512, 512, 2048, 8192, },
 	.vartex = 0,
+	.reset = 0,
 };
 
 /* thread: gl */
@@ -63,6 +65,9 @@ void ldcheckvartex(){
 	load.vartex=!glGetError();
 #endif
 }
+
+/* thread: sdl */
+void ldreset(){ load.reset=1; }
 
 /***************************** imgld ******************************************/
 
@@ -563,6 +568,19 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
+void ldresetdo(){
+	int i,it;
+	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
+	for(i=-1;i<nimg;i++) for(it=0;it<TEX_NUM;it++){
+		struct itex *itex=(i<0?defimg:imgs[i])->ld->texs+it;
+		free(itex->tx);
+		memset(itex,0,sizeof(struct itex));
+	}
+	ldfload(defimg->ld,TEX_BIG);
+	debug(DBG_STA,"ldreset done");
+	load.reset=0;
+}
+
 extern Uint32 paint_last;
 
 int ldthread(void *arg){
@@ -570,6 +588,7 @@ int ldthread(void *arg){
 	ldfload(defimg->ld,TEX_BIG);
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
+		if(load.reset) ldresetdo();
 		sdlthreadcheck();
 	}
 	ldconceptfree();

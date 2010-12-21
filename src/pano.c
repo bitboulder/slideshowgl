@@ -80,14 +80,16 @@ struct pano {
 } pano;
 
 /* thread: sdl */
-void panoinit(){
-	pano.cfg.defrot=cfggetfloat("pano.defrot");
-	pano.cfg.minrot=cfggetfloat("pano.minrot");
-	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
-	pano.cfg.mintexsize=cfggetint("pano.mintexsize");
-	pano.cfg.radius=cfggetfloat("pano.radius");
-	pano.cfg.fm=cfggetenum("pano.fishmode");
-	pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
+void panoinit(char done){
+	if(!done){
+		pano.cfg.defrot=cfggetfloat("pano.defrot");
+		pano.cfg.minrot=cfggetfloat("pano.minrot");
+		pano.cfg.texdegree=cfggetfloat("pano.texdegree");
+		pano.cfg.mintexsize=cfggetint("pano.mintexsize");
+		pano.cfg.radius=cfggetfloat("pano.radius");
+		pano.cfg.fm=cfggetenum("pano.fishmode");
+		pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
+	}
 	pano.pfish=glprgload("vs_fish.c","fs.c");
 }
 

@@ -14,6 +14,7 @@ struct itx {
 
 void ldmaxtexsize();
 void ldcheckvartex();
+void ldreset();
 
 struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);

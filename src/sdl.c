@@ -93,9 +93,15 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 }
 	
 void sdlresize(int w,int h){
-	Uint32 flags=SDL_OPENGL|SDL_DOUBLEBUF;
+	static char done=0;
+	Uint32 flags=SDL_OPENGL;
 	const SDL_VideoInfo *vi;
+	GLenum glerr;
 	sdl.doresize=0;
+	if(done>=0){
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
+	}
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
 		debug(DBG_STA,"sdl set video mode fullscreen");
 		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(ERR_QUIT,"video mode init failed");
@@ -109,13 +115,28 @@ void sdlresize(int w,int h){
 	sdl.scr_w=vi->current_w;
 	sdl.scr_h=vi->current_h;
 	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
+	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
 	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
+	if(done>=0){
+		int sync;
+		SDL_WM_SetCaption("Slideshowgl","slideshowgl");
+		SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync);
+		if(sync!=1) sdl.sync=0;
+		glinit(done);
+		panoinit(done);
+		if(done>0) ldreset();
+		debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
+		if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
+	}
 	effrefresh(EFFREF_FIT);
+#ifdef __WIN32__
+	done=1;
+#else
+	done=-1;
+#endif
 }
 
 void sdlinit(){
-	GLenum glerr;
-	int sync;
 	sdl.sync=cfggetint("sdl.sync");
 	sdl.fullscreen=cfggetint("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
@@ -128,15 +149,7 @@ void sdlinit(){
 		mprintf("SDL-Version: %i.%i.%i (video: %s)\n",v->major,v->minor,v->patch,
 				SDL_VideoDriverName(buf,32)?buf:_("(unknown)"));
 	}
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
-	SDL_WM_SetCaption("Slideshowgl","slideshowgl");
-	SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync);
-	if(sync!=1) sdl.sync=0;
-	glinit();
-	panoinit();
-	debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
-	if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
 }
 
 void sdlquit(){
