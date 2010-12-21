@@ -15,6 +15,7 @@ void imgpanoload(struct imgpano *ip,char *fn);
 void panoinit();
 
 struct img *panoactive();
+char *panostattxt();
 
 void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);

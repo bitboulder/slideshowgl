@@ -50,11 +50,19 @@ end:
 		debug(DBG_DBG,"panoinit no pano found for '%s'",fn);
 }
 
+#define PANOMODE	E2(NORMAL,0),E2(PLAIN,1),E2(FISHEYE,2),E2(NUM,3)
 
-enum panomode { PM_NORMAL=0, PM_PLAIN=1, PM_FISHEYE=2, PM_NUM=3 };
+#define E2(X,N)	PM_##X=N
+enum panomode { PANOMODE };
+#undef E2
 #define E2(X,N)	FM_##X=N
 enum panofm { PANOFM };
 #undef E2
+#define E2(X,N) #X
+char *panomodestr[]={ PANOMODE };
+char *panofmstr[]={ PANOFM };
+#undef E2
+
 struct pano {
 	float rot;
 	char run;
@@ -90,6 +98,18 @@ struct img *panoactive(){
 	if(!(img=imgget(dplgetimgi()))) return NULL;
 	if(!img->pano->enable) return NULL;
 	return img;
+}
+
+/* thread: dpl */
+char *panostattxt(){
+	struct img *img;
+	static char buf[64];
+	if(!(img=panoactive())) return NULL;
+	snprintf(buf,64," [pano:%s%s%s]",
+			panomodestr[pano.mode],
+			pano.mode!=PM_FISHEYE?"":"-",
+			pano.mode!=PM_FISHEYE?"":_(panofmstr[pano.cfg.fm]));
+	return buf;
 }
 
 /* thread: load */

@@ -291,7 +291,7 @@ void dplstatupdate(){
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		struct icol *ic=imgposcol(img->pos);
-		char *txt=dsttxt;
+		char *txt=dsttxt, *tmp;
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
@@ -308,6 +308,7 @@ void dplstatupdate(){
 			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",ic->c,dpl.colmode==COL_C?"]":"");
 			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",ic->b,dpl.colmode==COL_B?"]":"");
 		}
+		if((tmp=panostattxt())) ADDTXT(tmp);
 	}
 }
 
@@ -444,7 +445,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
 	}
-	if(dpl.pos.writemode || (dpl.pos.zoom<=0 && ev->ev!=DE_RIGHT) || dpl.pos.imgi>=nimg) ret|=2;
+	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi>=nimg) ret|=2;
 	return ret;
 }
 
