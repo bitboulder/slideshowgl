@@ -166,7 +166,6 @@ void panotrimmovepos(struct img *img,float *ix,float *iy){
 	float perspectw,perspecth;
 	if(!img || img!=panoactive()) return;
 	panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
-	printf("%.2f %.2f\n",perspectw,perspecth);
 	if(ix && perspectw>90.f) *ix/=perspectw/90.f;
 	if(iy && perspecth>90.f) *iy/=perspecth/90.f;
 }
@@ -277,13 +276,6 @@ char panorender(){
 	}else{
 		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
 		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
-		if(mode==PM_FISHEYE){
-			GLenum glerr;
-			if((glerr=glGetError())){
-				error(ERR_CONT,"using shader program failed (0x%04x)",glerr);
-				pano.pfish=0;
-			}
-		}
 		glCallList(dl);
 	}
 	glPopMatrix();
