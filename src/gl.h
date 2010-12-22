@@ -6,7 +6,7 @@
 
 void glsetbar(float bar);
 char glprg();
-GLuint glprgload(char *vs_fn,char *fs_fn);
+GLuint glprgload(const char *vs_fn,const char *fs_fn);
 
 enum glmode { GLM_3D, GLM_2D, GLM_TXT };
 #define glmode(A)	glmodex(A,0.f,0)

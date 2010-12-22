@@ -6,7 +6,7 @@ void imgfilefree(struct imgfile *ifl);
 char *imgfilefn(struct imgfile *ifl);
 char imgfiletfn(struct imgfile *ifl,char **tfn);
 
-char findfilesubdir(char *dst,char *subdir,char *ext);
+char findfilesubdir(char *dst,const char *subdir,const char *ext);
 
 void fgetfiles(int argc,char **argv);
 

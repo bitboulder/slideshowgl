@@ -15,8 +15,8 @@ struct ldjpg_error_mgr {
   jmp_buf setjmp_buffer;	/* for return to caller */
 };
 
-METHODDEF(void)
-ldjpg_error (j_common_ptr cinfo)
+METHODDEF(void) ldjpg_error (j_common_ptr cinfo) NORETURN;
+METHODDEF(void) ldjpg_error (j_common_ptr cinfo)
 {
 	struct ldjpg_error_mgr *err = (struct ldjpg_error_mgr *) cinfo->err;
 	(*cinfo->err->output_message) (cinfo);
@@ -43,7 +43,7 @@ SDL_Surface *JPG_LoadSwap(char *fn){
 		cinfo.quantize_colors=FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
 		img=SDL_AllocSurface(SDL_SWSURFACE,
-				cinfo.output_height,cinfo.output_width,32,
+				(int)cinfo.output_height,(int)cinfo.output_width,32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
 #else
@@ -61,7 +61,7 @@ SDL_Surface *JPG_LoadSwap(char *fn){
 #endif
 		jpeg_calc_output_dimensions(&cinfo);
 		img=SDL_AllocSurface(SDL_SWSURFACE,
-				cinfo.output_height,cinfo.output_width,24,
+				(int)cinfo.output_height,(int)cinfo.output_width,24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x0000FF, 0x00FF00, 0xFF0000,
 #else
@@ -74,7 +74,7 @@ SDL_Surface *JPG_LoadSwap(char *fn){
 
 	while(cinfo.output_scanline<cinfo.output_height){
 		rowptr[0]=(JSAMPROW)(Uint8*)img->pixels +
-			cinfo.output_scanline*cinfo.output_width*cinfo.output_components;
+			cinfo.output_scanline*cinfo.output_width*(unsigned int)cinfo.output_components;
 		jpeg_read_scanlines(&cinfo,rowptr,1);
 	}
 

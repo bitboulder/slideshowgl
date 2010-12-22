@@ -1,28 +1,38 @@
 
+SCONS = scons $(S)
+
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+  S = -s
+else
+  S = 
+endif
+
+.PHONY: all release debug win win-release win-debug clean install uninstall deb gettext
+
 all: release
 
 release:
-	scons mode=release
+	$(SCONS) mode=release
 
 debug:
-	scons mode=debug
+	$(SCONS) mode=debug
 
 win: win-release
 
 win-release:
-	scons mode=release os=win
+	$(SCONS) mode=release os=win
 
 win-debug:
-	scons mode=debug os=win
+	$(SCONS) mode=debug os=win
 
 clean:
-	scons -c
+	$(SCONS) -c
 
 install:
-	scons install mode=release destdir="$(DESTDIR)"
+	$(SCONS) install mode=release destdir="$(DESTDIR)"
 
 uninstall:
-	scons -c /
+	$(SCONS) -c /
 
 deb:
 	debuild

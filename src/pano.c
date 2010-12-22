@@ -14,12 +14,11 @@
 #include "file.h"
 #include "eff.h"
 
-#ifndef M_PI
-# define M_PI		3.14159265358979323846	/* pi */
-#endif
-#define SIN(x)		sin((x)/180.f*M_PI)
-#define COS(x)		cos((x)/180.f*M_PI)
-#define TAN(x)		tan((x)/180.f*M_PI)
+#define M_PIf		3.14159265358979323846f
+#define RAD(x)		((x)/180.f*M_PIf)
+#define SIN(x)		sinf(RAD(x))
+#define COS(x)		cosf(RAD(x))
+#define TAN(x)		tanf(RAD(x))
 
 struct imgpano {
 	char enable;
@@ -59,8 +58,8 @@ enum panomode { PANOMODE };
 enum panofm { PANOFM };
 #undef E2
 #define E2(X,N) #X
-char *panomodestr[]={ PANOMODE };
-char *panofmstr[]={ PANOFM };
+const char *panomodestr[]={ PANOMODE };
+const char *panofmstr[]={ PANOFM };
 #undef E2
 
 struct pano {
@@ -115,7 +114,7 @@ char *panostattxt(){
 }
 
 /* thread: load */
-void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres){
+void panores(struct imgpano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
 	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
 	if(!pano.pfish){
@@ -138,7 +137,7 @@ void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspect
 	float srat=sdlrat();
 	if(spos==PSPOS_DPL) spos=powf(2.f,(float)dplgetzoom());
 	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
-	else spos=sqrt(2.f)/powf(spos,0.5f);
+	else spos=sqrtf(2.f)/powf(spos,0.5f);
 	if(perspecth) *perspecth=gh*spos;
 	if(perspectw) *perspectw=gh*spos*srat;
 }
@@ -147,7 +146,7 @@ void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspect
 float panoperspectrev(struct imgpano *ip,float perspectw){
 	float spos=perspectw/panoclipgh(ip)/sdlrat();
 	if(spos>1.f) spos=2.f-logf(spos)/logf(ip->gw/ip->gh/sdlrat());
-	else spos=powf(sqrt(2.f)/spos,1.f/0.5f);
+	else spos=powf(sqrtf(2.f)/spos,1.f/0.5f);
 	return spos;
 }
 
@@ -171,7 +170,7 @@ char panoclip(struct img *img,float *xb,float *yb){
 	if(!img || img!=panoactive()) return 1;
 	panoperspect(img->pano,PSPOS_DPL,&xs,&ys);
 	ymax=(img->pano->gh-ys)/2.f;
-	yr=abs(img->pano->gyoff)+ymax;
+	yr=fabsf(img->pano->gyoff)+ymax;
 	yp=ys/2.f;
 	a=ys/2.f/TAN(ys/2.f);
 	c=yp*COS(yr)+a*SIN(yr);
@@ -253,11 +252,11 @@ void panoperspective(float h3d,int fm,float w){
 	int i;
 	for(i=0;i<16;i++) mat[i]=0.f;
 	mat[ 0]=w;
-	mat[10]=fm;
+	mat[10]=(float)fm;
 	switch(fm){
-	case FM_ANGLE: mat[ 5]=0.5f/tan(MIN(h3d,pano.cfg.maxfishangle)/4.f/180.f*M_PI); break;
-	case FM_ADIST: mat[ 5]=1.f/(h3d/2.f/180.f*M_PI); break;
-	case FM_PLANE: mat[ 5]=0.5f/sin(h3d/4.f/180.f*M_PI); break;
+	case FM_ANGLE: mat[ 5]=0.5f/TAN(MIN(h3d,pano.cfg.maxfishangle)/4.f); break;
+	case FM_ADIST: mat[ 5]=1.f/RAD(h3d/2.f); break;
+	case FM_PLANE: mat[ 5]=0.5f/SIN(h3d/4.f); break;
 	case FM_ORTHO: break;
 	}
 	glMultMatrixf(mat);
@@ -282,7 +281,7 @@ char panorender(){
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !pano.pfish) mode=PM_NORMAL;
-	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?pano.cfg.fm:-1);
+	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?(int)pano.cfg.fm:-1);
 	glPushMatrix();
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);

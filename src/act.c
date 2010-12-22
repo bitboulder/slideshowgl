@@ -23,13 +23,13 @@ void runcmd(char *cmd){
 }
 
 void actloadmarks(){
-	char *fn=cfggetstr("act.mark_fn");
+	const char *fn=cfggetstr("act.mark_fn");
 	FILE *fd;
 	char line[FILELEN];
 	if(!(fd=fopen(fn,"r"))) return;
 	while(!feof(fd) && fgets(line,FILELEN,fd)){
 		struct img *img;
-		int len=strlen(line);
+		int len=(int)strlen(line);
 		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
 		for(img=*imgs;img;img=img->nxt)
 			if(!strcmp(imgfilefn(img->file),line))
@@ -40,7 +40,7 @@ void actloadmarks(){
 }
 
 void actsavemarks(){
-	char *fn=cfggetstr("act.mark_fn");
+	const char *fn=cfggetstr("act.mark_fn");
 	FILE *fd;
 	struct img *img;
 	if(!(fd=fopen(fn,"w"))) return;
@@ -114,9 +114,9 @@ char actpop(){
 	return 1;
 }
 
-int actthread(void *arg){
-	actcfg.savemarks_delay = cfggetint("act.savemarks_delay");
-	actcfg.runcmd          = cfggetint("act.do");
+int actthread(void *UNUSED(arg)){
+	actcfg.savemarks_delay = cfggetuint("act.savemarks_delay");
+	actcfg.runcmd          = cfggetbool("act.do");
 	while(!sdl_quit){
 		acttrysavemarks();
 		if(!actpop()) SDL_Delay(500);

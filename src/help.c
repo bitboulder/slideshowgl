@@ -13,9 +13,9 @@ Uint32 SDL_GetPixelSw(SDL_Surface *surface, int x, int y, char swap)
 	case 1: return *p;
 	case 2: return *(Uint16 *)p;
 	case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
-				return p[0] << 16 | p[1] << 8 | p[2];
+				return (Uint32)p[0] << 16 | (Uint32)p[1] << 8 | (Uint32)p[2];
 			else
-				return p[0] | p[1] << 8 | p[2] << 16;
+				return (Uint32)p[0] | (Uint32)p[1] << 8 | (Uint32)p[2] << 16;
 	case 4: return *(Uint32 *)p;
 	default: return 0;
 	}
@@ -28,8 +28,8 @@ void SDL_PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
 	switch(bpp) {
-	case 1: *p = pixel; break;
-	case 2: *(Uint16 *)p = pixel; break;
+	case 1: *p = (Uint8)pixel; break;
+	case 2: *(Uint16 *)p = (Uint16)pixel; break;
 	case 3: if(SDL_BYTEORDER == SDL_BIG_ENDIAN){
 				p[0] = (pixel >> 16) & 0xff;
 				p[1] = (pixel >> 8) & 0xff;
@@ -44,41 +44,45 @@ void SDL_PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 	}
 }
 
-SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
+SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, int Width, int Height)
 {
+	SDL_Surface *_ret;
+	float _stretch_factor_x,_stretch_factor_y;
     if(!Surface || !Width || !Height) return 0;
 	if(Width==Surface->w && Height==Surface->h) return 0;
-	SDL_Surface *_ret = SDL_CreateRGBSurface(
+	_ret = SDL_CreateRGBSurface(
 			Surface->flags,
 			Width, Height,
 			Surface->format->BitsPerPixel,
 			Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask
 	);
 
-	float _stretch_factor_x = (float)Width/(float)Surface->w;
-	float _stretch_factor_y = (float)Height/(float)Surface->h;
+	_stretch_factor_x = (float)Width/(float)Surface->w;
+	_stretch_factor_y = (float)Height/(float)Surface->h;
 
 	for(Sint32 y = 0; y < Surface->h; y++)
 		for(Sint32 x = 0; x < Surface->w; x++)
 			for(Sint32 o_y = 0; o_y < _stretch_factor_y; ++o_y)
 				for(Sint32 o_x = 0; o_x < _stretch_factor_x; ++o_x)
-					SDL_PutPixel(_ret, (Sint32)(_stretch_factor_x * x) + o_x, (Sint32)(_stretch_factor_y * y) + o_y, SDL_GetPixel(Surface, x, y));
+					SDL_PutPixel(_ret, (Sint32)(_stretch_factor_x * (float)x) + o_x, (Sint32)(_stretch_factor_y * (float)y) + o_y, SDL_GetPixel(Surface, x, y));
 	return _ret;
 }
 
-SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh, char swap)
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, int factor, int xoff, int yoff, int fw, int fh, char swap)
 {
 	int srcw,srch;
+	Sint32 dw,dh,off;
+	SDL_Surface *dst;
     if(!src || !factor) return NULL;
 	if(swap){ srcw=src->h; srch=src->w; }
 	else    { srcw=src->w; srch=src->h; }
-	Sint32 dw = srcw/factor;
-	Sint32 dh = srch/factor;
+	dw = srcw/factor;
+	dh = srch/factor;
 	if(xoff+fw>dw) fw=dw-xoff;
 	if(yoff+fh>dh) fh=dh-yoff;
 	if(factor<2 && fw==srcw && fh==srch && !swap) return NULL;
-	Sint32 off = factor/2;
-	SDL_Surface *dst = SDL_CreateRGBSurface(
+	off = factor/2;
+	dst = SDL_CreateRGBSurface(
 			src->flags,
 			fw, fh,
 			src->format->BitsPerPixel,

@@ -4,8 +4,8 @@
 #include "dpl.h"
 #include "sdl.h"
 #include "load.h"
-#include "cfg.h"
 #include "main.h"
+#include "cfg.h"
 #include "exif.h"
 #include "act.h"
 #include "file.h"
@@ -17,7 +17,7 @@
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
-char *colmodestr[]={"G","B","C"};
+const char *colmodestr[]={"G","B","C"};
 
 struct dpl {
 	struct dplpos pos;
@@ -65,9 +65,9 @@ char imgfit(struct img *img,float *fitw,float *fith){
 	enum rot rot;
 	if(!img || !(irat=imgldrat(img->ld))) return 0;
 	rot=imgexifrot(img->exif);
-	if(rot==ROT_90 || rot==ROT_270) irat=1./irat;
-	if(fitw) *fitw = srat>irat ? irat/srat : 1.;
-	if(fith) *fith = srat>irat ? 1. : srat/irat;
+	if(rot==ROT_90 || rot==ROT_270) irat=1.f/irat;
+	if(fitw) *fitw = srat>irat ? irat/srat : 1.f;
+	if(fith) *fith = srat>irat ? 1.f : srat/irat;
 	return 1;
 }
 
@@ -100,10 +100,10 @@ struct zoomtab {
 	enum imgtex texcur;
 	enum imgtex texoth;
 } zoomtab[]={
-	{ .move=5, .size=1.,    .inc=0,  .texcur=TEX_BIG,   .texoth=TEX_BIG,   },
-	{ .move=3, .size=1./3., .inc=4,  .texcur=TEX_SMALL, .texoth=TEX_SMALL, },
-	{ .move=5, .size=1./5., .inc=12, .texcur=TEX_SMALL, .texoth=TEX_TINY,  },
-	{ .move=7, .size=1./7., .inc=24, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
+	{ .move=5, .size=1.f,     .inc=0,  .texcur=TEX_BIG,   .texoth=TEX_BIG,   },
+	{ .move=3, .size=1.f/3.f, .inc=4,  .texcur=TEX_SMALL, .texoth=TEX_SMALL, },
+	{ .move=5, .size=1.f/5.f, .inc=12, .texcur=TEX_SMALL, .texoth=TEX_TINY,  },
+	{ .move=7, .size=1.f/7.f, .inc=24, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
 };
 
 void dplclippos(struct img *img){
@@ -174,7 +174,7 @@ void dplchgimgi(int dir){
 }
 
 void dplmove(enum dplev ev,float sx,float sy){
-	const static int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
+	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
 	dpl.pos.imgiold=dpl.pos.imgi;
 	switch(ev){
@@ -224,9 +224,9 @@ int dplclickimg(float sx,float sy){
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
-	x=floor(sx/zoomtab[-dpl.pos.zoom].size+.5f);
-	y=floor(sy/zoomtab[-dpl.pos.zoom].size+.5f);
-	i=floor((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
+	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
+	y=(int)floorf(sy/zoomtab[-dpl.pos.zoom].size+.5f);
+	i=(int)floorf((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
 	i+=x;
 	return dpl.pos.imgi+i;
 }
@@ -283,7 +283,7 @@ void dplcol(int d){
 	if(*val> 1.f) *val= 1.f;
 }
 
-#define ADDTXT(...)	txt+=snprintf(txt,dsttxt+ISTAT_TXTSIZE-txt,__VA_ARGS__)
+#define ADDTXT(...)	txt+=snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__)
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	if(dpl.pos.imgi<0) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
@@ -316,7 +316,7 @@ void dplstatupdate(){
 
 void dplsetdisplayduration(int dur){
 	if(dur<100) dur*=1000;
-	if(dur>=250 && dur<=30000) dpl.cfg.displayduration=dur;
+	if(dur>=250 && dur<=30000) dpl.cfg.displayduration=(unsigned int)dur;
 }
 
 /***************************** dpl key ****************************************/
@@ -353,7 +353,7 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
 	}
 }
 
-char *keyboardlayout=
+const char *keyboardlayout=
 	__("Mouse left drag")"\0"     __("Move")"\0"
 	__("Mouse left button")"\0"   __("Goto image / Forward")"\0"
 	__("Mouse middle button")"\0" __("Toggle mark (only in writing mode)")"\0"
@@ -383,7 +383,7 @@ char *keyboardlayout=
 	"\0"
 ;
 
-char *dplhelp(){
+const char *dplhelp(){
 	return dpl.showhelp ? keyboardlayout : NULL;
 }
 
@@ -410,7 +410,7 @@ void dplkey(SDLKey key){
 	default: break;
 	}
 	if(key>=SDLK_0 && key<=SDLK_9){
-		dpl.inputnum = dpl.inputnum*10 + (key-SDLK_0);
+		dpl.inputnum = dpl.inputnum*10 + (int)(key-SDLK_0);
 	}else dpl.inputnum=0;
 	dpl.showinfo = !dpl.showinfo && key==SDLK_i &&
 		dpl.pos.imgi>=0 && dpl.pos.imgi<nimg;
@@ -442,7 +442,7 @@ char dplev(struct ev *ev){
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
 		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0)
-			dpl.run=dpl.run ? 0 : -100000;
+			dpl.run=dpl.run ? 0 : 0xf0000000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
@@ -483,11 +483,11 @@ void dplrun(){
 /***************************** dpl thread *************************************/
 
 void dplcfginit(){
-	dpl.cfg.displayduration=cfggetint("dpl.displayduration");
-	dpl.cfg.loop=cfggetint("dpl.loop");
+	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
+	dpl.cfg.loop=cfggetbool("dpl.loop");
 }
 
-int dplthread(void *arg){
+int dplthread(void *UNUSED(arg)){
 	Uint32 last=0;
 	dplcfginit();
 	effcfginit();

@@ -17,7 +17,7 @@ void panoinit(char done);
 struct img *panoactive();
 char *panostattxt();
 
-void panores(struct img *img,struct imgpano *ip,int w,int h,int *xres,int *yres);
+void panores(struct imgpano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
 char panoclip(struct img *img,float *xb,float *yb);
 void panotrimmovepos(struct img *img,float *ix,float *iy);

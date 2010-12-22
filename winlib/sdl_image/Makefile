@@ -14,13 +14,13 @@ clean:
 	rm -rf bin lib include include-libjpeg
 
 bin/%: $(SRCBINZIP)
-	unzip -j -d bin $< `basename $@`
+	unzip -j -d bin $< $(@F)
 	touch $@
 
 include/%: $(SRCINCZIP)
-	unzip -j -d include $< $(SRCINCDIR)/`basename $@`
+	unzip -j -d include $< $(SRCINCDIR)/$(@F)
 	touch $@
 
 include-libjpeg/%: /usr/include/%
-	mkdir -p `dirname $@`
+	mkdir -p $(@D)
 	cp $< $@

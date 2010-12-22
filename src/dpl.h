@@ -10,8 +10,8 @@ struct ipos {
 };
 
 struct iopt {
-	char active;
 	enum imgtex tex;
+	char active;
 	char back;
 };
 
@@ -62,7 +62,7 @@ int dplgetimgi();
 int dplgetzoom();
 char dplshowinfo();
 int dplinputnum();
-char *dplhelp();
+const char *dplhelp();
 char dplloop();
 
 char imgfit(struct img *img,float *fitw,float *fith);

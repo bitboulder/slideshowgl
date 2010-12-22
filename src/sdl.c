@@ -25,19 +25,19 @@ struct sdlcfg {
 struct sdlmove {
 	Uint16 base_x, base_y;
 	int pos_x, pos_y;
-	Uint8 btn;
 	Uint32 time;
+	Uint8 btn;
 };
 
 struct sdl {
 	struct sdlcfg cfg;
 	int scr_w, scr_h;
 	int scrnof_w, scrnof_h;
+	Uint32 hidecursor;
+	struct sdlmove move;
 	char fullscreen;
 	char doresize;
 	char sync;
-	Uint32 hidecursor;
-	struct sdlmove move;
 } sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
@@ -51,8 +51,8 @@ struct sdl {
 /* thread: gl */
 float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
 
-void switchdpms(char val){
 #if HAVE_X11 && HAVE_XEXT
+void switchdpms(char val){
 	static BOOL state=1;
 	int evb,erb;
 	CARD16 plv;
@@ -63,8 +63,10 @@ void switchdpms(char val){
 		DPMSDisable(display);
 	}else if(state) DPMSEnable(display); else DPMSDisable(display);
 	XCloseDisplay(display);
-#endif
 }
+#else
+void switchdpms(char UNUSED(val)){ }
+#endif
 
 /* thread: dpl */
 void sdlfullscreen(){
@@ -137,9 +139,9 @@ void sdlresize(int w,int h){
 }
 
 void sdlinit(){
-	sdl.sync=cfggetint("sdl.sync");
-	sdl.fullscreen=cfggetint("sdl.fullscreen");
-	sdl.cfg.hidecursor=cfggetint("sdl.hidecursor");
+	sdl.sync=cfggetbool("sdl.sync");
+	sdl.fullscreen=cfggetbool("sdl.fullscreen");
+	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
 	sdl.scrnof_w=cfggetint("sdl.width");
 	sdl.scrnof_h=cfggetint("sdl.height");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
@@ -277,7 +279,7 @@ char sdlgetevent(){
 
 /* thread: sdl, dpl */
 void sdldelay(Uint32 *last,Uint32 delay){
-	int diff=SDL_GetTicks()-*last;
+	Uint32 diff=SDL_GetTicks()-*last;
 	if(diff<delay) SDL_Delay(delay-diff);
 	*last=SDL_GetTicks();
 }
@@ -289,7 +291,7 @@ void sdlframerate(){
 	if(!t_last) t_last=t_now;
 	else n++;
 	if(t_now-t_last>1000){
-		float fr = n/(float)(t_now-t_last)*1000.;
+		float fr = (float)n/(float)(t_now-t_last)*1000.f;
 		debug(DBG_STA,"sdl framerate %.1f fps",fr);
 		t_last=t_now;
 		n=0;
@@ -304,7 +306,7 @@ void sdlframerate(){
 			system("killall -9 slideshowgl");
 	}
 
-int sdlthread(void *arg){
+int sdlthread(void *UNUSED(arg)){
 	switchdpms(0);
 	while(!sdl_quit){
 		if(!sdlgetevent()) break;

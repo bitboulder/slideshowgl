@@ -2,6 +2,7 @@
 #define _HELP_H
 
 #include "config.h"
+#include <SDL.h>
 
 #ifndef MIN
 	#define MIN(a,b)	((a)<(b)?(a):(b))
@@ -10,10 +11,12 @@
 	#define MAX(a,b)	((a)>(b)?(a):(b))
 #endif
 
-SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height);
-SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, Uint16 factor, Uint16 xoff, Uint16 yoff, Uint16 fw, Uint16 fh, char swap);
+SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, int Width, int Height);
+SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, int factor, int xoff, int yoff, int fw, int fh, char swap);
 
-#if ! HAVE_STRSEP
+#if HAVE_STRSEP
+	#include <string.h>
+#else
 char *strsep(char **stringp, const char *delim);
 #endif
 

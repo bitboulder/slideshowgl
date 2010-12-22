@@ -134,7 +134,13 @@ if not env.GetOption('clean'):
 
 	env = conf.Finish()
 
-env.Append(CCFLAGS = ['-Wall','-std=c99'])
+env.Append(CCFLAGS = ['-std=c99','-pedantic'])
+env.Append(CCFLAGS = ['-Wall'])
+env.Append(CCFLAGS = ['-Wextra','-Wno-missing-field-initializers'])
+env.Append(CCFLAGS = ['-Wwrite-strings','-Wconversion','-Wunused-macros',
+		'-Wdeclaration-after-statement','-Wshadow','-Wmissing-noreturn',
+		'-Wmissing-format-attribute'])
+#env.Append(CCFLAGS = ['-Wfloat-equal','-Wpadded'])
 
 if mode == 'debug':
 	env.Append(CCFLAGS = ['-g'])

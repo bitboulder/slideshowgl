@@ -35,15 +35,15 @@ char imgfiletfn(struct imgfile *ifl,char **tfn){
 
 /***************************** find *******************************************/
 
-char findfilesubdir1(char *dst,int len,char *subdir,char *ext){
-	int i;
+char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *ext){
+	size_t i;
 	FILE *fd;
 	char fn[FILELEN];
 	char *extpos = ext ? strrchr(dst,'.') : NULL;
 	if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
 	if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
 	if(extpos) extpos[0]='\0';
-	for(i=strlen(dst)-1;i>=0;i--) if(dst[i]=='/' || dst[i]=='\\'){
+	for(i=strlen(dst);i--;) if(dst[i]=='/' || dst[i]=='\\'){
 		char dsti=dst[i];
 		dst[i]='\0';
 		snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
@@ -59,7 +59,7 @@ char findfilesubdir1(char *dst,int len,char *subdir,char *ext){
 	return 0;
 }
 
-char findfilesubdir(char *dst,char *subdir,char *ext){
+char findfilesubdir(char *dst,const char *subdir,const char *ext){
 	if(findfilesubdir1(dst,FILELEN,subdir,ext)) return 1;
 #if HAVE_REALPATH
 	{
@@ -99,7 +99,7 @@ void faddflst(char *flst){
 	while(!feof(fd)){
 		int len;
 		if(!fgets(buf,FILELEN,fd)) continue;
-		len=strlen(buf);
+		len=(int)strlen(buf);
 		while(buf[len-1]=='\n' || buf[len-1]=='\r') buf[--len]='\0';
 		faddfile(buf);
 	}
@@ -107,7 +107,7 @@ void faddflst(char *flst){
 }
 
 void fgetfiles(int argc,char **argv){
-	char *defimgfn = finddatafile("defimg.png");
+	const char *defimgfn = finddatafile("defimg.png");
 	if(!defimgfn) defimgfn="";
 	defimg=imginit();
 	strncpy(defimg->file->fn,defimgfn,FILELEN);

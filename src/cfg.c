@@ -3,8 +3,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#include "cfg.h"
 #include "main.h"
+#include "cfg.h"
 #include "sdl.h"
 #include "help.h"
 #include "pano.h"
@@ -16,13 +16,13 @@ enum cfgmode { CM_INC, CM_FLIP, CM_SET };
 #define E2(X,N)	#X
 struct cfg {
 	char opt;
-	char *name;
+	const char *name;
 	enum cfgtype type;
 	enum cfgmode mode;
-	char *val;
-	char *vals[16];
-	char *help;
-} cfg[]={
+	const char *val;
+	const char *vals[16];
+	const char *help;
+} cfgs[]={
 	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0", {NULL}, __("Print this usage") },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0", {NULL}, __("Print version") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0", {NULL}, __("Increase debug level") },
@@ -64,15 +64,15 @@ struct cfg {
 #undef E
 
 /* thread: all */
-struct cfg *cfgfind(char *name){
+struct cfg *cfgfind(const char *name){
 	int i;
-	for(i=0;cfg[i].name;i++) if(!strcmp(name,cfg[i].name)) return cfg+i;
+	for(i=0;cfgs[i].name;i++) if(!strcmp(name,cfgs[i].name)) return cfgs+i;
 	error(ERR_CONT,"cfg not found '%s'",name);
 	return NULL;
 }
 
 /* thread: all */
-int cfggetint(char *name){
+int cfggetint(const char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_INT) return atoi(cfg->val);
 	error(ERR_CONT,"cfg not of type int '%s'",name);
@@ -80,7 +80,11 @@ int cfggetint(char *name){
 }
 
 /* thread: all */
-int cfggetenum(char *name){
+unsigned int cfggetuint(const char *name){ return (unsigned int)cfggetint(name); }
+char cfggetbool(const char *name){ return (char)cfggetint(name); }
+
+/* thread: all */
+int cfggetenum(const char *name){
 	int i;
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_ENM){
@@ -91,15 +95,15 @@ int cfggetenum(char *name){
 }
 
 /* thread: all */
-float cfggetfloat(char *name){
+float cfggetfloat(const char *name){
 	struct cfg *cfg=cfgfind(name);
-	if(cfg && cfg->type==CT_FLT) return atof(cfg->val);
+	if(cfg && cfg->type==CT_FLT) return (float)atof(cfg->val);
 	error(ERR_CONT,"cfg not of type float '%s'",name);
 	return 0.;
 }
 
 /* thread: all */
-void cfggetcol(char *name,float *col){
+void cfggetcol(const char *name,float *col){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_COL){
 		if(sscanf(cfg->val,"%f %f %f %f",col+0,col+1,col+2,col+3)!=4)
@@ -108,7 +112,7 @@ void cfggetcol(char *name,float *col){
 }
 
 /* thread: all */
-char *cfggetstr(char *name){
+const char *cfggetstr(const char *name){
 	struct cfg *cfg=cfgfind(name);
 	if(cfg && cfg->type==CT_STR) return cfg->val;
 	error(ERR_CONT,"cfg not of type str '%s'",name);
@@ -117,14 +121,15 @@ char *cfggetstr(char *name){
 
 void cfgset(struct cfg *cfg, char *val){
 	int ival;
+	char *tmp;
 	switch(cfg->mode){
 	case CM_INC: case CM_FLIP:
 		if(cfg->type!=CT_INT)
 			error(ERR_QUIT,"cfgset unsupported mode for '%s'",cfg->name);
 		ival=atoi(cfg->val);
 		if(cfg->mode==CM_FLIP) ival=!ival; else ival++;
-		cfg->val=malloc(10);
-		snprintf(cfg->val,10,"%i",ival);
+		cfg->val=tmp=malloc(10);
+		snprintf(tmp,10,"%i",ival);
 	break;
 	case CM_SET:
 		if(!val) error(ERR_QUIT,"cfgset no arg for CM_SET '%s'",cfg->name);
@@ -137,19 +142,20 @@ void version(){
 	mprintf(_("%s version %s\n"),APPNAME,VERSION);
 }
 
+void usage(char *fn) NORETURN;
 void usage(char *fn){
 	int i;
 	version();
 	mprintf(_("Usage: %s [Options] {FILES|FILELISTS.flst}\n"),fn);
 	mprintf("%s:\n",_("Options"));
-	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
-		mprintf("  -%c %s  %s",cfg[i].opt,cfg[i].mode==CM_FLIP?" ":"X",_(cfg[i].help?cfg[i].help:cfg[i].name));
-		if(cfg[i].type==CT_ENM){
+	for(i=0;cfgs[i].name;i++) if(cfgs[i].opt){
+		mprintf("  -%c %s  %s",cfgs[i].opt,cfgs[i].mode==CM_FLIP?" ":"X",_(cfgs[i].help?cfgs[i].help:cfgs[i].name));
+		if(cfgs[i].type==CT_ENM){
 			int j;
-			for(j=0;cfg[i].vals[j];j++) mprintf("%s%s",j?",":" [",cfg[i].vals[j]);
+			for(j=0;cfgs[i].vals[j];j++) mprintf("%s%s",j?",":" [",cfgs[i].vals[j]);
 			mprintf("]");
 		}
-		mprintf(" (%s: %s)\n",_("cur"),cfg[i].mode==CM_FLIP?(atoi(cfg[i].val)?"on":"off"):cfg[i].val);
+		mprintf(" (%s: %s)\n",_("cur"),cfgs[i].mode==CM_FLIP?(atoi(cfgs[i].val)?"on":"off"):cfgs[i].val);
 	}
 	exit(0);
 }
@@ -157,24 +163,25 @@ void usage(char *fn){
 char *cfgcompileopt(){
 	static char opt[256];
 	int i,p=0;
-	for(i=0;cfg[i].name;i++) if(cfg[i].opt){
+	for(i=0;cfgs[i].name;i++) if(cfgs[i].opt){
 		if(p==254) error(ERR_QUIT,"cfgcompileopt: opt too small");
-		opt[p++]=cfg[i].opt;
-		if(cfg[i].mode==CM_SET) opt[p++]=':';
+		opt[p++]=cfgs[i].opt;
+		if(cfgs[i].mode==CM_SET) opt[p++]=':';
 	}
 	opt[p++]='\0';
 	return opt;
 }
 
 void cfgparseargs(int argc,char **argv){
-	int c,i;
+	size_t i;
+	int c;
 #if HAVE_GETTEXT
 	struct stat st;
 	setlocale(LC_ALL,"");
 	setlocale(LC_NUMERIC,"C");
 	if(!stat(LOCALEDIR,&st)) bindtextdomain(APPNAME,LOCALEDIR); else if(argc){
-		for(i=strlen(argv[0])-1;i>=0;i--) if(argv[0][i]=='/' || argv[0][i]=='\\') break;
 		char buf[FILELEN];
+		for(i=strlen(argv[0]);i--;) if(argv[0][i]=='/' || argv[0][i]=='\\') break;
 		snprintf(buf,FILELEN,argv[0]);
 		snprintf(buf+i+1,FILELEN-i-1,"locale");
 		bindtextdomain(APPNAME,buf);
@@ -183,7 +190,7 @@ void cfgparseargs(int argc,char **argv){
 	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
-		for(i=0;cfg[i].name;i++) if(cfg[i].opt==c) cfgset(cfg+i,optarg);
+		for(i=0;cfgs[i].name;i++) if(cfgs[i].opt==c) cfgset(cfgs+i,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0]);
 	if(cfggetint("cfg.version")) version();
 }

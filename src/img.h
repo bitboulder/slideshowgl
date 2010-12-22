@@ -1,17 +1,17 @@
 #ifndef _IMG_H
 #define _IMG_H
 
-enum imgtex {
-	TEX_NONE  = -1,
-	TEX_TINY  =  0,
-	TEX_SMALL =  1,
-	TEX_BIG   =  2,
-	TEX_FULL  =  3,
-	TEX_NUM   =  4,
-	TEX_PANO  = -2,
-};
+#define IMGTEX	E2(TINY,  0),\
+				E2(SMALL, 1),\
+				E2(BIG,   2),\
+				E2(FULL,  3),\
+				E2(NUM,   4),\
+				E2(NONE, -1),\
+				E2(PANO, -2)
 
-extern char *imgtex_str[];
+#define E2(X,N)	TEX_##X=N
+enum imgtex { IMGTEX };
+#undef E2
 
 struct img {
 	struct img *nxt;

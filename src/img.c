@@ -7,16 +7,12 @@
 #include "pano.h"
 #include "eff.h"
 
-char *imgtex_str[]={
-	__("TINY"), __("SMALL"),__("BIG"),__("FULL"),
-};
-
 struct img **imgs = NULL;
 struct img *defimg;
 struct img *delimg;
 int nimg = 0;
 int nimgo = 0;
-int simg = 0;
+unsigned int simg = 0;
 
 /* thread: all */
 struct img *imgget(int i){
@@ -45,7 +41,7 @@ void imgfree(struct img *img){
 }
 
 struct img *imgadd(){
-	if(nimg==simg) imgs=realloc(imgs,sizeof(struct img *)*(simg+=16));
+	if((unsigned int)nimg==simg) imgs=realloc(imgs,sizeof(struct img *)*(simg+=16));
 	imgs[nimg]=imginit();
 	if(nimg) imgs[nimg-1]->nxt=imgs[nimg];
 	nimgo=nimg+1;

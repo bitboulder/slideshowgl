@@ -30,18 +30,18 @@ struct SDL_Thread {
 
 enum timer tim;
 #define TIMER_NUM	16
-void timer(enum timer timer,int id,char reset){
-	static Uint32 timer_max[TIMER_NUM];
-	static Uint32 timer_sum[TIMER_NUM];
-	static Uint32 timer_cnt[TIMER_NUM];
+void timer(enum timer ti,int id,char reset){
+	static Uint32 ti_max[TIMER_NUM];
+	static Uint32 ti_sum[TIMER_NUM];
+	static Uint32 ti_cnt[TIMER_NUM];
 	static Uint32 last=0, lastp=0;
 	Uint32 now=SDL_GetTicks();
-	if(timer!=tim) return;
+	if(ti!=tim) return;
 	if(id>=0 && id<TIMER_NUM && last){
 		Uint32 diff=now-last;
-		if(timer_max[id]<diff) timer_max[id]=diff;
-		timer_sum[id]+=diff;
-		timer_cnt[id]++;
+		if(ti_max[id]<diff) ti_max[id]=diff;
+		ti_sum[id]+=diff;
+		ti_cnt[id]++;
 	}
 	last=now;
 	if(now-lastp>2000){
@@ -49,15 +49,15 @@ void timer(enum timer timer,int id,char reset){
 			int i,l;
 			char tmp[256];
 			snprintf(tmp,256,"timer:");
-			for(l=TIMER_NUM-1;l>=0 && !timer_cnt[l];) l--;
+			for(l=TIMER_NUM-1;l>=0 && !ti_cnt[l];) l--;
 			for(i=0;i<=l;i++) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
-					(float)timer_sum[i]/(float)timer_cnt[i],timer_max[i]);
+					(float)ti_sum[i]/(float)ti_cnt[i],ti_max[i]);
 			debug(DBG_NONE,tmp);
 		}
 		if(reset){
-			memset(timer_max,0,sizeof(Uint32)*TIMER_NUM);
-			memset(timer_sum,0,sizeof(Uint32)*TIMER_NUM);
-			memset(timer_cnt,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_max,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_sum,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_cnt,0,sizeof(Uint32)*TIMER_NUM);
 		}
 		lastp=now;
 	}
@@ -65,12 +65,12 @@ void timer(enum timer timer,int id,char reset){
 
 enum debug dbg = DBG_NONE;
 #define E(X)	#X
-char *dbgstr[] = { EDEBUG };
+const char *dbgstr[] = { EDEBUG };
 #undef E
 
 FILE *fdout=NULL;
 
-void debug_ex(enum debug lvl,char *file,int line,char *txt,...){
+void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...){
 	va_list ap;
 	char err = lvl==ERR_QUIT || lvl==ERR_CONT;
 	FILE *fout = fdout ? fdout : (err ? stderr : stdout);
@@ -104,19 +104,22 @@ int mprintf(const char *format,...){
 
 char *progpath=NULL;
 
-char *finddatafile(char *fn){
+char *finddatafile(const char *fn){
 	int i;
 	static char ret[FILELEN];
-	static char *dirs[]={NULL, NULL, ".", "data", "../data", DATADIR, NULL};
+	static const char *dirs[]={NULL, NULL, ".", "data", "../data", DATADIR, NULL};
 	if(progpath && !dirs[0]){
-		int l=strlen(progpath);
-		dirs[0]=malloc(l);
-		dirs[1]=malloc(l+5);
-		strncpy(dirs[0],progpath,l-1);
-		dirs[0][l-1]='\0';
-		strncpy(dirs[1],progpath,l);
-		strncpy(dirs[1]+l,"data",4);
-		dirs[1][l+4]='\0';
+		size_t l=strlen(progpath);
+		char *tmp;
+		if(l){
+			dirs[0]=tmp=malloc(l);
+			strncpy(tmp,progpath,l-1);
+			tmp[l-1]='\0';
+		}
+		dirs[1]=tmp=malloc(l+5);
+		strncpy(tmp,progpath,l);
+		strncpy(tmp+l,"data",4);
+		tmp[l+4]='\0';
 	}
 	for(i=0;i<2 || dirs[i];i++) if(dirs[i]){
 		FILE *fd;
@@ -165,12 +168,12 @@ void start_threads(){
 char end_threads(){
 	int i;
 	for(i=500;(sdl_quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
-	return i;
+	return i!=0;
 }
 
 void setprogpath(char *pfn){
-	int i;
-	for(i=strlen(pfn)-1;i>=0;i--) if(pfn[i]=='/' || pfn[i]=='\\'){
+	size_t i;
+	for(i=strlen(pfn);i--;) if(pfn[i]=='/' || pfn[i]=='\\'){
 		progpath=malloc(i+1);
 		memcpy(progpath,pfn,i+1);
 		progpath[i+1]='\0';
@@ -178,17 +181,16 @@ void setprogpath(char *pfn){
 	}
 }
 
-void fileoutput(char open){
 #ifdef __WIN32__
-	if(open){
-		char *paths[2];
+void fileoutput(char doopen){
+	if(doopen){
+		const char *paths[2];
 		int i;
 		paths[0]=progpath?progpath:"";
 		paths[1]=getenv("TEMP");
 		for(i=0;!fdout && i<2;i++) if(paths[i]){
 			char *fn;
-			int l=0;
-			l=strlen(paths[i]);
+			size_t l=strlen(paths[i]);
 			fn=malloc(l+9);
 			if(l) strncpy(fn,paths[i],l);
 			if(l && fn[l-1]!='/' && fn[l-1]!='\\') fn[l++]='\\';
@@ -201,8 +203,10 @@ void fileoutput(char open){
 		fclose(fdout);
 		fdout=NULL;
 	}
-#endif
 }
+#else
+void fileoutput(char UNUSED(doopen)){ }
+#endif
 
 int main(int argc,char **argv){
 	if(argc) setprogpath(argv[0]);
@@ -215,7 +219,7 @@ int main(int argc,char **argv){
 	sdlinit();
 	start_threads();
 	if(!end_threads())
-		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s",
+		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s%s",
 			(sdl_quit&THR_SDL)?"":" sdl",
 			(sdl_quit&THR_DPL)?"":" dpl",
 			(sdl_quit&THR_LD )?"":" ld",

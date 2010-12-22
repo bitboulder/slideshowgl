@@ -3,6 +3,14 @@
 
 #define FILELEN		1024
 
+#ifndef __GNUC__
+	#define  __attribute__(x)
+#endif
+
+#define UNUSED(x) UNUSED_ ## x __attribute__((unused)) 
+#define FORMAT(a,b) __attribute__((format(printf,a,b)))
+#define NORETURN __attribute__((noreturn))
+
 #define ETIMER  E(NONE), E(SDL), E(DPL), E(LD), E(COL)
 #define E(X)	TI_##X
 enum timer { ETIMER };
@@ -25,10 +33,10 @@ enum debug { EDEBUG, ERR_QUIT, ERR_CONT };
 #define debug(lvl,...)	debug_ex(lvl,__FILE__,__LINE__,__VA_ARGS__)
 #define error(lvl,...)	debug_ex(lvl,__FILE__,__LINE__,__VA_ARGS__)
 
-void debug_ex(enum debug lvl,char *file,int line,char *txt,...);
+void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...) FORMAT(4,5);
 
-int mprintf(const char *format,...);
+int mprintf(const char *format,...) FORMAT(1,2);
 
-char *finddatafile(char *fn);
+char *finddatafile(const char *fn);
 
 #endif

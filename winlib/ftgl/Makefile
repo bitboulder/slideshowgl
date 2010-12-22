@@ -37,15 +37,15 @@ clean:
 	rm -rf bin lib include $(SRCDIR) libGL.a libGLU.a
 
 bin/%: $(BINDIR)/%
-	mkdir -p `dirname $@`
+	mkdir -p $(@D)
 	cp $< $@
 
 lib/%: $(LIBDIR)/%
-	mkdir -p `dirname $@`
+	mkdir -p $(@D)
 	cp $< $@
 
 include/%: $(INCDIR)/%
-	mkdir -p `dirname $@`
+	mkdir -p $(@D)
 	cp $< $@
 
 $(BINDIR)/%: $(SRCTAR)

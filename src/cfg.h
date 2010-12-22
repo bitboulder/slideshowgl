@@ -15,11 +15,13 @@
 #endif
 #define __(X)	X
 
-int cfggetint(char *name);
-int cfggetenum(char *name);
-float cfggetfloat(char *name);
-void cfggetcol(char *name,float *col);
-char *cfggetstr(char *name);
+int cfggetint(const char *name);
+unsigned int cfggetuint(const char *name);
+char cfggetbool(const char *name);
+int cfggetenum(const char *name);
+float cfggetfloat(const char *name);
+void cfggetcol(const char *name,float *col);
+const char *cfggetstr(const char *name);
 void cfgparseargs(int argc,char **argv);
 
 #endif

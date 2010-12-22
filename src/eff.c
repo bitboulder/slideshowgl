@@ -48,11 +48,11 @@ struct istat *effstat(){ return &eff.stat.pos; }
 struct imgpos {
 	char eff;
 	char mark;
+	char wayact;
 	struct iopt opt;
 	struct ipos cur;
 	struct ipos way[2];
 	Uint32 waytime[2];
-	char   wayact;
 	struct icol col;
 };
 
@@ -103,7 +103,7 @@ void effmove(struct dplpos *dp,struct ipos *ip,int i){
 		if(dplloop() && diff> nimg/2) diff-=nimg;
 		if(dplloop() && diff<-nimg/2) diff+=nimg;
 		ip->s=zoomtab[-dp->zoom].size;
-		ip->x=diff*ip->s;
+		ip->x=(float)diff*ip->s;
 		ip->y=0.;
 		while(ip->x<-.5f){ ip->x+=1.f; ip->y-=ip->s; }
 		while(ip->x> .5f){ ip->x-=1.f; ip->y+=ip->s; }
@@ -137,7 +137,7 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 	}
 	*ip=*ipon;
 	if(dp->zoom==0){
-		if(dp->writemode) ip->x += effdiff(dp,NULL,NULL) * (neg?-1:1);
+		if(dp->writemode) ip->x += (float)(effdiff(dp,NULL,NULL) * (neg?-1:1));
 		else ip->a=0.;
 	}else if(dp->imgi>=nimg || dp->imgiold>=nimg){
 		ip->a=0.;
@@ -145,10 +145,10 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 		ip->a=0.;
 		switch((int)ev){
 		case DE_RIGHT:
-		case DE_LEFT:  ip->x += (ip->x<0.?-1.:1.) * zoomtab[-dp->zoom].size; break;
+		case DE_LEFT:  ip->x += (ip->x<0.?-1.f:1.f) * zoomtab[-dp->zoom].size; break;
 		case DE_SEL:
 		case DE_UP:
-		case DE_DOWN:  ip->y += (ip->y<0.?-1.:1.) * zoomtab[-dp->zoom].size; break;
+		case DE_DOWN:  ip->y += (ip->y<0.?-1.f:1.f) * zoomtab[-dp->zoom].size; break;
 		}
 	}
 	return 0;
@@ -242,7 +242,7 @@ char effmaxfitupdate(struct dplpos *dp){
 void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	struct dplpos *dp=dplgetpos();
-	debug(DBG_DBG,"eff refresh%s%s",
+	debug(DBG_DBG,"eff refresh%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
 		effref&EFFREF_ALL?" (all)":"",
 		effref&EFFREF_FIT?" (fit)":"");
@@ -379,9 +379,9 @@ void effdo(){
 
 void effcfginit(){
 	eff.cfg.shrink=cfggetfloat("eff.shrink");
-	eff.cfg.efftime=cfggetint("eff.efftime");
+	eff.cfg.efftime=cfggetuint("eff.efftime");
 	eff.cfg.stat_delay[STAT_OFF] = 0;
-	eff.cfg.stat_delay[STAT_RISE]=cfggetint("dpl.stat_rise");
-	eff.cfg.stat_delay[STAT_ON]  =cfggetint("dpl.stat_on");
-	eff.cfg.stat_delay[STAT_FALL]=cfggetint("dpl.stat_fall");
+	eff.cfg.stat_delay[STAT_RISE]=cfggetuint("dpl.stat_rise");
+	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("dpl.stat_on");
+	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("dpl.stat_fall");
 }

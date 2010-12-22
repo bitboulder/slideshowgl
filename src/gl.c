@@ -43,24 +43,26 @@ char glprg(){ return !!gl.prg; }
 char *textload(char *fn){
 	FILE *fd;
 	long len;
-	char *buf;
+	char *buf = NULL;;
 	if(!fn) return NULL;
 	if(!(fd=fopen(fn,"r"))) return NULL;
 	fseek(fd,0,SEEK_END);
 	len=ftell(fd);
+	if(len<=0) goto end;
 	fseek(fd,0,SEEK_SET);
-	buf=malloc(len+1);
-	fread(buf,1,len,fd);
-	fclose(fd);
+	buf=malloc((size_t)len+1);
+	fread(buf,1,(size_t)len,fd);
 	buf[len]='\0';
+end:
+	fclose(fd);
 	return buf;
 }
 
 
-GLuint glprgload(char *vs_fn,char *fs_fn){
+GLuint glprgload(const char *vs_fn,const char *fs_fn){
 	char *vstxt,*fstxt;
 	GLuint prg=0,vs=0,fs=0,info;
-	int ret;
+	GLint ret;
 	if(!GLEW_ARB_vertex_shader || !GLEW_ARB_fragment_shader) return 0;
 	if(!(vstxt=textload(finddatafile(vs_fn)))){ error(ERR_CONT,"loading vertex shader file %s failed",vs_fn); return 0; }
 	if(!(fstxt=textload(finddatafile(fs_fn)))){ error(ERR_CONT,"loading fragment shader file %s failed",fs_fn); return 0; }
@@ -86,7 +88,7 @@ GLuint glprgload(char *vs_fn,char *fs_fn){
 info_log:
 	glGetObjectParameterivARB(info,GL_INFO_LOG_LENGTH,&ret);
 	if(ret>0){
-		char *buf=malloc(ret);
+		char *buf=malloc((size_t)ret);
 		glGetInfoLogARB(info,ret,&ret,buf);
 		error(ERR_CONT,"InfoLog: %s",buf);
 		free(buf);
@@ -210,10 +212,10 @@ GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
 
 void glrendermark(struct ipos *ipos,float rot){
 	glDisable(GL_TEXTURE_2D);
-	glRotatef(-rot,0.,0.,1.);
-	glColor4f(1.,1.,1.,ipos->m*0.7);
-	glTranslatef(.4,-.4,0.);
-	glScalef(.1,.1,1.);
+	glRotatef(-rot,0.f,0.f,1.f);
+	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
+	glTranslatef(.4f,-.4f,0.f);
+	glScalef(.1f,.1f,1.f);
 	glCallList(gl.dls+DLS_IMG);
 	glEnable(GL_TEXTURE_2D);
 }
@@ -258,10 +260,10 @@ void glrenderimg(struct img *img,char back){
 		// get rotation near to 90°/270°
 		float rot90 = ipos->r;
 		float schg=1.f;
-		while(rot90>= 90.) rot90-=180.;
-		while(rot90< -90.) rot90+=180.;
-		if(rot90<0.) rot90*=-1.;
-		rot90/=90.;
+		while(rot90>= 90.f) rot90-=180.f;
+		while(rot90< -90.f) rot90+=180.f;
+		if(rot90<0.f) rot90*=-1.f;
+		rot90/=90.f;
 		// correct size
 		if(srat<irat) if(srat<1.f/irat) schg=irat;
 		              else              schg=1.f/srat;
@@ -286,7 +288,7 @@ void glrenderimgs(){
 }
 
 #if HAVE_FTGL
-void gltextout(char *text,float x,float y){
+void gltextout(const char *text,float x,float y){
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
 	ftglRenderFont(gl.font,text,FTGL_RENDER_ALL);
@@ -294,14 +296,14 @@ void gltextout(char *text,float x,float y){
 }
 #endif
 
-void glrendertext(char *title,char *text){
+void glrendertext(const char *title,const char *text){
 #if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
 	 * h: .05 | .05 .8 .05 | .05
 	 */
 	int i,j,lines=2;
-	char *t;
+	const char *t;
 	float maxw[2]={0.,0.};
 	float w,h,x[2],y;
 	float lineh;
@@ -323,7 +325,7 @@ void glrendertext(char *title,char *text){
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
-	y=.4*h-lineh;
+	y=.4f*h-lineh;
 	tw=ftglGetFontAdvance(gl.font,title);
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
@@ -347,7 +349,7 @@ void glrenderinfo(){
 }
 
 void glrenderhelp(){
-	char *help;
+	const char *help;
 	if((help=dplhelp())) glrendertext(_("Keyboardlayout:"),help);
 }
 

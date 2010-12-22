@@ -10,8 +10,8 @@
 
 #if HAVE_EXIF
 struct exifinfo {
-	char *name;
-	ExifTag tag[5];
+	const char *name;
+	ExifTag tag[4];
 } exifinfo[]={
 	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
 	{__("Model"), {EXIF_TAG_MODEL,0}},
@@ -82,24 +82,24 @@ enum rot imgexifgetrot(ExifData *exdat){
 #define IIINC	1024
 char *imgexifgetinfo(ExifData *exdat){
 	char *imginfo=NULL;
-	int iilen=0;
-	int iipos=0;
+	unsigned int iilen=0;
+	unsigned int iipos=0;
 	int l,i;
 	for(l=0;exifinfo[l].name;l++){
-		int end=iipos+IILEN;
+		unsigned int end=iipos+IILEN;
 		if(end+1>iilen) imginfo=realloc(imginfo,(iilen+=IIINC)*sizeof(char));
 		snprintf(imginfo+iipos,end-iipos,exifinfo[l].name);
-		iipos+=strlen(imginfo+iipos)+1;
+		iipos+=(unsigned int)strlen(imginfo+iipos)+1;
 		for(i=0;i<5 && exifinfo[l].tag[i];i++){
 			ExifEntry *exet=exif_data_get_entry(exdat,exifinfo[l].tag[i]);
 			if(!exet) continue;
 			if(i && iipos<end) imginfo[iipos++]=' '; 
 			exif_entry_get_value(exet,imginfo+iipos,end-iipos);
-			iipos+=strlen(imginfo+iipos);
+			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 		if(iipos && imginfo[iipos-1]=='\0'){
 			snprintf(imginfo+iipos,end-iipos,_("(unknown)"));
-			iipos+=strlen(imginfo+iipos);
+			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 		iipos++;
 	}
@@ -124,5 +124,5 @@ void imgexifload(struct imgexif *exif,char *fn){
 
 /* thread: dpl */
 void exifrotate(struct imgexif *exif,int r){
-	exif->rot = (exif->rot+r+4)%4;
+	exif->rot = ((int)exif->rot+r+4)%4;
 }
