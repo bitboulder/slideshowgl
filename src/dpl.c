@@ -173,9 +173,10 @@ void dplchgimgi(int dir){
 	dpl.pos.imgi+=dir;
 }
 
-void dplmove(enum dplev ev,float sx,float sy){
+Uint32 dplmove(enum dplev ev,float sx,float sy){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
+	Uint32 nxttime=0;
 	dpl.pos.imgiold=dpl.pos.imgi;
 	switch(ev){
 	case DE_RIGHT:
@@ -184,6 +185,7 @@ void dplmove(enum dplev ev,float sx,float sy){
 			if(dpl.pos.zoom<=0) dplchgimgi(dir);
 			else dplmovepos((float)dir*.25f,0.f);
 		}
+		nxttime=1000;
 	break;
 	case DE_UP:
 	case DE_DOWN:
@@ -196,6 +198,7 @@ void dplmove(enum dplev ev,float sx,float sy){
 	{
 		float x;
 		struct img *img=imgget(dpl.pos.imgi);
+		int panoact=panoactive()?1:0;
 		if(dpl.pos.zoom==0 && dir>0 && panostart(img,&x)){
 			dpl.pos.x=x;
 			dpl.pos.zoom+=dir;
@@ -205,9 +208,11 @@ void dplmove(enum dplev ev,float sx,float sy){
 			dpl.pos.x=dpl.pos.y=0.;
 			dpl.pos.zoom+=dir;
 		}else dplzoompos(dpl.pos.zoom+dir,sx,sy);
+		if(dir>0 && dpl.pos.zoom==0) nxttime=1000;
+		if(dir<0 && dpl.pos.zoom==panoact) nxttime=1000;
 	}
 	break;
-	default: return;
+	default: return 0;
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 	if(dpl.pos.zoom>0)    dpl.run=0;
@@ -215,6 +220,7 @@ void dplmove(enum dplev ev,float sx,float sy){
 	if((dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) && dpl.pos.zoom>0) dpl.pos.zoom=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
+	return nxttime;
 }
 
 int dplclickimg(float sx,float sy){
@@ -418,12 +424,12 @@ void dplkey(SDLKey key){
 }
 
 char dplev(struct ev *ev){
-	static struct ev lastev;
+	static enum dplev lastev;
 	static Uint32 nxttime=0;
 	Uint32 time=SDL_GetTicks();
 	char ret=1;
-	if(nxttime && time<nxttime && !memcmp(ev,&lastev,sizeof(struct ev))) return 0;
-	lastev=*ev;
+	if(nxttime && time<nxttime && ev->ev==lastev) return 0;
+	lastev=ev->ev;
 	nxttime=0;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
@@ -431,11 +437,11 @@ char dplev(struct ev *ev){
 			) dpl.colmode=COL_NONE;
 	switch(ev->ev){
 	case DE_RIGHT:
-	case DE_LEFT: nxttime=time+1000;
+	case DE_LEFT:
 	case DE_UP:
 	case DE_DOWN:
 	case DE_ZOOMIN:
-	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy); break;
+	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy); break;
 	case DE_SEL:  dplsel(dplclickimg(ev->sx,ev->sy)); break;
 	case DE_MARK: dplmark(dplclickimg(ev->sx,ev->sy)); break;
 	case DE_ROT1: 
@@ -448,6 +454,7 @@ char dplev(struct ev *ev){
 	default: ret=0; break;
 	}
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi>=nimg) ret|=2;
+	if(nxttime) nxttime+=time;
 	return ret;
 }
 
