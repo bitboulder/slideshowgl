@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-21 11:48+0100\n"
+"POT-Creation-Date: 2010-12-22 13:20+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -110,65 +110,65 @@ msgstr ""
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:88
+#: src/cfg.c:92
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:89
+#: src/cfg.c:93
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:97
+#: src/cfg.c:101
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:106
+#: src/cfg.c:110
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:107
+#: src/cfg.c:111
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:114
+#: src/cfg.c:118
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:123
+#: src/cfg.c:128
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:130
+#: src/cfg.c:135
 #, c-format
 msgid "cfgset no arg for CM_SET '%s'"
 msgstr ""
 
-#: src/cfg.c:137
+#: src/cfg.c:142
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:143
+#: src/cfg.c:149
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:144
+#: src/cfg.c:150
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:152
+#: src/cfg.c:158
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:161
+#: src/cfg.c:167
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
@@ -430,7 +430,7 @@ msgstr ""
 
 #: src/eff.c:245
 #, c-format
-msgid "eff refresh%s%s"
+msgid "eff refresh%s%s%s"
 msgstr ""
 
 #: src/exif.c:16
@@ -481,7 +481,7 @@ msgstr "Belichtungsmodus"
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:101 src/sdl.c:129
+#: src/exif.c:101 src/sdl.c:152
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -501,194 +501,187 @@ msgstr ""
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/gl.c:65
+#: src/gl.c:67
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:66
+#: src/gl.c:68
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:76 src/gl.c:78
+#: src/gl.c:78 src/gl.c:80
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:84
+#: src/gl.c:86
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:91
+#: src/gl.c:93
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:106
+#: src/gl.c:109
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:344
+#: src/gl.c:348
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:349
+#: src/gl.c:353
 msgid "Keyboardlayout:"
 msgstr "Bedienung"
 
-#: src/gl.c:435
+#: src/gl.c:439
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
 
-#: src/img.c:11
-msgid "TINY"
+#: src/ldcp.c:52
+#, c-format
+msgid "concept: unknown tex '%c'"
 msgstr ""
 
-#: src/img.c:11
-msgid "SMALL"
+#: src/ldcp.c:58
+#, c-format
+msgid "concept: no digits after '..': '%s'"
 msgstr ""
 
-#: src/img.c:11
-msgid "BIG"
+#: src/ldcp.c:59
+#, c-format
+msgid "concept: str after '..[0-9]+': '%s'"
 msgstr ""
 
-#: src/img.c:11
-msgid "FULL"
+#: src/ldcp.c:69
+#, c-format
+msgid "concept: no digits at begin: '%s'"
+msgstr ""
+
+#: src/ldcp.c:74
+#, c-format
+msgid "concept: no digits after '[0-9]+..': '%s'"
+msgstr ""
+
+#: src/ldcp.c:75
+#, c-format
+msgid "concept: str after '[0-9]+..[0-9]+': '%s'"
+msgstr ""
+
+#: src/ldcp.c:77
+#, c-format
+msgid "concept: str after '[0-9]+': '%s' (%s)"
 msgstr ""
 
 #: src/ldjpg.c:87
 msgid "jpeg decompression failure"
 msgstr ""
 
-#: src/load.c:266
+#: src/load.c:276
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:291
+#: src/load.c:301
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:295
+#: src/load.c:305
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:296
+#: src/load.c:306
 #, c-format
 msgid "Wrong pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:338
+#: src/load.c:348
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:394
+#: src/load.c:404
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:457
-#, c-format
-msgid "concept: unknown tex '%c'"
+#: src/load.c:456
+msgid "ldreset done"
 msgstr ""
 
-#: src/load.c:463
-#, c-format
-msgid "concept: no digits after '..': '%s'"
-msgstr ""
-
-#: src/load.c:464
-#, c-format
-msgid "concept: str after '..[0-9]+': '%s'"
-msgstr ""
-
-#: src/load.c:474
-#, c-format
-msgid "concept: no digits at begin: '%s'"
-msgstr ""
-
-#: src/load.c:479
-#, c-format
-msgid "concept: no digits after '[0-9]+..': '%s'"
-msgstr ""
-
-#: src/load.c:480
-#, c-format
-msgid "concept: str after '[0-9]+..[0-9]+': '%s'"
-msgstr ""
-
-#: src/load.c:482
-#, c-format
-msgid "concept: str after '[0-9]+': '%s' (%s)"
-msgstr ""
-
-#: src/main.c:128
+#: src/main.c:131
 #, c-format
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:218
+#: src/main.c:222
 #, c-format
-msgid "sdl timeout waiting for threads:%s%s%s"
+msgid "sdl timeout waiting for threads:%s%s%s%s"
 msgstr ""
 
-#: src/pano.c:48
+#: src/pano.c:47
 #, c-format
 msgid "panoinit pano used: '%s'"
 msgstr ""
 
-#: src/pano.c:50
+#: src/pano.c:49
 #, c-format
 msgid "panoinit no pano found for '%s'"
 msgstr ""
 
-#: src/sdl.c:85
+#: src/sdl.c:87
 msgid "sdl All fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:86
+#: src/sdl.c:88
 msgid "sdl No fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:100
+#: src/sdl.c:108
 msgid "sdl set video mode fullscreen"
 msgstr ""
 
-#: src/sdl.c:101 src/sdl.c:106
+#: src/sdl.c:109 src/sdl.c:114
 msgid "video mode init failed"
 msgstr ""
 
-#: src/sdl.c:105
+#: src/sdl.c:113
 #, c-format
 msgid "sdl set video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:111
+#: src/sdl.c:119
 #, c-format
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:124
-msgid "sdl init failed"
+#: src/sdl.c:120
+#, c-format
+msgid "in sdl view mode (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:138
+#: src/sdl.c:130
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:139
+#: src/sdl.c:131
 #, c-format
 msgid "in sdlinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:280
+#: src/sdl.c:147
+msgid "sdl init failed"
+msgstr ""
+
+#: src/sdl.c:295
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
