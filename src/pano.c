@@ -348,7 +348,7 @@ void panorun(){
 	now=SDL_GetTicks();
 	if(last){
 		float sec=(float)(now-last)/1000.f;
-		dplevputp(DE_MOVE,pano.rot*sec,0.f);
+		dplevputp(DE_JUMP,pano.rot*sec,0.f);
 	}
 	last=now;
 }

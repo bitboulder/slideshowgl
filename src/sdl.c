@@ -176,7 +176,7 @@ void sdlkey(SDL_keysym key){
 	}
 }
 
-void sdlmove(Uint16 x,Uint16 y){
+void sdljump(Uint16 x,Uint16 y){
 	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
 	int zoom=dplgetzoom();
 	int w=100,wthr;
@@ -196,7 +196,7 @@ void sdlmove(Uint16 x,Uint16 y){
 		if(ev) dplevput(ev);
 	}else{
 		if(xd || yd)
-			dplevputp(DE_MOVE,
+			dplevputp(DE_JUMP,
 				-(float)xd/(float)sdl.scr_w,
 				-(float)yd/(float)sdl.scr_h);
 		sdl.move.base_x=x;
@@ -225,7 +225,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	SDL_ShowCursor(SDL_ENABLE);
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
-	if(sdl.move.base_x!=0xffff) sdlmove(x,y);
+	if(sdl.move.base_x!=0xffff) sdljump(x,y);
 	else dplevput(DE_STAT);
 }
 
@@ -253,7 +253,7 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
 	}else if(!down && button==SDL_BUTTON_LEFT){
-		sdlmove(x,y);
+		sdljump(x,y);
 		sdl.move.base_x=0xffff;
 	}
 }

@@ -207,9 +207,9 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 		ip->opt.active=act;
 		return;
 	}
-	if((ev&DE_MOVE) && act){
-		if(ev&DE_MOVEX) ip->cur.x=ip->way[1].x;
-		if(ev&DE_MOVEY) ip->cur.y=ip->way[1].y;
+	if((ev&DE_JUMP) && act){
+		if(ev&DE_JUMPX) ip->cur.x=ip->way[1].x;
+		if(ev&DE_JUMPY) ip->cur.y=ip->way[1].y;
 		ip->opt.active=1;
 	}else if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
 		effwaytime(ip,eff.cfg.efftime);

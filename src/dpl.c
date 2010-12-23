@@ -179,6 +179,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	Uint32 nxttime=0;
 	dpl.pos.imgiold=dpl.pos.imgi;
 	switch(ev){
+	case DE_MOVE: dplmovepos(sx,sy); break;
 	case DE_RIGHT:
 	case DE_LEFT:
 		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
@@ -346,7 +347,7 @@ struct dplevs {
 
 /* thread: sdl */
 void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
-	if(ev&DE_MOVE){
+	if(ev&DE_JUMP){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
 	}else{
@@ -436,6 +437,7 @@ char dplev(struct ev *ev){
 			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* TODO: fix keymap for win32 */
 			) dpl.colmode=COL_NONE;
 	switch(ev->ev){
+	case DE_MOVE:
 	case DE_RIGHT:
 	case DE_LEFT:
 	case DE_UP:
@@ -466,8 +468,8 @@ void dplcheckev(){
 	}
 	if(dev.move.sx || dev.move.sy){
 		enum dplev ev=0;
-		if(dev.move.sx) ev|=DE_MOVEX;
-		if(dev.move.sy) ev|=DE_MOVEY;
+		if(dev.move.sx) ev|=DE_JUMPX;
+		if(dev.move.sy) ev|=DE_JUMPY;
 		dplmovepos(dev.move.sx,dev.move.sy);
 		dev.move.sx=0.f;
 		dev.move.sy=0.f;
