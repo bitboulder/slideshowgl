@@ -209,7 +209,8 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
 	if(btn==SDL_BUTTON_MIDDLE){
-		dplevputp(DE_MARK,sx,sy);
+		if(dplgetpos()->writemode) dplevputp(DE_MARK,sx,sy);
+		else dplevputp(DE_PLAY,sx,sy);
 	}else if(zoom==0) switch(btn){
 		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT); break;
 		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT); break;
