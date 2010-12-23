@@ -180,6 +180,7 @@ enum imgtex imgseltex(struct dplpos *dp,struct imgpos *ip,int i){
 
 void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	struct imgpos *ip;
+	struct ipos dst;
 	char act;
 	if(i<0 || i>=nimg) return;
 	ip=imgs[i]->pos;
@@ -191,8 +192,30 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	if(!act && ip->eff && !ip->wayact) return;
 	ip->opt.tex=imgseltex(dp,ip,i);
 	ip->opt.back=0;
-	if(act) effmove(dp,ip->way+1,i);
-	else  ip->opt.back|=effonoff(dp,ip->way+1,&ip->cur,ev,1);
+	if(act) effmove(dp,&dst,i);
+	else  ip->opt.back|=effonoff(dp,&dst,&ip->cur,ev,1);
+	if((ev&DE_JUMP) && act){
+		if(ip->opt.active && ip->eff){
+			if(ev&DE_JUMPX){
+				float chg=dst.x-ip->way[1].x;
+				ip->cur.x+=chg;
+				ip->way[0].x+=chg;
+				ip->way[1].x+=chg;
+			}
+			if(ev&DE_JUMPY){
+				float chg=dst.y-ip->way[1].y;
+				ip->cur.y+=chg;
+				ip->way[0].y+=chg;
+				ip->way[1].y+=chg;
+			}
+		}else{
+			if(ev&DE_JUMPX) ip->cur.x=dst.x;
+			if(ev&DE_JUMPY) ip->cur.y=dst.y;
+			ip->opt.active=1;
+		}
+		return;
+	}
+	ip->way[1]=dst;
 	if(!ip->opt.active){
 		ip->opt.back|=effonoff(dp,ip->way+0,ip->way+1,ev,0);
 		ip->cur=ip->way[0];
@@ -207,11 +230,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 		ip->opt.active=act;
 		return;
 	}
-	if((ev&DE_JUMP) && act){
-		if(ev&DE_JUMPX) ip->cur.x=ip->way[1].x;
-		if(ev&DE_JUMPY) ip->cur.y=ip->way[1].y;
-		ip->opt.active=1;
-	}else if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
+	if(memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
 		effwaytime(ip,eff.cfg.efftime);
 		ip->wayact=act;
 		ip->eff=1;
