@@ -19,6 +19,7 @@ struct iopt {
 struct istat {
 	char txt[ISTAT_TXTSIZE];
 	float h;
+	char run;
 };
 
 struct icol {

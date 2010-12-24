@@ -293,12 +293,13 @@ void dplcol(int d){
 #define ADDTXT(...)	txt+=snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__)
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
+	char run=dpl.run!=0;
 	if(dpl.pos.imgi<0) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(dpl.pos.imgi>=nimg) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		struct icol *ic=imgposcol(img->pos);
-		char *txt=dsttxt, *tmp;
+		char *txt=dsttxt;
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
@@ -315,8 +316,9 @@ void dplstatupdate(){
 			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",ic->c,dpl.colmode==COL_C?"]":"");
 			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",ic->b,dpl.colmode==COL_B?"]":"");
 		}
-		if((tmp=panostattxt())) ADDTXT(tmp);
+		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}
+	effstat()->run=run;
 }
 
 /***************************** dpl action *************************************/

@@ -102,15 +102,15 @@ struct img *panoactive(){
 }
 
 /* thread: dpl */
-char *panostattxt(){
+char panostattxt(char *txt,size_t len){
 	struct img *img;
-	static char buf[64];
-	if(!(img=panoactive())) return NULL;
-	snprintf(buf,64," [pano:%s%s%s]",
+	if(!(img=panoactive())) return 0;
+	if(pano.mode==PM_NORMAL) return pano.run;
+	snprintf(txt,len," [pano:%s%s%s]",
 			panomodestr[pano.mode],
 			pano.mode!=PM_FISHEYE?"":"-",
 			pano.mode!=PM_FISHEYE?"":_(panofmstr[pano.cfg.fm]));
-	return buf;
+	return pano.run;
 }
 
 /* thread: load */

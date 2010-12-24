@@ -394,13 +394,30 @@ void glrenderstat(){
 	ftglGetFontBBox(gl.font,stat->txt,-1,rect);
 	tw=rect[3]-rect[0];
 	th=rect[4]-rect[1];
-	bw=tw+lineh*0.4f;
 	bh=th+lineh*0.4f;
+	bw=tw+lineh*0.4f+bh;
 	glTranslatef(0.f,(stat->h-1.f)*bh,0.f);
+
 	glColor4fv(gl.cfg.txt_bgcolor);
 	glRectf(0.f,0.f,bw,bh);
 	glColor4fv(gl.cfg.txt_fgcolor);
-	glTranslatef(-rect[0]+lineh*0.2f,-rect[1]+lineh*0.2f,0.f);
+
+	glPushMatrix();
+	glTranslatef(.5f*bh,.5f*bh,0.f);
+	glScalef(.5f*bh,.5f*bh,1.f);
+	glBegin(GL_POLYGON);
+	glVertex2f(-.5f,-.5f);
+	glVertex2f(-.5f, .5f);
+	if(stat->run)
+		glVertex2f( .5f, 0.f);
+	else{
+		glVertex2f( .5f, .5f);
+		glVertex2f( .5f,-.5f);
+	}
+	glEnd();
+	glPopMatrix();
+
+	glTranslatef(-rect[0]+lineh*0.2f+bh,-rect[1]+lineh*0.2f,0.f);
 	ftglRenderFont(gl.font,stat->txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
