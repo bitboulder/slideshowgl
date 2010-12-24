@@ -18,7 +18,7 @@
 #include "pano.h"
 #include "eff.h"
 
-enum dls { DLS_IMG, DLS_NUM };
+enum dls { DLS_IMG, DLS_STOP, DLS_RUN, DLS_NUM };
 
 struct gl {
 	GLuint dls;
@@ -120,7 +120,9 @@ void glinit(char done){
 		cfggetcol("gl.txt_fgcolor",gl.cfg.txt_fgcolor);
 	}
 	ldmaxtexsize();
+	
 	gl.dls=glGenLists(DLS_NUM);
+	
 	glNewList(gl.dls+DLS_IMG,GL_COMPILE);
 	glBegin(GL_QUADS);
 	glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
@@ -129,6 +131,24 @@ void glinit(char done){
 	glTexCoord2f( 0.0, 1.0); glVertex2f(-0.5, 0.5);
 	glEnd();
 	glEndList();
+
+	glNewList(gl.dls+DLS_STOP,GL_COMPILE);
+	glBegin(GL_POLYGON);
+	glVertex2f(-.25f,-.25f);
+	glVertex2f(-.25f, .25f);
+	glVertex2f( .25f, .25f);
+	glVertex2f( .25f,-.25f);
+	glEnd();
+	glEndList();
+	
+	glNewList(gl.dls+DLS_RUN,GL_COMPILE);
+	glBegin(GL_POLYGON);
+	glVertex2f(-.25f,-.35f);
+	glVertex2f(-.25f, .35f);
+	glVertex2f( .25f,  0.f);
+	glEnd();
+	glEndList();
+	
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
@@ -400,23 +420,15 @@ void glrenderstat(){
 
 	glColor4fv(gl.cfg.txt_bgcolor);
 	glRectf(0.f,0.f,bw,bh);
-	glColor4fv(gl.cfg.txt_fgcolor);
 
 	glPushMatrix();
-	glTranslatef(.5f*bh,.5f*bh,0.f);
-	glScalef(.5f*bh,.5f*bh,1.f);
-	glBegin(GL_POLYGON);
-	glVertex2f(-.5f,-.5f);
-	glVertex2f(-.5f, .5f);
-	if(stat->run)
-		glVertex2f( .5f, 0.f);
-	else{
-		glVertex2f( .5f, .5f);
-		glVertex2f( .5f,-.5f);
-	}
-	glEnd();
+	glColor4f(0.f,0.f,0.f,.7f);
+	glScalef(bh,bh,1.f);
+	glTranslatef(.5f,.5f,0.f);
+	glCallList(gl.dls+(stat->run?DLS_RUN:DLS_STOP));
 	glPopMatrix();
 
+	glColor4fv(gl.cfg.txt_fgcolor);
 	glTranslatef(-rect[0]+lineh*0.2f+bh,-rect[1]+lineh*0.2f,0.f);
 	ftglRenderFont(gl.font,stat->txt,FTGL_RENDER_ALL);
 	glPopMatrix();
