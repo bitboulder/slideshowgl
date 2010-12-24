@@ -207,15 +207,19 @@ float glmodex(enum glmode dst,float h3d,int fm){
 		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
 	break;
 	case GLM_2D:
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
 	break;
 	case GLM_TXT:
 		glScalef(1.f/w,1.f,1.f);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
 	break;
 	}
 	return w;
