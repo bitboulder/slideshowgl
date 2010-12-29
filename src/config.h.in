@@ -12,6 +12,7 @@
 
 #define HAVE_X11		%(HAVE_X11)i
 #define HAVE_XEXT		%(HAVE_XEXT)i
+#define HAVE_XINERAMA	%(HAVE_XINERAMA)i
 
 #define HAVE_JPEG		%(HAVE_JPEG)i
 

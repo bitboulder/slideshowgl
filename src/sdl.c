@@ -1,9 +1,16 @@
 #include "config.h"
 #include <SDL.h>
 #include <SDL_thread.h>
+#if HAVE_X11
+	#include <SDL_syswm.h>
+#endif
 #if HAVE_X11 && HAVE_XEXT
 	#include <X11/Xlib.h>
 	#include <X11/extensions/dpms.h>
+#endif
+#if HAVE_X11 && HAVE_XINERAMA
+	#include <X11/Xlib.h>
+	#include <X11/extensions/Xinerama.h>
 #endif
 #include "sdl.h"
 #include "gl.h"
@@ -51,18 +58,26 @@ struct sdl {
 /* thread: gl */
 float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
 
+#if HAVE_X11
+Display *x11getdisplay(){
+	SDL_SysWMinfo info;
+	if(SDL_GetWMInfo(&info)!=1) return NULL;
+	if(info.subsystem!=SDL_SYSWM_X11) return NULL;
+	return info.info.x11.display;
+}
+#endif
+
 #if HAVE_X11 && HAVE_XEXT
 void switchdpms(char val){
 	static BOOL state=1;
 	int evb,erb;
 	CARD16 plv;
-	Display *display=XOpenDisplay(NULL);
+	Display *display=x11getdisplay();
 	if(!display || !DPMSQueryExtension(display,&evb,&erb) || !DPMSCapable(display)) return;
 	if(!val){
 		DPMSInfo(display,&plv,&state);
 		DPMSDisable(display);
 	}else if(state) DPMSEnable(display); else DPMSDisable(display);
-	XCloseDisplay(display);
 }
 #else
 void switchdpms(char UNUSED(val)){ }
@@ -83,6 +98,24 @@ void sdlfullscreen(){
 }
 
 char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
+#if HAVE_X11 && HAVE_XINERAMA
+{
+	Display *display=x11getdisplay();
+	XineramaScreenInfo *info;
+	int ninfo,i;
+	if(display && XineramaIsActive(display) && (info=XineramaQueryScreens(display,&ninfo))){
+		*w=*h=0;
+		for(i=0;i<ninfo;i++){
+			//info[i].screen_number
+			if(info[i].x_org+info[i].width> *w) *w=info[i].x_org+info[i].width;
+			if(info[i].y_org+info[i].height>*w) *w=info[i].y_org+info[i].height;
+		}
+		free(info);
+		if(*w && *h) return 1;
+	}
+}
+#endif
+{
 	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags);
 	if(modes==(SDL_Rect**)-1) error(ERR_CONT,"sdl All fullscreen modes available");
 	else if(modes==(SDL_Rect**)0 || !modes[0]) error(ERR_CONT,"sdl No fullscreen modes available");
@@ -92,6 +125,7 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 		for(i=0;modes[i];i++) if(modes[i]->w>*w){ *w=modes[i]->w; *h=modes[i]->h; }
 	}
 	return *w && *h;
+}
 }
 	
 void sdlresize(int w,int h){
@@ -105,7 +139,8 @@ void sdlresize(int w,int h){
 		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	}
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
-		debug(DBG_STA,"sdl set video mode fullscreen");
+		// TODO: Xinerama -> current screen
+		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
 		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(ERR_QUIT,"video mode init failed");
 	}else{
 		if(!w) w=sdl.scr_w;
