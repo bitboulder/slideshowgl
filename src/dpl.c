@@ -453,6 +453,7 @@ char dplev(struct ev *ev){
 	case DE_PLAY: 
 		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0)
 			dpl.run=dpl.run ? 0 : 0xf0000000;
+		nxttime=1000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
