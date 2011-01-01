@@ -12,12 +12,14 @@
 #include "cfg.h"
 #include "act.h"
 #include "pano.h"
+#include "help.h"
 
 /***************************** imgfile ******************************************/
 
 struct imgfile {
 	char fn[FILELEN];
 	char tfn[FILELEN];
+	const char *dir;
 };
 
 struct imgfile *imgfileinit(){ return calloc(1,sizeof(struct imgfile)); }
@@ -25,6 +27,7 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 
 /* thread: dpl, load */
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
+const char *imgfiledir(struct imgfile *ifl){ return ifl->dir; }
 
 /* thread: load */
 char imgfiletfn(struct imgfile *ifl,char **tfn){
@@ -88,8 +91,15 @@ void faddfile(char *fn){
 	struct img *img=imgadd();
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	strncpy(img->file->fn,fn,FILELEN);
-	fthumbinit(img->file);
-	imgpanoload(img->pano,fn);
+	if(isdir(img->file->fn)){
+		int i=(int)strlen(img->file->fn)-2;
+		while(i>=0 && img->file->fn[i]!='/' && img->file->fn[i]!='\\') i--;
+		img->file->dir=img->file->fn+i+1;
+		debug(DBG_DBG,"directory found: '%s'",img->file->fn);
+	}else{
+		fthumbinit(img->file);
+		imgpanoload(img->pano,fn);
+	}
 }
 
 void faddflst(char *flst){
@@ -106,11 +116,16 @@ void faddflst(char *flst){
 	fclose(fd);
 }
 
+void finitimg(struct img **img,const char *basefn){
+	const char *fn = finddatafile(basefn);
+	if(!fn) fn="";
+	*img=imginit();
+	strncpy((*img)->file->fn,fn,FILELEN);
+}
+
 void fgetfiles(int argc,char **argv){
-	const char *defimgfn = finddatafile("defimg.png");
-	if(!defimgfn) defimgfn="";
-	defimg=imginit();
-	strncpy(defimg->file->fn,defimgfn,FILELEN);
+	finitimg(&defimg,"defimg.png");
+	finitimg(&dirimg,"dirimg.png");
 	for(;argc;argc--,argv++){
 		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) faddflst(argv[0]);
 		else faddfile(argv[0]);

@@ -17,6 +17,8 @@
 #include "exif.h"
 #include "pano.h"
 #include "eff.h"
+#include "file.h"
+#include "help.h"
 
 enum dls { DLS_IMG, DLS_STOP, DLS_RUN, DLS_NUM };
 
@@ -25,6 +27,7 @@ struct gl {
 	GLuint prg;
 #if HAVE_FTGL
 	FTGLfont *font;
+	FTGLfont *fontbig;
 #endif
 	float bar;
 	struct glcfg {
@@ -155,10 +158,13 @@ void glinit(char done){
 	glEnable(GL_BLEND);
 #if HAVE_FTGL
 	fontfn=finddatafile(cfggetstr("gl.font"));
-	gl.font=fontfn ? ftglCreateBufferFont(fontfn) : NULL;
-	if(gl.font){
+	if((gl.font=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
 		ftglSetFontFaceSize(gl.font, 24, 24);
 		ftglSetFontCharMap(gl.font,FT_ENCODING_UNICODE);
+	}
+	if((gl.fontbig=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
+		ftglSetFontFaceSize(gl.fontbig, 72, 72);
+		ftglSetFontCharMap(gl.fontbig,FT_ENCODING_UNICODE);
 	}
 #endif
 	ldcheckvartex();
@@ -167,7 +173,8 @@ void glinit(char done){
 
 void glfree(){
 #if HAVE_FTGL
-	if(gl.font) ftglDestroyFont(gl.font);
+	if(gl.font)    ftglDestroyFont(gl.font);
+	if(gl.fontbig) ftglDestroyFont(gl.fontbig);
 #endif
 }
 
@@ -182,6 +189,7 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	cur=dst;
 	cur_h3d=h3d;
 	cur_fm=fm;
+	// TODO: split glUseProg and glEn/Disable from glmode (for glrendermark and glrenderimgtext)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
@@ -228,19 +236,43 @@ float glmodex(enum glmode dst,float h3d,int fm){
 GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
 	GLuint dl;
 	*isc=img;
-	if((dl=imgldtex(img->ld,it))) return dl;
+	if((dl=imgldtex((*isc)->ld,it))) return dl;
 	*isc=defimg;
-	if((dl=imgldtex(defimg->ld,it))) return dl;
+	if((dl=imgldtex((*isc)->ld,it))) return dl;
 	return 0;
 }
 
 void glrendermark(struct ipos *ipos,float rot){
 	glDisable(GL_TEXTURE_2D);
+	if(gl.prg) glUseProgram(0);
+	glPushMatrix();
 	glRotatef(-rot,0.f,0.f,1.f);
 	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
 	glTranslatef(.4f,-.4f,0.f);
 	glScalef(.1f,.1f,1.f);
 	glCallList(gl.dls+DLS_IMG);
+	glPopMatrix();
+	if(gl.prg) glUseProgram(gl.prg);
+	glEnable(GL_TEXTURE_2D);
+}
+
+void glrenderimgtext(const char *text,float irat){
+	float rect[6];
+	float s;
+	if(!text) return;
+	if(!gl.fontbig) return;
+	glDisable(GL_TEXTURE_2D);
+	if(gl.prg) glUseProgram(0);
+	glPushMatrix();
+	ftglGetFontBBox(gl.fontbig,text,-1,rect);
+	glColor4fv(gl.cfg.txt_fgcolor);
+	// TODO: use irat
+	s=MAX(rect[3]-rect[0],rect[4]-rect[1]);
+	glScalef(.8f/s,-.8f/s,1.f);
+	glTranslatef(-(rect[0]+rect[3])/2.f,-(rect[1]+rect[4])/2.f,0.f);
+	ftglRenderFont(gl.fontbig,text,FTGL_RENDER_ALL);
+	glPopMatrix();
+	if(gl.prg) glUseProgram(gl.prg);
 	glEnable(GL_TEXTURE_2D);
 }
 
@@ -299,6 +331,7 @@ void glrenderimg(struct img *img,char back){
 	// draw img
 	glCallList(dl);
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
+	glrenderimgtext(imgfiledir(img->file),irat);
 	glPopMatrix();
 }
 

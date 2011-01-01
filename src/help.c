@@ -114,3 +114,18 @@ char *strsep(char **stringp, const char *delim){
 }
 #endif
 
+
+#if HAVE_STAT
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+char isdir(const char *fn){
+	struct stat st;
+	if(stat(fn,&st)) return 0;
+	return S_ISDIR(st.st_mode);
+}
+#else
+char isdir(const char *fn __attribute__((unused))){
+	return 0;
+}
+#endif

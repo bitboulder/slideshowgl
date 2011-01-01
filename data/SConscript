@@ -6,6 +6,7 @@ Import('destdir')
 
 data = """
 	defimg.png
+	dirimg.png
 	FreeSans.ttf
 	vs.c
 	vs_fish.c

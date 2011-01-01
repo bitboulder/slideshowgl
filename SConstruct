@@ -133,6 +133,7 @@ if not env.GetOption('clean'):
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
 	conf.CheckFuncMy('gettext',0,'GETTEXT')
+	conf.CheckFuncMy('stat',0,'STAT')
 
 	env = conf.Finish()
 

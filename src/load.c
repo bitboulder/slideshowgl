@@ -121,6 +121,7 @@ void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 /* thread: gl */
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
+	if(imgfiledir(il->img->file)) il=dirimg->ld;
 	if(it==TEX_PANO) return il->texs[TEX_FULL].pano &&
 				il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading ?
 			il->texs[TEX_FULL].dlpano : 0;
@@ -131,6 +132,7 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 
 /* thread: dpl, load, gl */
 float imgldrat(struct imgld *il){
+	if(imgfiledir(il->img->file)) il=dirimg->ld;
 	return (!il->h || !il->w) ? 0.f : (float)il->w/(float)il->h;
 }
 
@@ -292,6 +294,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	int lastscale=0;
 	char swap=0;
 	char panoenable=0;
+	if(imgfiledir(il->img->file)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
@@ -447,12 +450,18 @@ char ldcheck(){
 void ldresetdo(){
 	int i,it;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
-	for(i=-1;i<nimg;i++) for(it=0;it<TEX_NUM;it++){
-		struct itex *itex=(i<0?defimg:imgs[i])->ld->texs+it;
+	for(i=-2;i<nimg;i++) for(it=0;it<TEX_NUM;it++){
+		struct itex *itex;
+		switch(i){
+		case -2: itex=defimg->ld->texs+it; break;
+		case -1: itex=dirimg->ld->texs+it; break;
+		default: itex=imgs[i]->ld->texs+it; break;
+		}
 		free(itex->tx);
 		memset(itex,0,sizeof(struct itex));
 	}
 	ldfload(defimg->ld,TEX_BIG);
+	ldfload(dirimg->ld,TEX_BIG);
 	debug(DBG_STA,"ldreset done");
 	load.reset=0;
 }
@@ -462,6 +471,7 @@ extern Uint32 paint_last;
 int ldthread(void *UNUSED(arg)){
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
+	ldfload(dirimg->ld,TEX_BIG);
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();

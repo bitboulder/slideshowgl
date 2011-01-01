@@ -9,6 +9,7 @@
 
 struct img **imgs = NULL;
 struct img *defimg;
+struct img *dirimg;
 struct img *delimg;
 int nimg = 0;
 int nimgo = 0;
@@ -53,6 +54,7 @@ void imgfinalize(){
 	for(i=0;i<nimgo;i++) imgfree(imgs[i]);
 	free(imgs);
 	imgfree(defimg);
+	imgfree(dirimg);
 }
 
 void imgrandom(){

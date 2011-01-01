@@ -23,6 +23,7 @@ struct img {
 };
 extern struct img **imgs;
 extern struct img *defimg;
+extern struct img *dirimg;
 extern struct img *delimg;
 extern int nimg;
 

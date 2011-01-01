@@ -35,6 +35,7 @@ char imgpanoenable(struct imgpano *ip){ return ip->enable; }
 void imgpanoload(struct imgpano *ip,char *fn){
 	char pfn[FILELEN];
 	FILE *fd;
+	if(!fn){ ip->enable=0; return; }
 	ip->rotinit=4.f;
 	ip->gw=ip->gh=0.f;
 	strncpy(pfn,fn,FILELEN);
