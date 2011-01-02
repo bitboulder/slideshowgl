@@ -178,22 +178,48 @@ void glfree(){
 #endif
 }
 
+void glmodeslave(enum glmode dst){
+	static enum glmode cur=-1;
+	if(cur==dst) return;
+	cur=dst;
+	switch(dst){
+	case GLM_3D:
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+		glSecondaryColor3f(1.f,1.f,1.f);
+	break;
+	case GLM_2D:
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
+		glSecondaryColor3f(1.f,1.f,1.f);
+	break;
+	case GLM_TXT:
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
+		glSecondaryColor3f(0.f,0.f,0.f);
+	break;
+	}
+}
+
 float glmodex(enum glmode dst,float h3d,int fm){
 	static enum glmode cur=-1;
 	static float cur_h3d;
 	static float cur_w;
 	static int cur_fm;
 	float w = dst!=GLM_2D ? sdlrat() : 1.f;
-	if(cur==dst && (dst!=GLM_3D || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w)
-		return w;
+	glmodeslave(dst);
+	if(cur==dst && (dst!=GLM_3D || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w) return w;
 	cur=dst;
 	cur_h3d=h3d;
 	cur_fm=fm;
-	// TODO: split glUseProg and glEn/Disable from glmode (for glrendermark and glrenderimgtext)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
-	case GLM_3D:  
+	case GLM_3D: 
 		if(fm>=0) panoperspective(h3d,fm,w); else{
 			gluPerspective(h3d, w, 1., 15.);
 			if(gl.prg) glUseProgram(gl.prg);
@@ -213,21 +239,11 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	switch(dst){
 	case GLM_3D:
 		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
 	break;
 	case GLM_2D:
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_TEXTURE_2D);
-		glDisable(GL_CULL_FACE);
 	break;
 	case GLM_TXT:
 		glScalef(1.f/w,1.f,1.f);
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_CULL_FACE);
 	break;
 	}
 	return w;
@@ -243,8 +259,7 @@ GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
 }
 
 void glrendermark(struct ipos *ipos,float rot){
-	glDisable(GL_TEXTURE_2D);
-	if(gl.prg) glUseProgram(0);
+	glmodeslave(GLM_TXT);
 	glPushMatrix();
 	glRotatef(-rot,0.f,0.f,1.f);
 	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
@@ -252,20 +267,19 @@ void glrendermark(struct ipos *ipos,float rot){
 	glScalef(.1f,.1f,1.f);
 	glCallList(gl.dls+DLS_IMG);
 	glPopMatrix();
-	if(gl.prg) glUseProgram(gl.prg);
-	glEnable(GL_TEXTURE_2D);
 }
 
-void glrenderimgtext(const char *text,float irat){
+void glrenderimgtext(const char *text,float irat,float a){
 	float rect[6];
 	float s;
 	if(!text) return;
 	if(!gl.fontbig) return;
-	glDisable(GL_TEXTURE_2D);
+	// TODO: render text on an image-texture to prevent program switch and double-alpha
+	//glmodeslave(GLM_TXT);
 	if(gl.prg) glUseProgram(0);
 	glPushMatrix();
 	ftglGetFontBBox(gl.fontbig,text,-1,rect);
-	glColor4fv(gl.cfg.txt_fgcolor);
+	glColor4f(0.f,0.f,0.f,a);
 	// TODO: use irat
 	s=MAX(rect[3]-rect[0],rect[4]-rect[1]);
 	glScalef(.8f/s,-.8f/s,1.f);
@@ -273,7 +287,6 @@ void glrenderimgtext(const char *text,float irat){
 	ftglRenderFont(gl.fontbig,text,FTGL_RENDER_ALL);
 	glPopMatrix();
 	if(gl.prg) glUseProgram(gl.prg);
-	glEnable(GL_TEXTURE_2D);
 }
 
 void gldrawimg(struct itx *tx){
@@ -298,6 +311,7 @@ void glrenderimg(struct img *img,char back){
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
 	if(!(dl=glseltex(img,iopt->tex,&isc))) return;
+	glmodeslave(GLM_2D);
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	glPushMatrix();
@@ -331,7 +345,7 @@ void glrenderimg(struct img *img,char back){
 	// draw img
 	glCallList(dl);
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
-	glrenderimgtext(imgfiledir(img->file),irat);
+	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
 	glPopMatrix();
 }
 
