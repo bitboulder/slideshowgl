@@ -67,11 +67,15 @@ enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
 	char buf[255];
 	if(!exet) return ROT_0;
-	exif_entry_get_value(exet,buf,255);
+	exif_entry_get_value(exet,buf,255); // TODO get orientation as number
 	if(!strncmp("top - left",    buf,10)) return ROT_0;
+	if(!strncmp("oben - links",  buf,12)) return ROT_0;
 	if(!strncmp("left - bottom", buf,13)) return ROT_270;
+	if(!strncmp("links - unten", buf,13)) return ROT_270;
 	if(!strncmp("bottom - right",buf,14)) return ROT_180;
+	if(!strncmp("unten - rechts",buf,14)) return ROT_180;
 	if(!strncmp("right - top",   buf,11)) return ROT_90;
+	if(!strncmp("rechts - oben", buf,13)) return ROT_90;
 	return ROT_0;
 }
 #endif
