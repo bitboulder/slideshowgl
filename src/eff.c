@@ -281,7 +281,7 @@ void effdel(struct imgpos *ip){
 	ip->opt.active=1;
 	ip->opt.back=1;
 	ip->eff=1;
-	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1); // TODO: other img come from both directions after del ??
+	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 }
 
 void effstaton(){

@@ -177,7 +177,6 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
 	Uint32 nxttime=0;
-	dpl.pos.imgiold=dpl.pos.imgi;
 	switch(ev){
 	case DE_MOVE: dplmovepos(sx,sy); break;
 	case DE_RIGHT:
@@ -277,6 +276,7 @@ void dpldel(){
 		delimg=NULL;
 		ldffree(tmp->ld,TEX_NONE);
 	}
+	dpl.pos.imgiold--;
 	effdel(img->pos);
 	delimg=img;
 	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
@@ -438,6 +438,7 @@ char dplev(struct ev *ev){
 	if(nxttime && time<nxttime && ev->ev==lastev) return 0;
 	lastev=ev->ev;
 	nxttime=0;
+	dpl.pos.imgiold=dpl.pos.imgi;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
 			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* TODO: fix keymap for win32 */
