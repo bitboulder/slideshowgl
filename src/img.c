@@ -74,6 +74,7 @@ struct img *imgdel(int i){
 	struct img *img;
 	if(i<0 || i>=nimg) return NULL;
 	img=imgs[i];
+	if(imgfiledir(img->file)) return NULL;
 	if(i>0) imgs[i-1]->nxt=imgs[i]->nxt;
 	nimg--;
 	for(;i<nimg;i++) imgs[i]=imgs[i+1];

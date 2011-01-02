@@ -200,7 +200,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 		float x;
 		struct img *img=imgget(dpl.pos.imgi);
 		int panoact=panoactive()?1:0;
-		// TODO: no zoomin on directory
+		if(dpl.pos.zoom==0 && dir>0 && imgfiledir(img->file)) return nxttime;
 		if(dpl.pos.zoom==0 && dir>0 && panostart(img,&x)){
 			dpl.pos.x=x;
 			dpl.pos.zoom+=dir;
@@ -251,6 +251,7 @@ void dplmark(int imgi){
 	if(!dpl.pos.writemode) return;
 	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
+	if(imgfiledir(img->file)) return;
 	mark=imgposmark(img->pos);
 	*mark=!*mark;
 	effinit(EFFREF_IMG,DE_MARK,imgi);
@@ -261,6 +262,7 @@ void dplrotate(enum dplev ev){
 	struct img *img=imgget(dpl.pos.imgi);
 	int r=DE_DIR(ev);
 	if(!img) return;
+	if(imgfiledir(img->file)) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,ev,-1);
 	if(dpl.pos.writemode) actadd(ACT_ROTATE,img);
@@ -285,6 +287,7 @@ void dplcol(int d){
 	float *val;
 	if(dpl.colmode==COL_NONE) return;
 	if(!(img=imgget(dpl.pos.imgi))) return;
+	if(imgfiledir(img->file)) return;
 	val=((float*)imgposcol(img->pos))+dpl.colmode;
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
@@ -399,7 +402,6 @@ const char *dplhelp(){
 
 void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
-	// TODO: no del, colmod on directory
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
@@ -449,9 +451,9 @@ char dplev(struct ev *ev){
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy); break;
 	case DE_SEL:  dplsel(dplclickimg(ev->sx,ev->sy)); break;
-	case DE_MARK: dplmark(dplclickimg(ev->sx,ev->sy)); break; // TODO: no mark on directory
+	case DE_MARK: dplmark(dplclickimg(ev->sx,ev->sy)); break;
 	case DE_ROT1: 
-	case DE_ROT2: dplrotate(ev->ev); break; // TODO: no rotate on directory
+	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
 		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0)
 			dpl.run=dpl.run ? 0 : 0xf0000000;
