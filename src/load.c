@@ -315,7 +315,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		il->w=sdlimg->sf->h;
 		il->h=sdlimg->sf->w;
 	}
-	effrefresh(EFFREF_FIT);
+	effrefresh(EFFREF_FIT|(imgexifrot(il->img->exif)!=ROT_0?EFFREF_ROT:0));
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
 

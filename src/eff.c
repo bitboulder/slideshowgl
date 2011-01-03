@@ -261,15 +261,18 @@ char effmaxfitupdate(struct dplpos *dp){
 void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	struct dplpos *dp=dplgetpos();
-	debug(DBG_DBG,"eff refresh%s%s%s",
+	debug(DBG_DBG,"eff refresh%s%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
 		effref&EFFREF_ALL?" (all)":"",
-		effref&EFFREF_FIT?" (fit)":"");
+		effref&EFFREF_FIT?" (fit)":"",
+		effref&EFFREF_ROT?" (rot)":"");
 	if(effref&EFFREF_FIT) if(dp->zoom<0 && effmaxfitupdate(dp))
 		effref|=EFFREF_ALL;
 	if(effref&EFFREF_ALL) for(i=0;i<nimg;i++) effinitimg(dp,ev,i);
 	else if(effref&EFFREF_IMG) effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
-	
+	if(effref&EFFREF_ROT) for(i=0;i<nimg;i++) if(imgs[i]->pos->opt.active &&
+			imgs[i]->pos->cur.r != imgexifrotf(imgs[i]->exif))
+		effinitimg(dp,ev,i);
 }
 
 void effdel(struct imgpos *ip){

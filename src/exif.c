@@ -62,20 +62,30 @@ void imgexiffree(struct imgexif *exif){
 }
 
 #if HAVE_EXIF
+enum exifrot {
+	//action		0'Row	0'Col
+	ER_UDEF =0,	//	nothing
+	ER_NONE =1,	//	top		left
+	ER_FLPH =2,	//	top		right
+	ER_R180 =3,	//	bottom	right
+	ER_FLPV =4,	//	bottom	left
+	ER_TMAIN=5,	//	left	top
+	ER_R90  =6,	//	right	top
+	ER_TSLAV=7,	//	right	bottom
+	ER_R270 =8,	//	left	bottom
+};
+
 /* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
-	char buf[255];
 	if(!exet) return ROT_0;
-	exif_entry_get_value(exet,buf,255); // TODO get orientation as number
-	if(!strncmp("top - left",    buf,10)) return ROT_0;
-	if(!strncmp("oben - links",  buf,12)) return ROT_0;
-	if(!strncmp("left - bottom", buf,13)) return ROT_270;
-	if(!strncmp("links - unten", buf,13)) return ROT_270;
-	if(!strncmp("bottom - right",buf,14)) return ROT_180;
-	if(!strncmp("unten - rechts",buf,14)) return ROT_180;
-	if(!strncmp("right - top",   buf,11)) return ROT_90;
-	if(!strncmp("rechts - oben", buf,13)) return ROT_90;
+	if(exet->format!=EXIF_FORMAT_SHORT) return ROT_0;
+	if(exet->components<1) return ROT_0;
+	switch(*(short*)exet->data){
+	case ER_R90:  return ROT_90;
+	case ER_R180: return ROT_180;
+	case ER_R270: return ROT_270;
+	}
 	return ROT_0;
 }
 #endif

@@ -14,7 +14,7 @@ struct ipos *imgposcur(struct imgpos *ip);
 struct icol *imgposcol(struct imgpos *ip);
 char *imgposmark(struct imgpos *ip);
 
-enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4 };
+enum effrefresh { EFFREF_NO=0x0, EFFREF_IMG=0x1, EFFREF_ALL=0x2, EFFREF_FIT=0x4, EFFREF_ROT=0x8 };
 
 void effrefresh(enum effrefresh val);
 char effineff();
