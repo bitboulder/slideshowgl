@@ -149,7 +149,7 @@ void fgetfiles(int argc,char **argv){
 	actadd(ACT_LOADMARKS,NULL);
 }
 
-char floaddir(const char *dir){
+char floaddir(struct imgfile *ifl){
 #if HAVE_OPENDIR
 	DIR *dd;
 	struct dirent *de;
@@ -157,24 +157,23 @@ char floaddir(const char *dir){
 	size_t ld;
 	struct imglist *il;
 	int count=0;
-	if((il=ilfind(dir))){ ilswitch(il); return 1; }
-	if(!(dd=opendir(dir))) return 0;
-	il=ilnew(dir);
-	ld=strlen(dir);
-	memcpy(buf,dir,ld);
+	if((il=ilfind(ifl->fn))){ ilswitch(il); return 1; }
+	if(!(dd=opendir(ifl->fn))){ error(ERR_CONT,"opendir failed (%s)",ifl->fn); return 0; }
+	il=ilnew(ifl->fn);
+	ld=strlen(ifl->fn);
+	memcpy(buf,ifl->fn,ld);
 	if(buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
 	while((de=readdir(dd))){
 		size_t l=0;
 		char ok=0;
 		while(l<NAME_MAX && de->d_name[l]) l++;
 		if(ld+l>=FILELEN) continue;
-		if(l>=5 && strncmp(de->d_name+l-4,".png",4)) ok=1;
-		if(l>=5 && strncmp(de->d_name+l-4,".jpg",4)) ok=1;
-		if(l>=6 && strncmp(de->d_name+l-5,".jpeg",5)) ok=1;
+		if(l>=5 && !strncmp(de->d_name+l-4,".png",4)) ok=1;
+		if(l>=5 && !strncmp(de->d_name+l-4,".jpg",4)) ok=1;
+		if(l>=6 && !strncmp(de->d_name+l-5,".jpeg",5)) ok=1;
 		memcpy(buf+ld,de->d_name,l); buf[ld+l]='\0';
 		if(isdir(buf)) ok=1;
-		if(l==1 && !strncmp(de->d_name,".",1)) ok=0;
-		if(l==2 && !strncmp(de->d_name,"..",2)) ok=0;
+		if(l>=1 && de->d_name[0]=='.') ok=0;
 		if(!ok) continue;
 		faddfile(il,buf);
 		count++;

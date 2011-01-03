@@ -179,9 +179,9 @@ int imgsort_datecmp(const void *a,const void *b){
 	struct img *ib=*(struct img **)b;
 	int64_t ad=imgexifdate(ia->exif);
 	int64_t bd=imgexifdate(ib->exif);
-	if(ad<0 && bd<0) return strcmp(imgfilefn(ia->file),imgfilefn(ib->file));
-	if(ad<0)  return  1;
-	if(bd<0)  return -1;
+	if(!ad && !bd) return strcmp(imgfilefn(ia->file),imgfilefn(ib->file));
+	if(!ad)   return  1;
+	if(!bd)   return -1;
 	if(ad<bd) return -1;
 	if(ad>bd) return  1;
 	return 0;
@@ -189,7 +189,7 @@ int imgsort_datecmp(const void *a,const void *b){
 
 void imgsort(struct imglist *il,char date){
 	int i;
-	for(i=0;i<il->nimg;i++)
+	if(date) for(i=0;i<il->nimg;i++)
 		imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
 	imgsetnxt(il);

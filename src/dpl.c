@@ -288,19 +288,21 @@ void dplcol(int d){
 	if(*val> 1.f) *val= 1.f;
 }
 
-void dpldir(){
-	struct img *img=imgget(dpl.pos.imgi);
-	const char *dir;
-	if(img && (dir=imgfiledir(img->file))){
-		if(!floaddir(dir)) return;
+char dpldir(char dir){
+	if(dir==1){
+		struct img *img=imgget(dpl.pos.imgi);
+		if(!img || !imgfiledir(img->file)) return 0;
+		if(!floaddir(img->file)) return 1;
 		dpl.pos.imgi=0;
-	}else{
+	}
+	if(dir==-1){
 		int imgi=ilswitch(NULL);
-		if(imgi==IMGI_END) return;
+		if(imgi==IMGI_END) return 0;
 		if(imgi==IMGI_START) imgi=0;
 		dpl.pos.imgi=imgi;
 	}
 	effinit(EFFREF_CLR,DE_MOVE,-1);
+	return 1;
 }
 
 #define ADDTXT(...)	txt+=snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__)
@@ -414,7 +416,7 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(); break;
+	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(-1); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
@@ -465,7 +467,7 @@ char dplev(struct ev *ev){
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
-		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0)
+		if(!panoev(PE_PLAY) && !dpldir(1) && dpl.pos.zoom<=0)
 			dpl.run=dpl.run ? 0 : 0xf0000000;
 		nxttime=1000;
 	break;

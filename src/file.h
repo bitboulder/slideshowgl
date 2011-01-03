@@ -11,6 +11,6 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext);
 
 void fgetfiles(int argc,char **argv);
 
-char floaddir(const char *dir);
+char floaddir(struct imgfile *ifl);
 
 #endif

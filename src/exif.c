@@ -103,10 +103,11 @@ int64_t imgexifgetdate(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_ORIGINAL);
 	char *buf,*pos,c=0;
 	struct tm tm;
+	int64_t ret;
 	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME);
 	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_DIGITIZED);
-	if(!exet) return -1;
-	if(exet->format!=EXIF_FORMAT_ASCII) return -1;
+	if(!exet) return 0;
+	if(exet->format!=EXIF_FORMAT_ASCII) return 0;
 	pos=buf=malloc(exet->components+1);
 	memcpy(buf,exet->data,exet->components);
 	buf[exet->components]='\0';
@@ -117,7 +118,7 @@ int64_t imgexifgetdate(ExifData *exdat){
 		char *nxt=NULL;
 		while(*pos==':' || *pos=='.' || *pos==' ') pos++;
 		val=strtol(pos,&nxt,10);
-		if(!nxt || nxt==pos){ error(ERR_CONT,"date string parse error (%s)",buf); return -1; }
+		if(!nxt || nxt==pos){ error(ERR_CONT,"date string parse error (%s)",buf); return 0; }
 		pos=nxt;
 		switch(c++){
 		case 0: tm.tm_year=(int)val-1900; break;
@@ -128,11 +129,13 @@ int64_t imgexifgetdate(ExifData *exdat){
 		case 5: tm.tm_sec=(int)val; break;
 		}
 	}
-	if(c<2){ error(ERR_CONT,"no enought digits for date (%s)",buf); return -1; }
+	if(c<2){ error(ERR_CONT,"no enought digits for date (%s)",buf); return 0; }
 	free(buf);
-	return mktime(&tm);
+	ret=mktime(&tm);
+	if(ret<0) ret=0;
+	return ret;
 #else
-	return -1;
+	return 0;
 #endif
 }
 
