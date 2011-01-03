@@ -288,6 +288,21 @@ void dplcol(int d){
 	if(*val> 1.f) *val= 1.f;
 }
 
+void dpldir(){
+	struct img *img=imgget(dpl.pos.imgi);
+	const char *dir;
+	if(img && (dir=imgfiledir(img->file))){
+		if(!floaddir(dir)) return;
+		dpl.pos.imgi=0;
+	}else{
+		int imgi=ilswitch(NULL);
+		if(imgi==IMGI_END) return;
+		if(imgi==IMGI_START) imgi=0;
+		dpl.pos.imgi=imgi;
+	}
+	effinit(EFFREF_CLR,DE_MOVE,-1);
+}
+
 #define ADDTXT(...)	txt+=snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__)
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
@@ -295,7 +310,7 @@ void dplstatupdate(){
 	if(dpl.pos.imgi==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(dpl.pos.imgi==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
-		struct img *img=imgs[dpl.pos.imgi];
+		struct img *img=imgget(dpl.pos.imgi);
 		struct icol *ic=imgposcol(img->pos);
 		char *txt=dsttxt;
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, imggetn(), imgfilefn(img->file));
@@ -399,7 +414,7 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:panoev(PE_MODE); break;
+	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;

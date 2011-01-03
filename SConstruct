@@ -132,9 +132,13 @@ if not env.GetOption('clean'):
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
-	conf.CheckFuncMy('gettext',0,'GETTEXT')
+	if mode == 'debug':
+		env['HAVE_GETTEXT'] = 0
+	else:
+		conf.CheckFuncMy('gettext',0,'GETTEXT')
 	conf.CheckFuncMy('stat',0,'STAT')
 	conf.CheckFuncMy('mktime',0,'MKTIME')
+	conf.CheckFuncMy('opendir',0,'OPENDIR')
 
 	env = conf.Finish()
 

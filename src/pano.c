@@ -32,7 +32,7 @@ struct imgpano *imgpanoinit(){ return calloc(1,sizeof(struct imgpano)); }
 void imgpanofree(struct imgpano *ip){ free(ip); }
 char imgpanoenable(struct imgpano *ip){ return ip->enable; }
 
-void imgpanoload(struct imgpano *ip,char *fn){
+void imgpanoload(struct imgpano *ip,const char *fn){
 	char pfn[FILELEN];
 	FILE *fd;
 	if(!fn){ ip->enable=0; return; }

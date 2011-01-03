@@ -13,6 +13,8 @@
 enum imgtex { IMGTEX };
 #undef E2
 
+struct imglist;
+
 struct img {
 	struct img *nxt;
 	struct imgld *ld;
@@ -21,10 +23,15 @@ struct img {
 	struct imgfile *file;
 	struct imgpano *pano;
 };
-extern struct img **imgs;
 extern struct img *defimg;
 extern struct img *dirimg;
 extern struct img *delimg;
+
+struct imglist *ilnew(const char *dir);
+void ilfree(struct imglist *il);
+struct imglist *ilfind(const char *dir);
+void ilcleanup();
+int ilswitch(struct imglist *il);
 
 int imggetn();
 int imginarrorlimits(int i);
@@ -32,10 +39,11 @@ int imgidiff(int ia,int ib,int *ira,int *irb);
 
 struct img *imgget(int i);
 struct img *imginit();
-struct img *imgadd();
-void imgfinalize();
-void imgrandom();
-void imgdatesort();
+struct img *imgadd(struct imglist *il);
 struct img *imgdel(int i);
+
+void imgfinalize();
+void imgrandom(struct imglist *il);
+void imgsort(struct imglist *il,char date);
 
 #endif

@@ -6,6 +6,13 @@
 	#include <sys/param.h>
 	#include <unistd.h>
 #endif
+#if HAVE_OPENDIR
+	#include <sys/types.h>
+	#include <dirent.h>
+	#ifndef NAME_MAX
+		#define NAME_MAX 255
+	#endif
+#endif
 #include "file.h"
 #include "main.h"
 #include "img.h"
@@ -87,8 +94,8 @@ void fthumbinit(struct imgfile *ifl){
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
-void faddfile(char *fn){
-	struct img *img=imgadd();
+void faddfile(struct imglist *il,const char *fn){
+	struct img *img=imgadd(il);
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	strncpy(img->file->fn,fn,FILELEN);
 	if(isdir(img->file->fn)){
@@ -102,7 +109,7 @@ void faddfile(char *fn){
 	}
 }
 
-void faddflst(char *flst){
+void faddflst(struct imglist *il,char *flst){
 	FILE *fd=fopen(flst,"r");
 	char buf[FILELEN];
 	if(!fd){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return; }
@@ -111,7 +118,7 @@ void faddflst(char *flst){
 		if(!fgets(buf,FILELEN,fd)) continue;
 		len=(int)strlen(buf);
 		while(buf[len-1]=='\n' || buf[len-1]=='\r') buf[--len]='\0';
-		faddfile(buf);
+		faddfile(il,buf);
 	}
 	fclose(fd);
 }
@@ -123,14 +130,59 @@ void finitimg(struct img **img,const char *basefn){
 	strncpy((*img)->file->fn,fn,FILELEN);
 }
 
+void floadfinalize(struct imglist *il,char sort){
+	if(cfggetint("ld.datesort")) imgsort(il,1);
+	else if(cfggetint("ld.random")) imgrandom(il);
+	else if(sort) imgsort(il,0);
+}
+
 void fgetfiles(int argc,char **argv){
+	struct imglist *il=ilnew("[BASE]");
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
 	for(;argc;argc--,argv++){
-		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) faddflst(argv[0]);
-		else faddfile(argv[0]);
+		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) faddflst(il,argv[0]);
+		else faddfile(il,argv[0]);
 	}
-	if(cfggetint("ld.random")) imgrandom();
-	if(cfggetint("ld.datesort")) imgdatesort();
+	floadfinalize(il,0);
+	ilswitch(il);
 	actadd(ACT_LOADMARKS,NULL);
+}
+
+char floaddir(const char *dir){
+#if HAVE_OPENDIR
+	DIR *dd;
+	struct dirent *de;
+	char buf[FILELEN];
+	size_t ld;
+	struct imglist *il;
+	int count=0;
+	if((il=ilfind(dir))){ ilswitch(il); return 1; }
+	if(!(dd=opendir(dir))) return 0;
+	il=ilnew(dir);
+	ld=strlen(dir);
+	memcpy(buf,dir,ld);
+	if(buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
+	while((de=readdir(dd))){
+		size_t l=0;
+		char ok=0;
+		while(l<NAME_MAX && de->d_name[l]) l++;
+		if(ld+l>=FILELEN) continue;
+		if(l>=5 && strncmp(de->d_name+l-4,".png",4)) ok=1;
+		if(l>=5 && strncmp(de->d_name+l-4,".jpg",4)) ok=1;
+		if(l>=6 && strncmp(de->d_name+l-5,".jpeg",5)) ok=1;
+		memcpy(buf+ld,de->d_name,l); buf[ld+l]='\0';
+		if(isdir(buf)) ok=1;
+		if(l==1 && !strncmp(de->d_name,".",1)) ok=0;
+		if(l==2 && !strncmp(de->d_name,"..",2)) ok=0;
+		if(!ok) continue;
+		faddfile(il,buf);
+		count++;
+	}
+	closedir(dd);
+	if(!count){ ilfree(il); return 0; }
+	floadfinalize(il,1);
+	ilswitch(il);
+	return 1;
+#endif
 }

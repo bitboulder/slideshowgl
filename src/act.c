@@ -26,12 +26,13 @@ void actloadmarks(){
 	const char *fn=cfggetstr("act.mark_fn");
 	FILE *fd;
 	char line[FILELEN];
+	/* TODO: what to do with marks and mulitple img lists */
 	if(!(fd=fopen(fn,"r"))) return;
 	while(!feof(fd) && fgets(line,FILELEN,fd)){
 		struct img *img;
 		int len=(int)strlen(line);
 		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
-		for(img=*imgs;img;img=img->nxt)
+		for(img=imgget(0);img;img=img->nxt)
 			if(!strcmp(imgfilefn(img->file),line))
 				*imgposmark(img->pos)=1;
 	}
@@ -43,8 +44,9 @@ void actsavemarks(){
 	const char *fn=cfggetstr("act.mark_fn");
 	FILE *fd;
 	struct img *img;
+	/* TODO: what to do with marks and mulitple img lists */
 	if(!(fd=fopen(fn,"w"))) return;
-	for(img=*imgs;img;img=img->nxt) if(*imgposmark(img->pos))
+	for(img=imgget(0);img;img=img->nxt) if(*imgposmark(img->pos))
 		fprintf(fd,"%s\n",imgfilefn(img->file));
 	fclose(fd);
 	debug(DBG_STA,"marks saved");

@@ -6,45 +6,92 @@
 #include "file.h"
 #include "pano.h"
 #include "eff.h"
+#include "main.h"
 
-struct img **imgs = NULL;
 struct img *defimg;
 struct img *dirimg;
 struct img *delimg;
-int nimg = 0;
-int nimgo = 0;
-unsigned int simg = 0;
+
+struct imglist {
+	char dir[FILELEN];
+	struct img **imgs;
+	int nimg;
+	int nimgo;
+	unsigned int simg;
+	struct imglist *nxt;
+	struct imglist *parent;
+	int pos;
+} *ils=NULL;
+
+struct imglist *curil = NULL;
+
+/***************************** img list managment *****************************/
+
+struct imglist *ilnew(const char *dir){
+	struct imglist *il=calloc(1,sizeof(struct imglist));
+	if(curil) curil->pos=dplgetimgi();
+	strncpy(il->dir,dir,FILELEN);
+	il->parent=curil;
+	il->pos=IMGI_START;
+	il->nxt=ils;
+	ils=il;
+	return il;
+}
+
+void ilfree(struct imglist *il){
+	/* TODO: imglist cleanup */
+}
+
+struct imglist *ilfind(const char *dir){
+	struct imglist *il;
+	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)) return il;
+	return NULL;
+}
+
+int ilswitch(struct imglist *il){
+	if(!il && curil && curil->parent) il=curil->parent;
+	if(!il) return IMGI_END;
+	curil=il;
+	return curil->pos;
+}
+
+/***************************** img index operations ***************************/
 
 /* thread: all */
-int imggetn(){ return nimg; }
+int imggetn(){ return curil ? curil->nimg : 0; }
 
 /* thread: all */
 int imginarrorlimits(int i){
+	if(!curil) return 0;
 	if(i==IMGI_START) return -1;
-	if(i==IMGI_END)   return nimg;
+	if(i==IMGI_END)   return curil->nimg;
 	return i;
 }
 
 /* thread: all */
 int imgidiff(int ia,int ib,int *ira,int *irb){
 	int diff;
+	if(!curil) return 0;
 	ia=imginarrorlimits(ia);
 	ib=imginarrorlimits(ib);
 	if(ira) *ira=ia;
 	if(irb) *irb=ib;
 	diff=ib-ia;
 	if(dplloop()){
-		while(diff> nimg/2) diff-=nimg;
-		while(diff<-nimg/2) diff+=nimg;
+		while(diff> curil->nimg/2) diff-=curil->nimg;
+		while(diff<-curil->nimg/2) diff+=curil->nimg;
 	}
 	return diff;
 }
 
 /* thread: all */
 struct img *imgget(int i){
-	if(i<0 || i>=nimg) return NULL;
-	return imgs[i];
+	if(!curil) return NULL;
+	if(i<0 || i>=curil->nimg) return NULL;
+	return curil->imgs[i];
 }
+
+/***************************** image init *************************************/
 
 struct img *imginit(){
 	struct img *img=malloc(sizeof(struct img));
@@ -58,6 +105,7 @@ struct img *imginit(){
 }
 
 void imgfree(struct img *img){
+	if(!img) return;
 	imgldfree(img->ld);
 	imgposfree(img->pos);
 	imgexiffree(img->exif);
@@ -66,41 +114,67 @@ void imgfree(struct img *img){
 	free(img);
 }
 
-struct img *imgadd(){
-	if((unsigned int)nimg==simg) imgs=realloc(imgs,sizeof(struct img *)*(simg+=16));
-	imgs[nimg]=imginit();
-	if(nimg) imgs[nimg-1]->nxt=imgs[nimg];
-	nimgo=nimg+1;
-	return imgs[nimg++];
+struct img *imgadd(struct imglist *il){
+	if((unsigned int)il->nimg==il->simg) il->imgs=realloc(il->imgs,sizeof(struct img *)*(il->simg+=16));
+	il->imgs[il->nimg]=imginit();
+	if(il->nimg) il->imgs[il->nimg-1]->nxt=il->imgs[il->nimg];
+	il->nimgo=il->nimg+1;
+	return il->imgs[il->nimg++];
 }
+
+struct img *imgdel(int i){
+	struct img *img;
+	if(!curil) return NULL;
+	if(i<0 || i>=curil->nimg) return NULL;
+	img=curil->imgs[i];
+	if(imgfiledir(img->file)) return NULL;
+	if(i>0) curil->imgs[i-1]->nxt=curil->imgs[i]->nxt;
+	curil->nimg--;
+	for(;i<curil->nimg;i++) curil->imgs[i]=curil->imgs[i+1];
+	curil->imgs[i]=img;
+	return img;
+}
+
+/***************************** image list work ********************************/
 
 void imgfinalize(){
-	int i;
-	for(i=0;i<nimgo;i++) imgfree(imgs[i]);
-	free(imgs);
+	struct imglist *il;
+	for(il=ils;il;il=il->nxt){
+		int i;
+		for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
+		free(il->imgs);
+	}
 	imgfree(defimg);
 	imgfree(dirimg);
+	imgfree(delimg);
 }
 
-void imgsetnxt(){
+void imgsetnxt(struct imglist *il){
 	int i;
-	for(i=0;i<nimg;i++) imgs[i]->nxt = i<nimg ? imgs[i+1] : NULL;
+	for(i=0;i<il->nimg;i++)
+		il->imgs[i]->nxt = i<il->nimg-1 ? il->imgs[i+1] : NULL;
 }
 
-void imgrandom(){
-	struct img **oimgs=imgs;
+void imgrandom(struct imglist *il){
+	struct img **oimgs=il->imgs;
 	int i,j;
-	imgs=calloc(sizeof(struct img *),simg);
-	for(i=0;i<nimg;i++){
-		j=rand()%nimg;
-		while(imgs[j]) j=(j+1)%nimg;
-		imgs[j]=oimgs[i];
+	il->imgs=calloc(sizeof(struct img *),il->simg);
+	for(i=0;i<il->nimg;i++){
+		j=rand()%il->nimg;
+		while(il->imgs[j]) j=(j+1)%il->nimg;
+		il->imgs[j]=oimgs[i];
 	}
 	free(oimgs);
-	imgsetnxt();
+	imgsetnxt(il);
 }
 
-int imgdatesort_cmp(const void *a,const void *b){
+int imgsort_filecmp(const void *a,const void *b){
+	struct img *ia=*(struct img **)a;
+	struct img *ib=*(struct img **)b;
+	return strcmp(imgfilefn(ia->file),imgfilefn(ib->file));
+}
+
+int imgsort_datecmp(const void *a,const void *b){
 	struct img *ia=*(struct img **)a;
 	struct img *ib=*(struct img **)b;
 	int64_t ad=imgexifdate(ia->exif);
@@ -113,21 +187,11 @@ int imgdatesort_cmp(const void *a,const void *b){
 	return 0;
 }
 
-void imgdatesort(){
+void imgsort(struct imglist *il,char date){
 	int i;
-	for(i=0;i<nimg;i++) imgexifload(imgs[i]->exif,imgfilefn(imgs[i]->file));
-	qsort(imgs,(size_t)nimg,sizeof(struct img *),imgdatesort_cmp);
-	imgsetnxt();
+	for(i=0;i<il->nimg;i++)
+		imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
+	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
+	imgsetnxt(il);
 }
 
-struct img *imgdel(int i){
-	struct img *img;
-	if(i<0 || i>=nimg) return NULL;
-	img=imgs[i];
-	if(imgfiledir(img->file)) return NULL;
-	if(i>0) imgs[i-1]->nxt=imgs[i]->nxt;
-	nimg--;
-	for(;i<nimg;i++) imgs[i]=imgs[i+1];
-	imgs[i]=img;
-	return img;
-}

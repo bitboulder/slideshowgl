@@ -87,9 +87,10 @@ int effdiff(struct dplpos *dp,int *pi1,int *pi2){
 }
 
 void effmove(struct dplpos *dp,struct ipos *ip,int i){
+	struct img *img=imgget(i);
 	ip->a = 1.f;
-	ip->m=(imgs[i]->pos->mark && dp->writemode)?1.f:0.f;
-	ip->r=imgexifrotf(imgs[i]->exif);
+	ip->m=(img && img->pos->mark && dp->writemode)?1.f:0.f;
+	ip->r=img ? imgexifrotf(img->exif) : 0.f;
 	if(dp->zoom<0){
 		int diff=imgidiff(dp->imgi,i,NULL,NULL);
 		ip->s=zoomtab[-dp->zoom].size;
@@ -109,7 +110,7 @@ void effmove(struct dplpos *dp,struct ipos *ip,int i){
 		ip->s=powf(2.f,(float)dp->zoom);
 		ip->x=-dp->x*ip->s;
 		ip->y=-dp->y*ip->s;
-		if(imgfit(imgs[i],&fitw,&fith)){
+		if(imgfit(img,&fitw,&fith)){
 			ip->x*=fitw;
 			ip->y*=fith;
 		}
@@ -147,6 +148,7 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 char efffaston(struct dplpos *dp,struct imgpos *ip,int i){
 	int i1,i2;
 	int diff=effdiff(dp,&i1,&i2);
+	struct img *img=imgget(i);
 	if(!diff) return 0;
 	if(diff<0 && (i<=i2 || i>=i1)) return 0;
 	if(diff>0 && (i<=i1 || i>=i2)) return 0;
@@ -155,8 +157,8 @@ char efffaston(struct dplpos *dp,struct imgpos *ip,int i){
 	ip->cur.s=1.;
 	ip->cur.x=(float)(i-i1);
 	ip->cur.y=0.;
-	ip->cur.m=(imgs[i]->pos->mark && dp->writemode)?1.:0.;
-	ip->cur.r=imgexifrotf(imgs[i]->exif);
+	ip->cur.m=(img && img->pos->mark && dp->writemode)?1.:0.;
+	ip->cur.r=img ? imgexifrotf(img->exif) : 0.f;
 	ip->eff=0;
 	return 1;
 }
@@ -174,7 +176,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	struct ipos dst;
 	char act;
 	if(!(img=imgget(i))) return;
-	ip=imgs[i]->pos;
+	ip=img->pos;
 	act=effact(dp,i);
 	if(!act && !ip->opt.active){
 		if(dp->zoom!=0 || !(ev&DE_VER) || !dp->writemode) return;
@@ -236,7 +238,7 @@ char effmaxfitupdate(struct dplpos *dp){
 	int i;
 	float maxfitw=0.f,maxfith=0.f;
 	struct img *img;
-	for(img=*imgs,i=0;img;img=img->nxt,i++) if(effact(dp,i)){
+	for(img=imgget(0),i=0;img;img=img->nxt,i++) if(effact(dp,i)){
 		float fitw,fith;
 		if(!imgfit(img,&fitw,&fith)) continue;
 		if(fitw>maxfitw) maxfitw=fitw;
@@ -254,18 +256,26 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	struct dplpos *dp=dplgetpos();
 	int nimg=imggetn();
-	debug(DBG_DBG,"eff refresh%s%s%s%s",
+	struct img *img;
+	debug(DBG_DBG,"eff refresh%s%s%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
 		effref&EFFREF_ALL?" (all)":"",
+		effref&EFFREF_CLR?" (clr)":"",
 		effref&EFFREF_FIT?" (fit)":"",
 		effref&EFFREF_ROT?" (rot)":"");
-	if(effref&EFFREF_FIT) if(dp->zoom<0 && effmaxfitupdate(dp))
-		effref|=EFFREF_ALL;
-	if(effref&EFFREF_ALL) for(i=0;i<nimg;i++) effinitimg(dp,ev,i);
-	else if(effref&EFFREF_IMG) effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
-	if(effref&EFFREF_ROT) for(i=0;i<nimg;i++) if(imgs[i]->pos->opt.active &&
-			imgs[i]->pos->cur.r != imgexifrotf(imgs[i]->exif))
-		effinitimg(dp,ev,i);
+	if(effref&EFFREF_CLR)
+		for(img=imgget(0);img;img=img->nxt) img->pos->opt.active=0;
+	if(effref&EFFREF_FIT)
+		if(dp->zoom<0 && effmaxfitupdate(dp))
+			effref|=EFFREF_ALL;
+	if(effref&(EFFREF_ALL|EFFREF_CLR))
+		for(i=0;i<nimg;i++) effinitimg(dp,ev,i);
+	else if(effref&EFFREF_IMG)
+		effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
+	if(effref&EFFREF_ROT) for(i=0;i<nimg;i++)
+		if((img=imgget(i)) && img->pos->opt.active &&
+				img->pos->cur.r != imgexifrotf(img->exif))
+			effinitimg(dp,ev,i);
 }
 
 void effdel(struct imgpos *ip){
@@ -375,8 +385,7 @@ void effdo(){
 		effinit(eff.refresh,0,-1);
 		eff.refresh=EFFREF_NO;
 	}
-	if(!imgs) return;
-	for(img=*imgs;img;img=img->nxt) if(img->pos->eff){
+	for(img=imgget(0);img;img=img->nxt) if(img->pos->eff){
 		effimg(img->pos);
 		ineff=1;
 	}

@@ -420,12 +420,12 @@ char ldcheck(){
 	struct loadconcept *ldcp=ldconceptget();
 	char ret=0;
 
-	for(img=*imgs,i=0;img;img=img->nxt,i++){
+	for(img=imgget(0),i=0;img;img=img->nxt,i++){
 		enum imgtex hold=TEX_NONE;
 		int diff=imgidiff(imgi,i,NULL,NULL);
 		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 			hold=ldcp->hold[diff-ldcp->hold_min];
-		if(ldffree(imgs[i]->ld,hold)){ ret=1; break; }
+		if(ldffree(img->ld,hold)){ ret=1; break; }
 	}
 
 	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
@@ -446,7 +446,8 @@ char ldcheck(){
 
 void ldresetdo(){
 	int i,it;
-	struct img *img=*imgs;
+	struct img *img=imgget(0); /* TODO: reset not current imgs */
+	if(!img) return;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
 	for(i=-2;img;i++){
 		struct itex *itex;
