@@ -131,6 +131,6 @@ void fgetfiles(int argc,char **argv){
 		else faddfile(argv[0]);
 	}
 	if(cfggetint("ld.random")) imgrandom();
-	// TODO: sort by exif-date
+	if(cfggetint("ld.datesort")) imgdatesort();
 	actadd(ACT_LOADMARKS,NULL);
 }

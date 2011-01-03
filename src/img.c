@@ -57,6 +57,11 @@ void imgfinalize(){
 	imgfree(dirimg);
 }
 
+void imgsetnxt(){
+	int i;
+	for(i=0;i<nimg;i++) imgs[i]->nxt = i<nimg ? imgs[i+1] : NULL;
+}
+
 void imgrandom(){
 	struct img **oimgs=imgs;
 	int i,j;
@@ -67,7 +72,27 @@ void imgrandom(){
 		imgs[j]=oimgs[i];
 	}
 	free(oimgs);
-	for(i=0;i<nimg;i++) imgs[i]->nxt = i<nimg ? imgs[i+1] : NULL;
+	imgsetnxt();
+}
+
+int imgdatesort_cmp(const void *a,const void *b){
+	struct img *ia=*(struct img **)a;
+	struct img *ib=*(struct img **)b;
+	int64_t ad=imgexifdate(ia->exif);
+	int64_t bd=imgexifdate(ib->exif);
+	if(ad<0 && bd<0) return strcmp(imgfilefn(ia->file),imgfilefn(ib->file));
+	if(ad<0)  return  1;
+	if(bd<0)  return -1;
+	if(ad<bd) return -1;
+	if(ad>bd) return  1;
+	return 0;
+}
+
+void imgdatesort(){
+	int i;
+	for(i=0;i<nimg;i++) imgexifload(imgs[i]->exif,imgfilefn(imgs[i]->file));
+	qsort(imgs,(size_t)nimg,sizeof(struct img *),imgdatesort_cmp);
+	imgsetnxt();
 }
 
 struct img *imgdel(int i){

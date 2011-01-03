@@ -32,6 +32,7 @@ struct img *imginit();
 struct img *imgadd();
 void imgfinalize();
 void imgrandom();
+void imgdatesort();
 struct img *imgdel(int i);
 
 #endif

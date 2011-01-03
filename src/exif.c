@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #if HAVE_EXIF
-#include <exif-data.h>
+	#include <exif-data.h>
+#endif
+#if HAVE_MKTIME
+	#include <time.h>
 #endif
 #include "exif.h"
+#include "main.h"
 #include "cfg.h"
 
 #if HAVE_EXIF
@@ -32,11 +36,13 @@ struct exifinfo {
 struct imgexif {
 	char load;
 	enum rot rot;
+	int64_t date;
 	char *info;
 };
 
 /* thread: all */
 enum rot imgexifrot(struct imgexif *exif){ return exif->rot; }
+int64_t imgexifdate(struct imgexif *exif){ return exif->date; }
 char *imgexifinfo(struct imgexif *exif){ return exif->info; }
 
 /* thread: gl, dpl */
@@ -78,9 +84,11 @@ enum exifrot {
 /* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
-	if(!exet) return ROT_0;
-	if(exet->format!=EXIF_FORMAT_SHORT) return ROT_0;
-	if(exet->components<1) return ROT_0;
+	if(!exet){ error(ERR_CONT,"no orientation tag"); return ROT_0; }
+	if(exet->format!=EXIF_FORMAT_SHORT)
+	{ error(ERR_CONT,"wrong orientation format (%i)",exet->format); return ROT_0; }
+	if(exet->components<1)
+	{ error(ERR_CONT,"orientation tag with too less components (%lu)",exet->components); return ROT_0; }
 	switch(*(short*)exet->data){
 	case ER_R90:  return ROT_90;
 	case ER_R180: return ROT_180;
@@ -88,9 +96,46 @@ enum rot imgexifgetrot(ExifData *exdat){
 	}
 	return ROT_0;
 }
-#endif
 
-#if HAVE_EXIF
+/* thread: load */
+int64_t imgexifgetdate(ExifData *exdat){
+#if HAVE_MKTIME
+	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_ORIGINAL);
+	char *buf,*pos,c=0;
+	struct tm tm;
+	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME);
+	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_DIGITIZED);
+	if(!exet) return -1;
+	if(exet->format!=EXIF_FORMAT_ASCII) return -1;
+	pos=buf=malloc(exet->components+1);
+	memcpy(buf,exet->data,exet->components);
+	buf[exet->components]='\0';
+	memset(&tm,0,sizeof(struct tm));
+	tm.tm_isdst=-1;
+	while(*pos && c<6){
+		long int val;
+		char *nxt=NULL;
+		while(*pos==':' || *pos=='.' || *pos==' ') pos++;
+		val=strtol(pos,&nxt,10);
+		if(!nxt || nxt==pos){ error(ERR_CONT,"date string parse error (%s)",buf); return -1; }
+		pos=nxt;
+		switch(c++){
+		case 0: tm.tm_year=(int)val-1900; break;
+		case 1: tm.tm_mon=(int)val-1; break;
+		case 2: tm.tm_mday=(int)val; break;
+		case 3: tm.tm_hour=(int)val; break;
+		case 4: tm.tm_min=(int)val; break;
+		case 5: tm.tm_sec=(int)val; break;
+		}
+	}
+	if(c<2){ error(ERR_CONT,"no enought digits for date (%s)",buf); return -1; }
+	free(buf);
+	return mktime(&tm);
+#else
+	return -1;
+#endif
+}
+
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
@@ -130,7 +175,8 @@ void imgexifload(struct imgexif *exif,char *fn){
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	if(!(exdat=exif_data_new_from_file(fn))) return;
-	exif->rot=imgexifgetrot(exdat); // TODO: check exif-rot load with wrong thumb
+	exif->rot=imgexifgetrot(exdat);
+	exif->date=imgexifgetdate(exdat);
 	exif->info=imgexifgetinfo(exdat);
 	exif_data_free(exdat);
 #endif

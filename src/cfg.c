@@ -37,6 +37,7 @@ struct cfg {
 	{ 'D', "eff.efftime",         CT_INT, CM_SET,  "1000",   {NULL}, __("Set effect duration") },
 	{ 0,   "eff.shrink",          CT_FLT, CM_SET,  "0.75",   {NULL}, __("Factor to shrink all not-current images for zoom<0") },
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0",      {NULL}, __("Toggle image random") },
+	{ 'e', "ld.datesort",         CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle sort by exif date") },
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512",    {NULL}, __("Maximal texture size") },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024",   {NULL}, __("Maximal texture size for panoramas") },
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000",     {NULL}, __("Maximal pixels for panoramas (bigger ones are scaled down)") },

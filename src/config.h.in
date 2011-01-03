@@ -20,6 +20,7 @@
 #define HAVE_REALPATH	%(HAVE_REALPATH)i
 #define HAVE_GETTEXT	%(HAVE_GETTEXT)i
 #define HAVE_STAT		%(HAVE_STAT)i
+#define HAVE_MKTIME		%(HAVE_MKTIME)i
 
 /*#define HAVE_PTHREAD*/
 
