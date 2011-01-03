@@ -265,17 +265,19 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		effref&EFFREF_ROT?" (rot)":"");
 	if(effref&EFFREF_CLR)
 		for(img=imgget(0);img;img=img->nxt) img->pos->opt.active=0;
-	if(effref&EFFREF_FIT)
+	if(effref&(EFFREF_FIT|EFFREF_CLR))
 		if(dp->zoom<0 && effmaxfitupdate(dp))
 			effref|=EFFREF_ALL;
 	if(effref&(EFFREF_ALL|EFFREF_CLR))
 		for(i=0;i<nimg;i++) effinitimg(dp,ev,i);
-	else if(effref&EFFREF_IMG)
-		effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
-	if(effref&EFFREF_ROT) for(i=0;i<nimg;i++)
-		if((img=imgget(i)) && img->pos->opt.active &&
-				img->pos->cur.r != imgexifrotf(img->exif))
-			effinitimg(dp,ev,i);
+	else{
+		if(effref&EFFREF_IMG)
+			effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
+		if(effref&EFFREF_ROT) for(i=0;i<nimg;i++)
+			if((img=imgget(i)) && img->pos->opt.active &&
+					img->pos->cur.r != imgexifrotf(img->exif))
+				effinitimg(dp,ev,i);
+	}
 }
 
 void effdel(struct imgpos *ip){

@@ -25,36 +25,6 @@ struct imglist {
 
 struct imglist *curil = NULL;
 
-/***************************** img list managment *****************************/
-
-struct imglist *ilnew(const char *dir){
-	struct imglist *il=calloc(1,sizeof(struct imglist));
-	if(curil) curil->pos=dplgetimgi();
-	strncpy(il->dir,dir,FILELEN);
-	il->parent=curil;
-	il->pos=IMGI_START;
-	il->nxt=ils;
-	ils=il;
-	return il;
-}
-
-void ilfree(struct imglist *il){
-	/* TODO: imglist cleanup */
-}
-
-struct imglist *ilfind(const char *dir){
-	struct imglist *il;
-	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)) return il;
-	return NULL;
-}
-
-int ilswitch(struct imglist *il){
-	if(!il && curil && curil->parent) il=curil->parent;
-	if(!il) return IMGI_END;
-	curil=il;
-	return curil->pos;
-}
-
 /***************************** img index operations ***************************/
 
 /* thread: all */
@@ -135,19 +105,51 @@ struct img *imgdel(int i){
 	return img;
 }
 
-/***************************** image list work ********************************/
+/***************************** img list managment *****************************/
+
+struct imglist *ilnew(const char *dir){
+	struct imglist *il=calloc(1,sizeof(struct imglist));
+	if(curil) curil->pos=dplgetimgi();
+	strncpy(il->dir,dir,FILELEN);
+	il->parent=curil;
+	il->pos=IMGI_START;
+	il->nxt=ils;
+	ils=il;
+	return il;
+}
+
+void ilfree(struct imglist *il){
+	struct imglist **il2=&ils;
+	int i;
+	if(!il) return;
+	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
+	if(il2[0]) il2[0]=il->nxt;
+	for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
+	if(il->imgs) free(il->imgs);
+	free(il);
+}
+
+struct imglist *ilfind(const char *dir){
+	struct imglist *il;
+	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)) return il;
+	return NULL;
+}
+
+int ilswitch(struct imglist *il){
+	if(!il && curil && curil->parent) il=curil->parent;
+	if(!il) return IMGI_END;
+	curil=il;
+	return curil->pos;
+}
 
 void imgfinalize(){
-	struct imglist *il;
-	for(il=ils;il;il=il->nxt){
-		int i;
-		for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
-		free(il->imgs);
-	}
+	while(ils) ilfree(ils);
 	imgfree(defimg);
 	imgfree(dirimg);
 	imgfree(delimg);
 }
+
+/***************************** image list work ********************************/
 
 void imgsetnxt(struct imglist *il){
 	int i;
