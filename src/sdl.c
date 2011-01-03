@@ -334,15 +334,8 @@ void sdlframerate(){
 	}
 }
 
-	Uint32 paint_last=0;
-	/* thread: dpl, load */
-	/* TODO: remove */
-	void sdlthreadcheck(){
-		if(SDL_GetTicks()-paint_last>10000)
-			system("killall -9 slideshowgl");
-	}
-
 int sdlthread(void *UNUSED(arg)){
+	Uint32 paint_last=0;
 	switchdpms(0);
 	while(!sdl_quit){
 		if(!sdlgetevent()) break;
@@ -363,7 +356,7 @@ int sdlthread(void *UNUSED(arg)){
 
 		sdlframerate();
 		if(!sdl.sync) sdldelay(&paint_last,16);
-		else paint_last=SDL_GetTicks(); /* TODO remove (for sdlthreadcheck) */
+		else paint_last=SDL_GetTicks();
 		timer(TI_SDL,4,1);
 	}
 	switchdpms(1);

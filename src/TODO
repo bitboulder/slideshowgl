@@ -1,5 +1,4 @@
 # Fixes
-- fix sdlthreadcheck
 - load: delete texs for img size reduce
 - eaksn4: switch back from fullscreen if started in fullscreen
 

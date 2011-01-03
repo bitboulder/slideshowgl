@@ -520,7 +520,6 @@ int dplthread(void *UNUSED(arg)){
 		panorun();
 		timer(TI_DPL,2,0);
 
-		sdlthreadcheck();
 		timer(TI_DPL,3,0);
 		sdldelay(&last,16);
 		timer(TI_DPL,4,0);
