@@ -71,12 +71,10 @@ char *imgposmark(struct imgpos *ip){ return &ip->mark; }
 /***************************** eff init ***************************************/
 
 char effact(struct dplpos *dp,int i){
-	if(dp->imgi<0 || dp->imgi>=nimg) return 0;
+	if(dp->imgi==IMGI_START || dp->imgi==IMGI_END) return 0;
 	if(i==dp->imgi) return 1;
 	if(dp->zoom>=0) return 0;
-	if(abs(i-dp->imgi)<=zoomtab[-dp->zoom].inc) return 1;
-	if(!dplloop()) return 0;
-	if(nimg-abs(i-dp->imgi)<=zoomtab[-dp->zoom].inc) return 1;
+	if(abs(imgidiff(dp->imgi,i,NULL,NULL))<=zoomtab[-dp->zoom].inc) return 1;
 	return 0;
 }
 
@@ -85,13 +83,7 @@ void effwaytime(struct imgpos *ip,Uint32 len){
 }
 
 int effdiff(struct dplpos *dp,int *pi1,int *pi2){
-	int i1=dp->imgiold;
-	int i2=dp->imgi;
-	if(i1<0) i1=-1; if(i1>nimg) i1=nimg;
-	if(i2<0) i2=-1; if(i2>nimg) i2=nimg;
-	if(pi1) *pi1=i1;
-	if(pi2) *pi2=i2;
-	return i2-i1;
+	return imgidiff(dp->imgiold,dp->imgi,pi1,pi2);
 }
 
 void effmove(struct dplpos *dp,struct ipos *ip,int i){
@@ -99,9 +91,7 @@ void effmove(struct dplpos *dp,struct ipos *ip,int i){
 	ip->m=(imgs[i]->pos->mark && dp->writemode)?1.f:0.f;
 	ip->r=imgexifrotf(imgs[i]->exif);
 	if(dp->zoom<0){
-		int diff=i-dp->imgi;
-		if(dplloop() && diff> nimg/2) diff-=nimg;
-		if(dplloop() && diff<-nimg/2) diff+=nimg;
+		int diff=imgidiff(dp->imgi,i,NULL,NULL);
 		ip->s=zoomtab[-dp->zoom].size;
 		ip->x=(float)diff*ip->s;
 		ip->y=0.;
@@ -139,7 +129,7 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 	if(dp->zoom==0){
 		if(dp->writemode) ip->x += (float)(effdiff(dp,NULL,NULL) * (neg?-1:1));
 		else ip->a=0.;
-	}else if(dp->imgi>=nimg || dp->imgiold>=nimg){
+	}else if(dp->imgi==IMGI_END || dp->imgiold==IMGI_END){
 		ip->a=0.;
 	}else{
 		ip->a=0.;
@@ -179,10 +169,11 @@ enum imgtex imgseltex(struct dplpos *dp,struct imgpos *ip,int i){
 }
 
 void effinitimg(struct dplpos *dp,enum dplev ev,int i){
+	struct img *img;
 	struct imgpos *ip;
 	struct ipos dst;
 	char act;
-	if(i<0 || i>=nimg) return;
+	if(!(img=imgget(i))) return;
 	ip=imgs[i]->pos;
 	act=effact(dp,i);
 	if(!act && !ip->opt.active){
@@ -244,9 +235,10 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 char effmaxfitupdate(struct dplpos *dp){
 	int i;
 	float maxfitw=0.f,maxfith=0.f;
-	for(i=0;i<nimg;i++) if(effact(dp,i)){
+	struct img *img;
+	for(img=*imgs,i=0;img;img=img->nxt,i++) if(effact(dp,i)){
 		float fitw,fith;
-		if(!imgfit(imgs[i],&fitw,&fith)) continue;
+		if(!imgfit(img,&fitw,&fith)) continue;
 		if(fitw>maxfitw) maxfitw=fitw;
 		if(fith>maxfith) maxfith=fith;
 	}
@@ -261,6 +253,7 @@ char effmaxfitupdate(struct dplpos *dp){
 void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	struct dplpos *dp=dplgetpos();
+	int nimg=imggetn();
 	debug(DBG_DBG,"eff refresh%s%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
 		effref&EFFREF_ALL?" (all)":"",
@@ -361,7 +354,7 @@ void effimg(struct imgpos *ip){
 void effdostat(){
 	float ef=(float)(SDL_GetTicks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in);
 	if(eff.stat.mode!=STAT_OFF && ef>=1.f){
-		if(eff.stat.mode!=STAT_ON || dplgetimgi()<nimg){
+		if(eff.stat.mode!=STAT_ON || dplgetimgi()!=IMGI_END){
 			eff.stat.mode=(eff.stat.mode+1)%STAT_NUM;
 			eff.stat.in=eff.stat.out;
 			eff.stat.out=eff.stat.in+eff.cfg.stat_delay[eff.stat.mode];

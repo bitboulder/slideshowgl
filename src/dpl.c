@@ -12,9 +12,6 @@
 #include "eff.h"
 #include "gl.h"
 
-#define IMGI_START	INT_MIN
-#define IMGI_END	INT_MAX
-
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 const char *colmodestr[]={"G","B","C"};
@@ -47,11 +44,7 @@ struct dpl {
 
 /* thread: all */
 struct dplpos *dplgetpos(){ return &dpl.pos; }
-int dplgetimgi(){
-	if(dpl.pos.imgi==IMGI_START) return -1;
-	if(dpl.pos.imgi==IMGI_END) return nimg;
-	return dpl.pos.imgi;
-}
+int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
 int dplinputnum(){ return dpl.inputnum; }
@@ -150,6 +143,7 @@ void dplzoompos(int nzoom,float sx,float sy){
 
 void dplclipimgi(int *imgi){
 	int i = imgi ? *imgi : dpl.pos.imgi;
+	int nimg=imggetn();
 	if(dpl.cfg.loop){
 		if(i==IMGI_START) i=0;
 		if(i==IMGI_END)   i=nimg-1;
@@ -168,9 +162,7 @@ void dplclipimgi(int *imgi){
 }
 
 void dplchgimgi(int dir){
-	if(dpl.pos.imgi<0)     dpl.pos.imgi=-1;
-	if(dpl.pos.imgi>=nimg) dpl.pos.imgi=nimg;
-	dpl.pos.imgi+=dir;
+	dpl.pos.imgi=imginarrorlimits(dpl.pos.imgi)+dir;
 }
 
 Uint32 dplmove(enum dplev ev,float sx,float sy){
@@ -218,7 +210,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 	if(dpl.pos.zoom>0)    dpl.run=0;
 	dplclipimgi(NULL);
-	if((dpl.pos.imgi<0 || dpl.pos.imgi>=nimg) && dpl.pos.zoom>0) dpl.pos.zoom=0;
+	if((dpl.pos.imgi==IMGI_START || dpl.pos.imgi==IMGI_END) && dpl.pos.zoom>0) dpl.pos.zoom=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 	return nxttime;
@@ -226,8 +218,8 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 
 int dplclickimg(float sx,float sy){
 	int i,x,y;
-	if(dpl.pos.imgi<0)     return 0;
-	if(dpl.pos.imgi>=nimg) return nimg-1;
+	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
+	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
@@ -239,6 +231,7 @@ int dplclickimg(float sx,float sy){
 }
 
 void dplsel(int imgi){
+	if(imgi==IMGI_START || imgi==IMGI_END) return;
 	dpl.pos.imgi=imgi;
 	dplclipimgi(NULL);
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL,-1);
@@ -248,6 +241,7 @@ void dplmark(int imgi){
 	struct img *img;
 	char *mark;
 	if(!dpl.pos.writemode) return;
+	if(imgi==IMGI_START || imgi==IMGI_END) return;
 	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
 	if(imgfiledir(img->file)) return;
@@ -298,13 +292,13 @@ void dplcol(int d){
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
-	if(dpl.pos.imgi<0) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
-	else if(dpl.pos.imgi>=nimg) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
+	if(dpl.pos.imgi==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
+	else if(dpl.pos.imgi==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
 		struct img *img=imgs[dpl.pos.imgi];
 		struct icol *ic=imgposcol(img->pos);
 		char *txt=dsttxt;
-		ADDTXT("%i/%i %s",dpl.pos.imgi+1, nimg, imgfilefn(img->file));
+		ADDTXT("%i/%i %s",dpl.pos.imgi+1, imggetn(), imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
 			case ROT_90:  ADDTXT(_(" rotated-right")); break;
@@ -426,7 +420,7 @@ void dplkey(SDLKey key){
 		dpl.inputnum = dpl.inputnum*10 + (int)(key-SDLK_0);
 	}else dpl.inputnum=0;
 	dpl.showinfo = !dpl.showinfo && key==SDLK_i &&
-		dpl.pos.imgi>=0 && dpl.pos.imgi<nimg;
+		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
 	dpl.showhelp = !dpl.showhelp && key==SDLK_h;
 }
 
@@ -463,7 +457,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
 	}
-	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi>=nimg) ret|=2;
+	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;
 	if(nxttime) nxttime+=time;
 	return ret;
 }

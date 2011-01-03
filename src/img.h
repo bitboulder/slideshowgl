@@ -25,7 +25,10 @@ extern struct img **imgs;
 extern struct img *defimg;
 extern struct img *dirimg;
 extern struct img *delimg;
-extern int nimg;
+
+int imggetn();
+int imginarrorlimits(int i);
+int imgidiff(int ia,int ib,int *ira,int *irb);
 
 struct img *imgget(int i);
 struct img *imginit();

@@ -16,6 +16,31 @@ int nimgo = 0;
 unsigned int simg = 0;
 
 /* thread: all */
+int imggetn(){ return nimg; }
+
+/* thread: all */
+int imginarrorlimits(int i){
+	if(i==IMGI_START) return -1;
+	if(i==IMGI_END)   return nimg;
+	return i;
+}
+
+/* thread: all */
+int imgidiff(int ia,int ib,int *ira,int *irb){
+	int diff;
+	ia=imginarrorlimits(ia);
+	ib=imginarrorlimits(ib);
+	if(ira) *ira=ia;
+	if(irb) *irb=ib;
+	diff=ib-ia;
+	if(dplloop()){
+		while(diff> nimg/2) diff-=nimg;
+		while(diff<-nimg/2) diff+=nimg;
+	}
+	return diff;
+}
+
+/* thread: all */
 struct img *imgget(int i){
 	if(i<0 || i>=nimg) return NULL;
 	return imgs[i];

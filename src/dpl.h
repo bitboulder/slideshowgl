@@ -26,6 +26,8 @@ struct icol {
 	float g,c,b;
 };
 
+#define IMGI_START	INT_MIN
+#define IMGI_END	INT_MAX
 struct dplpos {
 	int imgi;
 	int imgiold;

@@ -416,16 +416,13 @@ char ldffree(struct imgld *il,enum imgtex thold){
 char ldcheck(){
 	int i;
 	int imgi = dplgetimgi();
+	struct img *img;
 	struct loadconcept *ldcp=ldconceptget();
 	char ret=0;
 
-	for(i=0;i<nimg;i++){
+	for(img=*imgs,i=0;img;img=img->nxt,i++){
 		enum imgtex hold=TEX_NONE;
-		int diff=i-imgi;
-		if(dplloop()){
-			while(diff>nimg/2) diff-=nimg;
-			while(diff<-nimg/2) diff+=nimg;
-		}
+		int diff=imgidiff(imgi,i,NULL,NULL);
 		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 			hold=ldcp->hold[diff-ldcp->hold_min];
 		if(ldffree(imgs[i]->ld,hold)){ ret=1; break; }
@@ -433,8 +430,8 @@ char ldcheck(){
 
 	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
 		int imgri;
-		struct img *img;
 		enum imgtex tex;
+		int nimg=imggetn();
 		imgri=imgi+ldcp->load[i].imgi;
 		if(dplloop()) imgri=(imgri+nimg)%nimg;
 		img=imgget(imgri);
@@ -449,16 +446,17 @@ char ldcheck(){
 
 void ldresetdo(){
 	int i,it;
+	struct img *img=*imgs;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
-	for(i=-2;i<nimg;i++) for(it=0;it<TEX_NUM;it++){
+	for(i=-2;img;i++){
 		struct itex *itex;
 		switch(i){
-		case -2: itex=defimg->ld->texs+it; break;
-		case -1: itex=dirimg->ld->texs+it; break;
-		default: itex=imgs[i]->ld->texs+it; break;
+		case -2: itex=defimg->ld->texs; break;
+		case -1: itex=dirimg->ld->texs; break;
+		default: itex=img->ld->texs; img=img->nxt; break;
 		}
-		free(itex->tx);
-		memset(itex,0,sizeof(struct itex));
+		for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
+		memset(itex,0,TEX_NUM*sizeof(struct itex));
 	}
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
