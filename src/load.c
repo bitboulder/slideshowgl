@@ -262,6 +262,7 @@ char ldtexload(){
 		if(tl->dat.img.itex){
 			ldgendl(tl->dat.img.itex);
 			tl->dat.img.itex->loaded=1;
+			tl->dat.img.itex->loading=1;
 		}
 		glsetbar(tl->dat.img.bar);
 	}
@@ -271,7 +272,10 @@ char ldtexload(){
 			glDeleteTextures(1,&tl->itx->tex);
 			tl->itx->tex=0;
 		}
-		if(tl->dat.free.itex) tl->dat.free.itex->loaded=0;
+		if(tl->dat.free.itex){
+			tl->dat.free.itex->loaded=0;
+			tl->dat.free.itex->loading=0;
+		}
 	break;
 	}
 	if((glerr=glGetError())){
@@ -336,13 +340,13 @@ char ldfload(struct imgld *il,enum imgtex it){
 			while(il->w/scale*il->h/scale>load.maxpanopixels) scale++;
 			panores(tex->pano,il->w/scale,il->h/scale,&xres,&yres);
 		}else tex->pano=NULL;
-		tex->loading=1;
-		tex->loaded=0;
 		if(i!=TEX_FULL){
 			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
 			while(wide/scale>load.maximgwide[i]) scale++;
 		}
 		if(lastscale && lastscale==scale && !tex->pano) continue;
+		tex->loading=1;
+		tex->loaded=0;
 		lastscale=scale;
 		sw=(float)(il->w/scale);
 		sh=(float)(il->h/scale);
