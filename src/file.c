@@ -152,7 +152,7 @@ void fgetfiles(int argc,char **argv){
 }
 
 /* thread: dpl */
-char floaddir(struct imgfile *ifl){
+int floaddir(struct imgfile *ifl){
 #if HAVE_OPENDIR
 	DIR *dd;
 	struct dirent *de;
@@ -160,8 +160,8 @@ char floaddir(struct imgfile *ifl){
 	size_t ld;
 	struct imglist *il;
 	int count=0;
-	if((il=ilfind(ifl->fn))){ ilswitch(il); return 1; }
-	if(!(dd=opendir(ifl->fn))){ error(ERR_CONT,"opendir failed (%s)",ifl->fn); return 0; }
+	if((il=ilfind(ifl->fn))) return ilswitch(il);
+	if(!(dd=opendir(ifl->fn))){ error(ERR_CONT,"opendir failed (%s)",ifl->fn); return IMGI_END; }
 	il=ilnew(ifl->fn);
 	ld=strlen(ifl->fn);
 	memcpy(buf,ifl->fn,ld);
@@ -182,11 +182,8 @@ char floaddir(struct imgfile *ifl){
 		count++;
 	}
 	closedir(dd);
-	if(!count){ ildestroy(il); return 0; }
+	if(!count){ ildestroy(il); return IMGI_END; }
 	floadfinalize(il,1);
-	ilswitch(il);
-	dplgetpos()->imgi=0;
-	effrefresh(EFFREF_CLR);
-	return 1;
+	return ilswitch(il);
 #endif
 }

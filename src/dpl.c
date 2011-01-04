@@ -289,19 +289,20 @@ void dplcol(int d){
 }
 
 char dpldir(char dir){
+	int imgi=0;
 	if(dir==1){
 		struct img *img=imgget(dpl.pos.imgi);
 		if(!img || !imgfiledir(img->file)) return 0;
-		if(!floaddir(img->file)) return 1;
-		dpl.pos.imgi=0;
+		imgi=floaddir(img->file);
+		if(imgi==IMGI_END) return 1;
 	}
 	if(dir==-1){
-		int imgi=ilswitch(NULL);
+		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 0;
-		if(imgi==IMGI_START) imgi=0;
-		dpl.pos.imgi=imgi;
 	}
-	effinit(EFFREF_CLR,DE_MOVE,-1);
+	if(imgi==IMGI_START) imgi=0;
+	dpl.pos.imgi=imgi;
+	effinit(EFFREF_CLR,0,-1);
 	return 1;
 }
 

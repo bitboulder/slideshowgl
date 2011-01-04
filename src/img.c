@@ -113,7 +113,6 @@ struct img *imgdel(int i){
 /* thread: dpl */
 struct imglist *ilnew(const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
-	if(curil) curil->pos=dplgetimgi();
 	strncpy(il->dir,dir,FILELEN);
 	il->parent=curil;
 	il->pos=IMGI_START;
@@ -162,6 +161,7 @@ void ilcleanup(){
 	} *ilsort;
 	struct imglist *il,*pa;
 	size_t nil=0,i,j;
+	unsigned int holdfolders=cfggetuint("img.holdfolders");
 	for(il=ils;il;il=il->nxt) nil++;
 	ilsort=malloc(sizeof(struct ilsort)*nil);
 	for(il=ils,i=0;il;il=il->nxt,i++){
@@ -169,13 +169,16 @@ void ilcleanup(){
 		ilsort[i].last_used=il->last_used;
 	}
 	for(i=0;i<nil;i++) if(ilsort[i].last_used)
-		for(pa=ilsort[i].il->parent;pa;pa=pa->parent) if(pa->last_used)
-			for(j=0;j<nil;j++) if(ilsort[j].il==pa)
-				ilsort[j].last_used=0;
-	/* TODO: free tree from old leave, not only leave */
+		for(pa=ilsort[i].il->parent;pa;pa=pa->parent)
+			if(pa->last_used && ilsort[i].last_used>pa->last_used)
+				for(j=0;j<nil;j++) if(ilsort[j].il==pa)
+					ilsort[j].last_used=ilsort[i].last_used;
 	qsort(ilsort,nil,sizeof(struct ilsort),ilcleanup_cmp);
 	for(i=0;i<nil;i++) printf("%2lu: %7i %s\n",i,ilsort[i].last_used,ilsort[i].il->dir);
-	for(i=cfggetuint("img.holdfolders");i<nil && ilsort[i].last_used;i++) ilfree(ilsort[i].il);
+	for(i=1;i<nil && ilsort[i].last_used;i++){
+		if(holdfolders && ilsort[i].last_used!=ilsort[i-1].last_used) holdfolders--;
+		if(!holdfolders) ilfree(ilsort[i].il);
+	}
 	free(ilsort);
 }
 
@@ -184,8 +187,9 @@ int ilswitch(struct imglist *il){
 	if(!il && curil && curil->parent) il=curil->parent;
 	if(!il) return IMGI_END;
 	debug(DBG_STA,"imglist switch to dir: %s",il->dir);
+	if(curil) curil->pos=dplgetimgi();
 	curil=il;
-	il->last_used=SDL_GetTicks();
+	if(strcmp("[BASE]",il->dir)) il->last_used=SDL_GetTicks();
 	actadd(ACT_ILCLEANUP,NULL);
 	return curil->pos;
 }
