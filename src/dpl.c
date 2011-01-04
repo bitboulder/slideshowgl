@@ -511,8 +511,12 @@ void dplrun(){
 /***************************** dpl thread *************************************/
 
 void dplcfginit(){
+	int z;
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");
+	z=cfggetint("dpl.initzoom");
+	for(;z>0;z--) dplevput(DE_ZOOMOUT);
+	for(;z<0;z++) dplevput(DE_ZOOMIN);
 }
 
 int dplthread(void *UNUSED(arg)){
