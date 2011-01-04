@@ -84,7 +84,7 @@ enum exifrot {
 /* thread: load */
 enum rot imgexifgetrot(ExifData *exdat){
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
-	if(!exet){ error(ERR_CONT,"no orientation tag"); return ROT_0; }
+	if(!exet) return ROT_0;
 	if(exet->format!=EXIF_FORMAT_SHORT)
 	{ error(ERR_CONT,"wrong orientation format (%i)",exet->format); return ROT_0; }
 	if(exet->components<1)

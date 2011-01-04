@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-22 14:08+0100\n"
+"POT-Creation-Date: 2011-01-04 19:52+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -17,27 +17,32 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/act.c:21
+#: src/act.c:24
 #, c-format
 msgid "running cmd: %s"
 msgstr ""
 
-#: src/act.c:39
+#: src/act.c:43
 msgid "marks loaded"
 msgstr ""
 
-#: src/act.c:50
+#: src/act.c:55
 msgid "marks saved"
 msgstr ""
 
-#: src/act.c:65
+#: src/act.c:64
 #, c-format
 msgid "img rotated (%s)"
 msgstr ""
 
-#: src/act.c:81
+#: src/act.c:80
 #, c-format
 msgid "img deleted (%s)"
+msgstr ""
+
+#: src/act.c:96
+#, c-format
+msgid "action %i run %s"
 msgstr ""
 
 #: src/cfg.c:26
@@ -85,542 +90,618 @@ msgid "Toggle image loop"
 msgstr "Bildschleife umschalten"
 
 #: src/cfg.c:37
+msgid "Set initial zoom"
+msgstr "Anfangszoom setzen"
+
+#: src/cfg.c:38
 msgid "Set effect duration"
 msgstr "Effektdauer setzen"
 
-#: src/cfg.c:38
-msgid "Factor to shrink all not-current images for zoom<0"
-msgstr "Faktor mit den alle nicht-aktuellen Bilder gestacht werdenn (bei zoom<0)"
-
 #: src/cfg.c:39
+msgid "Factor to shrink all not-current images for zoom<0"
+msgstr ""
+"Faktor mit den alle nicht-aktuellen Bilder gestacht werdenn (bei zoom<0)"
+
+#: src/cfg.c:40
 msgid "Toggle image random"
 msgstr "Zufällige Bildfolge umschalten"
 
-#: src/cfg.c:40
+#: src/cfg.c:41
+msgid "Toggle sort by exif date"
+msgstr "Sortierung nach Datum umschalten"
+
+#: src/cfg.c:42
+msgid "Toggle sort by exif date of subdirectories"
+msgstr "Sortierung nach datum für Unterverzeichnisse umschalten"
+
+#: src/cfg.c:43
 msgid "Maximal texture size"
 msgstr "Maximale Texturegröße"
 
-#: src/cfg.c:41
+#: src/cfg.c:44
 msgid "Maximal texture size for panoramas"
 msgstr "Maximale Texturgröße im Panoramamodus"
 
-#: src/cfg.c:42
+#: src/cfg.c:45
 msgid "Maximal pixels for panoramas (bigger ones are scaled down)"
 msgstr "Maximale Pixelanzahl für Panoramas (größere werden scaliert)"
 
-#: src/cfg.c:43
+#: src/cfg.c:46
+msgid "Number of directories to hold"
+msgstr "Anzahl der Verzeichnisse, die gehalten werden"
+
+#: src/cfg.c:47
 msgid "Filename of the font to use"
 msgstr "Dateiname der Schriftart"
 
-#: src/cfg.c:44
+#: src/cfg.c:48
 msgid "Textheight for input number"
 msgstr "Texthöhe der Eingabezahl"
 
-#: src/cfg.c:45
+#: src/cfg.c:49
 msgid "Textheight for statusbar"
 msgstr "Texthöhe der Statuszeile"
 
-#: src/cfg.c:46
+#: src/cfg.c:50
 msgid "Text background color"
 msgstr "Hintergrundfarbe für Text"
 
-#: src/cfg.c:47
+#: src/cfg.c:51
 msgid "Text foreground color"
 msgstr "Vordergrundfarbe für Text"
 
-#: src/cfg.c:48
+#: src/cfg.c:52
 msgid "Default rotation speed for panoramas (screens per second)"
 msgstr "Standart Drehgeschwindigkeit für Panoramas (Bildschrime pro Sekunde)"
 
-#: src/cfg.c:49
+#: src/cfg.c:53
 msgid "Minimal rotation speed for panoramas"
 msgstr "Minimale Drehgeschwindigkeit für Panoramas"
 
-#: src/cfg.c:50
+#: src/cfg.c:54
 msgid "Maximal texture size for panoramas (in degree)"
 msgstr "Maximale Texturgröße für Panoramas (in Grad)"
 
-#: src/cfg.c:51
+#: src/cfg.c:55
 msgid "Set minimal texture size for panorama mode"
 msgstr "Minimale Texturgröße im Panoramamodus setzen"
 
-#: src/cfg.c:52
+#: src/cfg.c:56
 msgid "Radius of sphere for panoramas"
 msgstr "Radius der Kugel für Panoramas"
 
-#: src/cfg.c:53
+#: src/cfg.c:57
 msgid "Panorama fisheye mode"
 msgstr "Panorama Fishaugen-Modus"
 
-#: src/cfg.c:54
+#: src/cfg.c:58
 msgid "Maximal angle for isogonic panorama fisheye mode"
 msgstr "Maximaler Winkel im winkeltreuen Fishaugen-Modus"
 
-#: src/cfg.c:55
+#: src/cfg.c:59
 msgid "Rise time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile erscheint (ms)"
 
-#: src/cfg.c:56
+#: src/cfg.c:60
 msgid "Time the statusbar remains (ms)"
 msgstr "Zeit die die Statuszeile angezeigt wird (ms)"
 
-#: src/cfg.c:57
+#: src/cfg.c:61
 msgid "Fall time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile verschwindet (ms)"
 
-#: src/cfg.c:58
+#: src/cfg.c:62
 msgid "Set mark file"
 msgstr "Mark-Datei setzen"
 
-#: src/cfg.c:59
+#: src/cfg.c:63
 msgid "Delay after that the mark file is written"
-msgstr "Wartedauer zum schreiben der Markierungsdatei"
+msgstr "Wartedauer zum Schreiben der Markierungsdatei"
 
-#: src/cfg.c:60
+#: src/cfg.c:64
+msgid "Delay after that the img lists are cleaned"
+msgstr "Wartedauer zum Aufräumen der Verzeichnislisten"
+
+#: src/cfg.c:65
 msgid "Toggle actions"
 msgstr "Aktionen (de-)aktivieren"
 
-#: src/cfg.c:70
+#: src/cfg.c:75
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:78
+#: src/cfg.c:83
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:92
+#: src/cfg.c:97
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:93
+#: src/cfg.c:98
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:101
+#: src/cfg.c:106
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:110
+#: src/cfg.c:115
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:111
+#: src/cfg.c:116
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:118
+#: src/cfg.c:123
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:128
+#: src/cfg.c:133
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:135
+#: src/cfg.c:140
 #, c-format
 msgid "cfgset no arg for CM_SET '%s'"
 msgstr ""
 
-#: src/cfg.c:142
+#: src/cfg.c:147
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:149
+#: src/cfg.c:154
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:150
+#: src/cfg.c:155
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:158
+#: src/cfg.c:163
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:167
+#: src/cfg.c:172
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/dpl.c:91
+#: src/dpl.c:84
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:134
+#: src/dpl.c:127
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:221
+#: src/dpl.c:214
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:295
+#: src/dpl.c:313
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:296
+#: src/dpl.c:314
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:304
+#: src/dpl.c:322
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:305
+#: src/dpl.c:323
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:306
+#: src/dpl.c:324
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:309
+#: src/dpl.c:327
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:310
+#: src/dpl.c:328
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:363
+#: src/dpl.c:382
 msgid "Mouse left drag"
 msgstr "Maus links ziehen"
 
-#: src/dpl.c:363
+#: src/dpl.c:382
 msgid "Move"
 msgstr "Bewegen"
 
-#: src/dpl.c:364
+#: src/dpl.c:383
 msgid "Mouse left button"
 msgstr "Maus Linksclick"
 
-#: src/dpl.c:364
+#: src/dpl.c:383
 msgid "Goto image / Forward"
 msgstr "Gehe zu Bild / Vorwärts"
 
-#: src/dpl.c:365
+#: src/dpl.c:384
 msgid "Mouse middle button"
 msgstr "Maus Mittelclick"
 
-#: src/dpl.c:365 src/dpl.c:383
+#: src/dpl.c:384 src/dpl.c:403
 msgid "Toggle mark (only in writing mode)"
 msgstr "Bildmarkierung umschalten (nur im Schreibmodus)"
 
-#: src/dpl.c:366
+#: src/dpl.c:385
 msgid "Mouse right button"
 msgstr "Maus Rechtsclick"
 
-#: src/dpl.c:366
+#: src/dpl.c:385
 msgid "Backward"
 msgstr "Zurück"
 
-#: src/dpl.c:367
+#: src/dpl.c:386
 msgid "Mouse scroll"
 msgstr "Maus scrollen"
 
-#: src/dpl.c:367
+#: src/dpl.c:386
 msgid "Zoom in/out"
 msgstr "Herein-/Herauszoomen"
 
-#: src/dpl.c:368
+#: src/dpl.c:387
 msgid "Space"
 msgstr "Leer"
 
-#: src/dpl.c:368
-msgid "Stop/Play"
-msgstr "Stop/Play"
+#: src/dpl.c:387
+msgid "Stop/Play / Open directory"
+msgstr "Stop/Play / Verzeichnis öffnen"
 
-#: src/dpl.c:369
+#: src/dpl.c:388
+msgid "Back"
+msgstr "Zurück"
+
+#: src/dpl.c:388
+msgid "Leave directory / Toggle panorama mode (spherical,plain,fisheye)"
+msgstr "Verzeichnis verlassen / Panorama-Modus ändern (kugel,flach,fischauge)"
+
+#: src/dpl.c:389
 msgid "Right"
 msgstr "Rechts"
 
-#: src/dpl.c:369
+#: src/dpl.c:389
 msgid "Forward (Zoom: shift right)"
 msgstr "Weiter (Zoom: rechts schieben)"
 
-#: src/dpl.c:370
+#: src/dpl.c:390
 msgid "Left"
 msgstr "Links"
 
-#: src/dpl.c:370
+#: src/dpl.c:390
 msgid "Backward (Zoom: shift left)"
 msgstr "Zurück (Zoom: links schieben)"
 
-#: src/dpl.c:371
+#: src/dpl.c:391
 msgid "Up"
 msgstr "Hoch"
 
-#: src/dpl.c:371
+#: src/dpl.c:391
 msgid "Fast forward (Zoom: shift up)"
 msgstr "Schnell weiter (Zoom: hoch schieben)"
 
-#: src/dpl.c:372
+#: src/dpl.c:392
 msgid "Down"
 msgstr "Runter"
 
-#: src/dpl.c:372
+#: src/dpl.c:392
 msgid "Fast backward (Zoom: shift down)"
 msgstr "Schnell zurück (Zoom: runter schieben)"
 
-#: src/dpl.c:373
+#: src/dpl.c:393
 msgid "Pageup"
 msgstr "Bild hoch"
 
-#: src/dpl.c:373
+#: src/dpl.c:393
 msgid "Zoom in"
 msgstr "Hereinzoomen"
 
-#: src/dpl.c:374
+#: src/dpl.c:394
 msgid "Pagedown"
 msgstr "Bild runter"
 
-#: src/dpl.c:374
+#: src/dpl.c:394
 msgid "Zoom out"
 msgstr "Herauszoomen"
 
-#: src/dpl.c:375
+#: src/dpl.c:395
 msgid "[0-9]+Enter"
 msgstr "[0-9]+Enter"
 
-#: src/dpl.c:375
+#: src/dpl.c:395
 msgid "Goto image with number"
 msgstr "Gehe zu Bild mit Nummer"
 
-#: src/dpl.c:376
+#: src/dpl.c:396
 msgid "[0-9]+d"
 msgstr "[0-9]+d"
 
-#: src/dpl.c:376
+#: src/dpl.c:396
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl.c:377
+#: src/dpl.c:397
 msgid "f"
 msgstr ""
 
-#: src/dpl.c:377
+#: src/dpl.c:397
 msgid "Switch fullscreen"
 msgstr "Vollbildmodus umschalten"
 
-#: src/dpl.c:378
+#: src/dpl.c:398
 msgid "r/R"
 msgstr ""
 
-#: src/dpl.c:378
+#: src/dpl.c:398
 msgid "Rotate image"
 msgstr "Bild drehen"
 
-#: src/dpl.c:379
+#: src/dpl.c:399
 msgid "w"
 msgstr ""
 
-#: src/dpl.c:379
+#: src/dpl.c:399
 msgid "Switch writing mode"
 msgstr "Schreibmodus umschalten"
 
-#: src/dpl.c:380
+#: src/dpl.c:400
 msgid "g/b/c"
 msgstr ""
 
-#: src/dpl.c:380
+#: src/dpl.c:400
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
 "+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl.c:381
+#: src/dpl.c:401
 msgid "+/-"
 msgstr ""
 
-#: src/dpl.c:381
+#: src/dpl.c:401
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl.c:382
+#: src/dpl.c:402
 msgid "Del"
 msgstr ""
 
-#: src/dpl.c:382
+#: src/dpl.c:402
 msgid "Move image to del/ and remove from dpl-list (only in writing mode)"
 msgstr ""
 "Bild nach 'del' verschieben und nicht mehr anzeigen (nur im Schreibmodus)"
 
-#: src/dpl.c:383
+#: src/dpl.c:403
 msgid "m"
 msgstr ""
 
-#: src/dpl.c:384
+#: src/dpl.c:404
 msgid "i"
 msgstr ""
 
-#: src/dpl.c:384
+#: src/dpl.c:404
 msgid "Show image info"
 msgstr "Bildinformationen anzeigen"
 
-#: src/dpl.c:385
+#: src/dpl.c:405
 msgid "h"
 msgstr ""
 
-#: src/dpl.c:385
+#: src/dpl.c:405
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl.c:386
-msgid "Back"
-msgstr "Zurück"
-
-#: src/dpl.c:386
-msgid "Toggle panorama mode (spherical,plain,fisheye)"
-msgstr "Panorama-Modus ändern (kugel,flach,fischauge)"
-
-#: src/dpl.c:387
+#: src/dpl.c:406
 msgid "e"
 msgstr ""
 
-#: src/dpl.c:387
+#: src/dpl.c:406
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
 
-#: src/dpl.c:388
+#: src/dpl.c:407
 msgid "q/Esc"
 msgstr ""
 
-#: src/dpl.c:388
+#: src/dpl.c:407
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl.c:397
+#: src/dpl.c:416
 #, c-format
 msgid "dpl key %i"
 msgstr ""
 
-#: src/eff.c:245
+#: src/eff.c:260
 #, c-format
-msgid "eff refresh%s%s%s"
+msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:16
+#: src/exif.c:20
 msgid "Date"
 msgstr "Datum"
 
-#: src/exif.c:17
+#: src/exif.c:21
 msgid "Model"
 msgstr "Kamera"
 
-#: src/exif.c:18
+#: src/exif.c:22
 msgid "Resolution"
 msgstr "Auflösung"
 
-#: src/exif.c:19
+#: src/exif.c:23
 msgid "ISO speed rating"
 msgstr "Empfindlichkeit (ISO)"
 
-#: src/exif.c:20
+#: src/exif.c:24
 msgid "Focal length"
 msgstr "Brennweite"
 
-#: src/exif.c:21
+#: src/exif.c:25
 msgid "Exposure time"
 msgstr "Belichtungszeit"
 
-#: src/exif.c:22
+#: src/exif.c:26
 msgid "Fnumber"
 msgstr "Blende"
 
-#: src/exif.c:23
+#: src/exif.c:27
 msgid "Exposure bias value"
 msgstr "Belichtunskorrektur"
 
-#: src/exif.c:24
+#: src/exif.c:28
 msgid "Flash"
 msgstr "Blitz"
 
-#: src/exif.c:25
+#: src/exif.c:29
 msgid "Exposure program"
 msgstr "Belichtungsprogramm"
 
-#: src/exif.c:26
+#: src/exif.c:30
 msgid "Exposure mode"
 msgstr "Belichtungsmodus"
 
-#: src/exif.c:27
+#: src/exif.c:31
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:101 src/sdl.c:152
+#: src/exif.c:89
+#, c-format
+msgid "wrong orientation format (%i)"
+msgstr ""
+
+#: src/exif.c:91
+#, c-format
+msgid "orientation tag with too less components (%lu)"
+msgstr ""
+
+#: src/exif.c:121
+#, c-format
+msgid "date string parse error (%s)"
+msgstr ""
+
+#: src/exif.c:132
+#, c-format
+msgid "no enought digits for date (%s)"
+msgstr ""
+
+#: src/exif.c:163 src/sdl.c:192
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/file.c:82
+#: src/file.c:94
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:84
+#: src/file.c:96
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:98
+#: src/file.c:107
+#, c-format
+msgid "directory found: '%s'"
+msgstr ""
+
+#: src/file.c:117
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/gl.c:67
+#: src/file.c:164
+#, c-format
+msgid "opendir failed (%s)"
+msgstr ""
+
+#: src/gl.c:70
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:68
+#: src/gl.c:71
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:78 src/gl.c:80
+#: src/gl.c:81 src/gl.c:83
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:86
+#: src/gl.c:89
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:93
+#: src/gl.c:96
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:109
+#: src/gl.c:112
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:348
+#: src/gl.c:418
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:353
+#: src/gl.c:423
 msgid "Keyboardlayout:"
 msgstr "Bedienung"
 
-#: src/gl.c:439
+#: src/gl.c:518
 #, c-format
 msgid "in glpaint (gl-err: %d)"
+msgstr ""
+
+#: src/img.c:121
+#, c-format
+msgid "imglist created for dir: %s"
+msgstr ""
+
+#: src/img.c:134
+#, c-format
+msgid "imglist destroyed for dir: %s"
+msgstr ""
+
+#: src/img.c:140
+#, c-format
+msgid "imglist free for dir: %s"
+msgstr ""
+
+#: src/img.c:177
+#, c-format
+msgid "ilcleanup state %2lu: %7i %s\n"
+msgstr ""
+
+#: src/img.c:189
+#, c-format
+msgid "imglist switch to dir: %s"
 msgstr ""
 
 #: src/ldcp.c:52
@@ -662,37 +743,37 @@ msgstr ""
 msgid "jpeg decompression failure"
 msgstr ""
 
-#: src/load.c:276
+#: src/load.c:282
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:301
+#: src/load.c:308
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:305
+#: src/load.c:312
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:306
+#: src/load.c:313
 #, c-format
 msgid "Wrong pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:348
+#: src/load.c:355
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:404
+#: src/load.c:411
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:456
+#: src/load.c:468
 msgid "ldreset done"
 msgstr ""
 
@@ -706,62 +787,66 @@ msgstr ""
 msgid "sdl timeout waiting for threads:%s%s%s%s"
 msgstr ""
 
-#: src/pano.c:47
+#: src/pano.c:48
 #, c-format
 msgid "panoinit pano used: '%s'"
 msgstr ""
 
-#: src/pano.c:49
+#: src/pano.c:50
 #, c-format
 msgid "panoinit no pano found for '%s'"
 msgstr ""
 
-#: src/sdl.c:87
+#: src/sdl.c:125
 msgid "sdl All fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:88
+#: src/sdl.c:126
 msgid "sdl No fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:108
-msgid "sdl set video mode fullscreen"
+#: src/sdl.c:148
+#, c-format
+msgid "sdl set video mode fullscreen %ix%i"
 msgstr ""
 
-#: src/sdl.c:109 src/sdl.c:114
+#: src/sdl.c:149 src/sdl.c:154
 msgid "video mode init failed"
 msgstr ""
 
-#: src/sdl.c:113
+#: src/sdl.c:153
 #, c-format
 msgid "sdl set video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:119
+#: src/sdl.c:159
 #, c-format
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:120
+#: src/sdl.c:160
 #, c-format
 msgid "in sdl view mode (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:130
+#: src/sdl.c:170
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:131
+#: src/sdl.c:171
 #, c-format
 msgid "in sdlinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:147
+#: src/sdl.c:187
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:295
+#: src/sdl.c:336
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
+
+#~ msgid "Stop/Play"
+#~ msgstr "Stop/Play"
