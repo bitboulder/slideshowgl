@@ -468,8 +468,9 @@ char dplev(struct ev *ev){
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
-		if(!panoev(PE_PLAY) && !dpldir(1) && dpl.pos.zoom<=0)
-			dpl.run=dpl.run ? 0 : 0xf0000000;
+		if(dpl.run) dpl.run=0;
+		else if(!panoev(PE_PLAY) && !dpldir(1) && dpl.pos.zoom<=0)
+			dpl.run=0xf0000000;
 		nxttime=1000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
