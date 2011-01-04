@@ -396,7 +396,7 @@ end0:
 	return ld;
 }
 
-/* thread: load, dpl */
+/* thread: load, dpl, act */
 char ldffree(struct imgld *il,enum imgtex thold){
 	int it;
 	char ret=0;

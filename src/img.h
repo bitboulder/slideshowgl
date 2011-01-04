@@ -28,7 +28,7 @@ extern struct img *dirimg;
 extern struct img *delimg;
 
 struct imglist *ilnew(const char *dir);
-void ilfree(struct imglist *il);
+void ildestroy(struct imglist *il);
 struct imglist *ilfind(const char *dir);
 void ilcleanup();
 int ilswitch(struct imglist *il);

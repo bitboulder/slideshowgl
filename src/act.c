@@ -9,13 +9,16 @@
 #include "file.h"
 #include "eff.h"
 
-struct actcfg {
-	Uint32 savemarks_delay;
-	Uint32 savemarks;
-	char runcmd;
-} actcfg = {
-	.savemarks = 0,
+struct actdelay {
+	Uint32 delay;
+	Uint32 countdown;
 };
+
+struct actcfg {
+	struct actdelay delay[ACT_NUM];
+	char runcmd;
+} actcfg;
+
 
 void runcmd(char *cmd){
 	debug(DBG_NONE,"running cmd: %s",cmd);
@@ -52,12 +55,6 @@ void actsavemarks(){
 	debug(DBG_STA,"marks saved");
 }
 
-void acttrysavemarks(){
-	if(!actcfg.savemarks || SDL_GetTicks()>actcfg.savemarks) return;
-	actcfg.savemarks=0;
-	actsavemarks();
-}
-
 void actrotate(struct img *img){
 	char *fn=imgfilefn(img->file);
 	float rot=imgexifrotf(img->exif);
@@ -86,9 +83,27 @@ void actdelete(struct img *img){
 void actdo(enum act act,struct img *img){
 	switch(act){
 	case ACT_LOADMARKS: actloadmarks(); break;
-	case ACT_SAVEMARKS: if(!actcfg.savemarks) actcfg.savemarks=SDL_GetTicks()+actcfg.savemarks_delay; break;
+	case ACT_SAVEMARKS: actsavemarks(); break;
 	case ACT_ROTATE:    actrotate(img); break;
 	case ACT_DELETE:    actdelete(img); break;
+	case ACT_ILCLEANUP: ilcleanup(); break;
+	default: break;
+	}
+}
+
+void actrun(enum act act,struct img *img){
+	struct actdelay *dl=actcfg.delay+act;
+	debug(DBG_STA,"action %i run %s",act,dl->delay?"with delay":"immediatly");
+	if(!dl->delay) actdo(act,img);
+	else if(!dl->countdown) dl->countdown=SDL_GetTicks()+dl->delay;
+}
+
+void actcheckdelay(char force){
+	int i;
+	struct actdelay *dl=actcfg.delay;
+	for(i=0;i<ACT_NUM;i++,dl++) if(dl->countdown && (force || SDL_GetTicks()>=dl->countdown)){
+		dl->countdown=0;
+		actdo(i,NULL);
 	}
 }
 
@@ -111,19 +126,25 @@ void actadd(enum act act,struct img *img){
 
 char actpop(){
 	if(qact_wi==qact_ri) return 0;
-	actdo(qacts[qact_ri].act,qacts[qact_ri].img);
+	actrun(qacts[qact_ri].act,qacts[qact_ri].img);
 	qact_ri=(qact_ri+1)%QACT_NUM;
 	return 1;
 }
 
+void actinit(){
+	actcfg.runcmd = cfggetbool("act.do");
+	memset(actcfg.delay,0,sizeof(struct actdelay)*ACT_NUM);
+	actcfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
+	actcfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
+}
+
 int actthread(void *UNUSED(arg)){
-	actcfg.savemarks_delay = cfggetuint("act.savemarks_delay");
-	actcfg.runcmd          = cfggetbool("act.do");
+	actinit();
 	while(!sdl_quit){
-		acttrysavemarks();
+		actcheckdelay(0);
 		if(!actpop()) SDL_Delay(500);
 	}
-	if(actcfg.savemarks) actsavemarks();
+	actcheckdelay(1);
 	sdl_quit|=THR_ACT;
 	return 0;
 }

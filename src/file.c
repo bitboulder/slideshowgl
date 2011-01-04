@@ -20,6 +20,8 @@
 #include "act.h"
 #include "pano.h"
 #include "help.h"
+#include "dpl.h"
+#include "eff.h"
 
 /***************************** imgfile ******************************************/
 
@@ -149,6 +151,7 @@ void fgetfiles(int argc,char **argv){
 	actadd(ACT_LOADMARKS,NULL);
 }
 
+/* thread: dpl */
 char floaddir(struct imgfile *ifl){
 #if HAVE_OPENDIR
 	DIR *dd;
@@ -179,9 +182,11 @@ char floaddir(struct imgfile *ifl){
 		count++;
 	}
 	closedir(dd);
-	if(!count){ ilfree(il); return 0; }
+	if(!count){ ildestroy(il); return 0; }
 	floadfinalize(il,1);
 	ilswitch(il);
+	dplgetpos()->imgi=0;
+	effrefresh(EFFREF_CLR);
 	return 1;
 #endif
 }
