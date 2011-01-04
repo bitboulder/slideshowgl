@@ -7,6 +7,7 @@
 #include "pano.h"
 #include "eff.h"
 #include "main.h"
+#include "gl.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -191,8 +192,14 @@ int imgsort_datecmp(const void *a,const void *b){
 
 void imgsort(struct imglist *il,char date){
 	int i;
-	if(date) for(i=0;i<il->nimg;i++)
-		imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
+	if(date){
+		for(i=0;i<il->nimg;i++){
+			// TODO: load imgexif threaded
+			glsetbar((float)(i+1)/(float)il->nimg);
+			imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
+		}
+		glsetbar(0.f);
+	}
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
 	imgsetnxt(il);
 }
