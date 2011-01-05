@@ -13,7 +13,7 @@
 	#include <X11/extensions/Xinerama.h>
 #endif
 #include "sdl.h"
-#include "gl.h"
+#include "gl_int.h"
 #include "main.h"
 #include "load.h"
 #include "dpl.h"

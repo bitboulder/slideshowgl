@@ -9,10 +9,11 @@
 #include "main.h"
 #include "help.h"
 #include "sdl.h"
-#include "gl.h"
+#include "gl_int.h"
 #include "cfg.h"
 #include "file.h"
 #include "eff.h"
+#include "dpl.h"
 
 #define M_PIf		3.14159265358979323846f
 #define RAD(x)		((x)/180.f*M_PIf)

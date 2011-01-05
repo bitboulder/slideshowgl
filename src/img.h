@@ -1,6 +1,8 @@
 #ifndef _IMG_H
 #define _IMG_H
 
+#include <limits.h>
+
 #define IMGTEX	E2(TINY,  0),\
 				E2(SMALL, 1),\
 				E2(BIG,   2),\
@@ -8,6 +10,9 @@
 				E2(NUM,   4),\
 				E2(NONE, -1),\
 				E2(PANO, -2)
+
+#define IMGI_START	INT_MIN
+#define IMGI_END	INT_MAX
 
 #define E2(X,N)	TEX_##X=N
 enum imgtex { IMGTEX };

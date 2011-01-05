@@ -2,32 +2,8 @@
 #define _DPL_H
 
 #include <SDL.h>
-#include <limits.h>
 #include "img.h"
 
-struct ipos {
-	float a,s,x,y,m,r;
-};
-
-struct iopt {
-	enum imgtex tex;
-	char active;
-	char back;
-};
-
-#define ISTAT_TXTSIZE	512
-struct istat {
-	char txt[ISTAT_TXTSIZE];
-	float h;
-	char run;
-};
-
-struct icol {
-	float g,c,b;
-};
-
-#define IMGI_START	INT_MIN
-#define IMGI_END	INT_MAX
 struct dplpos {
 	int imgi;
 	int imgiold;
@@ -69,7 +45,6 @@ int dplinputnum();
 char dplloop();
 const char *dplhelp();
 
-char imgfit(struct img *img,float *fitw,float *fith);
 void printixy(float sx,float sy);
 
 #define dplevput(e)			dplevputx(e,0,0.f,0.f)

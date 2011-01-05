@@ -1,10 +1,27 @@
 #ifndef _EFF_H
 #define _EFF_H
 
-#include "dpl.h"
+#include "img.h"
 
-struct wh {
-	float w,h;
+struct ipos {
+	float a,s,x,y,m,r;
+};
+
+struct iopt {
+	enum imgtex tex;
+	char active;
+	char back;
+};
+
+#define ISTAT_TXTSIZE	512
+struct istat {
+	char txt[ISTAT_TXTSIZE];
+	float h;
+	char run;
+};
+
+struct icol {
+	float g,c,b;
 };
 
 struct imgpos *imgposinit();
@@ -25,15 +42,7 @@ enum effrefresh {
 
 void effrefresh(enum effrefresh val);
 char effineff();
-struct wh effmaxfit();
 struct istat *effstat();
 
-void effinit(enum effrefresh effref,enum dplev ev,int imgi);
-void effdel(struct imgpos *ip);
-void effstaton();
-void effpanoend(struct img *img);
-
-void effdo();
-void effcfginit();
 
 #endif

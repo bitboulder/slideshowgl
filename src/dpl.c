@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <SDL.h>
 #include <math.h>
-#include "dpl.h"
+#include "dpl_int.h"
 #include "sdl.h"
 #include "load.h"
 #include "main.h"
@@ -9,8 +9,9 @@
 #include "exif.h"
 #include "act.h"
 #include "file.h"
-#include "eff.h"
+#include "eff_int.h"
 #include "gl.h"
+#include "pano.h"
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 

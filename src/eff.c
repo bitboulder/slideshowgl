@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
-#include "eff.h"
-#include "dpl.h"
+#include "eff_int.h"
+#include "dpl_int.h"
 #include "exif.h"
 #include "pano.h"
 #include "main.h"
@@ -38,10 +38,13 @@ struct eff {
 	.stat.pos.h = 0.f,
 };
 
+/* thread: all */
 void effrefresh(enum effrefresh val){ eff.refresh|=val; }
 char effineff(){ return eff.ineff; }
-struct wh effmaxfit(){ return eff.maxfit; }
+/* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
+
+struct wh effmaxfit(){ return eff.maxfit; }
 
 /***************************** imgpos *****************************************/
 

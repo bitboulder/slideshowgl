@@ -7,7 +7,7 @@
 #if HAVE_FTGL
 	#include <ftgl.h>
 #endif
-#include "gl.h"
+#include "gl_int.h"
 #include "main.h"
 #include "sdl.h"
 #include "dpl.h"
@@ -40,6 +40,7 @@ struct gl {
 	.bar = 0.f,
 };
 
+/* thread: all */
 void glsetbar(float bar){ gl.bar=bar; }
 char glprg(){ return !!gl.prg; }
 

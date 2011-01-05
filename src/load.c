@@ -18,6 +18,7 @@
 #include "file.h"
 #include "eff.h"
 #include "ldcp.h"
+#include "pano.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };

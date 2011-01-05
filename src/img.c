@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <SDL.h>
 #include "img.h"
 #include "load.h"
 #include "exif.h"
@@ -9,6 +10,7 @@
 #include "main.h"
 #include "gl.h"
 #include "act.h"
+#include "dpl.h"
 
 struct img *defimg;
 struct img *dirimg;

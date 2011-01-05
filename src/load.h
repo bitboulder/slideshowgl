@@ -10,7 +10,6 @@ struct itx {
 };
 
 #include "img.h"
-#include "pano.h"
 
 void ldmaxtexsize();
 void ldcheckvartex();
