@@ -193,13 +193,11 @@ void panotrimmovepos(struct img *img,float *ix,float *iy){
 }
 
 /* thread: dpl */
-char panostart(struct img *img,float *x){
+char panostart(struct img *img,float fitw,float *x){
 	float perspectw;
 	struct imgpano *ip;
-	float fitw;
 	if(!img) return 0;
 	if(!img->pano->enable) return 0;
-	if(!imgfit(img,&fitw,NULL)) return 0;
 	ip=img->pano;
 	pano.mode = ip->gh>90.f && pano.pfish ? PM_FISHEYE : PM_NORMAL;
 	pano.run=0;

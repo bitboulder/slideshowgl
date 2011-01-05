@@ -66,8 +66,8 @@ int dplgetimgi();
 int dplgetzoom();
 char dplshowinfo();
 int dplinputnum();
-const char *dplhelp();
 char dplloop();
+const char *dplhelp();
 
 char imgfit(struct img *img,float *fitw,float *fith);
 void printixy(float sx,float sy);

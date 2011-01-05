@@ -380,7 +380,7 @@ void glrendertext(const char *title,const char *text){
 	float winw;
 	float tw,tx;
 	if(!gl.font) return;
-	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1){
+	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
 		float len=ftglGetFontAdvance(gl.font,_(t));
 		if(len>maxw[j]) maxw[j]=len;
 	}
@@ -403,7 +403,7 @@ void glrendertext(const char *title,const char *text){
 	glColor4fv(gl.cfg.txt_fgcolor);
 	gltextout(title,tx,y);
 	y-=lineh*2;
-	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1)
+	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0])
 		gltextout(_(t),x[j],y);
 	glPopMatrix();
 #endif
@@ -420,7 +420,7 @@ void glrenderinfo(){
 
 void glrenderhelp(){
 	const char *help;
-	if((help=dplhelp())) glrendertext(_("Keyboardlayout:"),help);
+	if((help=dplhelp())) glrendertext(_("Interface"),help);
 }
 
 void glrenderinputnum(){

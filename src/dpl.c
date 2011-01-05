@@ -188,11 +188,11 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT:
 	{
-		float x;
+		float x,fitw;
 		struct img *img=imgget(dpl.pos.imgi);
 		int panoact=panoactive()?1:0;
-		if(dpl.pos.zoom==0 && dir>0 && imgfiledir(img->file)) return nxttime;
-		if(dpl.pos.zoom==0 && dir>0 && panostart(img,&x)){
+		if(dpl.pos.zoom==0 && dir>0 && img && imgfiledir(img->file)) return nxttime;
+		if(dpl.pos.zoom==0 && dir>0 && imgfit(img,&fitw,NULL) && panostart(img,fitw,&x)){
 			dpl.pos.x=x;
 			dpl.pos.zoom+=dir;
 			dplclippos(img);
@@ -288,17 +288,16 @@ void dplcol(int d){
 	if(*val> 1.f) *val= 1.f;
 }
 
-char dpldir(char dir){
-	int imgi=0;
-	if(dir==1){
-		struct img *img=imgget(dpl.pos.imgi);
-		if(!img || !imgfiledir(img->file)) return 0;
-		imgi=floaddir(img->file);
-		if(imgi==IMGI_END) return 1;
-	}
-	if(dir==-1){
+char dpldir(int imgi){
+	struct img *img;
+	if(imgi==IMGI_START) return 0;
+	if(!(img=imgget(imgi))){
 		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 0;
+	}else{
+		if(!imgfiledir(img->file)) return 0;
+		imgi=floaddir(img->file);
+		if(imgi==IMGI_END) return 1;
 	}
 	if(imgi==IMGI_START) imgi=0;
 	dpl.pos.imgi=imgi;
@@ -379,19 +378,22 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
 }
 
 const char *keyboardlayout=
-	__("Mouse left drag")"\0"     __("Move")"\0"
-	__("Mouse left button")"\0"   __("Goto image / Forward")"\0"
-	__("Mouse middle button")"\0" __("Toggle mark (only in writing mode)")"\0"
-	__("Mouse right button")"\0"  __("Backward")"\0"
-	__("Mouse scroll")"\0"        __("Zoom in/out")"\0"
-	__("Space")"\0"               __("Stop/Play / Open directory")"\0"
+	__("Mouse interface")"\0"     "\0"
+	__("Left drag")"\0"           __("Move")"\0"
+	__("Left click")"\0"          __("Goto image / Forward")"\0"
+	__("Middle click on image")"\0"     __("Play/Stop / Toggle mark (in writing mode)")"\0"
+	__("Middle click on directory")"\0" __("Enter directory")"\0"
+	__("Middle click on space")"\0"     __("Leave directory")"\0"
+	__("Right click")"\0"         __("Backward")"\0"
+	__("Scroll")"\0"              __("Zoom in/out")"\0"
+
+	" ""\0"                       "\0"
+	__("Keyboard interface")"\0"  "\0"
+	__("Space")"\0"               __("Stop/Play / Enter directory")"\0"
 	__("Back")"\0"                __("Leave directory / Toggle panorama mode (spherical,plain,fisheye)")"\0"
-	__("Right")"\0"               __("Forward (Zoom: shift right)")"\0"
-	__("Left")"\0"                __("Backward (Zoom: shift left)")"\0"
-	__("Up")"\0"                  __("Fast forward (Zoom: shift up)")"\0"
-	__("Down")"\0"                __("Fast backward (Zoom: shift down)")"\0"
-	__("Pageup")"\0"              __("Zoom in")"\0"
-	__("Pagedown")"\0"            __("Zoom out")"\0"
+	__("Right/Left")"\0"          __("Forward/Backward (Zoom: shift right/left)")"\0"
+	__("Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")"\0"
+	__("Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 	__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
 	__("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
 	__("f")"\0"                   __("Switch fullscreen")"\0"
@@ -408,6 +410,7 @@ const char *keyboardlayout=
 	"\0"
 ;
 
+/* thread: gl */
 const char *dplhelp(){
 	return dpl.showhelp ? keyboardlayout : NULL;
 }
@@ -417,7 +420,7 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(-1); break;
+	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
@@ -447,9 +450,11 @@ char dplev(struct ev *ev){
 	static Uint32 nxttime=0;
 	Uint32 time=SDL_GetTicks();
 	char ret=1;
+	int clickimg;
 	if(nxttime && time<nxttime && ev->ev==lastev) return 0;
 	lastev=ev->ev;
 	nxttime=0;
+	clickimg=dplclickimg(ev->sx,ev->sy);
 	dpl.pos.imgiold=dpl.pos.imgi;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
@@ -463,13 +468,13 @@ char dplev(struct ev *ev){
 	case DE_DOWN:
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy); break;
-	case DE_SEL:  dplsel(dplclickimg(ev->sx,ev->sy)); break;
-	case DE_MARK: dplmark(dplclickimg(ev->sx,ev->sy)); break;
+	case DE_SEL:  dplsel(clickimg); break;
+	case DE_MARK: if(!dpldir(clickimg)) dplmark(clickimg); break;
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
 		if(dpl.run) dpl.run=0;
-		else if(!panoev(PE_PLAY) && !dpldir(1) && dpl.pos.zoom<=0)
+		else if(!panoev(PE_PLAY) && !dpldir(clickimg) && dpl.pos.zoom<=0)
 			dpl.run=0xf0000000;
 		nxttime=1000;
 	break;

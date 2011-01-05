@@ -22,7 +22,7 @@ char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);
 char panoclip(struct img *img,float *xb,float *yb);
 void panotrimmovepos(struct img *img,float *ix,float *iy);
 
-char panostart(struct img *img,float *x);
+char panostart(struct img *img,float fitw,float *x);
 char panoend(float *s);
 
 void panodrawimg(struct itx *tx,struct imgpano *ip);
