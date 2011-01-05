@@ -457,7 +457,7 @@ void ldresetdoimg(struct img *img){
 }
 
 void ldresetdo(){
-	struct img *img=imgget(0); /* TODO: reset not current imgs */
+	struct img *img=imgget(0);
 	if(!img) return;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
 	ldresetdoimg(defimg);
