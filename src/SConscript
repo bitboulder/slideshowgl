@@ -31,6 +31,7 @@ sources = """
 	file.c
 	eff.c
 	ldcp.c
+	mark.c
 """.split()
 
 env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))

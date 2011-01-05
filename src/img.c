@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <SDL.h>
 #include "img.h"
+#include "main.h"
 #include "load.h"
 #include "exif.h"
 #include "cfg.h"
 #include "file.h"
 #include "pano.h"
 #include "eff.h"
-#include "main.h"
 #include "gl.h"
 #include "act.h"
 #include "dpl.h"
@@ -176,7 +176,7 @@ void ilcleanup(){
 				for(j=0;j<nil;j++) if(ilsort[j].il==pa)
 					ilsort[j].last_used=ilsort[i].last_used;
 	qsort(ilsort,nil,sizeof(struct ilsort),ilcleanup_cmp);
-	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2lu: %7i %s\n",i,ilsort[i].last_used,ilsort[i].il->dir);
+	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s\n",(int)i,ilsort[i].last_used,ilsort[i].il->dir);
 	for(i=1;i<nil && ilsort[i].last_used;i++){
 		if(holdfolders && ilsort[i].last_used!=ilsort[i-1].last_used) holdfolders--;
 		if(!holdfolders) ilfree(ilsort[i].il);
@@ -257,3 +257,10 @@ void imgsort(struct imglist *il,char date){
 	imgsetnxt(il);
 }
 
+void ilforallimgs(void (*func)(struct img *img)){
+	struct imglist *il;
+	struct img *img;
+	for(il=ils;il;il=il->nxt)
+		for(img=il->imgs[0];img;img=img->nxt)
+			func(img);
+}

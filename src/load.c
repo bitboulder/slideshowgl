@@ -449,21 +449,21 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
+void ldresetdoimg(struct img *img){
+	int it;
+	struct itex *itex = img->ld->texs;
+	for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
+	memset(itex,0,TEX_NUM*sizeof(struct itex));
+}
+
 void ldresetdo(){
-	int i,it;
 	struct img *img=imgget(0); /* TODO: reset not current imgs */
 	if(!img) return;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
-	for(i=-2;img;i++){
-		struct itex *itex;
-		switch(i){
-		case -2: itex=defimg->ld->texs; break;
-		case -1: itex=dirimg->ld->texs; break;
-		default: itex=img->ld->texs; img=img->nxt; break;
-		}
-		for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
-		memset(itex,0,TEX_NUM*sizeof(struct itex));
-	}
+	ldresetdoimg(defimg);
+	ldresetdoimg(dirimg);
+	ldresetdoimg(delimg);
+	ilforallimgs(ldresetdoimg);
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
 	debug(DBG_STA,"ldreset done");

@@ -8,6 +8,7 @@
 #include "exif.h"
 #include "file.h"
 #include "eff.h"
+#include "mark.h"
 
 struct actdelay {
 	Uint32 delay;
@@ -23,36 +24,6 @@ struct actcfg {
 void runcmd(char *cmd){
 	debug(DBG_NONE,"running cmd: %s",cmd);
 	if(actcfg.runcmd) system(cmd);
-}
-
-void actloadmarks(){
-	const char *fn=cfggetstr("act.mark_fn");
-	FILE *fd;
-	char line[FILELEN];
-	/* TODO: what to do with marks and mulitple img lists */
-	if(!(fd=fopen(fn,"r"))) return;
-	while(!feof(fd) && fgets(line,FILELEN,fd)){
-		struct img *img;
-		int len=(int)strlen(line);
-		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
-		for(img=imgget(0);img;img=img->nxt)
-			if(!strcmp(imgfilefn(img->file),line))
-				*imgposmark(img->pos)=1;
-	}
-	fclose(fd);
-	debug(DBG_STA,"marks loaded");
-}
-
-void actsavemarks(){
-	const char *fn=cfggetstr("act.mark_fn");
-	FILE *fd;
-	struct img *img;
-	/* TODO: what to do with marks and mulitple img lists */
-	if(!(fd=fopen(fn,"w"))) return;
-	for(img=imgget(0);img;img=img->nxt) if(*imgposmark(img->pos))
-		fprintf(fd,"%s\n",imgfilefn(img->file));
-	fclose(fd);
-	debug(DBG_STA,"marks saved");
 }
 
 void actrotate(struct img *img){
@@ -82,8 +53,7 @@ void actdelete(struct img *img){
 
 void actdo(enum act act,struct img *img){
 	switch(act){
-	case ACT_LOADMARKS: actloadmarks(); break;
-	case ACT_SAVEMARKS: actsavemarks(); break;
+	case ACT_SAVEMARKS: markssave(); break;
 	case ACT_ROTATE:    actrotate(img); break;
 	case ACT_DELETE:    actdelete(img); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;

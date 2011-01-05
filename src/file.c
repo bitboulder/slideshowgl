@@ -22,6 +22,7 @@
 #include "help.h"
 #include "dpl.h"
 #include "eff.h"
+#include "mark.h"
 
 /***************************** imgfile ******************************************/
 
@@ -108,6 +109,7 @@ void faddfile(struct imglist *il,const char *fn){
 	}else{
 		fthumbinit(img->file);
 		imgpanoload(img->pano,fn);
+		markimgload(img);
 	}
 }
 
@@ -148,7 +150,6 @@ void fgetfiles(int argc,char **argv){
 	}
 	floadfinalize(il,0);
 	ilswitch(il);
-	actadd(ACT_LOADMARKS,NULL);
 }
 
 /* thread: dpl */
