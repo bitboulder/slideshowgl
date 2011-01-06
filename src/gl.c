@@ -308,8 +308,9 @@ void glrenderimg(struct img *img,char back){
 	glPushMatrix();
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
-	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
+	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);
+	if(ipos->a<1.f) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);
@@ -334,8 +335,9 @@ void glrenderimg(struct img *img,char back){
 	}
 	// draw img
 	glCallList(dl);
-	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
 	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
+	if(ipos->a<1.f) glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
 	glPopMatrix();
 }
 
