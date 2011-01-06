@@ -123,6 +123,7 @@ void imgldsetimg(struct imgld *il,struct img *img){ il->img=img; }
 GLuint imgldtex(struct imgld *il,enum imgtex it){
 	int i;
 	if(imgfiledir(il->img->file)) il=dirimg->ld;
+	if(il->loadfail) il=defimg->ld;
 	if(it==TEX_PANO) return il->texs[TEX_FULL].pano &&
 				il->texs[TEX_FULL].loaded && il->texs[TEX_FULL].loading ?
 			il->texs[TEX_FULL].dlpano : 0;
@@ -134,6 +135,7 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 /* thread: dpl, load, gl */
 float imgldrat(struct imgld *il){
 	if(imgfiledir(il->img->file)) il=dirimg->ld;
+	if(il->loadfail) il=defimg->ld;
 	return (!il->h || !il->w) ? 0.f : (float)il->w/(float)il->h;
 }
 

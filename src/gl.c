@@ -250,15 +250,6 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	return w;
 }
 
-GLuint glseltex(struct img *img,enum imgtex it,struct img **isc){
-	GLuint dl;
-	*isc=img;
-	if((dl=imgldtex((*isc)->ld,it))) return dl;
-	*isc=defimg;
-	if((dl=imgldtex((*isc)->ld,it))) return dl;
-	return 0;
-}
-
 void glrendermark(struct ipos *ipos,float rot){
 	glmodeslave(GLM_TXT);
 	glPushMatrix();
@@ -302,7 +293,6 @@ void gldrawimg(struct itx *tx){
 }
 
 void glrenderimg(struct img *img,char back){
-	struct img *isc;
 	struct ipos *ipos;
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
@@ -311,14 +301,13 @@ void glrenderimg(struct img *img,char back){
 	float srat=sdlrat();
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
-	if(!(dl=glseltex(img,iopt->tex,&isc))) return;
+	if(!(dl=imgldtex(img->ld,iopt->tex))) return;
 	glmodeslave(GLM_2D);
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	glPushMatrix();
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
-	iopt=imgposopt(isc->pos);
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);
 	// rotate in real ratio
