@@ -143,6 +143,7 @@ float imgldrat(struct imgld *il){
 
 struct sdlimg {
 	SDL_Surface *sf;
+	GLenum fmt;
 	int ref;
 };
 
@@ -158,12 +159,26 @@ void sdlimg_ref(struct sdlimg *sdlimg){
 	sdlimg->ref++;
 }
 
+void sdlimg_pixelformat(struct sdlimg *sdlimg){
+	SDL_PixelFormat *fmt=sdlimg->sf->format;
+	sdlimg->fmt=0;
+	if(fmt->BytesPerPixel==3){
+		if(fmt->Rmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Bmask==0x00ff0000) sdlimg->fmt=GL_RGB;
+		if(fmt->Bmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Rmask==0x00ff0000) sdlimg->fmt=GL_BGR;
+	}
+	if(fmt->BytesPerPixel==4){
+		if(fmt->Rmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Bmask==0x00ff0000 && fmt->Amask==0xff000000) sdlimg->fmt=GL_RGBA;
+		if(fmt->Bmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Rmask==0x00ff0000 && fmt->Amask==0xff000000) sdlimg->fmt=GL_BGRA;
+	}
+}
+
 struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 	struct sdlimg *sdlimg;
 	if(!sf) return NULL;
 	sdlimg=malloc(sizeof(struct sdlimg));
 	sdlimg->sf=sf;
 	sdlimg->ref=1;
+	sdlimg_pixelformat(sdlimg);
 	return sdlimg;
 }
 
@@ -248,7 +263,7 @@ char ldtexload(){
 		glBindTexture(GL_TEXTURE_2D,tl->itx->tex);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
 		// http://www.songho.ca/opengl/gl_pbo.html
-		glTexImage2D(GL_TEXTURE_2D,0,3,sdlimg->sf->w,sdlimg->sf->h,0,GL_RGB,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
+		glTexImage2D(GL_TEXTURE_2D,0,(GLint)sdlimg->fmt,sdlimg->sf->w,sdlimg->sf->h,0,sdlimg->fmt,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
@@ -313,7 +328,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
-	if(sdlimg->sf->format->BytesPerPixel!=3){ error(ERR_CONT,"Wrong pixelformat \"%s\"",fn); goto end3; }
+	if(!sdlimg->fmt){ error(ERR_CONT,"Not supported pixelformat \"%s\"",fn); goto end3; }
 
 	if(!swap){
 		il->w=sdlimg->sf->w;
@@ -386,7 +401,8 @@ char ldfload(struct imgld *il,enum imgtex it){
 					sdlimgscale=sdlimgscale2;
 				}
 			}
-			ldtexload_put(ti,sdlimgscale,
+			if(!sdlimg->fmt) error(ERR_CONT,"Not supported pixelformat after scale \"%s\"",fn);
+			else ldtexload_put(ti,sdlimgscale,
 					tx==tw-1 && ty==th-1 ? tex : NULL,
 					(tx!=tw-1 || ty!=th-1) && i==TEX_FULL && panoenable ? (float)(tx*th+ty+1)/(float)(tw*th) : 0.f
 				);
