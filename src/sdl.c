@@ -1,5 +1,6 @@
 #include "config.h"
 #include <SDL.h>
+#include <SDL_image.h>
 #include <SDL_thread.h>
 #if HAVE_X11
 	#include <SDL_syswm.h>
@@ -178,6 +179,23 @@ void sdlresize(int w,int h){
 #endif
 }
 
+void sdlicon(){
+	const char *fn=finddatafile("icon.png");
+	SDL_Surface *icon=IMG_Load(fn);
+	if(!icon){ error(ERR_CONT,"icon load failed (%s)",fn); return; }
+#ifdef __WIN32__
+	if(icon->w!=32){
+		SDL_Surface *sicon=SDL_ScaleSurfaceFactor(icon,icon->w/32,0,0,32,32,0);
+		if(sicon){
+			SDL_FreeSurface(icon);
+			icon=sicon;
+		}
+	}
+#endif
+	SDL_WM_SetIcon(icon,NULL);
+	SDL_FreeSurface(icon);
+}
+
 void sdlinit(){
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
@@ -191,6 +209,7 @@ void sdlinit(){
 		mprintf("SDL-Version: %i.%i.%i (video: %s)\n",v->major,v->minor,v->patch,
 				SDL_VideoDriverName(buf,32)?buf:_("(unknown)"));
 	}
+	sdlicon();
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
 }
 

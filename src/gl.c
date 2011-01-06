@@ -280,7 +280,7 @@ void glrenderimgtext(const char *text,float irat,float a){
 	if(gl.prg) glUseProgram(0);
 	glPushMatrix();
 	ftglGetFontBBox(gl.fontbig,text,-1,rect);
-	glColor4f(0.f,0.f,0.f,a);
+	glColor4f(1.f,1.f,1.f,a);
 	// TODO: use irat
 	s=MAX(rect[3]-rect[0],rect[4]-rect[1]);
 	glScalef(.8f/s,-.8f/s,1.f);
