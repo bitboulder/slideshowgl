@@ -98,15 +98,25 @@ void fthumbinit(struct imgfile *ifl){
 }
 
 int faddfile(struct imglist *il,const char *fn){
-	struct img *img=imgadd(il);
+	struct img *img;
 	if(!strncmp(fn,"file://",7)) fn+=7;
-	strncpy(img->file->fn,fn,FILELEN);
-	if(isdir(img->file->fn)){
-		int i=(int)strlen(img->file->fn)-2;
+	if(strlen(fn)>=FILELEN) return 0;
+	if(isdir(fn)){
+		int i=(int)strlen(fn)-2;
+		img=imgadd(il);
+		strncpy(img->file->fn,fn,FILELEN);
 		while(i>=0 && img->file->fn[i]!='/' && img->file->fn[i]!='\\') i--;
 		img->file->dir=img->file->fn+i+1;
 		debug(DBG_DBG,"directory found: '%s'",img->file->fn);
 	}else{
+		size_t l=strlen(fn);
+		char ok=0;
+		if(l>=5 && !strncmp(fn+l-4,".png",4)) ok=1;
+		if(l>=5 && !strncmp(fn+l-4,".jpg",4)) ok=1;
+		if(l>=6 && !strncmp(fn+l-5,".jpeg",5)) ok=1;
+		if(!ok) return 0;
+		img=imgadd(il);
+		strncpy(img->file->fn,fn,FILELEN);
 		fthumbinit(img->file);
 		imgpanoload(img->pano,fn);
 		markimgload(img);
@@ -194,16 +204,11 @@ int floaddir(struct imgfile *ifl){
 	}
 	if(!dd) count=faddflst(il,ifl->fn,buf); else while((de=readdir(dd))){
 		size_t l=0;
-		char ok=0;
 		while(l<NAME_MAX && de->d_name[l]) l++;
+		if(l>=1 && de->d_name[0]=='.') continue;
 		if(ld+l>=FILELEN) continue;
-		if(l>=5 && !strncmp(de->d_name+l-4,".png",4)) ok=1;
-		if(l>=5 && !strncmp(de->d_name+l-4,".jpg",4)) ok=1;
-		if(l>=6 && !strncmp(de->d_name+l-5,".jpeg",5)) ok=1;
-		memcpy(buf+ld,de->d_name,l); buf[ld+l]='\0';
-		if(isdir(buf)) ok=1;
-		if(l>=1 && de->d_name[0]=='.') ok=0;
-		if(!ok) continue;
+		memcpy(buf+ld,de->d_name,l);
+		buf[ld+l]='\0';
 		count+=faddfile(il,buf);
 	}
 	if(dd) closedir(dd);
