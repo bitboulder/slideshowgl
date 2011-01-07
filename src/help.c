@@ -121,8 +121,12 @@ char *strsep(char **stringp, const char *delim){
 #include <unistd.h>
 char isdir(const char *fn){
 	struct stat st;
+	size_t l;
 	if(stat(fn,&st)) return 0;
-	return S_ISDIR(st.st_mode);
+	if(S_ISDIR(st.st_mode)) return 1;
+	l=strlen(fn);
+	if(l>=6 && !strncmp(fn+l-5,".flst",5)) return 1;
+	return 0;
 }
 #else
 char isdir(const char *fn __attribute__((unused))){
