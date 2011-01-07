@@ -2,5 +2,10 @@
 - load: delete texs for img size reduce
 - eaksn4: switch back from fullscreen if started in fullscreen
 
+- zoom to click-image if zoomed with mouse and zoom<0
+- stop-icon disapears if zoomin and -out on flstln/panorama
+#- no image-back-move if only hor- or vertical
+- fast next or prv if triggert by mouse
+
 # Want to have
 ? thread priorities

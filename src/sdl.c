@@ -21,6 +21,7 @@
 #include "cfg.h"
 #include "pano.h"
 #include "eff.h"
+#include "help.h"
 
 char sdl_quit = 0;
 
