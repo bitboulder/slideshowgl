@@ -24,6 +24,9 @@ char *strsep(char **stringp, const char *delim);
 #ifndef strcasecmp
 int strcasecmp(const char *s1, const char *s2);
 #endif
+#ifndef strncasecmp
+int strncasecmp(const char *s1, const char *s2, size_t n);
+#endif
 
 char isdir(const char *fn);
 

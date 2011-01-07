@@ -44,7 +44,7 @@ int imgidiff(int ia,int ib,int *ira,int *irb);
 
 struct img *imgget(int i);
 struct img *imginit();
-struct img *imgadd(struct imglist *il);
+struct img *imgadd(struct imglist *il,const char *prg);
 struct img *imgdel(int i);
 
 void imgfinalize();

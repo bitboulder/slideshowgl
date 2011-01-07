@@ -4,7 +4,7 @@
 #include "img.h"
 
 struct ipos {
-	float a,s,x,y,m,r;
+	float a,s,x,y,r,m;
 };
 
 struct iopt {

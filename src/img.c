@@ -11,6 +11,7 @@
 #include "gl.h"
 #include "act.h"
 #include "dpl.h"
+#include "prg.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -26,6 +27,7 @@ struct imglist {
 	struct imglist *parent;
 	int pos;
 	Uint32 last_used;
+	struct prg *prg;
 } *ils=NULL;
 
 struct imglist *curil = NULL;
@@ -89,12 +91,14 @@ void imgfree(struct img *img){
 	free(img);
 }
 
-struct img *imgadd(struct imglist *il){
+struct img *imgadd(struct imglist *il,const char *prg){
+	struct img *img;
 	if((unsigned int)il->nimg==il->simg) il->imgs=realloc(il->imgs,sizeof(struct img *)*(il->simg+=16));
-	il->imgs[il->nimg]=imginit();
-	if(il->nimg) il->imgs[il->nimg-1]->nxt=il->imgs[il->nimg];
-	il->nimgo=il->nimg+1;
-	return il->imgs[il->nimg++];
+	img=il->imgs[il->nimg]=imginit();
+	if(il->nimg) il->imgs[il->nimg-1]->nxt=img;
+	il->nimgo=++il->nimg;
+	if(prg) prgadd(&il->prg,prg,img);
+	return img;
 }
 
 struct img *imgdel(int i){
@@ -129,6 +133,7 @@ void ildestroy(struct imglist *il){
 	struct imglist **il2=&ils;
 	int i;
 	if(!il) return;
+	if(il->prg) prgdestroy(il->prg);
 	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
 	if(il2[0]) il2[0]=il->nxt;
 	for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
