@@ -166,6 +166,20 @@ void dplchgimgi(int dir){
 	dpl.pos.imgi=imginarrorlimits(dpl.pos.imgi)+dir;
 }
 
+int dplclickimg(float sx,float sy){
+	int i,x,y;
+	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
+	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
+	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
+	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
+	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
+	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
+	y=(int)floorf(sy/zoomtab[-dpl.pos.zoom].size+.5f);
+	i=(int)floorf((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
+	i+=x;
+	return dpl.pos.imgi+i;
+}
+
 Uint32 dplmove(enum dplev ev,float sx,float sy){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
@@ -190,8 +204,14 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	case DE_ZOOMOUT:
 	{
 		float x,fitw;
-		struct img *img=imgget(dpl.pos.imgi);
-		int panoact=panoactive()?1:0;
+		struct img *img;
+		int panoact;
+		if(dpl.pos.zoom<0){
+			dpl.pos.imgi=dplclickimg(sx,sy);
+			dplclipimgi(NULL);
+		}
+		img=imgget(dpl.pos.imgi);
+		panoact=panoactive()?1:0;
 		if(dpl.pos.zoom==0 && dir>0 && img && imgfiledir(img->file)) return nxttime;
 		if(dpl.pos.zoom==0 && dir>0 && imgfit(img,&fitw,NULL) && panostart(img,fitw,&x)){
 			dpl.pos.x=x;
@@ -215,20 +235,6 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 	return nxttime;
-}
-
-int dplclickimg(float sx,float sy){
-	int i,x,y;
-	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
-	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
-	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
-	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
-	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
-	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
-	y=(int)floorf(sy/zoomtab[-dpl.pos.zoom].size+.5f);
-	i=(int)floorf((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
-	i+=x;
-	return dpl.pos.imgi+i;
 }
 
 void dplsel(int imgi){
