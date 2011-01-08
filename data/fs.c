@@ -11,7 +11,7 @@ void main(){
 		if(gl_Color.y!=0.5) color = (0.5-color)*log2(1-gl_Color.y) + 0.5;
 		if(gl_Color.z!=0.5) color = color + (gl_Color.z - 0.5)*2;
 
-		color.a = gl_Color.a;
+		color.a = color.a * gl_Color.a;
 	}else{
 		color = gl_Color;
 	}
