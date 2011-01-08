@@ -5,6 +5,7 @@
 #include "img.h"
 #include "main.h"
 #include "eff.h"
+#include "dpl.h"
 
 struct prg {
 	int nfrm;
@@ -69,6 +70,21 @@ void prgadd(struct prg **prg,const char *txt,struct img *img){
 	free(flt);
 }
 
+int prgimgidiff(int frm,int imgi){
+	struct prg *prg=ilprg();
+	struct img *img=imgget(imgi);
+	int fchg,fdir,f;
+	struct prgev *ev;
+	if(!prg || !img || dplgetzoom()!=0) return imgidiff(frm,imgi,NULL,NULL);
+	/* TODO: ev-off no mark for imgi on in frame */
+	for(fchg=0;fchg<prg->nfrm;fchg++) for(fdir=-1;fdir<=1;fdir+=2){
+		f=frm+fchg*fdir;
+		if(f<0 || f>=prg->nfrm) continue;
+		for(ev=prg->ev[f];ev;ev=ev->nxt) if(ev->img==img) return fchg*fdir;
+	}
+	return imgi;
+}
+
 int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos *way,float *waytime){
 	struct prgev *ev;
 	int num=0,i=0;
@@ -82,4 +98,19 @@ int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos 
 		waytime[(int)!rev]=rev ? 1.f-ev->waytime[1] : ev->waytime[1];
 	}
 	return num>iev ? num : 0;
+}
+
+char prgforoneldfrm(int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it){
+	struct prg *prg=ilprg();
+	if(!prg || dplgetzoom()!=0){
+		struct img *img=imgget(frm);
+		return img && func(img->ld,it);
+	}else{
+		struct prgev *ev;
+		if(frm<0 || frm>=prg->nfrm) return 0;
+		/* TODO: ev-off no mark for imgi on in frame */
+		for(ev=prg->ev[frm];ev;ev=ev->nxt)
+			if(func(ev->img->ld,it)) return 1;
+		return 0;
+	}
 }

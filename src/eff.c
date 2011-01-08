@@ -182,9 +182,10 @@ char effprg(struct dplpos *dp,struct img *img,int iev){
 	struct imgpos *ip=img->pos;
 	if(!prg) return 0;
 	if(!dp) dp=dplgetpos();
-	if(dp->imgi==dp->imgiold) return 1;
 	rev = dp->imgi<dp->imgiold;
 	num=prgget(prg,img,dp->imgi+rev,rev,iev,ip->way,waytime);
+	ip->opt.tex=TEX_BIG;
+	ip->opt.back=0;
 	if(!num){
 		ip->eff=0;
 		ip->opt.active=0;

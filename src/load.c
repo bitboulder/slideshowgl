@@ -19,6 +19,7 @@
 #include "eff.h"
 #include "ldcp.h"
 #include "pano.h"
+#include "prg.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };
@@ -323,7 +324,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(il->texs[it].loaded) goto end0;
 	imgexifload(il->img->exif,fn);
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
-	debug(DBG_DBG,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
+	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
@@ -370,7 +371,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		sh=(float)(il->h/scale);
 		tw=(int)(sw/(float)xres); if(tw*xres<sw) tw++;
 		th=(int)(sh/(float)yres); if(th*yres<sh) th++;
-		debug(DBG_STA,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
+		debug(DBG_DBG,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		tx=0;
 		if(tex->tx){
 			while(tex->tx[tx].tex) tx++;
@@ -445,7 +446,7 @@ char ldcheck(){
 
 	for(img=imgget(0),i=0;img;img=img->nxt,i++){
 		enum imgtex hold=TEX_NONE;
-		int diff=imgidiff(imgi,i,NULL,NULL);
+		int diff=prgimgidiff(imgi,i);
 		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 			hold=ldcp->hold[diff-ldcp->hold_min];
 		if(ldffree(img->ld,hold)){ ret=1; break; }
@@ -457,9 +458,8 @@ char ldcheck(){
 		int nimg=imggetn();
 		imgri=imgi+ldcp->load[i].imgi;
 		if(dplloop()) imgri=(imgri+nimg)%nimg;
-		img=imgget(imgri);
 		tex=ldcp->load[i].tex;
-		if(img && ldfload(img->ld,tex)){ ret=1; break; }
+		if(prgforoneldfrm(imgri,ldfload,tex)){ ret=1; break; }
 	}
 
 	return ret;
