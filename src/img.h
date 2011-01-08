@@ -39,6 +39,7 @@ void ilcleanup();
 int ilswitch(struct imglist *il);
 
 int imggetn();
+struct prg *ilprg();
 int imginarrorlimits(int i);
 int imgidiff(int ia,int ib,int *ira,int *irb);
 

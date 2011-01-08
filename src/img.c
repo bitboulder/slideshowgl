@@ -36,6 +36,7 @@ struct imglist *curil = NULL;
 
 /* thread: all */
 int imggetn(){ return curil ? curil->nimg : 0; }
+struct prg *ilprg(){ return curil ? curil->prg : NULL; }
 
 /* thread: all */
 int imginarrorlimits(int i){

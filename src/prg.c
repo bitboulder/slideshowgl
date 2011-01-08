@@ -69,3 +69,17 @@ void prgadd(struct prg **prg,const char *txt,struct img *img){
 	free(flt);
 }
 
+int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos *way,float *waytime){
+	struct prgev *ev;
+	int num=0,i=0;
+	if(frm<0 || frm>prg->nfrm) return 0;
+	for(ev=prg->ev[frm];ev;ev=ev->nxt) if(img==ev->img) num++;
+	if(!rev) iev=num-1-iev;
+	for(ev=prg->ev[frm];ev;ev=ev->nxt) if(img==ev->img && iev==i++){
+		way[(int) rev]=ev->way[0];
+		way[(int)!rev]=ev->way[1];
+		waytime[(int) rev]=rev ? 1.f-ev->waytime[0] : ev->waytime[0];
+		waytime[(int)!rev]=rev ? 1.f-ev->waytime[1] : ev->waytime[1];
+	}
+	return num>iev ? num : 0;
+}

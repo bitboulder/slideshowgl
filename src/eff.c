@@ -6,6 +6,7 @@
 #include "pano.h"
 #include "main.h"
 #include "cfg.h"
+#include "prg.h"
 
 extern struct zoomtab {
 	int move;
@@ -49,7 +50,7 @@ struct wh effmaxfit(){ return eff.maxfit; }
 /***************************** imgpos *****************************************/
 
 struct imgpos {
-	char eff;
+	int eff;
 	char mark;
 	char wayact;
 	struct iopt opt;
@@ -173,12 +174,38 @@ enum imgtex imgseltex(struct dplpos *dp,struct imgpos *ip,int i){
 	else return zoomtab[-dp->zoom].texoth;
 }
 
+char effprg(struct dplpos *dp,struct img *img,int iev){
+	struct prg *prg=ilprg();
+	char rev;
+	float waytime[2];
+	int num;
+	struct imgpos *ip=img->pos;
+	if(!prg) return 0;
+	if(!dp) dp=dplgetpos();
+	if(dp->imgi==dp->imgiold) return 1;
+	rev = dp->imgi<dp->imgiold;
+	num=prgget(prg,img,dp->imgi+rev,rev,iev,ip->way,waytime);
+	if(!num){
+		ip->eff=0;
+		ip->opt.active=0;
+	}else{
+		ip->waytime[0]= iev ? ip->waytime[1] : SDL_GetTicks()+(Uint32)((float)eff.cfg.efftime*waytime[0]);
+		ip->waytime[1]=ip->waytime[0]+(Uint32)((float)eff.cfg.efftime*(waytime[1]-waytime[0]));
+		ip->cur=ip->way[0];
+		if(!iev) ip->eff=num;
+		ip->opt.active=1;
+		ip->wayact=1;
+	}
+	return 1;
+}
+
 void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 	struct img *img;
 	struct imgpos *ip;
 	struct ipos dst;
 	char act;
 	if(!(img=imgget(i))) return;
+	if(dp->zoom==0 && effprg(dp,img,0)) return;
 	ip=img->pos;
 	act=effact(dp,i);
 	if(!act && !ip->opt.active){
@@ -331,12 +358,16 @@ void effpanoend(struct img *img){
 /***************************** eff do *****************************************/
 
 float effcalclin(float a,float b,float ef){
+	if(ef<=0.f) return a;
+	if(ef>=1.f) return b;
 	return (b-a)*ef+a;
 }
 
 float effcalcrot(float a,float b,float ef){
 	while(b-a> 180.f) b-=360.f;
 	while(b-a<-180.f) b+=360.f;
+	if(ef<=0.f) return a;
+	if(ef>=1.f) return b;
 	return (b-a)*ef+a;
 }
 
@@ -348,12 +379,15 @@ float effcalcshrink(float ef){
 	else                    return 1.f-(1.f-ef)/ECS_TIME*(1.f-ECS_SIZE);
 }
 
-void effimg(struct imgpos *ip){
+void effimg(struct img *img){
+	struct imgpos *ip=img->pos;
 	Uint32 time=SDL_GetTicks();
 	if(time>=ip->waytime[1]){
-		ip->eff=0;
-		ip->cur=ip->way[1];
-		ip->opt.active=ip->wayact;
+		ip->eff--;
+		if(ip->eff) effprg(NULL,img,ip->eff); else {
+			ip->cur=ip->way[1];
+			ip->opt.active=ip->wayact;
+		}
 	}else if(time>ip->waytime[0]){
 		float ef = (float)(time-ip->waytime[0]) / (float)(ip->waytime[1]-ip->waytime[0]);
 		if(ip->way[0].a!=ip->way[1].a) ip->cur.a=effcalclin(ip->way[0].a,ip->way[1].a,ef);
@@ -392,11 +426,11 @@ void effdo(){
 		eff.refresh=EFFREF_NO;
 	}
 	for(img=imgget(0);img;img=img->nxt) if(img->pos->eff){
-		effimg(img->pos);
+		effimg(img);
 		ineff=1;
 	}
 	if(delimg){
-		if(delimg->pos->eff) effimg(delimg->pos);
+		if(delimg->pos->eff) effimg(delimg);
 		if(!delimg->pos->eff){
 			struct img *tmp=delimg;
 			delimg=NULL;
