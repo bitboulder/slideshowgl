@@ -3,10 +3,8 @@
 - eaksn4: switch back from fullscreen if started in fullscreen
 
 - fix: stop-icon disapears if zoomin and -out on flstln/panorama
-
 - stop play at end of effprg
-- fix: play-click with mouse
-- fix: nxttime for DE_PLAY
+- fix: nxttime for DE_PLAY (DE_PLAY,DE_RIGHT,DE_PLAY)
 
 # Want to have
 ? thread priorities

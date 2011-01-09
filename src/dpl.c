@@ -485,8 +485,10 @@ char dplev(struct ev *ev){
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
 		if(dpl.run) dpl.run=0;
-		else if(!panoev(PE_PLAY) && !dpldir(clickimg,ev->src!=DES_MOUSE) && dpl.pos.zoom<=0)
-			dpl.run=0xf0000000;
+		else if(!panoev(PE_PLAY) && !dpldir(clickimg,ev->src!=DES_MOUSE) && dpl.pos.zoom<=0){
+			dplmove(DE_RIGHT,0.f,0.f);
+			dpl.run=SDL_GetTicks();
+		}
 		nxttime=1000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
@@ -494,7 +496,8 @@ char dplev(struct ev *ev){
 	}
 	if(dpl.pos.imgi==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;
-	if(ev->src!=DES_MOUSE && nxttime) nxttime+=time;
+	if(ev->src==DES_MOUSE) nxttime=0;
+	if(nxttime) nxttime+=time;
 	return ret;
 }
 
