@@ -295,10 +295,11 @@ void dplcol(int d){
 	if(*val> 1.f) *val= 1.f;
 }
 
-char dpldir(int imgi){
+char dpldir(int imgi,char noleave){
 	struct img *img;
 	if(imgi==IMGI_START) return 0;
 	if(!(img=imgget(imgi))){
+		if(noleave) return 0;
 		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 0;
 	}else{
@@ -359,6 +360,7 @@ struct dplevs {
 		enum dplev ev;
 		SDLKey key;
 		float sx,sy;
+		enum dplevsrc src;
 	} evs[DPLEVS_NUM];
 	struct {
 		float sx,sy;
@@ -371,7 +373,7 @@ struct dplevs {
 };
 
 /* thread: sdl */
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
+void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,enum dplevsrc src){
 	if(ev&DE_JUMP){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
@@ -381,6 +383,7 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy){
 		dev.evs[dev.wi].key=key;
 		dev.evs[dev.wi].sx=sx;
 		dev.evs[dev.wi].sy=sy;
+		dev.evs[dev.wi].src=src;
 		if(nwi!=dev.ri) dev.wi=nwi;
 	}
 }
@@ -428,7 +431,7 @@ void dplkey(SDLKey key){
 	switch(key){
 	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END); break;
+	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
 	case SDLK_f:        sdlfullscreen(); break;
 	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
@@ -477,12 +480,12 @@ char dplev(struct ev *ev){
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy); break;
 	case DE_SEL:  dplsel(clickimg); break;
-	case DE_MARK: if(!dpldir(clickimg)) dplmark(clickimg); break;
+	case DE_MARK: if(ev->src!=DES_MOUSE || !dpldir(clickimg,0)) dplmark(clickimg); break;
 	case DE_ROT1: 
 	case DE_ROT2: dplrotate(ev->ev); break;
 	case DE_PLAY: 
 		if(dpl.run) dpl.run=0;
-		else if(!panoev(PE_PLAY) && !dpldir(clickimg) && dpl.pos.zoom<=0)
+		else if(!panoev(PE_PLAY) && !dpldir(clickimg,ev->src!=DES_MOUSE) && dpl.pos.zoom<=0)
 			dpl.run=0xf0000000;
 		nxttime=1000;
 	break;
@@ -491,7 +494,7 @@ char dplev(struct ev *ev){
 	}
 	if(dpl.pos.imgi==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;
-	if(nxttime) nxttime+=time;
+	if(ev->src!=DES_MOUSE && nxttime) nxttime+=time;
 	return ret;
 }
 

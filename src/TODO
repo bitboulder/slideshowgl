@@ -8,6 +8,7 @@
 - stop play at end of effprg
 - fix: play-click with mouse
 - fix: nxttime for DE_PLAY
+- do not leave dir on space if not triggert by mouse
 
 # Want to have
 ? thread priorities

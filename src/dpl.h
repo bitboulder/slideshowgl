@@ -37,6 +37,8 @@ enum dplev {
 #define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
 #define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev)))
 
+enum dplevsrc { DES_KEY, DES_MOUSE };
+
 struct dplpos *dplgetpos();
 int dplgetimgi();
 int dplgetzoom();
@@ -47,10 +49,11 @@ const char *dplhelp();
 
 void printixy(float sx,float sy);
 
-#define dplevput(e)			dplevputx(e,0,0.f,0.f)
-#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f)
-#define dplevputp(e,x,y)	dplevputx(e,0,x,y)
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy);
+#define dplevput(e)			dplevputx(e,0,0.f,0.f,DES_KEY)
+#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f,DES_KEY)
+#define dplevputp(e,x,y)	dplevputx(e,0,x,y,DES_MOUSE)
+#define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,src)
+void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,enum dplevsrc src);
 int dplthread(void *arg);
 
 #endif

@@ -253,7 +253,7 @@ void sdljump(Uint16 x,Uint16 y){
 		if(xd>sdl.move.pos_x*w+wthr){ ev=DE_RIGHT; sdl.move.pos_x++; }
 		if(yd<sdl.move.pos_y*w-wthr){ ev=DE_UP;    sdl.move.pos_y--; }
 		if(yd>sdl.move.pos_y*w+wthr){ ev=DE_DOWN;  sdl.move.pos_y++; }
-		if(ev) dplevput(ev);
+		if(ev) dplevputs(ev,DES_MOUSE);
 	}else{
 		if(xd || yd)
 			dplevputp(DE_JUMP,
@@ -272,8 +272,8 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
 		if(dplgetpos()->writemode) dplevputp(DE_MARK,sx,sy);
 		else dplevputp(DE_PLAY,sx,sy);
 	}else if(zoom==0) switch(btn){
-		case SDL_BUTTON_LEFT:  dplevput(DE_RIGHT); break;
-		case SDL_BUTTON_RIGHT: dplevput(DE_LEFT); break;
+		case SDL_BUTTON_LEFT:  dplevputs(DE_RIGHT,DES_MOUSE); break;
+		case SDL_BUTTON_RIGHT: dplevputs(DE_LEFT,DES_MOUSE); break;
 	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
 		dplevputp(DE_SEL,sx,sy);
 	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
@@ -286,7 +286,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdljump(x,y);
-	else dplevput(DE_STAT);
+	else dplevputs(DE_STAT,DES_MOUSE);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
