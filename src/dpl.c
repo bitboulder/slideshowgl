@@ -303,6 +303,7 @@ char dpldir(int imgi){
 		if(imgi==IMGI_END) return 0;
 	}else{
 		if(!imgfiledir(img->file)) return 0;
+		dpl.pos.imgi=imgi;
 		imgi=floaddir(img->file);
 		if(imgi==IMGI_END) return 1;
 	}

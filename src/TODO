@@ -8,7 +8,6 @@
 - stop play at end
 - fix: play-click with mouse
 - fix: nxttime for DE_PLAY
-- set parent-imgi on parent folder if opened with mouse
 
 # Want to have
 ? thread priorities
