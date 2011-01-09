@@ -35,14 +35,18 @@ struct imglist *curil = NULL;
 /***************************** img index operations ***************************/
 
 /* thread: all */
-int imggetn(){ return curil ? curil->nimg : 0; }
+int imggetn(){
+	if(!curil) return 0;
+	if(curil->prg) return prggetn(curil->prg);
+	return curil->nimg;
+}
 struct prg *ilprg(){ return curil ? curil->prg : NULL; }
 
 /* thread: all */
 int imginarrorlimits(int i){
 	if(!curil) return 0;
 	if(i==IMGI_START) return -1;
-	if(i==IMGI_END)   return curil->nimg;
+	if(i==IMGI_END)   return imggetn();
 	return i;
 }
 

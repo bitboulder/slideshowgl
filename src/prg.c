@@ -18,6 +18,8 @@ struct prg {
 	} **ev;
 };
 
+int prggetn(struct prg *prg){ return prg->nfrm-1; }
+
 void prgdestroy(struct prg *prg){
 	int frm;
 	for(frm=0;frm<prg->nfrm;frm++) while(prg->ev[frm]){

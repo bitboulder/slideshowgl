@@ -183,7 +183,7 @@ char effprg(struct dplpos *dp,struct img *img,int iev){
 	if(!prg) return 0;
 	if(!dp) dp=dplgetpos();
 	rev = dp->imgi<dp->imgiold;
-	num=prgget(prg,img,dp->imgi+rev,rev,iev,ip->way,waytime);
+	num=prgget(prg,img,imginarrorlimits(dp->imgi)+rev,rev,iev,ip->way,waytime);
 	ip->opt.tex=TEX_BIG;
 	ip->opt.back=0;
 	if(!num){
@@ -287,7 +287,6 @@ char effmaxfitupdate(struct dplpos *dp){
 void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 	int i;
 	struct dplpos *dp=dplgetpos();
-	int nimg=imggetn();
 	struct img *img;
 	debug(DBG_DBG,"eff refresh%s%s%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
@@ -301,11 +300,11 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		if(dp->zoom<0 && effmaxfitupdate(dp))
 			effref|=EFFREF_ALL;
 	if(effref&(EFFREF_ALL|EFFREF_CLR))
-		for(i=0;i<nimg;i++) effinitimg(dp,ev,i);
+		for(i=0,img=imgget(0);img;img=img->nxt,i++) effinitimg(dp,ev,i);
 	else{
 		if(effref&EFFREF_IMG)
 			effinitimg(dp,ev,imgi<0?dp->imgi:imgi);
-		if(effref&EFFREF_ROT) for(i=0;i<nimg;i++)
+		if(effref&EFFREF_ROT) for(i=0,img=imgget(0);img;img=img->nxt,i++)
 			if((img=imgget(i)) && img->pos->opt.active &&
 					img->pos->cur.r != imgexifrotf(img->exif))
 				effinitimg(dp,ev,i);

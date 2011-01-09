@@ -6,6 +6,7 @@
 
 struct prg;
 
+int prggetn(struct prg *prg);
 void prgdestroy(struct prg *prg);
 void prgadd(struct prg **prg,const char *txt,struct img *img);
 int prgimgidiff(int frm,int imgi);
