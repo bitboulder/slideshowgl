@@ -28,6 +28,13 @@ int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 
+#ifndef popen
+FILE *popen(const char *command, const char *type);
+int pclose(FILE *stream);
+#endif
+
 char isdir(const char *fn);
+
+char fileext(const char *fn,size_t len,const char *ext);
 
 #endif

@@ -3,8 +3,12 @@
 - eaksn4: switch back from fullscreen if started in fullscreen
 
 - fix: stop-icon disapears if zoomin and -out on flstln/panorama
-#- no image-back-move if only hor- or vertical
 - fast next or prv if triggert by mouse
+
+- stop play at end
+- fix: play-click with mouse
+- fix: nxttime for DE_PLAY
+- set parent-imgi on parent folder if opened with mouse
 
 # Want to have
 ? thread priorities

@@ -6,6 +6,7 @@
 #include "main.h"
 #include "eff.h"
 #include "dpl.h"
+#include "help.h"
 
 struct prg {
 	int nfrm;

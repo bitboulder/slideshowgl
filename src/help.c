@@ -121,15 +121,22 @@ char *strsep(char **stringp, const char *delim){
 #include <unistd.h>
 char isdir(const char *fn){
 	struct stat st;
-	size_t l;
 	if(stat(fn,&st)) return 0;
 	if(S_ISDIR(st.st_mode)) return 1;
-	l=strlen(fn);
-	if(l>=6 && !strncmp(fn+l-5,".flst",5)) return 1;
+	if(fileext(fn,0,".flst")) return 1;
+	if(fileext(fn,0,".effprg")) return 1;
 	return 0;
 }
 #else
 char isdir(const char *fn __attribute__((unused))){
+	if(fileext(fn,".flst")) return 1;
+	if(fileext(fn,".effprg")) return 1;
 	return 0;
 }
 #endif
+
+char fileext(const char *fn,size_t len,const char *ext){
+	size_t lext=strlen(ext);
+	if(!len) len=strlen(fn);
+	return len>lext+1 && !strncasecmp(fn+len-lext,ext,lext);
+}

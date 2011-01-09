@@ -117,9 +117,9 @@ int faddfile(struct imglist *il,const char *fn){
 		debug(DBG_DBG,"directory found: '%s'",img->file->fn);
 	}else{
 		char ok=0;
-		if(len>=5 && !strncasecmp(fn+len-4,".png",4)) ok=1;
-		if(len>=5 && !strncasecmp(fn+len-4,".jpg",4)) ok=1;
-		if(len>=6 && !strncasecmp(fn+len-5,".jpeg",5)) ok=1;
+		if(fileext(fn,len,".png")) ok=1;
+		if(fileext(fn,len,".jpg")) ok=1;
+		if(fileext(fn,len,".jpeg")) ok=1;
 		if(!ok) return 0;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
@@ -131,11 +131,17 @@ int faddfile(struct imglist *il,const char *fn){
 }
 
 int faddflst(struct imglist *il,char *flst,const char *pfx){
-	FILE *fd=fopen(flst,"r");
+	FILE *fd;
 	char buf[FILELEN];
 	int count=0;
 	size_t lpfx=strlen(pfx);
-	if(!fd){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return 0; }
+	char prg;
+	if((prg=fileext(flst,0,".effprg"))){
+		char cmd[FILELEN*3];
+		snprintf(cmd,FILELEN*3,"perl \"%s\" \"%s\"",finddatafile("effprg.pl"),flst);
+		if(!(fd=popen(cmd,"r"))){ error(ERR_CONT,"ld read effprg failed \"%s\"",cmd); return 0; }
+	}else
+		if(!(fd=fopen(flst,"r"))){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return 0; }
 	while(!feof(fd)){
 		size_t len;
 		if(!fgets(buf,FILELEN,fd)) continue;
@@ -154,7 +160,7 @@ int faddflst(struct imglist *il,char *flst,const char *pfx){
 		}
 		count+=faddfile(il,buf);
 	}
-	fclose(fd);
+	if(prg) pclose(fd); else fclose(fd);
 	return count;
 }
 
@@ -173,11 +179,13 @@ void floadfinalize(struct imglist *il,char sort){
 
 void fgetfiles(int argc,char **argv){
 	struct imglist *il=ilnew("[BASE]");
+	int i;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
-	for(;argc;argc--,argv++){
-		if(!strcmp(".flst",argv[0]+strlen(argv[0])-5)) faddflst(il,argv[0],"");
-		else faddfile(il,argv[0]);
+	for(i=0;i<argc;i++){
+		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"");
+		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"");
+		else faddfile(il,argv[i]);
 	}
 	floadfinalize(il,0);
 	ilswitch(il);
