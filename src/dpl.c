@@ -489,6 +489,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	default: ret=0; break;
 	}
+	if(dpl.pos.imgi==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;
 	if(nxttime) nxttime+=time;
 	return ret;
@@ -509,7 +510,7 @@ void dplcheckev(){
 		dev.move.sy=0.f;
 		effinit(EFFREF_IMG,ev,-1);
 	}
-	if(stat&1) dplstatupdate(stat);
+	if(stat&1) dplstatupdate();
 	if(stat&2) effstaton(stat);
 }
 

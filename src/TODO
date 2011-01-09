@@ -5,7 +5,7 @@
 - fix: stop-icon disapears if zoomin and -out on flstln/panorama
 - fast next or prv if triggert by mouse
 
-- stop play at end
+- stop play at end of effprg
 - fix: play-click with mouse
 - fix: nxttime for DE_PLAY
 
