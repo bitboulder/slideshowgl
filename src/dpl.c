@@ -307,8 +307,10 @@ char dpldir(int imgi,char noleave){
 		dpl.pos.imgi=imgi;
 		imgi=floaddir(img->file);
 		if(imgi==IMGI_END) return 1;
+		if(imgi==IMGI_START && !ilprg()) imgi=0;
+		if(ilprg()) dpl.pos.zoom=0;
 	}
-	if(imgi==IMGI_START) imgi=0;
+	dpl.run=0;
 	dpl.pos.imgi=imgi;
 	effinit(EFFREF_CLR,0,-1);
 	return 1;
