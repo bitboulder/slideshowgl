@@ -37,7 +37,7 @@ struct imglist *curil = NULL;
 /* thread: all */
 int imggetn(){
 	if(!curil) return 0;
-	if(curil->prg) return prggetn(curil->prg);
+	if(curil->prg && dplgetzoom()==0) return prggetn(curil->prg);
 	return curil->nimg;
 }
 struct prg *ilprg(){ return curil ? curil->prg : NULL; }
@@ -274,3 +274,8 @@ void ilforallimgs(void (*func)(struct img *img)){
 		for(img=il->imgs[0];img;img=img->nxt)
 			func(img);
 }
+
+void ilprgfrm(struct imglist *il,const char *prgfrm){
+	prgadd(&il->prg,prgfrm,NULL);
+}
+

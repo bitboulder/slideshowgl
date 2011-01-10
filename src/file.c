@@ -103,9 +103,10 @@ int faddfile(struct imglist *il,const char *fn){
 	char *prg;
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	len=strlen(fn);
-	if((prg=strchr(fn,':'))){
+	if((prg=strchr(fn,';'))){
 		len=(size_t)(prg-fn);
 		prg++;
+		if(len==3 && !strncmp(fn,"frm",3)) ilprgfrm(il,prg);
 	}
 	if(len>=FILELEN) return 0;
 	if(isdir(fn)){
@@ -120,6 +121,7 @@ int faddfile(struct imglist *il,const char *fn){
 		if(fileext(fn,len,".png")) ok=1;
 		if(fileext(fn,len,".jpg")) ok=1;
 		if(fileext(fn,len,".jpeg")) ok=1;
+		if(len>=5 && !strncmp(fn,"txt_",4)) ok=1;
 		if(!ok) return 0;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';

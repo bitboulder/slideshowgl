@@ -343,10 +343,11 @@ void glrenderimg(struct img *img,char back){
 
 void glrenderimgs(){
 	struct img *img;
+	char back;
 	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1);
-	for(img=imgget(0);img;img=img->nxt) glrenderimg(img,1);
-	for(img=imgget(0);img;img=img->nxt) glrenderimg(img,0);
+	for(back=2;back>=0;back--)
+		for(img=imgget(0);img;img=img->nxt) glrenderimg(img,back);
 }
 
 #if HAVE_FTGL

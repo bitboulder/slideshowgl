@@ -1,8 +1,54 @@
 #!/usr/bin/perl
 
+## [INPUT-FORMAT] ##
+#
+# dir  DIR
+# start
+# img  FILE
+# txt  "TEXT"
+# col  r:g:b:a           (1:1:1:1)
+# col  0xCOL
+#
+# deffrm on:stay         (1:1)
+# defpos a:s:x:y:r       (1:1:0:0:0)
+# defsrc a:s:x:y:r       (0::::)
+# defdst a:s:x:y:r       (0::::)
+# defsd  => defsrc+defdst
+# defon  start:end:layer (0:1:0)
+# defoff start:end:layer (0:1:0)
+#
+# frm    on:stay         (deffrm)
+# pos    a:s:x:y:r       (defpos)
+# src    a:s:x:y:r       (pos defsrc)
+# dst    a:s:x:y:r       (pos defdst)
+# sd     => src+dst
+# on     start:end:layer (defon)
+# off    start:end:layer (defoff)
+
+## [OUTPUT-FORMAT]##
+#
+# frm;NUM-FRM{:ON:STAY}
+# FILE;NUM-EV{:START:END:LAYER:SRC-A:S:X:Y:R:DST-A:S:X:Y:R}
+# txt_TEXT_R_G_B_A;NUM-EV...
+
 use strict;
 
 my $fprg=shift;
+
+my %def=(
+	"frm"=>"1:1",
+	"col"=>"1:1:1:1",
+	"pos"=>"1:1:0:0:0",
+	"src"=>"0",
+	"dst"=>"0",
+	"on" =>"0:1:0",
+	"off"=>"0:1:0",
+);
+
+foreach my $def (keys %def){
+	my @arg=split /:/,$def{$def};
+	$def{$def}=\@arg;
+}
 
 my @prg=&loadprg($fprg);
 @prg=&fillprg(@prg);
@@ -46,12 +92,12 @@ sub flstimgs {
 	my %imgs=%{$arg};
 	my $flst="";
 	foreach my $f (sort keys %imgs){
-		$flst.=sprintf "%s:%i",$f,@{$imgs{$f}}+0;
+		$flst.=sprintf "%s;%i",$f,@{$imgs{$f}}+0;
 		foreach my $ev (@{$imgs{$f}}){
 			my $str=join ":",@{$ev};
 			$flst.=":".$str;
 			$str=~s/[^:]//g;
-			return "" if 12 != length($str);
+			die "wrong number of arguments (".length($str).")" if "frm"ne$f && 13 != length($str);
 		}
 		$flst.="\n";
 	}
@@ -71,50 +117,81 @@ sub loadprg {
 		(my $cmd,my $arg)=split /[[:blank:]]+/,$_,2;
 		my @arg=split /:/,$arg;
 		foreach(@arg){ $_=~s/^[[:blank:]]+|[[:blank:]]+//g; }
-		if("dir"eq$cmd){ $dir=$arg; }
-		elsif("frm"eq$cmd){
-			$prg[@prg]->{"stay"}=$arg[0];
+		if("dir"eq$cmd){
+			$dir=$arg;
+		}elsif("start"eq$cmd){
+			@prg=();
+		}elsif("frm"eq$cmd){
+			$prg[@prg]->{"frm"}=\@arg;
 			@{$prg[-1]->{"imgs"}}=();
 			@{$prg[-1]->{"evs"}}=();
-		}elsif("img"eq$cmd){
-			$arg=$dir."/".$arg if "/" ne substr $arg,0,1;
+		}elsif($cmd=~/^(img|txt)$/){
+			if("txt"eq$cmd){
+				$arg=~s/^"|"$//g;
+				$arg="txt_".$arg;
+			}else{
+				$arg=$dir."/".$arg if $arg!~/^(\/|[A-Za-z]:\\)/;
+			}
 			$prg[-1]->{"imgs"}->[@{$prg[-1]->{"imgs"}}]->{"file"}=$arg;
 			@{$prg[-1]->{"imgs"}->[-1]->{"pos"}}=();
 			@{$prg[-1]->{"imgs"}->[-1]->{"src"}}=();
 			@{$prg[-1]->{"imgs"}->[-1]->{"dst"}}=();
 			@{$prg[-1]->{"imgs"}->[-1]->{"on" }}=();
 			@{$prg[-1]->{"imgs"}->[-1]->{"off"}}=();
-		}elsif($cmd=~/^(pos|src|dst|on|off)$/){
+		}elsif($cmd=~/^(pos|src|dst|on|off|col)$/){
+			@arg=&colread(@arg) if "col"eq$cmd;
 			$prg[-1]->{"imgs"}->[-1]->{$cmd}=\@arg;
 		}elsif("sd"eq$cmd){
 			$prg[-1]->{"imgs"}->[-1]->{"src"}=\@arg;
 			$prg[-1]->{"imgs"}->[-1]->{"dst"}=\@arg;
+		}elsif($cmd=~/^def(.*)$/){
+			my $cmd=$1;
+			$cmd="on:off" if "oo"eq$cmd;
+			$cmd="src:dst" if "sd"eq$cmd;
+			foreach my $cmd (split /:/,$cmd){
+				&fillarg(\@arg,$def{$cmd}) if $cmd!~/^(src|dst)$/;
+				$def{$cmd}=\@arg;
+			}
 		}
 	}
 	close FD;
 	return @prg;
 }
 
+sub colread {
+	my @arg=@_;
+	return @arg if "0x"ne substr $arg[0],0,2;
+	my $str=$arg[0];
+	@arg=();
+	for(my $i=0;$i<6;$i++){
+		my $c=substr $str,2+$i,1;
+		$c=ord($c)-ord("a")+10 if $c=~/^[a-f]$/;
+		$c=ord($c)-ord("A")+10 if $c=~/^[A-F]$/;
+		die "colread error ($str -> $i: $c)" if $c!~/^[0-9]+$/ || $c>=16;
+		$arg[int($i/2)]+=$c/($i%2 ? 255 : 255/16);
+	}
+	foreach(@arg){ $_=int($_*1000)/1000; }
+	return @arg;
+}
+
 sub fillprg {
-	my @defpos=(1,1,0,0,0);
-	my @defsd =(0);
-	my @defoo =(0,1);
 	my @prg=@_;
 	for(my $fi=0;$fi<@prg;$fi++){
 		my $frm=$prg[$fi];
-		$frm->{"stay"}=1 if ""eq$frm->{"stay"};
+		&fillarg($frm->{"frm"},$def{"frm"});
 		foreach my $img (@{$frm->{"imgs"}}){
+			&fillarg($img->{"col"},$def{"col"});
 			my $prv=&findimg($fi-1,$img->{"file"},@prg);
 			my $nxt=&findimg($fi+1,$img->{"file"},@prg);
 			if($prv){
 				&fillarg($img->{"pos"},$prv->{"dst"});
 				&fillarg($img->{"src"},$prv->{"dst"});
 			}else{
-				&fillarg($img->{"pos"},\@defpos);
+				&fillarg($img->{"pos"},$def{"pos"});
 				if(@{$img->{"src"}}){
 					&fillarg($img->{"src"},$img->{"pos"});
 				}else{
-					&fillarg($img->{"src"},\@defsd,$img->{"pos"});
+					&fillarg($img->{"src"},$def{"src"},$img->{"pos"});
 				}
 			}
 			if($nxt){
@@ -123,11 +200,11 @@ sub fillprg {
 				if(@{$img->{"dst"}}){
 					&fillarg($img->{"dst"},$img->{"pos"});
 				}else{
-					&fillarg($img->{"dst"},\@defsd,$img->{"pos"});
+					&fillarg($img->{"dst"},$def{"dst"},$img->{"pos"});
 				}
 			}
-			&fillarg($img->{"on" },\@defoo);
-			&fillarg($img->{"off"},\@defoo);
+			&fillarg($img->{"on" },$def{"on"});
+			&fillarg($img->{"off"},$def{"off"});
 		}
 	}
 	return @prg;
@@ -158,17 +235,20 @@ sub fillarg {
 sub compileprg {
 	my @prg=@_;
 	my %imgs=();
+	my @frm=();
 	for(my $fi=0;$fi<=@prg;$fi++){
 		if($fi<@prg){
+			push @frm,$prg[$fi]->{"frm"};
 			foreach my $img (@{$prg[$fi]->{"imgs"}}){
+				$img->{"file"}.="_".join "_",@{$img->{"col"}} if "txt_"eq substr $img->{"file"},0,4;
 				my $prv=&findimg($fi-1,$img->{"file"},@prg);
 				my @path=();
 				if($prv){
-					&pushpath(\@path,$prv->{"off"}->[0],@{$prv->{"pos"}});
-					&pushpath(\@path,$prv->{"off"}->[1],@{$prv->{"dst"}});
+					&pushpath(\@path,$prv->{"off"},0,@{$prv->{"pos"}});
+					&pushpath(\@path,$prv->{"off"},1,@{$prv->{"dst"}});
 				}
-				&pushpath(\@path,$img->{"on"}->[0],@{$img->{"src"}});
-				&pushpath(\@path,$img->{"on"}->[1],@{$img->{"pos"}});
+				&pushpath(\@path,$img->{"on"},0,@{$img->{"src"}});
+				&pushpath(\@path,$img->{"on"},1,@{$img->{"pos"}});
 				@path=&alignpath(@path);
 				&compilepath(\%imgs,$img,$fi,@path);
 			}
@@ -178,21 +258,24 @@ sub compileprg {
 				my $img=&findimg($fi,$prv->{"file"},@prg);
 				next if $img;
 				my @path=();
-				&pushpath(\@path,$prv->{"off"}->[0],@{$prv->{"pos"}});
-				&pushpath(\@path,$prv->{"off"}->[1],@{$prv->{"dst"}});
+				&pushpath(\@path,$prv->{"off"},0,@{$prv->{"pos"}});
+				&pushpath(\@path,$prv->{"off"},1,@{$prv->{"dst"}});
 				@path=&alignpath(@path);
 				&compilepath(\%imgs,$prv,$fi,@path);
 			}
 		}
 	}
+	$imgs{"frm"}=\@frm;
 	return %imgs;
 }
 
 sub pushpath {
 	my $path=shift;
 	my $time=shift;
+	my $timeid=shift;
 	my @pos=@_;
-	$path->[@{$path}]->{"t"}=$time;
+	$path->[@{$path}]->{"t"}=$time->[$timeid];
+	$path->[      -1]->{"l"}=$time->[2];
 	$path->[      -1]->{"p"}=join ":",@pos;
 }
 
@@ -243,5 +326,5 @@ sub compileev {
 	my $fi=shift;
 	my $psrc=shift;
 	my $pdst=shift;
-	return ($fi,$psrc->{"t"},$pdst->{"t"},$psrc->{"p"},$pdst->{"p"});
+	return ($fi,$psrc->{"t"},$pdst->{"t"},$pdst->{"l"},$psrc->{"p"},$pdst->{"p"});
 }

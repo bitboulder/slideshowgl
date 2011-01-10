@@ -326,6 +326,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
+	/* TODO: render fn="txt_TEXT_R_G_B_A" */
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }

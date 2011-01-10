@@ -180,12 +180,13 @@ char effprg(struct dplpos *dp,struct img *img,int iev){
 	float waytime[2];
 	int num;
 	struct imgpos *ip=img->pos;
+	int layer;
 	if(!prg) return 0;
 	if(!dp) dp=dplgetpos();
 	rev = dp->imgi<dp->imgiold;
-	num=prgget(prg,img,imginarrorlimits(dp->imgi)+rev,rev,iev,ip->way,waytime);
+	num=prgget(prg,img,imginarrorlimits(dp->imgi)+rev,rev,iev,ip->way,waytime,&layer);
 	ip->opt.tex=TEX_BIG;
-	ip->opt.back=0;
+	ip->opt.back=(char)layer;
 	if(!num){
 		ip->eff=0;
 		ip->opt.active=0;
