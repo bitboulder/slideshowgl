@@ -30,6 +30,7 @@ struct imgfile {
 	char fn[FILELEN];
 	char tfn[FILELEN];
 	const char *dir;
+	struct txtimg txt;
 };
 
 struct imgfile *imgfileinit(){ return calloc(1,sizeof(struct imgfile)); }
@@ -38,6 +39,7 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 /* thread: dpl, load */
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
 const char *imgfiledir(struct imgfile *ifl){ return ifl->dir; }
+struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
 /* thread: load */
 char imgfiletfn(struct imgfile *ifl,char **tfn){
@@ -116,12 +118,29 @@ int faddfile(struct imglist *il,const char *fn){
 		while(i>=0 && img->file->fn[i]!='/' && img->file->fn[i]!='\\') i--;
 		img->file->dir=img->file->fn+i+1;
 		debug(DBG_DBG,"directory found: '%s'",img->file->fn);
+	}else if(len>=5 && !strncmp(fn,"txt_",4)){
+		char *pos,*end;
+		size_t ltxt;
+		int i;
+		float val;
+		img=imgadd(il,prg);
+		pos=strchr(fn+=4,'_');
+		ltxt = MIN(pos ? (size_t)pos-(size_t)fn : len, FILELEN-1);
+		memcpy(img->file->txt.txt,fn,ltxt);
+		img->file->txt.txt[ltxt]='\0';
+		for(i=0;i<4;i++){
+			while(*pos=='_') pos++;
+			val=(float)strtod(pos,&end);
+			if(pos==end) break;
+			img->file->txt.col[i]=val;
+			pos=end;
+		}
+		for(;i<4;i++) img->file->txt.col[i]=1.f;
 	}else{
 		char ok=0;
 		if(fileext(fn,len,".png")) ok=1;
 		if(fileext(fn,len,".jpg")) ok=1;
 		if(fileext(fn,len,".jpeg")) ok=1;
-		if(len>=5 && !strncmp(fn,"txt_",4)) ok=1;
 		if(!ok) return 0;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';

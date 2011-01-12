@@ -261,6 +261,49 @@ void glrendermark(struct ipos *ipos,float rot){
 	glPopMatrix();
 }
 
+void glfontscale(FTGLfont *font,float hrat){
+	float lineh=ftglGetFontLineHeight(font);
+	glScalef(hrat/lineh,-hrat/lineh,1.f);
+}
+
+enum glfontpos {
+	GFP_LEFT    = 0x01,
+	GFP_RIGHT   = 0x02,
+	GFP_HCENTER = 0x04,
+	GFP_TOP     = 0x10,
+	GFP_BOTTOM  = 0x20,
+	GFP_VCENTER = 0x40,
+};
+#define GFP_CENTER	(GFP_HCENTER|GFP_VCENTER)
+
+void glfontrender(FTGLfont *font,const char *txt,enum glfontpos pos){
+	float rect[6];
+	ftglGetFontBBox(font,txt,-1,rect);
+	if(pos&GFP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
+	if(pos&GFP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
+	if(pos&GFP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
+	if(pos&GFP_TOP    ) glTranslatef(0.f,-rect[1],0.f);
+	if(pos&GFP_BOTTOM ) glTranslatef(0.f,-rect[4],0.f);
+	if(pos&GFP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
+	//glmodeslave(GLM_TXT);
+	if(gl.prg) glUseProgram(0); // TODO: do not switch program
+	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
+	if(gl.prg) glUseProgram(gl.prg);
+}
+
+void glrendertxtimg(struct txtimg *txt,float a){
+	float col[4];
+	int i;
+	if(!gl.fontbig) return;
+	for(i=0;i<4;i++) col[i]=txt->col[i];
+	col[3]*=a;
+	glPushMatrix();
+	glColor4fv(col);
+	glfontscale(gl.fontbig,0.1f);
+	glfontrender(gl.fontbig,txt->txt,GFP_CENTER);
+	glPopMatrix();
+}
+
 void glrenderimgtext(const char *text,float irat,float a){
 	float rect[6];
 	float s;
@@ -296,12 +339,14 @@ void glrenderimg(struct img *img,char back){
 	struct ipos *ipos;
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
-	GLuint dl;
+	GLuint dl=0;
 	float irat=imgldrat(img->ld);
 	float srat=sdlrat();
+	struct txtimg *txt;
 	if(!iopt->active) return;
 	if(iopt->back!=back) return;
-	if(!(dl=imgldtex(img->ld,iopt->tex))) return;
+	if(!irat) return;
+	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
 	glmodeslave(GLM_2D);
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
@@ -334,7 +379,8 @@ void glrenderimg(struct img *img,char back){
 		glScalef(schg,schg,1.);
 	}
 	// draw img
-	glCallList(dl);
+	if(dl) glCallList(dl);
+	if(txt) glrendertxtimg(txt,ipos->a);
 	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
 	if(ipos->a<1.f) glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
