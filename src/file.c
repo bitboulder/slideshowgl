@@ -174,6 +174,7 @@ int faddflst(struct imglist *il,char *flst,const char *pfx){
 #else
 		if(buf[0]!='/')
 #endif
+			if(strncmp(buf,"frm;",4) && strncmp(buf,"txt_",4))
 		{
 			memmove(buf+lpfx,buf,MIN(len+1,FILELEN-lpfx-1));
 			memcpy(buf,pfx,lpfx);

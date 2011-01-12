@@ -261,6 +261,7 @@ void glrendermark(struct ipos *ipos,float rot){
 	glPopMatrix();
 }
 
+#if HAVE_FTGL
 void glfontscale(FTGLfont *font,float hrat){
 	float lineh=ftglGetFontLineHeight(font);
 	glScalef(hrat/lineh,-hrat/lineh,1.f);
@@ -290,8 +291,10 @@ void glfontrender(FTGLfont *font,const char *txt,enum glfontpos pos){
 	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
 	if(gl.prg) glUseProgram(gl.prg);
 }
+#endif
 
 void glrendertxtimg(struct txtimg *txt,float a){
+#if HAVE_FTGL
 	float col[4];
 	int i;
 	if(!gl.fontbig) return;
@@ -302,26 +305,28 @@ void glrendertxtimg(struct txtimg *txt,float a){
 	glfontscale(gl.fontbig,0.1f);
 	glfontrender(gl.fontbig,txt->txt,GFP_CENTER);
 	glPopMatrix();
+#endif
 }
 
 void glrenderimgtext(const char *text,float irat,float a){
+#if HAVE_FTGL
 	float rect[6];
 	float s;
 	if(!text) return;
 	if(!gl.fontbig) return;
-	// TODO: render text on an image-texture to prevent program switch and double-alpha
+	// TODO: render text using irat and fixed text-height (glfontscale, glfontrender)
 	//glmodeslave(GLM_TXT);
 	if(gl.prg) glUseProgram(0);
 	glPushMatrix();
 	ftglGetFontBBox(gl.fontbig,text,-1,rect);
 	glColor4f(1.f,1.f,1.f,a);
-	// TODO: use irat
 	s=MAX(rect[3]-rect[0],rect[4]-rect[1]);
 	glScalef(.8f/s,-.8f/s,1.f);
 	glTranslatef(-(rect[0]+rect[3])/2.f,-(rect[1]+rect[4])/2.f,0.f);
 	ftglRenderFont(gl.fontbig,text,FTGL_RENDER_ALL);
 	glPopMatrix();
 	if(gl.prg) glUseProgram(gl.prg);
+#endif
 }
 
 void gldrawimg(struct itx *tx){
