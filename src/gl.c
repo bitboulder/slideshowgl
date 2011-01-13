@@ -31,10 +31,16 @@ struct gl {
 #endif
 	float bar;
 	struct glcfg {
-		float inputnum_lineh;
-		float stat_lineh;
-		float txt_bgcolor[4];
-		float txt_fgcolor[4];
+		float hrat_inputnum;
+		float hrat_stat;
+		float hrat_txtimg;
+		float hrat_dirname;
+		float txt_border;
+		float dir_border;
+		float col_txtbg[4];
+		float col_txtfg[4];
+		float col_dirname[4];
+		float col_playicon[4];
 	} cfg;
 } gl = {
 	.bar = 0.f,
@@ -118,10 +124,16 @@ void glinit(char done){
 			mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
 			mprintf("GLSL-Version: %s\n",str?str:"NONE");
 		}
-		gl.cfg.inputnum_lineh = cfggetfloat("gl.inputnum_lineh");
-		gl.cfg.stat_lineh     = cfggetfloat("gl.stat_lineh");
-		cfggetcol("gl.txt_bgcolor",gl.cfg.txt_bgcolor);
-		cfggetcol("gl.txt_fgcolor",gl.cfg.txt_fgcolor);
+		gl.cfg.hrat_inputnum = cfggetfloat("gl.hrat_inputnum");
+		gl.cfg.hrat_stat     = cfggetfloat("gl.hrat_stat");
+		gl.cfg.hrat_txtimg   = cfggetfloat("gl.hrat_txtimg");
+		gl.cfg.hrat_dirname  = cfggetfloat("gl.hrat_dirname");
+		gl.cfg.txt_border    = cfggetfloat("gl.txt_border");
+		gl.cfg.dir_border    = cfggetfloat("gl.dir_border");
+		cfggetcol("gl.col_txtbg",   gl.cfg.col_txtbg);
+		cfggetcol("gl.col_txtfg",   gl.cfg.col_txtfg);
+		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
+		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
 	}
 	ldmaxtexsize();
 	
@@ -250,51 +262,69 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	return w;
 }
 
-void glrendermark(struct ipos *ipos,float rot){
-	glmodeslave(GLM_TXT);
+enum glpos {
+	GP_LEFT    = 0x01,
+	GP_RIGHT   = 0x02,
+	GP_HCENTER = 0x04,
+	GP_TOP     = 0x10,
+	GP_BOTTOM  = 0x20,
+	GP_VCENTER = 0x40,
+};
+#define GP_CENTER	(GP_HCENTER|GP_VCENTER)
+
+void glpostranslate(enum glpos pos,float *rect){
+	if(pos&GP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
+	if(pos&GP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
+	if(pos&GP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
+	if(pos&GP_TOP    ) glTranslatef(0.f,-rect[1],0.f);
+	if(pos&GP_BOTTOM ) glTranslatef(0.f,-rect[4],0.f);
+	if(pos&GP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
+}
+
+void glrect(float w,float h,enum glpos pos){
+	float rect[6];
+	w/=2.f; h/=2.f;
+	rect[0]=-w; rect[1]=-h; rect[2]=0.f;
+	rect[3]= w; rect[4]= h; rect[5]=0.f;
 	glPushMatrix();
-	glRotatef(-rot,0.f,0.f,1.f);
-	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
-	glTranslatef(.4f,-.4f,0.f);
-	glScalef(.1f,.1f,1.f);
-	glCallList(gl.dls+DLS_IMG);
+	glpostranslate(pos,rect);
+	glRectf(-w,-h,w,h);
 	glPopMatrix();
 }
 
+float glfontscale(FTGLfont *font,float hrat,float wrat){
 #if HAVE_FTGL
-void glfontscale(FTGLfont *font,float hrat){
 	float lineh=ftglGetFontLineHeight(font);
-	glScalef(hrat/lineh,-hrat/lineh,1.f);
+	glScalef(fabsf(hrat)/wrat/lineh,hrat/lineh,1.f);
+	return lineh;
+#else
+	return 1.f;
+#endif
 }
 
-enum glfontpos {
-	GFP_LEFT    = 0x01,
-	GFP_RIGHT   = 0x02,
-	GFP_HCENTER = 0x04,
-	GFP_TOP     = 0x10,
-	GFP_BOTTOM  = 0x20,
-	GFP_VCENTER = 0x40,
-};
-#define GFP_CENTER	(GFP_HCENTER|GFP_VCENTER)
+float glfontwidth(FTGLfont *font,const char *txt){
+#if HAVE_FTGL
+	return ftglGetFontAdvance(font,txt);
+#else
+	return 1.f;
+#endif
+}
 
-void glfontrender(FTGLfont *font,const char *txt,enum glfontpos pos){
+void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
+#if HAVE_FTGL
 	float rect[6];
+	glPushMatrix();
 	ftglGetFontBBox(font,txt,-1,rect);
-	if(pos&GFP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
-	if(pos&GFP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
-	if(pos&GFP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
-	if(pos&GFP_TOP    ) glTranslatef(0.f,-rect[1],0.f);
-	if(pos&GFP_BOTTOM ) glTranslatef(0.f,-rect[4],0.f);
-	if(pos&GFP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
+	glpostranslate(pos,rect);
 	//glmodeslave(GLM_TXT);
 	if(gl.prg) glUseProgram(0); // TODO: do not switch program
 	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
 	if(gl.prg) glUseProgram(gl.prg);
-}
+	glPopMatrix();
 #endif
+}
 
 void glrendertxtimg(struct txtimg *txt,float a){
-#if HAVE_FTGL
 	float col[4];
 	int i;
 	if(!gl.fontbig) return;
@@ -302,31 +332,53 @@ void glrendertxtimg(struct txtimg *txt,float a){
 	col[3]*=a;
 	glPushMatrix();
 	glColor4fv(col);
-	glfontscale(gl.fontbig,0.1f);
-	glfontrender(gl.fontbig,txt->txt,GFP_CENTER);
+	glfontscale(gl.fontbig,-gl.cfg.hrat_txtimg,1.f);
+	glfontrender(gl.fontbig,txt->txt,GP_CENTER);
 	glPopMatrix();
-#endif
 }
 
 void glrenderimgtext(const char *text,float irat,float a){
-#if HAVE_FTGL
-	float rect[6];
-	float s;
+	float col[4];
+	float w,h,wmax,wclip,hclip;
+	size_t l,i,n=1;
+	char buf[FILELEN],*pos;
 	if(!text) return;
 	if(!gl.fontbig) return;
-	// TODO: render text using irat and fixed text-height (glfontscale, glfontrender)
-	//glmodeslave(GLM_TXT);
-	if(gl.prg) glUseProgram(0);
+
+	for(l=i=0;l<FILELEN-1 && text[i];i++,l++){
+		if(text[i]=='.' && i>=2) break;
+		switch(text[i]){
+		case '/':
+		case '\\': buf[l]=' '; break;
+		case '_': buf[l]='\0'; n++; break;
+		default: buf[l]=text[i]; break;
+		}
+	}
+	while(l && buf[l-1]==' ') l--;
+	buf[l]='\0';
+
+	for(i=0;i<4;i++) col[i]=gl.cfg.col_dirname[i];
+	col[3]*=a;
+	glColor4fv(col);
+
 	glPushMatrix();
-	ftglGetFontBBox(gl.fontbig,text,-1,rect);
-	glColor4f(1.f,1.f,1.f,a);
-	s=MAX(rect[3]-rect[0],rect[4]-rect[1]);
-	glScalef(.8f/s,-.8f/s,1.f);
-	glTranslatef(-(rect[0]+rect[3])/2.f,-(rect[1]+rect[4])/2.f,0.f);
-	ftglRenderFont(gl.fontbig,text,FTGL_RENDER_ALL);
+	glTranslatef(-0.0293f,0.0293f,1.f); /* render to center of top image (outof image center) */
+	h=glfontscale(gl.fontbig,-gl.cfg.hrat_dirname,irat);
+	hclip=h/gl.cfg.hrat_dirname*(1.f-2.f*gl.cfg.dir_border);
+	wclip=hclip*irat;
+
+	wmax=0;
+	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1)
+		if((w=glfontwidth(gl.fontbig,pos))>wmax) wmax=w;
+	if(wmax>wclip) glScalef(wclip/wmax,1.f,1.f);
+	if((float)n*h>hclip) glScalef(1.f,hclip/(float)n/h,1.f);
+
+	glTranslatef(0.f,(float)(n-1)/2.f*h,0.f);
+	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1){
+		glfontrender(gl.fontbig,pos,GP_CENTER);
+		glTranslatef(0.f,-h,0.f);
+	}
 	glPopMatrix();
-	if(gl.prg) glUseProgram(gl.prg);
-#endif
 }
 
 void gldrawimg(struct itx *tx){
@@ -338,6 +390,17 @@ void gldrawimg(struct itx *tx){
 		glCallList(gl.dls+DLS_IMG);
 		glPopMatrix();
 	}
+}
+
+void glrendermark(struct ipos *ipos,float rot){
+	glmodeslave(GLM_TXT);
+	glPushMatrix();
+	glRotatef(-rot,0.f,0.f,1.f);
+	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
+	glTranslatef(.4f,-.4f,0.f);
+	glScalef(.1f,.1f,1.f);
+	glCallList(gl.dls+DLS_IMG);
+	glPopMatrix();
 }
 
 void glrenderimg(struct img *img,char back){
@@ -435,7 +498,7 @@ void glrendertext(const char *title,const char *text){
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
-	glColor4fv(gl.cfg.txt_bgcolor);
+	glColor4fv(gl.cfg.col_txtbg);
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
@@ -444,7 +507,7 @@ void glrendertext(const char *title,const char *text){
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
-	glColor4fv(gl.cfg.txt_fgcolor);
+	glColor4fv(gl.cfg.col_txtfg);
 	gltextout(title,tx,y);
 	y-=lineh*2;
 	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0])
@@ -468,65 +531,50 @@ void glrenderhelp(){
 }
 
 void glrenderinputnum(){
-#if HAVE_FTGL
 	int i=dplinputnum();
 	char txt[16];
-	float lineh;
-	float rect[6];
+	float w,h,b;
 	if(!i) return;
 	snprintf(txt,16,"%i",i);
 	glmode(GLM_TXT);
 	glPushMatrix();
-	lineh=ftglGetFontLineHeight(gl.font);
-	glScalef(gl.cfg.inputnum_lineh/lineh,gl.cfg.inputnum_lineh/lineh,1.f);
-	ftglGetFontBBox(gl.font,txt,-1,rect);
-	glTranslatef(-rect[0]-(rect[3]-rect[0])/2.f,
-				 -rect[1]-(rect[4]-rect[1])/2.f,0.f);
-	lineh*=0.2f;
-	glColor4fv(gl.cfg.txt_bgcolor);
-	glRectf(rect[0]-lineh,rect[1]-lineh,rect[3]+lineh,rect[4]+lineh);
-	glColor4fv(gl.cfg.txt_fgcolor);
-	ftglRenderFont(gl.font,txt,FTGL_RENDER_ALL);
+	h=glfontscale(gl.font,gl.cfg.hrat_inputnum,1.f);
+	w=glfontwidth(gl.font,txt);
+	b=h*gl.cfg.txt_border*2.f;
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b,h+b,GP_CENTER);
+	glColor4fv(gl.cfg.col_txtfg);
+	glfontrender(gl.font,txt,GP_CENTER);
 	glPopMatrix();
-#endif
 }
 
 void glrenderstat(){
-#if HAVE_FTGL
 	struct istat *stat=effstat();
 	float winw;
-	float lineh;
-	float rect[6];
-	float tw,th;
-	float bw,bh;
+	float h,w,b;
 	if(!stat->h) return;
 	winw=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
-	lineh=ftglGetFontLineHeight(gl.font);
-	glScalef(gl.cfg.stat_lineh/lineh,gl.cfg.stat_lineh/lineh,1.f);
-	ftglGetFontBBox(gl.font,stat->txt,-1,rect);
-	tw=rect[3]-rect[0];
-	th=rect[4]-rect[1];
-	bh=th+lineh*0.4f;
-	bw=tw+lineh*0.4f+bh;
-	glTranslatef(0.f,(stat->h-1.f)*bh,0.f);
+	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(gl.font,stat->txt);
+	b=h*gl.cfg.txt_border*2.f;
 
-	glColor4fv(gl.cfg.txt_bgcolor);
-	glRectf(0.f,0.f,bw,bh);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b+h+b,h+b,GP_LEFT|GP_TOP);
 
 	glPushMatrix();
-	glColor4f(0.f,0.f,0.f,.7f);
-	glScalef(bh,bh,1.f);
+	glColor4fv(gl.cfg.col_playicon);
+	glScalef(h+b,h+b,1.f);
 	glTranslatef(.5f,.5f,0.f);
 	glCallList(gl.dls+(stat->run?DLS_RUN:DLS_STOP));
 	glPopMatrix();
 
-	glColor4fv(gl.cfg.txt_fgcolor);
-	glTranslatef(-rect[0]+lineh*0.2f+bh,-rect[1]+lineh*0.2f,0.f);
-	ftglRenderFont(gl.font,stat->txt,FTGL_RENDER_ALL);
+	glColor4fv(gl.cfg.col_txtfg);
+	glTranslatef(h+b,(h+b)/2.f,0.f);
+	glfontrender(gl.font,stat->txt,GP_LEFT|GP_VCENTER);
+
 	glPopMatrix();
-#endif
 }
 
 void glrenderbar(){
