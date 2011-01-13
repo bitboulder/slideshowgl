@@ -441,7 +441,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 
 char ldcheck(){
 	int i;
-	int imgi = dplgetimgi();
+	int imgi = imginarrorlimits(dplgetimgi());
 	struct img *img;
 	struct loadconcept *ldcp=ldconceptget();
 	char ret=0;

@@ -105,6 +105,7 @@ int prgimgidiff(int frm,int imgi){
 	struct img *img=imgget(imgi);
 	int fchg,fdir,f;
 	struct prgev *ev;
+	frm=imginarrorlimits(frm);
 	if(!prg || !img || dplgetzoom()!=0) return imgidiff(frm,imgi,NULL,NULL);
 	/* TODO: ev-off no mark for imgi on in frame */
 	for(fchg=0;fchg<prg->nfrm;fchg++) for(fdir=-1;fdir<=1;fdir+=2){
@@ -112,7 +113,7 @@ int prgimgidiff(int frm,int imgi){
 		if(f<0 || f>=prg->nfrm) continue;
 		for(ev=prg->frms[f].ev;ev;ev=ev->nxt) if(ev->img==img) return fchg*fdir;
 	}
-	return imgi;
+	return prg->nfrm;
 }
 
 int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos *way,float *waytime,int *layer){
