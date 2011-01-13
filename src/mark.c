@@ -77,7 +77,7 @@ void markinit(){
 		fn=getenv("TEMP");
 		if(!fn) fn=getenv("TMP");
 		if(!fn) fn="/tmp";
-		snprintf(mark.fn,FILELEN,"%s/slideshowgl-mark",fn);
+		snprintf(mark.fn,FILELEN,"%s/slideshowgl-mark.flst",fn);
 	}
 	marksload();
 	mark.init=1;
