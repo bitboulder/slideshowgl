@@ -11,6 +11,7 @@
 struct mk {
 	struct mk *nxt;
 	char fn[FILELEN];
+	char *cmp;
 	char mark;
 };
 
@@ -24,9 +25,16 @@ struct mark {
 	.init = 0,
 };
 
-int mkhash(const char *line){
+const char *mkcmp(const char *fn){
+	size_t c=0,i,len=strlen(fn);
+	for(i=len;i>0 && c<3;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') c++;
+	if(i) i++;
+	return fn+i;
+}
+
+int mkhash(const char *cmp){
 	int hash=0;
-	for(;line[0];line++) hash+=line[0];
+	for(;cmp[0];cmp++) hash+=cmp[0];
 	return abs(hash)%MKCHAINS;
 }
 
@@ -40,12 +48,14 @@ void marksfree(){
 }
 
 struct mk *mkfind(const char *fn,char create){
-	int hash=mkhash(fn);
+	const char *cmp=mkcmp(fn);
+	int hash=mkhash(cmp);
 	struct mk *mk=NULL;
-	if(create<2) for(mk=mark.mks[hash];mk && strncmp(fn,mk->fn,FILELEN);) mk=mk->nxt;
+	if(create<2) for(mk=mark.mks[hash];mk && strncmp(cmp,mk->cmp,FILELEN);) mk=mk->nxt;
 	if(!mk && create){
 		mk=malloc(sizeof(struct mk));
 		strncpy(mk->fn,fn,FILELEN); mk->fn[FILELEN-1]='\0';
+		mk->cmp=mk->fn+(cmp-fn);
 		mk->nxt=mark.mks[hash];
 		mark.mks[hash]=mk;
 		mk->mark=1;
@@ -93,7 +103,10 @@ void markimgload(struct img *img){
 void markimgsave(struct img *img){
 	char imk=*imgposmark(img->pos);
 	struct mk *mk=mkfind(imgfilefn(img->file),imk);
-	if(mk) mk->mark=imk;
+	if(!mk) return;
+	if(mk->mark==imk) return;
+	mk->mark=imk;
+	/* TODO: change for images with similiar names */
 }
 
 void markssave(){
