@@ -267,12 +267,12 @@ void imgsort(struct imglist *il,char date){
 	imgsetnxt(il);
 }
 
-void ilforallimgs(void (*func)(struct img *img)){
+void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg){
 	struct imglist *il;
 	struct img *img;
 	for(il=ils;il;il=il->nxt)
 		for(img=il->imgs[0];img;img=img->nxt)
-			func(img);
+			func(img,arg);
 }
 
 void ilprgfrm(struct imglist *il,const char *prgfrm){

@@ -395,6 +395,7 @@ void gldrawimg(struct itx *tx){
 void glrendermark(struct ipos *ipos,float rot){
 	glmodeslave(GLM_TXT);
 	glPushMatrix();
+	/* TODO: invert */
 	glRotatef(-rot,0.f,0.f,1.f);
 	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
 	glTranslatef(.4f,-.4f,0.f);

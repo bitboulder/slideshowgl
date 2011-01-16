@@ -51,7 +51,7 @@ struct img *imgdel(int i);
 void imgfinalize();
 void imgrandom(struct imglist *il);
 void imgsort(struct imglist *il,char date);
-void ilforallimgs(void (*func)(struct img *img));
+void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg);
 void ilprgfrm(struct imglist *il,const char *prgfrm);
 
 #endif

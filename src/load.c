@@ -469,7 +469,7 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
-void ldresetdoimg(struct img *img){
+void ldresetdoimg(struct img *img,void *UNUSED(arg)){
 	int it;
 	struct itex *itex = img->ld->texs;
 	for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
@@ -480,10 +480,10 @@ void ldresetdo(){
 	struct img *img=imgget(0);
 	if(!img) return;
 	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
-	ldresetdoimg(defimg);
-	ldresetdoimg(dirimg);
-	ldresetdoimg(delimg);
-	ilforallimgs(ldresetdoimg);
+	ldresetdoimg(defimg,NULL);
+	ldresetdoimg(dirimg,NULL);
+	ldresetdoimg(delimg,NULL);
+	ilforallimgs(ldresetdoimg,NULL);
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
 	debug(DBG_STA,"ldreset done");

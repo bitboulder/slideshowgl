@@ -58,7 +58,7 @@ struct mk *mkfind(const char *fn,char create){
 		mk->cmp=mk->fn+(cmp-fn);
 		mk->nxt=mark.mks[hash];
 		mark.mks[hash]=mk;
-		mk->mark=1;
+		mk->mark=--create;
 	}
 	return mk;
 }
@@ -100,13 +100,21 @@ void markimgload(struct img *img){
 	*imgposmark(img->pos) = mk && mk->mark;
 }
 
-void markimgsave(struct img *img){
+void markimgsync(struct img *img,void *arg){
+	char *imk=imgposmark(img->pos);
+	struct mk *mk=(struct mk *)arg;
+	if(*imk==mk->mark) return;
+	if(mkfind(imgfilefn(img->file),0)!=mk) return;
+	*imk=mk->mark;
+}
+
+void markimgsave(struct img *img,void *UNUSED(arg)){
 	char imk=*imgposmark(img->pos);
 	struct mk *mk=mkfind(imgfilefn(img->file),imk);
 	if(!mk) return;
 	if(mk->mark==imk) return;
 	mk->mark=imk;
-	/* TODO: change for images with similiar names */
+	ilforallimgs(markimgsync,mk);
 }
 
 void markssave(){
@@ -114,7 +122,7 @@ void markssave(){
 	int i;
 	struct mk *mk;
 	markinit();
-	ilforallimgs(markimgsave);
+	ilforallimgs(markimgsave,NULL);
 	if(!(fd=fopen(mark.fn,"w"))) return;
 	for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
 		if(mk->mark) fprintf(fd,"%s\n",mk->fn);
