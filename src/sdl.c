@@ -60,31 +60,18 @@ struct sdl {
 /* thread: gl */
 float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
 
-#if HAVE_X11
-Display *x11getdisplay(char *dfree){
-	SDL_SysWMinfo info;
-	if(SDL_GetWMInfo(&info)!=1){
-		if(dfree){ *dfree=1; return XOpenDisplay(NULL); }
-		else return NULL;
-	}
-	if(info.subsystem!=SDL_SYSWM_X11) return NULL;
-	return info.info.x11.display;
-}
-#endif
-
 #if HAVE_X11 && HAVE_XEXT
 void switchdpms(char val){
 	static BOOL state=1;
 	int evb,erb;
 	CARD16 plv;
-	char dfree=0;
-	Display *display=x11getdisplay(&dfree);
+	Display *display=XOpenDisplay(NULL);
 	if(!display || !DPMSQueryExtension(display,&evb,&erb) || !DPMSCapable(display)) return;
 	if(!val){
 		DPMSInfo(display,&plv,&state);
 		DPMSDisable(display);
 	}else if(state) DPMSEnable(display); else DPMSDisable(display);
-	if(dfree) XCloseDisplay(display);
+	XCloseDisplay(display);
 }
 #else
 void switchdpms(char UNUSED(val)){ }
@@ -107,7 +94,7 @@ void sdlfullscreen(){
 char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 #if HAVE_X11 && HAVE_XINERAMA
 {
-	Display *display=x11getdisplay(NULL);
+	Display *display=XOpenDisplay(NULL);
 	XineramaScreenInfo *info;
 	int ninfo,i;
 	if(display && XineramaIsActive(display) && (info=XineramaQueryScreens(display,&ninfo))){
@@ -115,11 +102,12 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 		for(i=0;i<ninfo;i++){
 			//info[i].screen_number
 			if(info[i].x_org+info[i].width> *w) *w=info[i].x_org+info[i].width;
-			if(info[i].y_org+info[i].height>*w) *w=info[i].y_org+info[i].height;
+			if(info[i].y_org+info[i].height>*h) *h=info[i].y_org+info[i].height;
 		}
 		free(info);
 		if(*w && *h) return 1;
 	}
+	XCloseDisplay(display);
 }
 #endif
 {
