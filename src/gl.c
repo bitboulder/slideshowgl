@@ -20,11 +20,12 @@
 #include "file.h"
 #include "help.h"
 
-enum dls { DLS_IMG, DLS_STOP, DLS_RUN, DLS_NUM };
+enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_NUM };
 
 struct gl {
 	GLuint dls;
 	GLuint prg;
+	GLuint prgfish;
 #if HAVE_FTGL
 	FTGLfont *font;
 	FTGLfont *fontbig;
@@ -49,6 +50,7 @@ struct gl {
 /* thread: all */
 void glsetbar(float bar){ gl.bar=bar; }
 char glprg(){ return !!gl.prg; }
+char glprgfish(){ return !!gl.prgfish; }
 
 char *textload(char *fn){
 	FILE *fd;
@@ -148,6 +150,15 @@ void glinit(char done){
 	glEnd();
 	glEndList();
 
+	glNewList(gl.dls+DLS_BRD,GL_COMPILE);
+	glBegin(GL_QUADS);
+	glVertex2f(-0.50f,-0.50f); glVertex2f(-0.45f,-0.50f); glVertex2f(-0.45f, 0.50f); glVertex2f(-0.50f, 0.50f);
+	glVertex2f( 0.50f,-0.50f); glVertex2f( 0.45f,-0.50f); glVertex2f( 0.45f, 0.50f); glVertex2f( 0.50f, 0.50f);
+	glVertex2f(-0.45f,-0.50f); glVertex2f( 0.45f,-0.50f); glVertex2f( 0.45f,-0.45f); glVertex2f(-0.45f,-0.45f);
+	glVertex2f(-0.45f, 0.50f); glVertex2f( 0.45f, 0.50f); glVertex2f( 0.45f, 0.45f); glVertex2f(-0.45f, 0.45f);
+	glEnd();
+	glEndList();
+
 	glNewList(gl.dls+DLS_STOP,GL_COMPILE);
 	glBegin(GL_POLYGON);
 	glVertex2f(-.25f,-.25f);
@@ -165,7 +176,6 @@ void glinit(char done){
 	glEnd();
 	glEndList();
 	
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -182,6 +192,7 @@ void glinit(char done){
 #endif
 	ldcheckvartex();
 	gl.prg=glprgload("vs.c","fs.c");
+	gl.prgfish=glprgload("vs_fish.c","fs.c");
 }
 
 void glfree(){
@@ -197,23 +208,39 @@ void glmodeslave(enum glmode dst){
 	cur=dst;
 	switch(dst){
 	case GLM_3D:
+	case GLM_3DP:
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
-		glSecondaryColor3f(1.f,1.f,1.f);
+		glSecondaryColor3f(1.f,0.f,0.f);
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
+		else if(gl.prg) glUseProgram(gl.prg);
 	break;
 	case GLM_2D:
+	case GLM_2DA:
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		glSecondaryColor3f(1.f,1.f,1.f);
+		glSecondaryColor3f(1.f,0.f,0.f);
+		if(dst==GLM_2DA) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+		else glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		if(gl.prg) glUseProgram(gl.prg);
 	break;
+	case GLM_1D:
+	case GLM_1DI:
 	case GLM_TXT:
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
 		glSecondaryColor3f(0.f,0.f,0.f);
+		if(dst==GLM_1DI){
+			glBlendFunc(GL_ONE_MINUS_DST_COLOR,GL_ONE_MINUS_SRC_ALPHA);
+		}else{
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		}
+		if(gl.prg) glUseProgram(dst==GLM_TXT ? 0 : gl.prg);
 	break;
 	}
 }
@@ -223,38 +250,39 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	static float cur_h3d;
 	static float cur_w;
 	static int cur_fm;
-	float w = dst!=GLM_2D ? sdlrat() : 1.f;
+	float w = dst!=GLM_2D && dst!=GLM_2DA ? sdlrat() : 1.f;
 	glmodeslave(dst);
-	if(cur==dst && (dst!=GLM_3D || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w) return w;
+	if(cur==dst && ((dst!=GLM_3D && dst!=GLM_3DP) || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w) return w;
 	cur=dst;
 	cur_h3d=h3d;
 	cur_fm=fm;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	switch(dst){
-	case GLM_3D: 
-		if(fm>=0) panoperspective(h3d,fm,w); else{
-			gluPerspective(h3d, w, 1., 15.);
-			if(gl.prg) glUseProgram(gl.prg);
-		}
-	break;
+	case GLM_3D:  gluPerspective(h3d, w, 1., 15.); break;
+	case GLM_3DP: panoperspective(h3d,fm,w); break;
 	case GLM_2D:
+	case GLM_2DA:
 		glOrtho(-0.5,0.5,0.5,-0.5,-1.,1.);
-		if(gl.prg) glUseProgram(gl.prg);
 	break;
+	case GLM_1D:
+	case GLM_1DI:
 	case GLM_TXT:
 		glOrtho(-0.5,0.5,-0.5,0.5,-1.,1.);
-		if(gl.prg) glUseProgram(0);
 	break;
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:
+	case GLM_3DP:
 		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 	break;
 	case GLM_2D:
+	case GLM_2DA:
 	break;
+	case GLM_1D:
+	case GLM_1DI:
 	case GLM_TXT:
 		glScalef(1.f/w,1.f,1.f);
 	break;
@@ -316,10 +344,8 @@ void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
 	glPushMatrix();
 	ftglGetFontBBox(font,txt,-1,rect);
 	glpostranslate(pos,rect);
-	//glmodeslave(GLM_TXT);
-	if(gl.prg) glUseProgram(0); // TODO: do not switch program
+	glmodeslave(GLM_TXT);
 	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
-	if(gl.prg) glUseProgram(gl.prg);
 	glPopMatrix();
 #endif
 }
@@ -392,14 +418,19 @@ void gldrawimg(struct itx *tx){
 	}
 }
 
-void glrendermark(struct ipos *ipos,float rot){
-	glmodeslave(GLM_TXT);
+void glrendermark(struct ipos *ipos,float rot,float irat){
 	glPushMatrix();
-	/* TODO: invert */
 	glRotatef(-rot,0.f,0.f,1.f);
-	glColor4f(1.f,1.f,1.f,ipos->m*0.7f);
 	glTranslatef(.4f,-.4f,0.f);
+	if(rot==90.f || rot==270.f) irat=1.f/irat;
+	glScalef(1.f/irat,1.f,1.f);
+	glmodeslave(GLM_1D);
+	glColor4f(1.f,1.f,1.f,ipos->m);
 	glScalef(.1f,.1f,1.f);
+	glCallList(gl.dls+DLS_BRD);
+	glmodeslave(GLM_1DI);
+	glColor4f(ipos->m,ipos->m,ipos->m,ipos->m);
+	glScalef(.9f,.9f,1.f);
 	glCallList(gl.dls+DLS_IMG);
 	glPopMatrix();
 }
@@ -416,15 +447,14 @@ void glrenderimg(struct img *img,char back){
 	if(iopt->back!=back) return;
 	if(!irat) return;
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
-	glmodeslave(GLM_2D);
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
+	glmodeslave(ipos->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
 	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);
-	if(ipos->a<1.f) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);
@@ -451,8 +481,7 @@ void glrenderimg(struct img *img,char back){
 	if(dl) glCallList(dl);
 	if(txt) glrendertxtimg(txt,ipos->a);
 	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
-	if(ipos->a<1.f) glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif));
+	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif),irat);
 	glPopMatrix();
 }
 
@@ -581,7 +610,7 @@ void glrenderstat(){
 void glrenderbar(){
 	float w;
 	if(!gl.bar) return;
-	w=glmode(GLM_TXT);
+	w=glmode(GLM_1D);
 	glPushMatrix();
 	glScalef(w,-1.f,1.f);
 	glTranslatef(.5f,-.5f,0.f);

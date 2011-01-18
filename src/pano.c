@@ -51,16 +51,22 @@ end:
 		debug(DBG_DBG,"panoinit no pano found for '%s'",fn);
 }
 
-#define PANOMODE	E2(NORMAL,0),E2(PLAIN,1),E2(FISHEYE,2),E2(NUM,3)
+#define PANOMODE	E3(NORMAL,0,GLM_3D),E3(PLAIN,1,GLM_2D),E3(FISHEYE,2,GLM_3DP),E3(NUM,3,0)
 
-#define E2(X,N)	PM_##X=N
+#define E3(X,N,G)	PM_##X=N
 enum panomode { PANOMODE };
-#undef E2
+#undef E3
+#define E3(X,N,G) #X
+const char *panomodestr[]={ PANOMODE };
+#undef E3
+#define E3(X,N,G) G
+enum glmode panoglmode[]={ PANOMODE };
+#undef E3
+
 #define E2(X,N)	FM_##X=N
 enum panofm { PANOFM };
 #undef E2
 #define E2(X,N) #X
-const char *panomodestr[]={ PANOMODE };
 const char *panofmstr[]={ PANOFM };
 #undef E2
 
@@ -77,21 +83,18 @@ struct pano {
 		enum panofm fm;
 		float maxfishangle;
 	} cfg;
-	GLuint pfish;
 } pano;
 
 /* thread: sdl */
 void panoinit(char done){
-	if(!done){
-		pano.cfg.defrot=cfggetfloat("pano.defrot");
-		pano.cfg.minrot=cfggetfloat("pano.minrot");
-		pano.cfg.texdegree=cfggetfloat("pano.texdegree");
-		pano.cfg.mintexsize=cfggetint("pano.mintexsize");
-		pano.cfg.radius=cfggetfloat("pano.radius");
-		pano.cfg.fm=cfggetenum("pano.fishmode");
-		pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
-	}
-	pano.pfish=glprgload("vs_fish.c","fs.c");
+	if(done) return;
+	pano.cfg.defrot=cfggetfloat("pano.defrot");
+	pano.cfg.minrot=cfggetfloat("pano.minrot");
+	pano.cfg.texdegree=cfggetfloat("pano.texdegree");
+	pano.cfg.mintexsize=cfggetint("pano.mintexsize");
+	pano.cfg.radius=cfggetfloat("pano.radius");
+	pano.cfg.fm=cfggetenum("pano.fishmode");
+	pano.cfg.maxfishangle=cfggetfloat("pano.maxfishangle");
 }
 
 /* thread: dpl */
@@ -119,7 +122,7 @@ char panostattxt(char *txt,size_t len){
 void panores(struct imgpano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
 	while(*yres>(float)h/ip->gh*pano.cfg.texdegree) *yres>>=1;
-	if(!pano.pfish){
+	if(!glprgfish()){
 		*xres=MAX(pano.cfg.mintexsize,*xres);
 		*yres=MAX(pano.cfg.mintexsize,*yres);
 	}
@@ -127,8 +130,8 @@ void panores(struct imgpano *ip,int w,int h,int *xres,int *yres){
 
 /* thread: dpl, gl */
 float panoclipgh(struct imgpano *ip){
-	if(!pano.pfish && ip->gh>90.f) return 90.f;
-	if( pano.pfish && ip->gh>=180.f) return 360.f;
+	if(!glprgfish() && ip->gh>90.f) return 90.f;
+	if( glprgfish() && ip->gh>=180.f) return 360.f;
 	return ip->gh;
 }
 
@@ -200,7 +203,7 @@ char panostart(struct img *img,float fitw,float *x){
 	if(!img) return 0;
 	if(!img->pano->enable) return 0;
 	ip=img->pano;
-	pano.mode = ip->gh>90.f && pano.pfish ? PM_FISHEYE : PM_NORMAL;
+	pano.mode = ip->gh>90.f && glprgfish() ? PM_FISHEYE : PM_NORMAL;
 	pano.run=0;
 	pano.rot=pano.cfg.defrot;
 	if(ip->rotinit<0.f) pano.rot*=-1.f;
@@ -260,7 +263,6 @@ void panoperspective(float h3d,int fm,float w){
 	case FM_ORTHO: break;
 	}
 	glMultMatrixf(mat);
-	glUseProgram(pano.pfish);
 }
 
 /* thread: gl */
@@ -279,9 +281,9 @@ char panorender(){
 	ipos=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
 	panoperspect(ip,ipos->s,&perspectw,&perspecth);
-	if(mode==PM_NORMAL && perspecth>90.f && pano.pfish) mode=PM_FISHEYE;
-	if(mode==PM_FISHEYE && !pano.pfish) mode=PM_NORMAL;
-	glmodex(mode==PM_PLAIN?GLM_2D:GLM_3D, perspecth, mode==PM_FISHEYE?(int)pano.cfg.fm:-1);
+	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
+	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
+	glmodex(panoglmode[mode], perspecth, mode==PM_FISHEYE?(int)pano.cfg.fm:-1);
 	glPushMatrix();
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);
@@ -330,7 +332,7 @@ char panoev(enum panoev pe){
 	break;
 	case PE_MODE:     
 		pano.mode = (pano.mode+1)%PM_NUM;
-		if(!pano.pfish && pano.mode==PM_FISHEYE)
+		if(!glprgfish() && pano.mode==PM_FISHEYE)
 			pano.mode = (pano.mode+1)%PM_NUM;
 	break;
 	case PE_FISHMODE: pano.cfg.fm = (pano.cfg.fm+1)%3;  break;
