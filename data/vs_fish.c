@@ -2,6 +2,7 @@ const float pi = 3.14159265358979323846;
 
 void main(){
 	gl_FrontColor = gl_Color;
+	gl_FrontSecondaryColor = gl_SecondaryColor;
 	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
 
 	// apply modelview matrix
