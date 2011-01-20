@@ -301,7 +301,7 @@ char dpldir(int imgi,char noleave){
 	if(!(img=imgget(imgi))){
 		if(noleave) return 0;
 		imgi=ilswitch(NULL);
-		if(imgi==IMGI_END) return 0;
+		if(imgi==IMGI_END) return 1;
 	}else{
 		if(!imgfiledir(img->file)) return 0;
 		dpl.pos.imgi=imgi;
