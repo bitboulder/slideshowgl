@@ -34,8 +34,7 @@ struct sdlcfg {
 struct sdlmove {
 	Uint16 base_x, base_y;
 	int pos_x, pos_y;
-	Uint32 time;
-	Uint8 btn;
+	char jump;
 };
 
 struct sdl {
@@ -224,11 +223,13 @@ void sdlkey(SDL_keysym key){
 	}
 }
 
-void sdljump(Uint16 x,Uint16 y){
+char sdljump(Uint16 x,Uint16 y){
 	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
 	int zoom=dplgetzoom();
 	int w=100,wthr;
 	enum dplev ev=0;
+	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
+	sdl.move.jump=1;
 	if(zoom<=0){
 		switch(zoom){
 			case -1: w=sdl.scr_h/3/2; break;
@@ -250,6 +251,7 @@ void sdljump(Uint16 x,Uint16 y){
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
 	}
+	return 1;
 }
 
 void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
@@ -280,28 +282,20 @@ void sdlmotion(Uint16 x,Uint16 y){
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
-	if(down){
-		switch(button){
+	if(down) switch(button){
 		case SDL_BUTTON_LEFT:
+			sdl.move.jump=0;
+			sdl.move.pos_x=0;
+			sdl.move.pos_y=0;
+			sdl.move.base_x=x;
+			sdl.move.base_y=y;
+		break;
 		case SDL_BUTTON_MIDDLE:
-		case SDL_BUTTON_RIGHT:
-			sdl.move.btn=button;
-			sdl.move.time=SDL_GetTicks();
-		}
-	}else if(button==sdl.move.btn && SDL_GetTicks()-sdl.move.time<200){
-		if(button==SDL_BUTTON_LEFT) sdl.move.base_x=0xffff;
-		sdlclick(button,x,y);
-		return;
-	}
-	if(down && button==SDL_BUTTON_WHEELUP) dplevputp(DE_ZOOMIN,fx,fy);
-	else if(down && button==SDL_BUTTON_WHEELDOWN) dplevputp(DE_ZOOMOUT,fx,fy);
-	else if(down && button==SDL_BUTTON_LEFT){
-		sdl.move.pos_x=0;
-		sdl.move.pos_y=0;
-		sdl.move.base_x=x;
-		sdl.move.base_y=y;
-	}else if(!down && button==SDL_BUTTON_LEFT){
-		sdljump(x,y);
+		case SDL_BUTTON_RIGHT:     sdlclick(button,x,y);        break;
+		case SDL_BUTTON_WHEELUP:   dplevputp(DE_ZOOMIN, fx,fy); break;
+		case SDL_BUTTON_WHEELDOWN: dplevputp(DE_ZOOMOUT,fx,fy); break;
+	}else if(button==SDL_BUTTON_LEFT){
+		if(!sdljump(x,y)) sdlclick(button,x,y);
 		sdl.move.base_x=0xffff;
 	}
 }

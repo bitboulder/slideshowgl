@@ -249,7 +249,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i){
 		float ydiff=fabsf(ip->cur.y-ip->way[1].y)/eff.maxfit.h/ip->way[1].s;
 		ip->way[0]=ip->cur;
 		if(act && dp->zoom<0 &&
-			((xdiff>0.01f && ydiff>0.01f && (xdiff>1.5f || ydiff>1.5f)) || xdiff>3.5f || ydiff>3.5f)
+			((xdiff>0.01f && ydiff>1.5f) || xdiff>1.5f || ydiff>3.5f)
 			) ip->opt.back=1;
 	}
 	if(!memcmp(&ip->cur,ip->way+1,sizeof(struct ipos))){
