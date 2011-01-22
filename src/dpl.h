@@ -49,12 +49,12 @@ const char *dplhelp();
 
 void printixy(float sx,float sy);
 
-#define dplevput(e)			dplevputx(e,0,0.f,0.f,-1,DES_KEY)
-#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f,-1,DES_KEY)
-#define dplevputp(e,x,y)	dplevputx(e,0,x,y,-1,DES_MOUSE)
+#define dplevput(e)			dplevputx(e,0,0.f,0.f,-2,DES_KEY)
+#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f,-2,DES_KEY)
+#define dplevputp(e,x,y)	dplevputx(e,0,x,y,-2,DES_MOUSE)
 #define dplevputi(e,i)		dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
 #define dplevputpi(e,x,y,i)	dplevputx(e,0,x,y,i,DES_MOUSE)
-#define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,-1,src)
+#define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,-2,src)
 void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc src);
 int dplthread(void *arg);
 

@@ -171,7 +171,7 @@ int dplclickimg(float sx,float sy,int evimgi){
 	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
 	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
-	if(evimgi>=0) return evimgi;
+	if(evimgi>=-1) return evimgi;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
@@ -239,7 +239,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy,int clickimg){
 }
 
 void dplsel(int imgi){
-	if(imgi==IMGI_START || imgi==IMGI_END) return;
+	if(imgi<0 || imgi==IMGI_START || imgi==IMGI_END) return;
 	dpl.pos.imgi=imgi;
 	dplclipimgi(NULL);
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL,-1);
