@@ -43,6 +43,11 @@ struct gl {
 		float col_dirname[4];
 		float col_playicon[4];
 	} cfg;
+	struct glsel {
+		char act;
+		int x,y;
+		GLint view[4];
+	} sel;
 } gl = {
 	.bar = 0.f,
 };
@@ -258,6 +263,10 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	cur_fm=fm;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	if(gl.sel.act){
+		gluPickMatrix(gl.sel.x,gl.sel.y,1.,1.,gl.sel.view);
+		glScalef(1.f,-1.f,1.f);
+	}
 	switch(dst){
 	case GLM_3D:  gluPerspective(h3d, w, 1., 15.); break;
 	case GLM_3DP: panoperspective(h3d,fm,w); break;
@@ -490,8 +499,14 @@ void glrenderimgs(){
 	char back;
 	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1);
-	for(back=2;back>=0;back--)
-		for(img=imgget(0);img;img=img->nxt) glrenderimg(img,back);
+	for(back=2;back>=0;back--){
+		GLuint imgi=1;
+		for(img=imgget(0);img;img=img->nxt){
+			glLoadName(imgi++);
+			glrenderimg(img,back);
+		}
+	}
+	glLoadName(0);
 }
 
 #if HAVE_FTGL
@@ -631,6 +646,7 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!panorender()) glrenderimgs();
+	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
@@ -640,3 +656,19 @@ void glpaint(){
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);
 }
 
+int glselect(int x,int y){
+	GLuint selbuf[64]={0};
+	GLint hits;
+	gl.sel.x=x;
+	gl.sel.y=y;
+	gl.sel.act=1;
+	glSelectBuffer(64,selbuf);
+	glGetIntegerv(GL_VIEWPORT,gl.sel.view);
+	glRenderMode(GL_SELECT);
+	glInitNames();
+	glPushName(0);
+	glpaint();
+	hits=glRenderMode(GL_RENDER);
+	gl.sel.act=0;
+	return hits ? (int)selbuf[3]-1 : -1;
+}

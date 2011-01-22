@@ -254,20 +254,20 @@ char sdljump(Uint16 x,Uint16 y){
 	return 1;
 }
 
-void sdlclick(Uint8 btn,Uint16 x,Uint16 y){
+void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 	int zoom=dplgetzoom();
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
 	if(btn==SDL_BUTTON_MIDDLE){
-		if(dplgetpos()->writemode) dplevputp(DE_MARK,sx,sy);
-		else dplevputp(DE_PLAY,sx,sy);
+		if(dplgetpos()->writemode) dplevputi(DE_MARK,clickimg);
+		else dplevputi(DE_PLAY,clickimg);
 	}else if(zoom==0) switch(btn){
 		case SDL_BUTTON_LEFT:  dplevputs(DE_RIGHT,DES_MOUSE); break;
 		case SDL_BUTTON_RIGHT: dplevputs(DE_LEFT,DES_MOUSE); break;
 	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
-		dplevputp(DE_SEL,sx,sy);
+		dplevputi(DE_SEL,clickimg);
 	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
-		dplevputp(DE_MOVE,sx,sy);
+		dplevputpi(DE_MOVE,sx,sy,clickimg);
 	}
 }
 
@@ -282,6 +282,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
+	int clickimg = glselect(x,y);
 	if(down) switch(button){
 		case SDL_BUTTON_LEFT:
 			sdl.move.jump=0;
@@ -291,11 +292,11 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 			sdl.move.base_y=y;
 		break;
 		case SDL_BUTTON_MIDDLE:
-		case SDL_BUTTON_RIGHT:     sdlclick(button,x,y);        break;
-		case SDL_BUTTON_WHEELUP:   dplevputp(DE_ZOOMIN, fx,fy); break;
-		case SDL_BUTTON_WHEELDOWN: dplevputp(DE_ZOOMOUT,fx,fy); break;
+		case SDL_BUTTON_RIGHT:     sdlclick(button,x,y,clickimg);         break;
+		case SDL_BUTTON_WHEELUP:   dplevputpi(DE_ZOOMIN, fx,fy,clickimg); break;
+		case SDL_BUTTON_WHEELDOWN: dplevputpi(DE_ZOOMOUT,fx,fy,clickimg); break;
 	}else if(button==SDL_BUTTON_LEFT){
-		if(!sdljump(x,y)) sdlclick(button,x,y);
+		if(!sdljump(x,y)) sdlclick(button,x,y,clickimg);
 		sdl.move.base_x=0xffff;
 	}
 }

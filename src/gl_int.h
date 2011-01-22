@@ -13,4 +13,6 @@ void glinit(char done);
 void glfree();
 void glpaint();
 
+int glselect(int x,int y);
+
 #endif

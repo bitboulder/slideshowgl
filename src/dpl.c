@@ -166,11 +166,12 @@ void dplchgimgi(int dir){
 	dpl.pos.imgi=imginarrorlimits(dpl.pos.imgi)+dir;
 }
 
-int dplclickimg(float sx,float sy){
+int dplclickimg(float sx,float sy,int evimgi){
 	int i,x,y;
 	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
 	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
+	if(evimgi>=0) return evimgi;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
@@ -180,7 +181,7 @@ int dplclickimg(float sx,float sy){
 	return dpl.pos.imgi+i;
 }
 
-Uint32 dplmove(enum dplev ev,float sx,float sy){
+Uint32 dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
 	Uint32 nxttime=0;
@@ -207,7 +208,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy){
 		struct img *img;
 		int panoact;
 		if(dpl.pos.zoom<0){
-			dpl.pos.imgi=dplclickimg(sx,sy);
+			dpl.pos.imgi=clickimg;
 			dplclipimgi(NULL);
 		}
 		img=imgget(dpl.pos.imgi);
@@ -362,6 +363,7 @@ struct dplevs {
 		enum dplev ev;
 		SDLKey key;
 		float sx,sy;
+		int imgi;
 		enum dplevsrc src;
 	} evs[DPLEVS_NUM];
 	struct {
@@ -375,7 +377,7 @@ struct dplevs {
 };
 
 /* thread: sdl */
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,enum dplevsrc src){
+void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc src){
 	if(ev&DE_JUMP){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
@@ -385,6 +387,7 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,enum dplevsrc src){
 		dev.evs[dev.wi].key=key;
 		dev.evs[dev.wi].sx=sx;
 		dev.evs[dev.wi].sy=sy;
+		dev.evs[dev.wi].imgi=imgi;
 		dev.evs[dev.wi].src=src;
 		if(nwi!=dev.ri) dev.wi=nwi;
 	}
@@ -467,7 +470,7 @@ char dplev(struct ev *ev){
 	if(nxttime && time<nxttime && ev->ev==lastev) return 0;
 	lastev=ev->ev;
 	nxttime=0;
-	clickimg=dplclickimg(ev->sx,ev->sy);
+	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
 	dpl.pos.imgiold=dpl.pos.imgi;
 	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
 	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
@@ -480,7 +483,7 @@ char dplev(struct ev *ev){
 	case DE_UP:
 	case DE_DOWN:
 	case DE_ZOOMIN:
-	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy); break;
+	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy,clickimg); break;
 	case DE_SEL:  dplsel(clickimg); break;
 	case DE_MARK: if(ev->src!=DES_MOUSE || !dpldir(clickimg,0)) dplmark(clickimg); break;
 	case DE_ROT1: 
@@ -488,7 +491,7 @@ char dplev(struct ev *ev){
 	case DE_PLAY: 
 		if(dpl.run) dpl.run=0;
 		else if(!panoev(PE_PLAY) && !dpldir(clickimg,ev->src!=DES_MOUSE) && dpl.pos.zoom<=0){
-			dplmove(DE_RIGHT,0.f,0.f);
+			dplmove(DE_RIGHT,0.f,0.f,-1);
 			dpl.run=SDL_GetTicks();
 		}
 		nxttime=1000;
