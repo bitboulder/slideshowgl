@@ -377,8 +377,8 @@ void glrenderimgtext(const char *text,float irat,float a){
 	float w,h,wmax,wclip,hclip;
 	size_t l,i,n=1;
 	char buf[FILELEN],*pos;
-	if(!text) return;
-	if(!gl.fontbig) return;
+	FTGLfont *font=dplgetzoom()<-1 ? gl.font : gl.fontbig;
+	if(!text || !font) return;
 
 	for(l=i=0;l<FILELEN-1 && text[i];i++,l++){
 		if(text[i]=='.' && i>=2) break;
@@ -398,19 +398,19 @@ void glrenderimgtext(const char *text,float irat,float a){
 
 	glPushMatrix();
 	glTranslatef(-0.0293f,0.0293f,1.f); /* render to center of top image (outof image center) */
-	h=glfontscale(gl.fontbig,-gl.cfg.hrat_dirname,irat);
+	h=glfontscale(font,-gl.cfg.hrat_dirname,irat);
 	hclip=h/gl.cfg.hrat_dirname*(1.f-2.f*gl.cfg.dir_border);
 	wclip=hclip*irat;
 
 	wmax=0;
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1)
-		if((w=glfontwidth(gl.fontbig,pos))>wmax) wmax=w;
+		if((w=glfontwidth(font,pos))>wmax) wmax=w;
 	if(wmax>wclip) glScalef(wclip/wmax,1.f,1.f);
 	if((float)n*h>hclip) glScalef(1.f,hclip/(float)n/h,1.f);
 
 	glTranslatef(0.f,(float)(n-1)/2.f*h,0.f);
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1){
-		glfontrender(gl.fontbig,pos,GP_CENTER);
+		glfontrender(font,pos,GP_CENTER);
 		glTranslatef(0.f,-h,0.f);
 	}
 	glPopMatrix();
