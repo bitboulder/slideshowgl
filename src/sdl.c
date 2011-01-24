@@ -46,6 +46,12 @@ struct sdl {
 	char fullscreen;
 	char doresize;
 	char sync;
+	struct sdlclickdelay {
+		Uint32 time;
+		Uint8 btn;
+		Uint16 x,y;
+		int clickimg;
+	} clickdelay;
 } sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
@@ -54,6 +60,7 @@ struct sdl {
 	.sync       = 0,
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
+	.clickdelay.time = 0,
 };
 
 /* thread: gl */
@@ -258,6 +265,20 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 	int zoom=dplgetzoom();
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
+	char doubleclick;
+	Uint32 now=SDL_GetTicks();
+	if((doubleclick=(sdl.clickdelay.btn==btn && sdl.clickdelay.time>=now))){
+		sdl.clickdelay.time=0;
+		x=sdl.clickdelay.x;
+		y=sdl.clickdelay.y;
+		clickimg=sdl.clickdelay.clickimg;
+	}else{
+		sdl.clickdelay.time=now+500;
+		sdl.clickdelay.btn=btn;
+		sdl.clickdelay.x=x;
+		sdl.clickdelay.y=y;
+		sdl.clickdelay.clickimg=clickimg;
+	}
 	if(btn==SDL_BUTTON_MIDDLE){
 		if(dplgetpos()->writemode) dplevputi(DE_MARK,clickimg);
 		else dplevputi(DE_PLAY,clickimg);
@@ -265,7 +286,8 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		case SDL_BUTTON_LEFT:  dplevputs(DE_RIGHT,DES_MOUSE); break;
 		case SDL_BUTTON_RIGHT: dplevputs(DE_LEFT,DES_MOUSE); break;
 	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
-		dplevputi(DE_SEL,clickimg);
+		if(doubleclick) dplevputi(DE_PLAY,clickimg); /* TODO: DE_DIR */
+		else dplevputi(DE_SEL,clickimg);
 	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
 		dplevputpi(DE_MOVE,sx,sy,clickimg);
 	}
