@@ -168,10 +168,10 @@ void dplchgimgi(int dir){
 
 int dplclickimg(float sx,float sy,int evimgi){
 	int i,x,y;
+	if(evimgi>=-1) return evimgi;
 	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
 	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
 	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
-	if(evimgi>=-1) return evimgi;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
@@ -185,25 +185,20 @@ Uint32 dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
 	Uint32 nxttime=0;
-	switch(ev){
-	case DE_MOVE: dplmovepos(sx,sy); break;
-	case DE_RIGHT:
-	case DE_LEFT:
+	if(ev&DE_MOVE) dplmovepos(sx,sy);
+	if(ev&(DE_RIGHT|DE_LEFT)){
 		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
 			if(dpl.pos.zoom<=0) dplchgimgi(dir);
 			else dplmovepos((float)dir*.25f,0.f);
 		}
 		nxttime=1000;
-	break;
-	case DE_UP:
-	case DE_DOWN:
+	}
+	if(ev&(DE_UP|DE_DOWN)){
 		if(dpl.pos.zoom<0)  dplchgimgi(-dir*zoomtab[-dpl.pos.zoom].move);
 		if(dpl.pos.zoom==0) dplchgimgi( dir*zoomtab[-dpl.pos.zoom].move);
 		else dplmovepos(0.f,-(float)dir*.25f);
-	break;
-	case DE_ZOOMIN:
-	case DE_ZOOMOUT:
-	{
+	}
+	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		float x,fitw;
 		struct img *img;
 		int panoact;
@@ -225,9 +220,6 @@ Uint32 dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		}else dplzoompos(dpl.pos.zoom+dir,sx,sy);
 		if(dir>0 && dpl.pos.zoom==0) nxttime=1000;
 		if(dir<0 && dpl.pos.zoom==panoact) nxttime=1000;
-	}
-	break;
-	default: return 0;
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 	if(dpl.pos.zoom>0)    dpl.run=0;
@@ -280,6 +272,7 @@ void dpldel(){
 	}
 	dpl.pos.imgiold--;
 	effdel(img->pos);
+	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 	delimg=img;
 	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
 }
@@ -381,7 +374,9 @@ void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc
 	if(ev&DE_JUMP){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
-	}else{
+		ev&=~(unsigned int)DE_JUMP;
+	}
+	if(ev){
 		int nwi=(dev.wi+1)%DPLEVS_NUM;
 		dev.evs[dev.wi].ev=ev;
 		dev.evs[dev.wi].key=key;
@@ -397,9 +392,9 @@ const char *keyboardlayout=
 	__("Mouse interface")"\0"     "\0"
 	__("Left drag")"\0"           __("Move")"\0"
 	__("Left click")"\0"          __("Goto image / Forward")"\0"
-	__("Middle click on image")"\0"     __("Play/Stop / Toggle mark (in writing mode)")"\0"
-	__("Middle click on directory")"\0" __("Enter directory")"\0"
-	__("Middle click on space")"\0"     __("Leave directory")"\0"
+	__("Double click on directory")"\0" __("Enter directory")"\0"
+	__("Double click on space")"\0"     __("Leave directory")"\0"
+	__("Middle click")"\0"        __("Play/Stop / Toggle mark (in writing mode)")"\0"
 	__("Right click")"\0"         __("Backward")"\0"
 	__("Scroll")"\0"              __("Zoom in/out")"\0"
 
@@ -465,18 +460,20 @@ char dplev(struct ev *ev){
 	static enum dplev lastev;
 	static Uint32 nxttime=0;
 	Uint32 time=SDL_GetTicks();
-	char ret=1;
+	char ret=0;
 	int clickimg;
+	unsigned int evi;
+	char evdone=0;
 	if(nxttime && time<nxttime && ev->ev==lastev) return 0;
 	lastev=ev->ev;
 	nxttime=0;
 	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
 	dpl.pos.imgiold=dpl.pos.imgi;
-	if(ev->ev!=DE_KEY && ev->ev!=DE_STAT) dpl.colmode=COL_NONE;
-	if(ev->ev==DE_KEY && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
+	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
+	if( (ev->ev&DE_KEY) && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
 			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* TODO: fix keymap for win32 */
 			) dpl.colmode=COL_NONE;
-	switch(ev->ev){
+	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
 	case DE_MOVE:
 	case DE_RIGHT:
 	case DE_LEFT:
@@ -484,20 +481,20 @@ char dplev(struct ev *ev){
 	case DE_DOWN:
 	case DE_ZOOMIN:
 	case DE_ZOOMOUT: nxttime=dplmove(ev->ev,ev->sx,ev->sy,clickimg); break;
-	case DE_SEL:  dplsel(clickimg); break;
-	case DE_MARK: if(ev->src!=DES_MOUSE || !dpldir(clickimg,0)) dplmark(clickimg); break;
+	case DE_SEL:     dplsel(clickimg); break;
+	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
+	case DE_MARK:    if((evdone=dpl.pos.writemode)) dplmark(clickimg); break;
 	case DE_ROT1: 
-	case DE_ROT2: dplrotate(ev->ev); break;
+	case DE_ROT2:    dplrotate(ev->ev); break;
+	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
 	case DE_PLAY: 
-		if(dpl.run) dpl.run=0;
-		else if(!panoev(PE_PLAY) && !dpldir(clickimg,ev->src!=DES_MOUSE) && dpl.pos.zoom<=0){
+		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);
 			dpl.run=SDL_GetTicks();
 		}
 		nxttime=1000;
 	break;
 	case DE_KEY: dplkey(ev->key); break;
-	default: ret=0; break;
 	}
 	if(dpl.pos.imgi==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;

@@ -29,6 +29,7 @@ SDL_Surface *screen;
 
 struct sdlcfg {
 	Uint32 hidecursor;
+	Uint32 doubleclicktime;
 };
 
 struct sdlmove {
@@ -197,6 +198,7 @@ void sdlinit(){
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
 	sdl.scrnof_w=cfggetint("sdl.width");
 	sdl.scrnof_h=cfggetint("sdl.height");
+	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	if(cfggetint("cfg.version")){
 		const SDL_version* v = SDL_Linked_Version();
@@ -225,7 +227,7 @@ void sdlkey(SDL_keysym key){
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
 		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1); break;
 		case SDLK_KP_ENTER:
-		case SDLK_SPACE:    dplevput(DE_PLAY);    break;
+		case SDLK_SPACE:    dplevput(DE_STOP|DE_DIR|DE_PLAY);    break;
 		default:            dplevputk(key.sym);   break;
 	}
 }
@@ -273,23 +275,21 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		y=sdl.clickdelay.y;
 		clickimg=sdl.clickdelay.clickimg;
 	}else{
-		sdl.clickdelay.time=now+500;
+		sdl.clickdelay.time=now+sdl.cfg.doubleclicktime;
 		sdl.clickdelay.btn=btn;
 		sdl.clickdelay.x=x;
 		sdl.clickdelay.y=y;
 		sdl.clickdelay.clickimg=clickimg;
 	}
-	if(btn==SDL_BUTTON_MIDDLE){
-		if(dplgetpos()->writemode) dplevputi(DE_MARK,clickimg);
-		else dplevputi(DE_PLAY,clickimg);
-	}else if(zoom==0) switch(btn){
-		case SDL_BUTTON_LEFT:  dplevputs(DE_RIGHT,DES_MOUSE); break;
-		case SDL_BUTTON_RIGHT: dplevputs(DE_LEFT,DES_MOUSE); break;
-	}else if(zoom<0 && btn==SDL_BUTTON_LEFT){
-		if(doubleclick) dplevputi(DE_PLAY,clickimg); /* TODO: DE_DIR */
-		else dplevputi(DE_SEL,clickimg);
-	}else if(zoom>0 && btn==SDL_BUTTON_LEFT){
-		dplevputpi(DE_MOVE,sx,sy,clickimg);
+	switch(btn){
+	case SDL_BUTTON_LEFT:
+		if(zoom>0)           dplevputp(DE_MOVE,sx,sy);
+		else if(doubleclick) dplevputi(DE_DIR,clickimg);
+		else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
+		else                 dplevputi(DE_SEL,clickimg);
+	break;
+	case SDL_BUTTON_MIDDLE: dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
+	case SDL_BUTTON_RIGHT: if(zoom==0) dplevputs(DE_LEFT,DES_MOUSE); break;
 	}
 }
 

@@ -4,42 +4,35 @@
 #include <SDL.h>
 #include "img.h"
 
-struct dplpos {
-	int imgi;
-	int imgiold;
-	int zoom;
-	float x,y;
-	char writemode;
-};
-
 enum dplev {
-	DE_JUMPX   = 0x0001,
-	DE_JUMPY   = 0x0002,
-	DE_MOVE    = 0x0004,
-	DE_RIGHT   = 0x0008,
-	DE_LEFT    = 0x0010,
-	DE_UP      = 0x0020,
-	DE_DOWN    = 0x0040,
-	DE_ZOOMIN  = 0x0080,
-	DE_ZOOMOUT = 0x0100,
-	DE_ROT1    = 0x0200,
-	DE_ROT2    = 0x0400,
-	DE_PLAY    = 0x0800,
-	DE_KEY     = 0x1000,
-	DE_STAT    = 0x2000,
-	DE_SEL     = 0x4000,
-	DE_MARK    = 0x8000,
+	DE_STAT    = 0x00000001,
+	DE_KEY     = 0x00000002,
+	DE_JUMPX   = 0x00000004,
+	DE_JUMPY   = 0x00000008,
+	DE_MOVE    = 0x00000010,
+	DE_RIGHT   = 0x00000020,
+	DE_LEFT    = 0x00000040,
+	DE_UP      = 0x00000080,
+	DE_DOWN    = 0x00000100,
+	DE_ZOOMIN  = 0x00000200,
+	DE_ZOOMOUT = 0x00000400,
+	DE_ROT1    = 0x00000800,
+	DE_ROT2    = 0x00001000,
+	DE_STOP    = 0x00002000,
+	DE_DIR     = 0x00004000,
+	DE_MARK    = 0x00008000,
+	DE_PLAY    = 0x00010000,
+	DE_SEL     = 0x00020000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)
 #define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
 #define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
-#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev)))
+#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev))) /* TODO: shift only directory significant DE_'s */
 
 enum dplevsrc { DES_KEY, DES_MOUSE };
 
-struct dplpos *dplgetpos();
 int dplgetimgi();
 int dplgetzoom();
 char dplshowinfo();

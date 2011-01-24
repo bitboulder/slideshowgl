@@ -138,13 +138,8 @@ char effonoff(struct dplpos *dp, struct ipos *ip,struct ipos *ipon,enum dplev ev
 		ip->a=0.;
 	}else{
 		ip->a=0.;
-		switch((int)ev){
-		case DE_RIGHT:
-		case DE_LEFT:  ip->x += (ip->x<0.?-1.f:1.f) * zoomtab[-dp->zoom].size; break;
-		case DE_SEL:
-		case DE_UP:
-		case DE_DOWN:  ip->y += (ip->y<0.?-1.f:1.f) * zoomtab[-dp->zoom].size; break;
-		}
+		if(ev&(DE_RIGHT|DE_LEFT)) ip->x += (ip->x<0.?-1.f:1.f) * zoomtab[-dp->zoom].size;
+		if(ev&(DE_UP|DE_DOWN|DE_SEL)) ip->y += (ip->y<0.?-1.f:1.f) * zoomtab[-dp->zoom].size;
 	}
 	return 0;
 }
@@ -321,7 +316,6 @@ void effdel(struct imgpos *ip){
 	ip->opt.active=1;
 	ip->opt.back=1;
 	ip->eff=1;
-	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 }
 
 void effstaton(){
