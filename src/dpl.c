@@ -202,7 +202,7 @@ Uint32 dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		float x,fitw;
 		struct img *img;
 		int panoact;
-		if(dpl.pos.zoom<0){
+		if(dpl.pos.zoom<0 && clickimg>=0){
 			dpl.pos.imgi=clickimg;
 			dplclipimgi(NULL);
 		}
