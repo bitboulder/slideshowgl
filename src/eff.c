@@ -444,3 +444,11 @@ void effcfginit(){
 	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("dpl.stat_on");
 	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("dpl.stat_fall");
 }
+
+unsigned int effdelay(int imgi,unsigned int dpldur){
+	float on,stay;
+	if(!prgdelay(imgi,&on,&stay)) return dpldur+eff.cfg.efftime;
+	on*=(float)eff.cfg.efftime;
+	stay*=(float)dpldur;
+	return (unsigned int)(on+stay);
+}

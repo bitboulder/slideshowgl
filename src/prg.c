@@ -127,10 +127,20 @@ int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos 
 		way[(int)!rev]=ev->way[1];
 		waytime[(int) rev]=rev ? 1.f-ev->waytime[0] : ev->waytime[0];
 		waytime[(int)!rev]=rev ? 1.f-ev->waytime[1] : ev->waytime[1];
+		waytime[0]*=prg->frms[frm].on;
+		waytime[1]*=prg->frms[frm].on;
 		layer[0]=ev->layer;
+		break;
 	}
-	/* TODO: do something with prg->frms[frm].on/stay */
 	return num>iev ? num : 0;
+}
+
+char prgdelay(int frm,float *on,float *stay){
+	struct prg *prg=ilprg();
+	if(!prg || frm<0 || frm>prg->nfrm) return 0;
+	if(on  ) *on  =prg->frms[frm].on;
+	if(stay) *stay=prg->frms[frm].stay;
+	return 1;
 }
 
 char prgforoneldfrm(int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it){

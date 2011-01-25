@@ -526,7 +526,7 @@ void dplcheckev(){
 
 void dplrun(){
 	Uint32 time=SDL_GetTicks();
-	if(time-dpl.run>dpl.cfg.displayduration){
+	if(time-dpl.run>effdelay(imginarrorlimits(dpl.pos.imgi),dpl.cfg.displayduration)){
 		dpl.run=time;
 		dplevput(DE_RIGHT);
 	}

@@ -18,4 +18,6 @@ void effpanoend(struct img *img);
 void effdo();
 void effcfginit();
 
+unsigned int effdelay(int imgi,unsigned int dpldur);
+
 #endif
