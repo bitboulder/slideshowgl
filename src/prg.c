@@ -119,7 +119,7 @@ int prgimgidiff(int frm,int imgi){
 int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos *way,float *waytime,int *layer){
 	struct prgev *ev;
 	int num=0,i=0;
-	if(frm<0 || frm>prg->nfrm) return 0;
+	if(frm<0 || frm>=prg->nfrm) return 0;
 	for(ev=prg->frms[frm].ev;ev;ev=ev->nxt) if(img==ev->img) num++;
 	if(!rev) iev=num-1-iev;
 	for(ev=prg->frms[frm].ev;ev;ev=ev->nxt) if(img==ev->img && iev==i++){
@@ -137,7 +137,7 @@ int prgget(struct prg *prg,struct img *img,int frm,char rev,int iev,struct ipos 
 
 char prgdelay(int frm,float *on,float *stay){
 	struct prg *prg=ilprg();
-	if(!prg || frm<0 || frm>prg->nfrm) return 0;
+	if(!prg || frm<0 || frm>=prg->nfrm) return 0;
 	if(on  ) *on  =prg->frms[frm].on;
 	if(stay) *stay=prg->frms[frm].stay;
 	return 1;
