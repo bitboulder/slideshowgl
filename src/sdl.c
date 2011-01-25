@@ -141,7 +141,6 @@ void sdlresize(int w,int h){
 		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
 	}
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
-		// TODO: Xinerama -> current screen
 		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
 		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(ERR_QUIT,"video mode init failed");
 	}else{

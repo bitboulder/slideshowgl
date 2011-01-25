@@ -379,7 +379,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 			while(tex->tx[tx].tex) tx++;
 			while(tx>tw*th){
 				tx--;
-				/* TODO: glDeleteTextures(tex->tx[tx] */
+				/* todo: glDeleteTextures(tex->tx[tx] */
 			}
 		}
 		ti=tex->tx=realloc(tex->tx,sizeof(struct itx)*(long unsigned int)(tw*th+1));
@@ -479,7 +479,7 @@ void ldresetdoimg(struct img *img,void *UNUSED(arg)){
 void ldresetdo(){
 	struct img *img=imgget(0);
 	if(!img) return;
-	tlb.wi=tlb.ri; /* TODO: cleanup texloadbuf */
+	tlb.wi=tlb.ri; /* todo: cleanup texloadbuf */
 	ldresetdoimg(defimg,NULL);
 	ldresetdoimg(dirimg,NULL);
 	ldresetdoimg(delimg,NULL);

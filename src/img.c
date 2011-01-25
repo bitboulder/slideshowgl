@@ -257,7 +257,7 @@ void imgsort(struct imglist *il,char date){
 	int i;
 	if(date){
 		for(i=0;i<il->nimg;i++){
-			// TODO: load imgexif threaded
+			// todo: load imgexif threaded
 			glsetbar((float)(i+1)/(float)il->nimg);
 			imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
 		}

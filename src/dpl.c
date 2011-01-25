@@ -442,9 +442,9 @@ void dplkey(SDLKey key){
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
-	case SDLK_RIGHTBRACKET: /* TODO: fix keymap for win32 */
+	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */
 	case SDLK_PLUS:     dplcol(1); break;
-	case SDLK_SLASH: /* TODO: fix keymap for win32 */
+	case SDLK_SLASH: /* todo: fix keymap for win32 */
 	case SDLK_MINUS:    dplcol(-1); break;
 	default: break;
 	}
@@ -471,7 +471,7 @@ char dplev(struct ev *ev){
 	dpl.pos.imgiold=dpl.pos.imgi;
 	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
 	if( (ev->ev&DE_KEY) && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
-			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* TODO: fix keymap for win32 */
+			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* todo: fix keymap for win32 */
 			) dpl.colmode=COL_NONE;
 	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
 	case DE_MOVE:
