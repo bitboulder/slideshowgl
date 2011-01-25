@@ -28,8 +28,11 @@ enum dplev {
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)
 #define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
-#define DE_DIR(ev)	(((ev)&(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1))?1:(((ev)&(DE_LEFT|DE_DOWN|DE_ZOOMOUT|DE_ROT2))?-1:0))
-#define DE_NEG(ev)	(DE_DIR(ev)>0?((ev)<<1):(DE_DIR(ev)<0?((ev)>>1):(ev))) /* TODO: shift only directory significant DE_'s */
+#define DEX_DIR1	(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1)
+#define DEX_DIR2	(DEX_DIR1<<1)
+#define DEX_NDIR	(~(unsigned int)(DEX_DIR1|DEX_DIR2))
+#define DE_DIR(ev)	(((ev)&DEX_DIR1)?1:(((ev)&DEX_DIR2)?-1:0))
+#define DE_NEG(ev)	(((ev)&DEX_NDIR)|(((ev)&DEX_DIR1)<<1)|(((ev)&DEX_DIR2)>>1))
 
 enum dplevsrc { DES_KEY, DES_MOUSE };
 
