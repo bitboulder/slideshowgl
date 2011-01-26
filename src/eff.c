@@ -172,26 +172,31 @@ enum imgtex imgseltex(struct dplpos *dp,struct imgpos *ip,int i){
 char effprg(struct dplpos *dp,struct img *img,int iev){
 	struct prg *prg=ilprg();
 	char rev;
-	float waytime[2];
 	int num;
 	struct imgpos *ip=img->pos;
-	int layer;
+	struct pev *pev=NULL;
 	if(!prg) return 0;
 	if(!dp) dp=dplgetpos();
 	rev = dp->imgi<dp->imgiold;
-	num=prgget(prg,img,imginarrorlimits(dp->imgi)+rev,rev,iev,ip->way,waytime,&layer);
-	ip->opt.tex=TEX_BIG;
-	ip->opt.back=(char)layer;
-	if(!num){
+	num = prgget(prg,img,imginarrorlimits(dp->imgi)+rev,rev?iev:-1-iev,&pev);
+	if(!num || !pev){
 		ip->eff=0;
 		ip->opt.active=0;
 	}else{
-		ip->waytime[0]= iev ? ip->waytime[1] : SDL_GetTicks()+(Uint32)((float)eff.cfg.efftime*waytime[0]);
-		ip->waytime[1]=ip->waytime[0]+(Uint32)((float)eff.cfg.efftime*(waytime[1]-waytime[0]));
+		ip->opt.tex=TEX_BIG;
+		ip->opt.back=(char)pev->layer;
+		ip->way[(int) rev]=pev->way[0];
+		ip->way[(int)!rev]=pev->way[1];
+		if(iev) ip->waytime[0]=ip->waytime[1];
+		else{
+			float wt = rev ? 1.f-pev->waytime[1] : pev->waytime[0];
+			ip->waytime[0]=SDL_GetTicks()+(Uint32)((float)eff.cfg.efftime*wt);
+		}
+		ip->waytime[1]=ip->waytime[0]+(Uint32)((float)eff.cfg.efftime*(pev->waytime[1]-pev->waytime[0]));
 		ip->cur=ip->way[0];
 		if(!iev) ip->eff=num;
 		ip->opt.active=1;
-		ip->wayact=1;
+		ip->wayact=(rev?pev->on:pev->off)?0:1;
 	}
 	return 1;
 }
