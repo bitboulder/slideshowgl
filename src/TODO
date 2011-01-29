@@ -10,9 +10,6 @@
 
 - fix: keymap for win32
 
-- prg: img not in frame if ev-off
-
-
 # Want to have
 - load imgexif threaded
 

@@ -551,17 +551,15 @@ int dplthread(void *UNUSED(arg)){
 	effstaton();
 	while(!sdl_quit){
 
-		dplcheckev();
 		if(dpl.run) dplrun();
-		timer(TI_DPL,0,0);
-		effdo();
-		timer(TI_DPL,1,0);
 		panorun();
+		timer(TI_DPL,0,0);
+		dplcheckev();
+		timer(TI_DPL,1,0);
+		effdo();
 		timer(TI_DPL,2,0);
-
-		timer(TI_DPL,3,0);
 		sdldelay(&last,16);
-		timer(TI_DPL,4,0);
+		timer(TI_DPL,3,0);
 	}
 	sdl_quit|=THR_DPL;
 	return 0;
