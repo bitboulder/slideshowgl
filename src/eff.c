@@ -296,7 +296,7 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		effref&EFFREF_FIT?" (fit)":"",
 		effref&EFFREF_ROT?" (rot)":"");
 	if(effref&EFFREF_CLR)
-		for(img=imgget(0);img;img=img->nxt) img->pos->opt.active=0;
+		for(img=imgget(0);img;img=img->nxt) img->pos->opt.active=img->pos->eff=0;
 	if(effref&(EFFREF_FIT|EFFREF_CLR))
 		if(dp->zoom<0 && effmaxfitupdate(dp))
 			effref|=EFFREF_ALL;
