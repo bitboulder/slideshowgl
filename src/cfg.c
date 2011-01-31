@@ -8,9 +8,10 @@
 #include "sdl.h"
 #include "help.h"
 #include "pano.h"
+#include "mark.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
-enum cfgmode { CM_INC, CM_FLIP, CM_SET };
+enum cfgmode { CM_INC, CM_FLIP, CM_SET, CM_DO };
 
 #define E(X)	#X
 #define E2(X,N)	#X
@@ -67,6 +68,7 @@ struct cfg {
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000",   {NULL}, __("Time the statusbar remains (ms)") },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000",   {NULL}, __("Fall time for statusbar (ms)") },
 	{ 'm', "mark.fn",             CT_STR, CM_SET,  "",       {NULL}, __("Set mark file (Default: $TEMP/slideshowgl-mark)") },
+	{ 'k', "mark.catalog",        CT_STR, CM_DO,   "",       {NULL}, __("Add catalog") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle actions") },
@@ -147,6 +149,9 @@ void cfgset(struct cfg *cfg, char *val){
 		if(!val) error(ERR_QUIT,"cfgset no arg for CM_SET '%s'",cfg->name);
 		cfg->val=val;
 	break;
+	case CM_DO:
+		if(!strcmp(cfg->name,"mark.catalog")) markcatadd(val);
+	break;
 	}
 }
 
@@ -178,7 +183,7 @@ char *cfgcompileopt(){
 	for(i=0;cfgs[i].name;i++) if(cfgs[i].opt){
 		if(p==254) error(ERR_QUIT,"cfgcompileopt: opt too small");
 		opt[p++]=cfgs[i].opt;
-		if(cfgs[i].mode==CM_SET) opt[p++]=':';
+		if(cfgs[i].mode==CM_SET || cfgs[i].mode==CM_DO) opt[p++]=':';
 	}
 	opt[p++]='\0';
 	return opt;

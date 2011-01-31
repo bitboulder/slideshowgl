@@ -15,23 +15,41 @@ struct mk {
 	char *mark;
 };
 
+struct mkcat {
+	char fn[FILELEN];
+	char name[FILELEN];
+};
+
 #define MKCHAINS	512
 
 struct mark {
 	char init;
 	char fn[FILELEN];
 	struct mk *mks[MKCHAINS];
-	char *catalog;
-	size_t ncatalog;
+	struct mkcat *cat;
+	size_t ncat;
 } mark = {
 	.init = 0,
-	.catalog = NULL,
-	.ncatalog = 0,
+	.cat = NULL,
+	.ncat = 0,
 };
 
-void catalogadd(char *fn){
+void markcatadd(char *fn){
+	struct mkcat *cat;
+	size_t len;
+	size_t i;
 	if(mark.init) return;
-	/* TODO */
+	mark.cat=realloc(mark.cat,sizeof(struct mkcat)*(++mark.ncat));
+	cat=mark.cat+mark.ncat-1;
+	len=strlen(fn);
+	if(len>FILELEN-1) len=FILELEN-1;
+	memcpy(cat->fn,fn,len);
+	cat->fn[len]='\0';
+	for(i=len;i>0;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') break;
+	len-=i;
+	memcpy(cat->name,fn+i,len);
+	for(i=0;i<len;i++) if(cat->name[i]=='.') break;
+	cat->name[i]='\0';
 }
 
 const char *mkcmp(const char *fn){
@@ -68,8 +86,7 @@ struct mk *mkfind(const char *fn,enum mkcreate create){
 		mk->cmp=mk->fn+(cmp-fn);
 		mk->nxt=mark.mks[hash];
 		mark.mks[hash]=mk;
-		mk->mark=calloc(mark.ncatalog+1,sizeof(char));
-		mk->mark[0]=--create;
+		mk->mark=calloc(mark.ncat+1,sizeof(char));
 	}
 	return mk;
 }
@@ -77,15 +94,19 @@ struct mk *mkfind(const char *fn,enum mkcreate create){
 void marksload(){
 	FILE *fd;
 	char line[FILELEN];
-	if(!(fd=fopen(mark.fn,"r"))) return;
+	size_t c;
 	marksfree();
-	while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
-		int len=(int)strlen(line);
-		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
-		mkfind(line,2);
+	for(c=0;c<=mark.ncat;c++){
+		char *fn=c?mark.cat[c-1].fn:mark.fn;
+		if(!(fd=fopen(fn,"r"))) continue;
+		while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
+			int len=(int)strlen(line);
+			while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
+			mkfind(line,2)->mark[c]=1;
+		}
+		fclose(fd);
+		debug(DBG_STA,"marks loaded (%s)",fn);
 	}
-	fclose(fd);
-	debug(DBG_STA,"marks loaded (%s)",mark.fn);
 }
 
 void markinit(){
@@ -114,12 +135,16 @@ char *markimgget(struct img *img,enum mkcreate create){
 void markssave(){
 	FILE *fd;
 	int i;
+	size_t c;
 	struct mk *mk;
 	markinit();
-	if(!(fd=fopen(mark.fn,"w"))) return;
-	for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
-		if(mk->mark[0]) fprintf(fd,"%s\n",mk->fn);
-	fclose(fd);
-	debug(DBG_STA,"marks saved (%s)",mark.fn);
+	for(c=0;c<=mark.ncat;c++){
+		char *fn=c?mark.cat[c-1].fn:mark.fn;
+		if(!(fd=fopen(fn,"w"))) return;
+		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
+			if(mk->mark[i]) fprintf(fd,"%s\n",mk->fn);
+		fclose(fd);
+		debug(DBG_STA,"marks saved (%s)",fn);
+	}
 }
 

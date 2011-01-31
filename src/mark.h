@@ -5,7 +5,7 @@
 
 enum mkcreate { MKC_NO, MKC_YES, MKC_ALLWAYS };
 
-void catalogadd(char *fn);
+void markcatadd(char *fn);
 
 char *markimgget(struct img *img,enum mkcreate create);
 
