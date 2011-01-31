@@ -26,30 +26,38 @@ struct mark {
 	char init;
 	char fn[FILELEN];
 	struct mk *mks[MKCHAINS];
-	struct mkcat *cat;
+	char *catfn;
+	char *catna;
 	size_t ncat;
 } mark = {
 	.init = 0,
-	.cat = NULL,
+	.catfn = NULL,
+	.catna = NULL,
 	.ncat = 0,
 };
 
+char *markcats(){ return mark.catna; }
+
 void markcatadd(char *fn){
-	struct mkcat *cat;
+	char *cfn;
+	char *cna;
 	size_t len;
 	size_t i;
 	if(mark.init) return;
-	mark.cat=realloc(mark.cat,sizeof(struct mkcat)*(++mark.ncat));
-	cat=mark.cat+mark.ncat-1;
+	mark.catfn=realloc(mark.catfn,sizeof(char)*FILELEN*(++mark.ncat));
+	mark.catna=realloc(mark.catna,sizeof(char)*(FILELEN*mark.ncat+1));
+	cfn=mark.catfn+FILELEN*(mark.ncat-1);
+	cna=mark.catna+FILELEN*(mark.ncat-1);
 	len=strlen(fn);
 	if(len>FILELEN-1) len=FILELEN-1;
-	memcpy(cat->fn,fn,len);
-	cat->fn[len]='\0';
+	memcpy(cfn,fn,len);
+	cfn[len]='\0';
 	for(i=len;i>0;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') break;
 	len-=i;
-	memcpy(cat->name,fn+i,len);
-	for(i=0;i<len;i++) if(cat->name[i]=='.') break;
-	cat->name[i]='\0';
+	memcpy(cna,fn+i,len);
+	for(i=0;i<len;i++) if(cna[i]=='.') break;
+	cna[i]='\0';
+	cna[FILELEN]='\0';
 }
 
 const char *mkcmp(const char *fn){
@@ -97,7 +105,7 @@ void marksload(){
 	size_t c;
 	marksfree();
 	for(c=0;c<=mark.ncat;c++){
-		char *fn=c?mark.cat[c-1].fn:mark.fn;
+		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.fn;
 		if(!(fd=fopen(fn,"r"))) continue;
 		while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
 			int len=(int)strlen(line);
@@ -139,7 +147,7 @@ void markssave(){
 	struct mk *mk;
 	markinit();
 	for(c=0;c<=mark.ncat;c++){
-		char *fn=c?mark.cat[c-1].fn:mark.fn;
+		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.fn;
 		if(!(fd=fopen(fn,"w"))) return;
 		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
 			if(mk->mark[i]) fprintf(fd,"%s\n",mk->fn);

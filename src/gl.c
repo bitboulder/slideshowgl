@@ -19,6 +19,7 @@
 #include "eff.h"
 #include "file.h"
 #include "help.h"
+#include "mark.h"
 
 enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_NUM };
 
@@ -575,6 +576,21 @@ void glrenderhelp(){
 	if((help=dplhelp())) glrendertext(_("Interface"),help);
 }
 
+void glrendercat(){
+	struct img *img;
+	char *mark;
+	char *cats;
+	if(!dplshowcat()) return;
+	if(!(img=imgget(dplgetimgi()))) return;
+	if(!(cats=markcats())) return;
+	mark=imgposmark(img,MPC_NO);
+	for(;cats[0];cats+=FILELEN){
+		if(mark) mark++;
+		/* TODO */
+		//printf("%i %s\n",mark && mark[0],cats);
+	}
+}
+
 void glrenderinputnum(){
 	int i=dplinputnum();
 	char txt[16];
@@ -650,6 +666,7 @@ void glpaint(){
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
+	glrendercat();
 	glrenderinputnum();
 	glrenderhelp();
 	

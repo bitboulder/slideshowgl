@@ -39,6 +39,7 @@ enum dplevsrc { DES_KEY, DES_MOUSE };
 int dplgetimgi();
 int dplgetzoom();
 char dplshowinfo();
+char dplshowcat();
 int dplinputnum();
 char dplloop();
 const char *dplhelp();

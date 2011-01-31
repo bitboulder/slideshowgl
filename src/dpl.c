@@ -22,6 +22,7 @@ struct dpl {
 	Uint32 run;
 	char showinfo;
 	char showhelp;
+	char showcat;
 	int inputnum;
 	struct {
 		Uint32 displayduration;
@@ -37,6 +38,7 @@ struct dpl {
 	.run = 0,
 	.showinfo = 0,
 	.showhelp = 0,
+	.showcat = 0,
 	.inputnum = 0,
 	.colmode = COL_NONE,
 };
@@ -48,6 +50,7 @@ struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
+char dplshowcat(){ return dpl.showcat; }
 int dplinputnum(){ return dpl.inputnum; }
 char dplloop(){ return dpl.cfg.loop; }
 
@@ -416,6 +419,7 @@ const char *keyboardlayout=
 	__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
 	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 	__("i")"\0"                   __("Show image info")"\0"
+	__("k")"\0"                   __("Show image catalog")"\0"
 	__("h")"\0"                   __("Show help")"\0"
 	__("e")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
 	__("q/Esc")"\0"               __("Quit")"\0"
@@ -430,7 +434,7 @@ const char *dplhelp(){
 void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
 	switch(key){
-	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
+	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp || dpl.showcat) break;
 	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
@@ -455,6 +459,8 @@ void dplkey(SDLKey key){
 	dpl.showinfo = !dpl.showinfo && key==SDLK_i &&
 		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
 	dpl.showhelp = !dpl.showhelp && key==SDLK_h;
+	dpl.showcat = !dpl.showcat && key==SDLK_k &&
+		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
 }
 
 char dplev(struct ev *ev){
