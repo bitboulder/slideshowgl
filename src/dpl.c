@@ -245,8 +245,8 @@ void dplmark(int imgi){
 	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
 	if(imgfiledir(img->file)) return;
-	mark=imgposmark(img->pos);
-	*mark=!*mark;
+	mark=imgposmark(img,MPC_ALLWAYS);
+	mark[0]=!mark[0];
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	actadd(ACT_SAVEMARKS,NULL);
 }
@@ -328,8 +328,9 @@ void dplstatupdate(){
 			case ROT_270: ADDTXT(_(" rotated-left")); break;
 		}
 		if(dpl.pos.writemode){
+			char *mark;
 			ADDTXT(_(" (write-mode)"));
-			if(*imgposmark(img->pos)) ADDTXT(_(" [MARK]"));
+			if((mark=imgposmark(img,MPC_NO)) && mark[0]) ADDTXT(_(" [MARK]"));
 		}
 		if(dpl.colmode!=COL_NONE || ic->g || ic->c || ic->b){
 			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",ic->g,dpl.colmode==COL_G?"]":"");

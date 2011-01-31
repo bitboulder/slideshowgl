@@ -24,12 +24,14 @@ struct icol {
 	float g,c,b;
 };
 
+enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS };
+
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
 struct ipos *imgposcur(struct imgpos *ip);
 struct icol *imgposcol(struct imgpos *ip);
-char *imgposmark(struct imgpos *ip);
+char *imgposmark(struct img *img,enum mpcreate create);
 
 enum effrefresh {
 	EFFREF_NO =0x00,

@@ -7,6 +7,7 @@
 #include "main.h"
 #include "cfg.h"
 #include "prg.h"
+#include "mark.h"
 
 extern struct zoomtab {
 	int move;
@@ -51,7 +52,7 @@ struct wh effmaxfit(){ return eff.maxfit; }
 
 struct imgpos {
 	int eff;
-	char mark;
+	char* mark;
 	char wayact;
 	struct iopt opt;
 	struct ipos cur;
@@ -70,7 +71,10 @@ struct ipos *imgposcur(struct imgpos *ip){ return &ip->cur; }
 struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
 
 /* thread: act */
-char *imgposmark(struct imgpos *ip){ return &ip->mark; }
+char *imgposmark(struct img *img,enum mpcreate create){
+	if(create>=MPC_YES && !img->pos->mark) img->pos->mark=markimgget(img,create==MPC_ALLWAYS ? MKC_YES : MKC_NO);
+	return img->pos->mark;
+}
 
 /***************************** eff init ***************************************/
 
@@ -93,7 +97,7 @@ int effdiff(struct dplpos *dp,int *pi1,int *pi2){
 void effmove(struct dplpos *dp,struct ipos *ip,int i){
 	struct img *img=imgget(i);
 	ip->a = 1.f;
-	ip->m=(img && img->pos->mark && dp->writemode)?1.f:0.f;
+	ip->m=(img && img->pos->mark && img->pos->mark[0] && dp->writemode)?1.f:0.f;
 	ip->r=img ? imgexifrotf(img->exif) : 0.f;
 	if(dp->zoom<0){
 		int diff=imgidiff(dp->imgi,i,NULL,NULL);
@@ -156,7 +160,7 @@ char efffaston(struct dplpos *dp,struct imgpos *ip,int i){
 	ip->cur.s=1.;
 	ip->cur.x=(float)(i-i1);
 	ip->cur.y=0.;
-	ip->cur.m=(img && img->pos->mark && dp->writemode)?1.:0.;
+	ip->cur.m=(img && img->pos->mark && img->pos->mark[0] && dp->writemode)?1.:0.;
 	ip->cur.r=img ? imgexifrotf(img->exif) : 0.f;
 	ip->eff=0;
 	return 1;
@@ -296,7 +300,7 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		effref&EFFREF_FIT?" (fit)":"",
 		effref&EFFREF_ROT?" (rot)":"");
 	if(effref&EFFREF_CLR)
-		for(img=imgget(0);img;img=img->nxt) img->pos->opt.active=img->pos->eff=0;
+		for(img=imgget(0);img;img=img->nxt){ img->pos->opt.active=0; img->pos->eff=0; }
 	if(effref&(EFFREF_FIT|EFFREF_CLR))
 		if(dp->zoom<0 && effmaxfitupdate(dp))
 			effref|=EFFREF_ALL;

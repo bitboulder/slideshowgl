@@ -3,7 +3,11 @@
 
 #include "img.h"
 
-void markimgload(struct img *img);
+enum mkcreate { MKC_NO, MKC_YES, MKC_ALLWAYS };
+
+void catalogadd(char *fn);
+
+char *markimgget(struct img *img,enum mkcreate create);
 
 void markssave();
 

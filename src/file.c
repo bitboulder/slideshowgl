@@ -22,7 +22,6 @@
 #include "help.h"
 #include "dpl.h"
 #include "eff.h"
-#include "mark.h"
 
 /***************************** imgfile ******************************************/
 
@@ -146,7 +145,7 @@ int faddfile(struct imglist *il,const char *fn){
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 		fthumbinit(img->file);
 		imgpanoload(img->pano,fn);
-		markimgload(img);
+		imgposmark(img,MPC_YES);
 	}
 	return 1;
 }
