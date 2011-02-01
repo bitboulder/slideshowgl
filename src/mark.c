@@ -1,12 +1,21 @@
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#if HAVE_OPENDIR
+	#include <sys/types.h>
+	#include <dirent.h>
+	#ifndef NAME_MAX
+		#define NAME_MAX 255
+	#endif
+#endif
 #include "mark.h"
 #include "img.h"
 #include "main.h"
 #include "cfg.h"
 #include "file.h"
 #include "eff.h"
+#include "help.h"
 
 struct mk {
 	struct mk *nxt;
@@ -43,12 +52,39 @@ char *markcatfn(int id){
 	return mark.catfn+id*FILELEN;
 }
 
+void markcatadddir(char *fn){
+#if HAVE_OPENDIR
+	DIR *dd;
+	struct dirent *de;
+	char buf[FILELEN];
+	size_t ld;
+	if(!(dd=opendir(fn))) return;
+	ld=strlen(fn);
+	memcpy(buf,fn,ld);
+	if(ld && buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
+	while((de=readdir(dd))){
+		size_t l=0;
+		while(l<NAME_MAX && de->d_name[l]) l++;
+		if(l<6 || strncmp(de->d_name+l-5,".flst",5)) continue;
+		if(ld+l>=FILELEN) continue;
+		memcpy(buf+ld,de->d_name,l);
+		buf[ld+l]='\0';
+		markcatadd(buf);
+	}
+	closedir(dd);
+#endif
+}
+
 void markcatadd(char *fn){
 	char *cfn;
 	char *cna;
 	size_t len;
 	size_t i;
 	if(mark.init) return;
+	if(isdir(fn)==1){
+		markcatadddir(fn);
+		return;
+	}
 	mark.catfn=realloc(mark.catfn,sizeof(char)*FILELEN*(++mark.ncat));
 	mark.catna=realloc(mark.catna,sizeof(char)*(FILELEN*mark.ncat+1));
 	cfn=mark.catfn+FILELEN*(mark.ncat-1);

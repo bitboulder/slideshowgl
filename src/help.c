@@ -123,8 +123,8 @@ char isdir(const char *fn){
 	struct stat st;
 	if(stat(fn,&st)) return 0;
 	if(S_ISDIR(st.st_mode)) return 1;
-	if(fileext(fn,0,".flst")) return 1;
-	if(fileext(fn,0,".effprg")) return 1;
+	if(fileext(fn,0,".flst")) return 2;
+	if(fileext(fn,0,".effprg")) return 2;
 	return 0;
 }
 #else

@@ -222,7 +222,7 @@ int floaddir(const char *fn){
 	size_t ld;
 	struct imglist *il;
 	int count=0;
-	if((il=ilfind(fn))) return ilswitch(il);
+	if((il=ilfind(fn))) return ilswitch(il); /* TODO: check changes in dir */
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);
 		return IMGI_END;
@@ -232,7 +232,7 @@ int floaddir(const char *fn){
 	ld=strlen(fn);
 	memcpy(buf,fn,ld);
 	if(dd){
-		if(buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
+		if(ld && buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
 	}else{
 //		while(buf[ld-1]!='/' && buf[ld-1]!='\\') ld--;
 		ld=0;
