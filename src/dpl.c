@@ -12,6 +12,7 @@
 #include "eff_int.h"
 #include "gl.h"
 #include "pano.h"
+#include "mark.h"
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
@@ -243,13 +244,20 @@ void dplsel(int imgi){
 void dplmark(int imgi){
 	struct img *img;
 	char *mark;
+	size_t mkid=0;
 	if(!dpl.pos.writemode) return;
 	if(imgi==IMGI_START || imgi==IMGI_END) return;
+	if(imgi>=IMGI_CAT){
+		mkid=(size_t)imgi-IMGI_CAT+1;
+		imgi=dpl.pos.imgi;
+		if(imgi==IMGI_START || imgi==IMGI_END) return;
+		if(mkid>markncat()) return;
+	}
 	dplclipimgi(&imgi);
 	if(!(img=imgget(imgi))) return;
 	if(imgfiledir(img->file)) return;
 	mark=imgposmark(img,MPC_ALLWAYS);
-	mark[0]=!mark[0];
+	mark[mkid]=!mark[mkid];
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	actadd(ACT_SAVEMARKS,NULL);
 }
@@ -294,6 +302,7 @@ void dplcol(int d){
 
 char dpldir(int imgi,char noleave){
 	struct img *img;
+	if(imgi>=IMGI_CAT) return 0; /* TODO */
 	if(imgi==IMGI_START) return 0;
 	if(!(img=imgget(imgi))){
 		if(noleave) return 0;
@@ -445,6 +454,7 @@ void dplkey(SDLKey key){
 	case SDLK_g:        if(glprg()) dpl.colmode=COL_G; break;
 	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
+	case SDLK_k:        dpl.showcat=!dpl.showcat; break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */
@@ -459,8 +469,6 @@ void dplkey(SDLKey key){
 	dpl.showinfo = !dpl.showinfo && key==SDLK_i &&
 		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
 	dpl.showhelp = !dpl.showhelp && key==SDLK_h;
-	dpl.showcat = !dpl.showcat && key==SDLK_k &&
-		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
 }
 
 char dplev(struct ev *ev){

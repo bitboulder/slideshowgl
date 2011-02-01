@@ -36,6 +36,7 @@ struct mark {
 	.ncat = 0,
 };
 
+size_t markncat(){ return mark.ncat; }
 char *markcats(){ return mark.catna; }
 
 void markcatadd(char *fn){
@@ -87,7 +88,7 @@ struct mk *mkfind(const char *fn,enum mkcreate create){
 	const char *cmp=mkcmp(fn);
 	int hash=mkhash(cmp);
 	struct mk *mk=NULL;
-	if(create<MKC_ALLWAYS) for(mk=mark.mks[hash];mk && strncmp(cmp,mk->cmp,FILELEN);) mk=mk->nxt;
+	for(mk=mark.mks[hash];mk && strncmp(cmp,mk->cmp,FILELEN);) mk=mk->nxt;
 	if(!mk && create>=MKC_YES){
 		mk=malloc(sizeof(struct mk));
 		strncpy(mk->fn,fn,FILELEN); mk->fn[FILELEN-1]='\0';
@@ -110,7 +111,7 @@ void marksload(){
 		while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
 			int len=(int)strlen(line);
 			while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
-			mkfind(line,2)->mark[c]=1;
+			mkfind(line,MKC_YES)->mark[c]=1;
 		}
 		fclose(fd);
 		debug(DBG_STA,"marks loaded (%s)",fn);
@@ -150,7 +151,7 @@ void markssave(){
 		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.fn;
 		if(!(fd=fopen(fn,"w"))) return;
 		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
-			if(mk->mark[i]) fprintf(fd,"%s\n",mk->fn);
+			if(mk->mark[c]) fprintf(fd,"%s\n",mk->fn);
 		fclose(fd);
 		debug(DBG_STA,"marks saved (%s)",fn);
 	}

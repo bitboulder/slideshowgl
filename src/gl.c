@@ -37,10 +37,12 @@ struct gl {
 		float hrat_stat;
 		float hrat_txtimg;
 		float hrat_dirname;
+		float hrat_cat;
 		float txt_border;
 		float dir_border;
 		float col_txtbg[4];
 		float col_txtfg[4];
+		float col_txtmk[4];
 		float col_dirname[4];
 		float col_playicon[4];
 	} cfg;
@@ -136,10 +138,12 @@ void glinit(char done){
 		gl.cfg.hrat_stat     = cfggetfloat("gl.hrat_stat");
 		gl.cfg.hrat_txtimg   = cfggetfloat("gl.hrat_txtimg");
 		gl.cfg.hrat_dirname  = cfggetfloat("gl.hrat_dirname");
+		gl.cfg.hrat_cat      = cfggetfloat("gl.hrat_cat");
 		gl.cfg.txt_border    = cfggetfloat("gl.txt_border");
 		gl.cfg.dir_border    = cfggetfloat("gl.dir_border");
 		cfggetcol("gl.col_txtbg",   gl.cfg.col_txtbg);
 		cfggetcol("gl.col_txtfg",   gl.cfg.col_txtfg);
+		cfggetcol("gl.col_txtmk",   gl.cfg.col_txtmk);
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
 		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
 	}
@@ -314,8 +318,8 @@ void glpostranslate(enum glpos pos,float *rect){
 	if(pos&GP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
 	if(pos&GP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
 	if(pos&GP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
-	if(pos&GP_TOP    ) glTranslatef(0.f,-rect[1],0.f);
-	if(pos&GP_BOTTOM ) glTranslatef(0.f,-rect[4],0.f);
+	if(pos&GP_TOP    ) glTranslatef(0.f,-rect[4],0.f);
+	if(pos&GP_BOTTOM ) glTranslatef(0.f,-rect[1],0.f);
 	if(pos&GP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
 }
 
@@ -579,16 +583,39 @@ void glrenderhelp(){
 void glrendercat(){
 	struct img *img;
 	char *mark;
-	char *cats;
+	char *cats,*cat;
+	float w=0.f,h,b;
+	float colfg[4];
+	GLuint name=IMGI_CAT+1;
 	if(!dplshowcat()) return;
 	if(!(img=imgget(dplgetimgi()))) return;
 	if(!(cats=markcats())) return;
+	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
 	mark=imgposmark(img,MPC_NO);
-	for(;cats[0];cats+=FILELEN){
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(-w/2.f,0.5f,0.f);
+	h=glfontscale(gl.font,gl.cfg.hrat_cat,1.f);
+	for(cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(gl.font,cat))>w) w=b;
+	b=h*gl.cfg.txt_border*2.f;
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b,b/2.f,GP_TOP|GP_LEFT);
+	glTranslatef(0.f,-b/2.f,0.f);
+	for(cat=cats;cat[0];cat+=FILELEN,name++){
 		if(mark) mark++;
-		/* TODO */
-		//printf("%i %s\n",mark && mark[0],cats);
+		glColor4fv(gl.cfg.col_txtbg);
+		glLoadName(name);
+		glrect(w+b,h,GP_TOP|GP_LEFT);
+		glLoadName(0);
+		if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
+		else glColor4fv(colfg);
+		glTranslatef(b/2.f,-h/2.f,0.f);
+		glfontrender(gl.font,cat,GP_VCENTER|GP_LEFT);
+		glTranslatef(-b/2.f,-h/2.f,0.f);
 	}
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b,b/2.f,GP_TOP|GP_LEFT);
+	glPopMatrix();
 }
 
 void glrenderinputnum(){
@@ -622,7 +649,7 @@ void glrenderstat(){
 	b=h*gl.cfg.txt_border*2.f;
 
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w+b+h+b,h+b,GP_LEFT|GP_TOP);
+	glrect(w+b+h+b,h+b,GP_LEFT|GP_BOTTOM);
 
 	glPushMatrix();
 	glColor4fv(gl.cfg.col_playicon);
@@ -662,11 +689,11 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if(!panorender()) glrenderimgs();
+	glrendercat();
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
-	glrendercat();
 	glrenderinputnum();
 	glrenderhelp();
 	
@@ -674,8 +701,8 @@ void glpaint(){
 }
 
 int glselect(int x,int y){
-	GLuint selbuf[64]={0};
-	GLint hits;
+	GLuint ret,selbuf[64]={0};
+	GLint hits,i;
 	gl.sel.x=x;
 	gl.sel.y=y;
 	gl.sel.act=1;
@@ -687,5 +714,7 @@ int glselect(int x,int y){
 	glpaint();
 	hits=glRenderMode(GL_RENDER);
 	gl.sel.act=0;
-	return hits ? (int)selbuf[3]-1 : -1;
+	ret=0;
+	for(i=0;i<hits;i++) if(selbuf[4*i+3]>ret) ret=selbuf[4*i+3];
+	return (int)ret-1;
 }

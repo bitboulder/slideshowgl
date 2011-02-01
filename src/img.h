@@ -13,6 +13,8 @@
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
+#define IMGI_CAT	0x40000000
+
 
 #define E2(X,N)	TEX_##X=N
 enum imgtex { IMGTEX };

@@ -280,7 +280,13 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		sdl.clickdelay.y=y;
 		sdl.clickdelay.clickimg=clickimg;
 	}
-	switch(btn){
+	if(clickimg>=IMGI_CAT) switch(btn){
+	case SDL_BUTTON_LEFT:
+		dplevputi(DE_MARK,clickimg);
+		if(doubleclick) dplevputi(DE_DIR,clickimg);
+	break;
+	}
+	else switch(btn){
 	case SDL_BUTTON_LEFT:
 		if(zoom>0)           dplevputp(DE_MOVE,sx,sy);
 		else if(doubleclick) dplevputi(DE_DIR,clickimg);
