@@ -87,8 +87,14 @@ void markcatadd(char *fn){
 	}
 	mark.catfn=realloc(mark.catfn,sizeof(char)*FILELEN*(++mark.ncat));
 	mark.catna=realloc(mark.catna,sizeof(char)*(FILELEN*mark.ncat+1));
-	cfn=mark.catfn+FILELEN*(mark.ncat-1);
-	cna=mark.catna+FILELEN*(mark.ncat-1);
+	for(i=0;i<mark.ncat-1;i++) if(strncmp(fn,mark.catfn+i*FILELEN,FILELEN)<=0) break;
+	if(i<mark.ncat-1){
+		memmove(mark.catfn+(i+1)*FILELEN,mark.catfn+i*FILELEN,(mark.ncat-i-1)*FILELEN);
+		memmove(mark.catna+(i+1)*FILELEN,mark.catna+i*FILELEN,(mark.ncat-i-1)*FILELEN);
+	}
+	mark.catfn[mark.ncat*FILELEN]='\0';
+	cfn=mark.catfn+FILELEN*i;
+	cna=mark.catna+FILELEN*i;
 	len=strlen(fn);
 	if(len>FILELEN-1) len=FILELEN-1;
 	memcpy(cfn,fn,len);
@@ -98,7 +104,6 @@ void markcatadd(char *fn){
 	memcpy(cna,fn+i,len);
 	for(i=0;i<len;i++) if(cna[i]=='.') break;
 	cna[i]='\0';
-	cna[FILELEN]='\0';
 }
 
 const char *mkcmp(const char *fn){

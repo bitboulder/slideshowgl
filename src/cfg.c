@@ -51,7 +51,7 @@ struct cfg {
 	{ 0,   "gl.hrat_stat",        CT_FLT, CM_SET,  "0.025",  {NULL}, __("Textheight for statusbar") },
 	{ 0,   "gl.hrat_txtimg",      CT_FLT, CM_SET,  "0.1",    {NULL}, __("Textheight for text-images") },
 	{ 0,   "gl.hrat_dirname",     CT_FLT, CM_SET,  "0.15",   {NULL}, __("Textheight for directory names") },
-	{ 0,   "gl.hrat_cat",         CT_FLT, CM_SET,  "0.05",   {NULL}, __("Textheight for catalog names") },
+	{ 0,   "gl.hrat_cat",         CT_FLT, CM_SET,  "0.03",   {NULL}, __("Textheight for catalog names") },
 	{ 0,   "gl.txt_border",       CT_FLT, CM_SET,  "0.1",    {NULL}, __("Border around text (in percent of height)") },
 	{ 0,   "gl.dir_border",       CT_FLT, CM_SET,  "0.1",    {NULL}, __("Border around dirname (in percent of height)") },
 	{ 0,   "gl.col_txtbg",        CT_COL, CM_SET,  "0.8 0.8 0.8 0.7", {NULL}, __("Text background color") },
