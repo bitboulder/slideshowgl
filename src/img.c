@@ -12,6 +12,7 @@
 #include "act.h"
 #include "dpl.h"
 #include "prg.h"
+#include "help.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -28,6 +29,7 @@ struct imglist {
 	int pos;
 	Uint32 last_used;
 	struct prg *prg;
+	long time;
 } *ils=NULL;
 
 struct imglist *curil = NULL;
@@ -127,6 +129,7 @@ struct imglist *ilnew(const char *dir){
 	strncpy(il->dir,dir,FILELEN);
 	il->parent=curil;
 	il->pos=IMGI_START;
+	il->time=filetime(dir);
 	il->nxt=ils;
 	ils=il;
 	debug(DBG_STA,"imglist created for dir: %s",il->dir);
@@ -157,7 +160,11 @@ void ilfree(struct imglist *il){
 /* thread: dpl */
 struct imglist *ilfind(const char *dir){
 	struct imglist *il;
-	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)) return il;
+	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)){
+		if(filetime(dir)==il->time) return il;
+		ildestroy(il);
+		return NULL;
+	}
 	return NULL;
 }
 

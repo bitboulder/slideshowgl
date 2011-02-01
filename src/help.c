@@ -119,6 +119,7 @@ char *strsep(char **stringp, const char *delim){
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 char isdir(const char *fn){
 	struct stat st;
 	if(stat(fn,&st)) return 0;
@@ -127,12 +128,25 @@ char isdir(const char *fn){
 	if(fileext(fn,0,".effprg")) return 2;
 	return 0;
 }
+
+long filetime(const char *fn){
+	struct stat st;
+	if(stat(fn,&st)) return 0;
+	return st.st_mtime;
+}
+
 #else
+
 char isdir(const char *fn __attribute__((unused))){
-	if(fileext(fn,".flst")) return 1;
-	if(fileext(fn,".effprg")) return 1;
+	if(fileext(fn,".flst")) return 2;
+	if(fileext(fn,".effprg")) return 2;
 	return 0;
 }
+
+long filetime(const char *fn){
+	return 0;
+}
+
 #endif
 
 char fileext(const char *fn,size_t len,const char *ext){

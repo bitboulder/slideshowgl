@@ -222,7 +222,7 @@ int floaddir(const char *fn){
 	size_t ld;
 	struct imglist *il;
 	int count=0;
-	if((il=ilfind(fn))) return ilswitch(il); /* TODO: check changes in dir */
+	if((il=ilfind(fn))) return ilswitch(il);
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);
 		return IMGI_END;

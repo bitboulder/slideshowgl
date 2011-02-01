@@ -314,7 +314,7 @@ char dpldir(int imgi,char noleave){
 			if(!imgfiledir(img->file)) return 0;
 			dirfn=imgfilefn(img->file);
 			dpl.pos.imgi=imgi;
-		}
+		}/* TODO: else actcheckdelay(1) */
 		imgi=floaddir(dirfn);
 		if(imgi==IMGI_END) return 1;
 		if(imgi==IMGI_START && !ilprg()) imgi=0;
