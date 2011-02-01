@@ -150,7 +150,7 @@ int faddfile(struct imglist *il,const char *fn){
 	return 1;
 }
 
-int faddflst(struct imglist *il,char *flst,const char *pfx){
+int faddflst(struct imglist *il,const char *flst,const char *pfx){
 	FILE *fd;
 	char buf[FILELEN];
 	int count=0;
@@ -213,7 +213,7 @@ void fgetfiles(int argc,char **argv){
 }
 
 /* thread: dpl */
-int floaddir(struct imgfile *ifl){
+int floaddir(const char *fn){
 #if HAVE_OPENDIR
 	DIR *dd;
 	FILE *fd;
@@ -222,22 +222,23 @@ int floaddir(struct imgfile *ifl){
 	size_t ld;
 	struct imglist *il;
 	int count=0;
-	if((il=ilfind(ifl->fn))) return ilswitch(il);
-	if(!(dd=opendir(ifl->fn)) && !(fd=fopen(ifl->fn,"r"))){
-		error(ERR_CONT,"opendir failed (%s)",ifl->fn);
+	if((il=ilfind(fn))) return ilswitch(il);
+	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
+		error(ERR_CONT,"opendir failed (%s)",fn);
 		return IMGI_END;
 	}
 	if(!dd) fclose(fd);
-	il=ilnew(ifl->fn);
-	ld=strlen(ifl->fn);
-	memcpy(buf,ifl->fn,ld);
+	il=ilnew(fn);
+	ld=strlen(fn);
+	memcpy(buf,fn,ld);
 	if(dd){
 		if(buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
 	}else{
-		while(buf[ld-1]!='/' && buf[ld-1]!='\\') ld--;
+//		while(buf[ld-1]!='/' && buf[ld-1]!='\\') ld--;
+		ld=0;
 		buf[ld]='\0';
 	}
-	if(!dd) count=faddflst(il,ifl->fn,buf); else while((de=readdir(dd))){
+	if(!dd) count=faddflst(il,fn,buf); else while((de=readdir(dd))){
 		size_t l=0;
 		while(l<NAME_MAX && de->d_name[l]) l++;
 		if(l>=1 && de->d_name[0]=='.') continue;

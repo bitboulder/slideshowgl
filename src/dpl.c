@@ -302,16 +302,20 @@ void dplcol(int d){
 
 char dpldir(int imgi,char noleave){
 	struct img *img;
-	if(imgi>=IMGI_CAT) return 0; /* TODO */
+	char *dirfn=NULL;
+	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(dirfn=markcatfn(imgi-IMGI_CAT))) return 1;
 	if(imgi==IMGI_START) return 0;
-	if(!(img=imgget(imgi))){
+	if(!dirfn && !(img=imgget(imgi))){
 		if(noleave) return 0;
 		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 1;
 	}else{
-		if(!imgfiledir(img->file)) return 0;
-		dpl.pos.imgi=imgi;
-		imgi=floaddir(img->file);
+		if(!dirfn){
+			if(!imgfiledir(img->file)) return 0;
+			dirfn=imgfilefn(img->file);
+			dpl.pos.imgi=imgi;
+		}
+		imgi=floaddir(dirfn);
 		if(imgi==IMGI_END) return 1;
 		if(imgi==IMGI_START && !ilprg()) imgi=0;
 		if(ilprg()) dpl.pos.zoom=0;
@@ -330,8 +334,10 @@ void dplstatupdate(){
 	else if(dpl.pos.imgi==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
 		struct img *img=imgget(dpl.pos.imgi);
-		struct icol *ic=imgposcol(img->pos);
+		struct icol *ic;
 		char *txt=dsttxt;
+		if(!img) return;
+		ic=imgposcol(img->pos);
 		ADDTXT("%i/%i %s",dpl.pos.imgi+1, imggetn(), imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;

@@ -38,6 +38,10 @@ struct mark {
 
 size_t markncat(){ return mark.ncat; }
 char *markcats(){ return mark.catna; }
+char *markcatfn(int id){
+	if(id<0 || (size_t)id>=mark.ncat) return NULL;
+	return mark.catfn+id*FILELEN;
+}
 
 void markcatadd(char *fn){
 	char *cfn;
