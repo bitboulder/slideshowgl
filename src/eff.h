@@ -45,6 +45,7 @@ enum effrefresh {
 void effrefresh(enum effrefresh val);
 char effineff();
 struct istat *effstat();
+float effcatf();
 
 
 #endif

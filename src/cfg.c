@@ -69,6 +69,7 @@ struct cfg {
 	{ 0,   "dpl.stat_rise",       CT_INT, CM_SET,  "250",    {NULL}, __("Rise time for statusbar (ms)") },
 	{ 0,   "dpl.stat_on",         CT_INT, CM_SET,  "5000",   {NULL}, __("Time the statusbar remains (ms)") },
 	{ 0,   "dpl.stat_fall",       CT_INT, CM_SET,  "1000",   {NULL}, __("Fall time for statusbar (ms)") },
+	{ 0,   "dpl.cat_delay",       CT_INT, CM_SET,  "1000",   {NULL}, __("Rise and fall time for catalog bar (ms)") },
 	{ 'm', "mark.fn",             CT_STR, CM_SET,  "",       {NULL}, __("Set mark file (Default: $TEMP/slideshowgl-mark)") },
 	{ 'k', "mark.catalog",        CT_STR, CM_DO,   "",       {NULL}, __("Add catalog") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },

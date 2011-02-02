@@ -23,7 +23,6 @@ struct dpl {
 	Uint32 run;
 	char showinfo;
 	char showhelp;
-	char showcat;
 	int inputnum;
 	struct {
 		Uint32 displayduration;
@@ -39,7 +38,6 @@ struct dpl {
 	.run = 0,
 	.showinfo = 0,
 	.showhelp = 0,
-	.showcat = 0,
 	.inputnum = 0,
 	.colmode = COL_NONE,
 };
@@ -51,7 +49,6 @@ struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
-char dplshowcat(){ return dpl.showcat; }
 int dplinputnum(){ return dpl.inputnum; }
 char dplloop(){ return dpl.cfg.loop; }
 
@@ -450,7 +447,8 @@ const char *dplhelp(){
 void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
 	switch(key){
-	case SDLK_ESCAPE:   if(dpl.inputnum || dpl.showinfo || dpl.showhelp || dpl.showcat) break;
+	case SDLK_ESCAPE:   if(effcatinit(0)) break;
+						if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case SDLK_q:        sdl_quit=1; break;
 	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
 	case SDLK_e:        panoev(PE_FISHMODE); break;
@@ -461,7 +459,7 @@ void dplkey(SDLKey key){
 	case SDLK_g:        if(glprg()) dpl.colmode=COL_G; break;
 	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
-	case SDLK_k:        dpl.showcat=!dpl.showcat; break;
+	case SDLK_k:        effcatinit(-1); break;
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */

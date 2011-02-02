@@ -595,10 +595,10 @@ void glrendercat(){
 	struct img *img;
 	char *mark;
 	char *cats,*cat;
-	float w=0.f,h,b;
+	float f,w=0.f,h,b;
 	float colfg[4];
 	GLuint name=IMGI_CAT+1;
-	if(!dplshowcat()) return;
+	if(!(f=effcatf())) return;
 	if(!(img=imgget(dplgetimgi()))) return;
 	if(!(cats=markcats())) return;
 	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
@@ -609,6 +609,7 @@ void glrendercat(){
 	h=glfontscale(gl.font,gl.cfg.hrat_cat,1.f);
 	for(cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(gl.font,cat))>w) w=b;
 	b=h*gl.cfg.txt_border*2.f;
+	glScalef(f,1.f,1.f);
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(w+b,b/2.f,GP_TOP|GP_LEFT);
 	glTranslatef(0.f,-b/2.f,0.f);

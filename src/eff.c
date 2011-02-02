@@ -27,17 +27,25 @@ struct eff {
 		Uint32 efftime;
 		float shrink;
 		Uint32 stat_delay[STAT_NUM];
+		Uint32 cat_delay;
 	} cfg;
 	struct stat {
 		enum statmode mode;
 		Uint32 in,out;
 		struct istat pos;
 	} stat;
+	struct cat {
+		char on;
+		Uint32 reach;
+		float f;
+	} cat;
 } eff = {
 	.refresh = EFFREF_NO,
 	.ineff = 0,
 	.stat.mode = STAT_OFF,
 	.stat.pos.h = 0.f,
+	.cat.on = 0,
+	.cat.f = 0.f,
 };
 
 /* thread: all */
@@ -45,6 +53,7 @@ void effrefresh(enum effrefresh val){ eff.refresh|=val; }
 char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
+float effcatf(){ return eff.cat.f; }
 
 struct wh effmaxfit(){ return eff.maxfit; }
 
@@ -359,6 +368,16 @@ void effpanoend(struct img *img){
 	img->pos->cur.y*=img->pos->cur.s;
 }
 
+char effcatinit(char dst){
+	float f;
+	if(dst>=0 && eff.cat.on==dst) return 0;
+	if(dst<0) dst=!eff.cat.on;
+	eff.cat.on=dst;
+	f = dst ? 1.f-eff.cat.f : eff.cat.f;
+	eff.cat.reach=SDL_GetTicks()+(Uint32)((float)eff.cfg.cat_delay*f);
+	return 1;
+}
+
 /***************************** eff do *****************************************/
 
 float effcalclin(float a,float b,float ef){
@@ -425,6 +444,15 @@ void effdostat(){
 	}
 }
 
+void effdocat(){
+	Uint32 now=SDL_GetTicks();
+	if(eff.cat.reach<=now) eff.cat.f = eff.cat.on ? 1.f : 0.f;
+	else{
+		float f=(float)(eff.cat.reach-now)/(float)eff.cfg.cat_delay;
+		eff.cat.f = eff.cat.on ? 1.f-f : f;
+	}
+}
+
 void effdo(){
 	struct img *img;
 	char ineff=0;
@@ -445,6 +473,7 @@ void effdo(){
 		}
 	}
 	effdostat();
+	effdocat();
 	eff.ineff=ineff;
 }
 
@@ -455,6 +484,7 @@ void effcfginit(){
 	eff.cfg.stat_delay[STAT_RISE]=cfggetuint("dpl.stat_rise");
 	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("dpl.stat_on");
 	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("dpl.stat_fall");
+	eff.cfg.cat_delay=cfggetuint("dpl.cat_delay");
 }
 
 unsigned int effdelay(int imgi,unsigned int dpldur){
