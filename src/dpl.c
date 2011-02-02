@@ -302,20 +302,21 @@ void dplcol(int d){
 
 char dpldir(int imgi,char noleave){
 	struct img *img;
-	char *dirfn=NULL;
-	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(dirfn=markcatfn(imgi-IMGI_CAT))) return 1;
+	const char *fn=NULL;
+	const char *dir=NULL;
+	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(fn=markcatfn(imgi-IMGI_CAT,&dir))) return 1;
 	if(imgi==IMGI_START) return 0;
-	if(!dirfn && !(img=imgget(imgi))){
+	if(!fn && !(img=imgget(imgi))){
 		if(noleave) return 0;
 		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 1;
 	}else{
-		if(!dirfn){
-			if(!imgfiledir(img->file)) return 0;
-			dirfn=imgfilefn(img->file);
+		if(!fn){
+			if(!(dir=imgfiledir(img->file))) return 0;
+			fn=imgfilefn(img->file);
 			dpl.pos.imgi=imgi;
-		}/* TODO: else actcheckdelay(1) */
-		imgi=floaddir(dirfn);
+		} /* TODO: else actcheckdelay(1) */
+		imgi=floaddir(fn,dir);
 		if(imgi==IMGI_END) return 1;
 		if(imgi==IMGI_START && !ilprg()) imgi=0;
 		if(ilprg()) dpl.pos.zoom=0;

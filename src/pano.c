@@ -15,12 +15,6 @@
 #include "eff.h"
 #include "dpl.h"
 
-#define M_PIf		3.14159265358979323846f
-#define RAD(x)		((x)/180.f*M_PIf)
-#define SIN(x)		sinf(RAD(x))
-#define COS(x)		cosf(RAD(x))
-#define TAN(x)		tanf(RAD(x))
-
 struct imgpano {
 	char enable;
 	float gw;

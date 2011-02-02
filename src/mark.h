@@ -7,7 +7,7 @@ enum mkcreate { MKC_NO, MKC_YES, MKC_ALLWAYS };
 
 size_t markncat();
 char *markcats();
-char *markcatfn(int id);
+char *markcatfn(int id,const char **na);
 void markcatadd(char *fn);
 
 char *markimgget(struct img *img,enum mkcreate create);

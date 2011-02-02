@@ -19,6 +19,7 @@ struct img *dirimg;
 struct img *delimg;
 
 struct imglist {
+	char fn[FILELEN];
 	char dir[FILELEN];
 	struct img **imgs;
 	int nimg;
@@ -43,6 +44,7 @@ int imggetn(){
 	return curil->nimg;
 }
 struct prg *ilprg(){ return curil ? curil->prg : NULL; }
+const char *ildir(){ return curil && curil->dir[0] ? curil->dir : NULL; }
 
 /* thread: all */
 int imginarrorlimits(int i){
@@ -124,15 +126,16 @@ struct img *imgdel(int i){
 /***************************** img list managment *****************************/
 
 /* thread: dpl */
-struct imglist *ilnew(const char *dir){
+struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
+	strncpy(il->fn,fn,FILELEN);
 	strncpy(il->dir,dir,FILELEN);
 	il->parent=curil;
 	il->pos=IMGI_START;
-	il->time=filetime(dir);
+	il->time=filetime(fn);
 	il->nxt=ils;
 	ils=il;
-	debug(DBG_STA,"imglist created for dir: %s",il->dir);
+	debug(DBG_STA,"imglist created for dir: %s",il->fn);
 	return il;
 }
 
@@ -146,22 +149,22 @@ void ildestroy(struct imglist *il){
 	if(il2[0]) il2[0]=il->nxt;
 	for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
 	if(il->imgs) free(il->imgs);
-	debug(DBG_STA,"imglist destroyed for dir: %s",il->dir);
+	debug(DBG_STA,"imglist destroyed for dir: %s",il->fn);
 	free(il);
 }
 
 void ilfree(struct imglist *il){
 	struct img *img;
-	debug(DBG_STA,"imglist free for dir: %s",il->dir);
+	debug(DBG_STA,"imglist free for dir: %s",il->fn);
 	il->last_used=0;
 	for(img=il->imgs[0];img;img=img->nxt) ldffree(img->ld,TEX_NONE);
 }
 
 /* thread: dpl */
-struct imglist *ilfind(const char *dir){
+struct imglist *ilfind(const char *fn){
 	struct imglist *il;
-	for(il=ils;il;il=il->nxt) if(!strncmp(il->dir,dir,FILELEN)){
-		if(filetime(dir)==il->time) return il;
+	for(il=ils;il;il=il->nxt) if(!strncmp(il->fn,fn,FILELEN)){
+		if(filetime(fn)==il->time) return il;
 		ildestroy(il);
 		return NULL;
 	}
@@ -193,7 +196,7 @@ void ilcleanup(){
 				for(j=0;j<nil;j++) if(ilsort[j].il==pa)
 					ilsort[j].last_used=ilsort[i].last_used;
 	qsort(ilsort,nil,sizeof(struct ilsort),ilcleanup_cmp);
-	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s\n",(int)i,ilsort[i].last_used,ilsort[i].il->dir);
+	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s\n",(int)i,ilsort[i].last_used,ilsort[i].il->fn);
 	for(i=1;i<nil && ilsort[i].last_used;i++){
 		if(holdfolders && ilsort[i].last_used!=ilsort[i-1].last_used) holdfolders--;
 		if(!holdfolders) ilfree(ilsort[i].il);
@@ -205,10 +208,10 @@ void ilcleanup(){
 int ilswitch(struct imglist *il){
 	if(!il && curil && curil->parent) il=curil->parent;
 	if(!il) return IMGI_END;
-	debug(DBG_STA,"imglist switch to dir: %s",il->dir);
+	debug(DBG_STA,"imglist switch to dir: %s",il->fn);
 	if(curil) curil->pos=dplgetimgi();
 	curil=il;
-	if(strcmp("[BASE]",il->dir)) il->last_used=SDL_GetTicks();
+	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
 	actadd(ACT_ILCLEANUP,NULL);
 	return curil->pos;
 }

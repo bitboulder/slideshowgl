@@ -34,14 +34,15 @@ extern struct img *defimg;
 extern struct img *dirimg;
 extern struct img *delimg;
 
-struct imglist *ilnew(const char *dir);
+struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
-struct imglist *ilfind(const char *dir);
+struct imglist *ilfind(const char *fn);
 void ilcleanup();
 int ilswitch(struct imglist *il);
 
 int imggetn();
 struct prg *ilprg();
+const char *ildir();
 int imginarrorlimits(int i);
 int imgidiff(int ia,int ib,int *ira,int *irb);
 

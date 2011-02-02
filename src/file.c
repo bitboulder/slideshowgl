@@ -28,7 +28,7 @@
 struct imgfile {
 	char fn[FILELEN];
 	char tfn[FILELEN];
-	const char *dir;
+	char dir[FILELEN];
 	struct txtimg txt;
 };
 
@@ -37,7 +37,7 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 
 /* thread: dpl, load */
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
-const char *imgfiledir(struct imgfile *ifl){ return ifl->dir; }
+const char *imgfiledir(struct imgfile *ifl){ return ifl->dir[0] ? ifl->dir : NULL; }
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
 /* thread: load */
@@ -111,12 +111,18 @@ int faddfile(struct imglist *il,const char *fn){
 	}
 	if(len>=FILELEN) return 0;
 	if(isdir(fn)){
-		int i=(int)len-2;
+		int i=(int)len-2, l;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 		while(i>=0 && img->file->fn[i]!='/' && img->file->fn[i]!='\\') i--;
-		img->file->dir=img->file->fn+i+1;
-		debug(DBG_DBG,"directory found: '%s'",img->file->fn);
+		for(l=0,i++;l<FILELEN-1 && fn[i];l++,i++){
+			char c=img->file->fn[i];
+			if((c=='.' || c=='/' || c=='\\') && l>=2) break;
+			if(c=='_') c=' ';
+			img->file->dir[l]=c;
+		}
+		img->file->dir[l]='\0';
+		debug(DBG_DBG,"directory found '%s': '%s'",img->file->dir,img->file->fn);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
 		size_t ltxt;
@@ -199,7 +205,7 @@ void floadfinalize(struct imglist *il,char sort){
 }
 
 void fgetfiles(int argc,char **argv){
-	struct imglist *il=ilnew("[BASE]");
+	struct imglist *il=ilnew("[BASE]","");
 	int i;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
@@ -213,7 +219,7 @@ void fgetfiles(int argc,char **argv){
 }
 
 /* thread: dpl */
-int floaddir(const char *fn){
+int floaddir(const char *fn,const char *dir){
 #if HAVE_OPENDIR
 	DIR *dd;
 	FILE *fd;
@@ -228,7 +234,7 @@ int floaddir(const char *fn){
 		return IMGI_END;
 	}
 	if(!dd) fclose(fd);
-	il=ilnew(fn);
+	il=ilnew(fn,dir);
 	ld=strlen(fn);
 	memcpy(buf,fn,ld);
 	if(dd){

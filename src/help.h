@@ -11,6 +11,12 @@
 	#define MAX(a,b)	((a)>(b)?(a):(b))
 #endif
 
+#define M_PIf		3.14159265358979323846f
+#define RAD(x)		((x)/180.f*M_PIf)
+#define SIN(x)		sinf(RAD(x))
+#define COS(x)		cosf(RAD(x))
+#define TAN(x)		tanf(RAD(x))
+
 SDL_Surface *SDL_ScaleSurface(SDL_Surface *Surface, int Width, int Height);
 SDL_Surface *SDL_ScaleSurfaceFactor(SDL_Surface *src, int factor, int xoff, int yoff, int fw, int fh, char swap);
 

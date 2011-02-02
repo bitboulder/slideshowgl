@@ -21,7 +21,7 @@
 #include "help.h"
 #include "mark.h"
 
-enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_NUM };
+enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
 
 struct gl {
 	GLuint dls;
@@ -125,6 +125,7 @@ info_log:
 
 void glinit(char done){
 	char *fontfn;
+	float f;
 	if(!done){
 		if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 		if(cfggetint("cfg.version")){
@@ -183,6 +184,15 @@ void glinit(char done){
 	glVertex2f(-.25f,-.35f);
 	glVertex2f(-.25f, .35f);
 	glVertex2f( .25f,  0.f);
+	glEnd();
+	glEndList();
+
+	glNewList(gl.dls+DLS_ARC,GL_COMPILE);
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex2f(0.f,0.f);
+	glVertex2f(0.f,1.f);
+	for(f=0.05f;f<1.f;f+=0.05f) glVertex2f(f,cosf(f*M_PIf)/2.f+0.5f);
+	glVertex2f(1.f,0.f);
 	glEnd();
 	glEndList();
 	
@@ -323,7 +333,8 @@ void glpostranslate(enum glpos pos,float *rect){
 	if(pos&GP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
 }
 
-void glrect(float w,float h,enum glpos pos){
+#define glrect(w,h,p)	glrectarc(w,h,p,0.f);
+void glrectarc(float w,float h,enum glpos pos,float barc){
 	float rect[6];
 	w/=2.f; h/=2.f;
 	rect[0]=-w; rect[1]=-h; rect[2]=0.f;
@@ -331,6 +342,14 @@ void glrect(float w,float h,enum glpos pos){
 	glPushMatrix();
 	glpostranslate(pos,rect);
 	glRectf(-w,-h,w,h);
+	if(barc){
+		glTranslatef(-w,h,0.f);
+		glScalef(-barc,-h*2.f,1.f);
+		glCallList(gl.dls+DLS_ARC);
+		glScalef(-1.f,1.f,1.f);
+		glTranslatef(w*2.f/barc,0.f,0.f);
+		glCallList(gl.dls+DLS_ARC);
+	}
 	glPopMatrix();
 }
 
@@ -380,22 +399,14 @@ void glrendertxtimg(struct txtimg *txt,float a){
 void glrenderimgtext(const char *text,float irat,float a){
 	float col[4];
 	float w,h,wmax,wclip,hclip;
-	size_t l,i,n=1;
+	size_t i,n=1;
 	char buf[FILELEN],*pos;
 	FTGLfont *font=dplgetzoom()<-1 ? gl.font : gl.fontbig;
 	if(!text || !font) return;
 
-	for(l=i=0;l<FILELEN-1 && text[i];i++,l++){
-		if(text[i]=='.' && i>=2) break;
-		switch(text[i]){
-		case '/':
-		case '\\': buf[l]=' '; break;
-		case '_': buf[l]='\0'; n++; break;
-		default: buf[l]=text[i]; break;
-		}
-	}
-	while(l && buf[l-1]==' ') l--;
-	buf[l]='\0';
+	strncpy(buf,text,FILELEN);
+	for(i=0;i<FILELEN-1 && buf[i];i++) if(buf[i]==' '){ buf[i]='\0'; n++; } /* TODO: multiple spaces in name */
+	buf[i]='\0';
 
 	for(i=0;i<4;i++) col[i]=gl.cfg.col_dirname[i];
 	col[3]*=a;
@@ -638,10 +649,12 @@ void glrenderinputnum(){
 
 void glrenderstat(){
 	struct istat *stat=effstat();
+	const char *dir=ildir();
 	float winw;
 	float h,w,b;
 	if(!stat->h) return;
 	winw=glmode(GLM_TXT);
+
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
 	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
@@ -661,7 +674,21 @@ void glrenderstat(){
 	glColor4fv(gl.cfg.col_txtfg);
 	glTranslatef(h+b,(h+b)/2.f,0.f);
 	glfontrender(gl.font,stat->txt,GP_LEFT|GP_VCENTER);
+	glPopMatrix();
 
+	if(!dir) return;
+	glPushMatrix();
+	glTranslatef(0.f,0.5f,0.f);
+	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(gl.font,dir);
+	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(0.f,-(b+h)/2.f,0.f);
+
+	glColor4fv(gl.cfg.col_txtbg);
+	glrectarc(w,h+b,GP_CENTER,h+b);
+
+	glColor4fv(gl.cfg.col_txtfg);
+	glfontrender(gl.font,dir,GP_CENTER);
 	glPopMatrix();
 }
 
