@@ -660,6 +660,7 @@ void glrenderstat(){
 	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
 	w=glfontwidth(gl.font,stat->txt);
 	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(0.f,-(h+b)*(1.f-stat->h),0.f);
 
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(w+b+h+b,h+b,GP_LEFT|GP_BOTTOM);
@@ -682,6 +683,7 @@ void glrenderstat(){
 	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
 	w=glfontwidth(gl.font,dir);
 	b=h*gl.cfg.txt_border*2.f;
+	glScalef(1.f,stat->h,1.f);
 	glTranslatef(0.f,-(b+h)/2.f,0.f);
 
 	glColor4fv(gl.cfg.col_txtbg);

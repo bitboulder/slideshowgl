@@ -405,13 +405,16 @@ void effimg(struct img *img){
 	/*printf("%i %i %i %g\n",ip->waytime[0],ip->waytime[1],time,ip->cur.a);*/
 }
 
+float effdostatef(){ return (float)(SDL_GetTicks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in); }
+
 void effdostat(){
-	float ef=(float)(SDL_GetTicks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in);
+	float ef=effdostatef();
 	if(eff.stat.mode!=STAT_OFF && ef>=1.f){
 		if(eff.stat.mode!=STAT_ON || dplgetimgi()!=IMGI_END){
 			eff.stat.mode=(eff.stat.mode+1)%STAT_NUM;
 			eff.stat.in=eff.stat.out;
 			eff.stat.out=eff.stat.in+eff.cfg.stat_delay[eff.stat.mode];
+			ef=effdostatef();
 		}
 	}
 	switch(eff.stat.mode){
