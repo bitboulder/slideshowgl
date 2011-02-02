@@ -399,14 +399,16 @@ void glrendertxtimg(struct txtimg *txt,float a){
 void glrenderimgtext(const char *text,float irat,float a){
 	float col[4];
 	float w,h,wmax,wclip,hclip;
-	size_t i,n=1;
+	size_t i,l,n=1;
 	char buf[FILELEN],*pos;
 	FTGLfont *font=dplgetzoom()<-1 ? gl.font : gl.fontbig;
 	if(!text || !font) return;
 
-	strncpy(buf,text,FILELEN);
-	for(i=0;i<FILELEN-1 && buf[i];i++) if(buf[i]==' '){ buf[i]='\0'; n++; } /* TODO: multiple spaces in name */
-	buf[i]='\0';
+	for(i=l=0;l<FILELEN-1 && text[i];i++,l++) if(text[i]==' '){
+		if(l && buf[l-1]=='\0') l--;
+		else{ buf[l]='\0'; n++; }
+	}else buf[l]=text[i];
+	buf[l]='\0';
 
 	for(i=0;i<4;i++) col[i]=gl.cfg.col_dirname[i];
 	col[3]*=a;
