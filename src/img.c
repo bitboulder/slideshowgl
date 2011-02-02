@@ -165,7 +165,7 @@ struct imglist *ilfind(const char *fn){
 	struct imglist *il;
 	for(il=ils;il;il=il->nxt) if(!strncmp(il->fn,fn,FILELEN)){
 		if(filetime(fn)==il->time) return il;
-		ildestroy(il);
+		//ildestroy(il); /* TODO: fix */
 		return NULL;
 	}
 	return NULL;

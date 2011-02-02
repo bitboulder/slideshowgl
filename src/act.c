@@ -18,12 +18,19 @@ struct actdelay {
 struct actcfg {
 	struct actdelay delay[ACT_NUM];
 	char runcmd;
-} actcfg;
+};
+
+struct ac {
+	struct actcfg cfg;
+	SDL_mutex *mutex;
+} ac = {
+	.mutex = NULL,
+};
 
 
 void runcmd(char *cmd){
 	debug(DBG_NONE,"running cmd: %s",cmd);
-	if(actcfg.runcmd) system(cmd);
+	if(ac.cfg.runcmd) system(cmd);
 }
 
 void actrotate(struct img *img){
@@ -62,7 +69,7 @@ void actdo(enum act act,struct img *img){
 }
 
 void actrun(enum act act,struct img *img){
-	struct actdelay *dl=actcfg.delay+act;
+	struct actdelay *dl=ac.cfg.delay+act;
 	debug(DBG_STA,"action %i run %s",act,dl->delay?"with delay":"immediatly");
 	if(!dl->delay) actdo(act,img);
 	else if(!dl->countdown) dl->countdown=SDL_GetTicks()+dl->delay;
@@ -70,7 +77,7 @@ void actrun(enum act act,struct img *img){
 
 void actcheckdelay(char force){
 	int i;
-	struct actdelay *dl=actcfg.delay;
+	struct actdelay *dl=ac.cfg.delay;
 	for(i=0;i<ACT_NUM;i++,dl++) if(dl->countdown && (force || SDL_GetTicks()>=dl->countdown)){
 		dl->countdown=0;
 		actdo(i,NULL);
@@ -102,19 +109,33 @@ char actpop(){
 }
 
 void actinit(){
-	actcfg.runcmd = cfggetbool("act.do");
-	memset(actcfg.delay,0,sizeof(struct actdelay)*ACT_NUM);
-	actcfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
-	actcfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
+	ac.mutex=SDL_CreateMutex();
+	SDL_mutexP(ac.mutex);
+	ac.cfg.runcmd = cfggetbool("act.do");
+	memset(ac.cfg.delay,0,sizeof(struct actdelay)*ACT_NUM);
+	ac.cfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
+	ac.cfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
 }
 
 int actthread(void *UNUSED(arg)){
 	actinit();
 	while(!sdl_quit){
 		actcheckdelay(0);
-		if(!actpop()) SDL_Delay(500);
+		if(!actpop()){
+			SDL_mutexV(ac.mutex);
+			SDL_Delay(500);
+			SDL_mutexP(ac.mutex);
+		}
 	}
 	actcheckdelay(1);
 	sdl_quit|=THR_ACT;
 	return 0;
+}
+
+/* thread: any */
+void actforce(){
+	if(!ac.mutex) return;
+	SDL_mutexP(ac.mutex);
+	actcheckdelay(1);
+	SDL_mutexV(ac.mutex);
 }
