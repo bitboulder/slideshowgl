@@ -375,7 +375,7 @@ void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
 #if HAVE_FTGL
 	float rect[6];
 	glPushMatrix();
-	ftglGetFontBBox(font,txt,-1,rect);
+	ftglGetFontBBox(font,txt,-1,rect); /* TODO: line height ? */
 	glpostranslate(pos,rect);
 	glmodeslave(GLM_TXT);
 	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
