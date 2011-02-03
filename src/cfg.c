@@ -34,6 +34,7 @@ struct cfg {
 	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle video sync") },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500",   {NULL}, __("After that time (ms) the cursor is hidden") },
 	{ 0,   "sdl.doubleclicktime", CT_INT, CM_SET,  "500",    {NULL}, __("Delay for double-click in ms") },
+	{ 0,   "sdl.fsaa",            CT_INT, CM_SET,  "4",      {NULL}, __("Full screen antialias mode") },
 	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "6000",   {NULL}, __("Set display duration") },
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0",      {NULL}, __("Toggle image loop") },
 	{ 'z', "dpl.initzoom",        CT_INT, CM_SET,  "0",      {NULL}, __("Set initial zoom") },

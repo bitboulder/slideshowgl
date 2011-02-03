@@ -628,7 +628,9 @@ void glrendercat(){
 		glTranslatef(-b/2.f,-h/2.f,0.f);
 	}
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w+b,b/2.f,GP_TOP|GP_LEFT);
+	glScalef(-(w+b),-h/2.f,1.f);
+	glRotatef(90.f,0.f,0.f,1.f);
+	glCallList(gl.dls+DLS_ARC);
 	glPopMatrix();
 }
 

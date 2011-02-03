@@ -30,6 +30,7 @@ SDL_Surface *screen;
 struct sdlcfg {
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
+	int fsaa;
 };
 
 struct sdlmove {
@@ -139,15 +140,25 @@ void sdlresize(int w,int h){
 	if(done>=0){
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
 	}
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
 		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
-		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_FULLSCREEN))) error(ERR_QUIT,"video mode init failed");
+		flags|=SDL_FULLSCREEN;
 	}else{
 		if(!w) w=sdl.scr_w;
 		if(!h) h=sdl.scr_h;
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		if(!(screen=SDL_SetVideoMode(w,h,16,flags|SDL_RESIZABLE))) error(ERR_QUIT,"video mode init failed");
+		flags|=SDL_RESIZABLE;
+	}
+	if(!(screen=SDL_SetVideoMode(w,h,16,flags))){
+		if(!done && sdl.cfg.fsaa){
+			error(ERR_CONT,"disable anti-aliasing");
+			sdl.cfg.fsaa=0;
+			sdlresize(w,h);
+			return;
+		}else error(ERR_QUIT,"video mode init failed");
 	}
 	vi=SDL_GetVideoInfo();
 	sdl.scr_w=vi->current_w;
@@ -198,6 +209,7 @@ void sdlinit(){
 	sdl.scrnof_w=cfggetint("sdl.width");
 	sdl.scrnof_h=cfggetint("sdl.height");
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
+	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	if(cfggetint("cfg.version")){
 		const SDL_version* v = SDL_Linked_Version();
