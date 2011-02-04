@@ -56,12 +56,9 @@ int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
 char dplloop(){ return dpl.cfg.loop; }
 char *dplgetinput(){
-	if(dpl.inputnum){
-		static char txt[16];
-		snprintf(txt,16,"%i",dpl.inputnum);
-		return txt;
-	}
-	if(dpl.catsel[0]=='\0') return _("\0[Catalog]");
+	static char txt[16]={'\0'};
+	if(dpl.inputnum){ snprintf(txt,16,"%i",dpl.inputnum); return txt; }
+	if(dpl.catsel[0]=='\0'){ snprintf(txt+1,15,_("[Catalog]")); return txt; }
 	if(dpl.catsel[0]!=CATSELEMPTY) return dpl.catsel;
 	return NULL;
 }
