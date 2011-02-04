@@ -23,14 +23,22 @@
 
 enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
 
+enum glft { FT_NOR, FT_BIG, NFT };
+
+struct glfont {
+#if HAVE_FTGL
+	FTGLfont *f;
+#endif
+	float h;
+	float b;
+};
+
 struct gl {
 	GLuint dls;
 	GLuint prg;
 	GLuint prgfish;
-#if HAVE_FTGL
-	FTGLfont *font;
-	FTGLfont *fontbig;
-#endif
+	struct glfont font[NFT];
+	struct glfont *fontcur;
 	float bar;
 	struct glcfg {
 		float hrat_input;
@@ -126,6 +134,7 @@ info_log:
 void glinit(char done){
 	char *fontfn;
 	float f;
+	int i;
 	if(!done){
 		if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 		if(cfggetint("cfg.version")){
@@ -199,17 +208,18 @@ void glinit(char done){
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-#if HAVE_FTGL
+	memset(gl.font,0,sizeof(struct glfont)*NFT);
 	fontfn=finddatafile(cfggetstr("gl.font"));
-	if((gl.font=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
-		ftglSetFontFaceSize(gl.font, 24, 24);
-		ftglSetFontCharMap(gl.font,FT_ENCODING_UNICODE);
-	}
-	if((gl.fontbig=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
-		ftglSetFontFaceSize(gl.fontbig, 72, 72);
-		ftglSetFontCharMap(gl.fontbig,FT_ENCODING_UNICODE);
-	}
+	if(fontfn) for(i=0;i<NFT;i++){
+		unsigned int s = i ? 72 : 24;
+#if HAVE_FTGL
+		if(!(gl.font[i].f=ftglCreateBufferFont(fontfn))) continue;
+		ftglSetFontFaceSize(gl.font[i].f, s, s);
+		ftglSetFontCharMap(gl.font[i].f,FT_ENCODING_UNICODE);
+		gl.font[i].h=ftglGetFontLineHeight(gl.font[i].f);
+		gl.font[i].b=ftglGetFontDescender(gl.font[i].f);
 #endif
+	}
 	ldcheckvartex();
 	gl.prg=glprgload("vs.c","fs.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
@@ -217,8 +227,8 @@ void glinit(char done){
 
 void glfree(){
 #if HAVE_FTGL
-	if(gl.font)    ftglDestroyFont(gl.font);
-	if(gl.fontbig) ftglDestroyFont(gl.fontbig);
+	int i;
+	for(i=0;i<NFT;i++) if(gl.font[i].f) ftglDestroyFont(gl.font[i].f);
 #endif
 }
 
@@ -324,61 +334,62 @@ enum glpos {
 };
 #define GP_CENTER	(GP_HCENTER|GP_VCENTER)
 
-void glpostranslate(enum glpos pos,float *rect){
-	if(pos&GP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
-	if(pos&GP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
-	if(pos&GP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
-	if(pos&GP_TOP    ) glTranslatef(0.f,-rect[4],0.f);
-	if(pos&GP_BOTTOM ) glTranslatef(0.f,-rect[1],0.f);
-	if(pos&GP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
+void glpostranslate(enum glpos pos,float w,float h){
+	if(pos&GP_RIGHT  ) glTranslatef(-w,0.f,0.f);
+	if(pos&GP_HCENTER) glTranslatef(-w/2.f,0.f,0.f);
+	if(pos&GP_TOP    ) glTranslatef(0.f,-h,0.f);
+	if(pos&GP_VCENTER) glTranslatef(0.f,-h/2.f,0.f);
 }
 
 #define glrect(w,h,p)	glrectarc(w,h,p,0.f);
 void glrectarc(float w,float h,enum glpos pos,float barc){
-	float rect[6];
-	w/=2.f; h/=2.f;
-	rect[0]=-w; rect[1]=-h; rect[2]=0.f;
-	rect[3]= w; rect[4]= h; rect[5]=0.f;
 	glPushMatrix();
-	glpostranslate(pos,rect);
-	glRectf(-w,-h,w,h);
+	glpostranslate(pos,w,h);
+	glRectf(0.f,0.f,w,h);
 	if(barc){
-		glTranslatef(-w,h,0.f);
-		glScalef(-barc,-h*2.f,1.f);
+		glTranslatef(0.f,h,0.f);
+		glScalef(-barc,-h,1.f);
 		glCallList(gl.dls+DLS_ARC);
 		glScalef(-1.f,1.f,1.f);
-		glTranslatef(w*2.f/barc,0.f,0.f);
+		glTranslatef(w/barc,0.f,0.f);
 		glCallList(gl.dls+DLS_ARC);
 	}
 	glPopMatrix();
 }
 
-float glfontscale(FTGLfont *font,float hrat,float wrat){
-#if HAVE_FTGL
-	float lineh=ftglGetFontLineHeight(font);
-	glScalef(fabsf(hrat)/wrat/lineh,hrat/lineh,1.f);
-	return lineh;
-#else
-	return 1.f;
-#endif
+char glfontsel(enum glft i){
+	if(i>=NFT) return 0;
+	while(i && !gl.font[i].h) i--;
+	if(!gl.font[i].h) return 0;
+	gl.fontcur=gl.font+i;
+	return 1;
 }
 
-float glfontwidth(FTGLfont *font,const char *txt){
+float glfontscale(float hrat,float wrat){
 #if HAVE_FTGL
-	return ftglGetFontAdvance(font,txt);
-#else
-	return 1.f;
+	if(gl.fontcur){
+		glScalef(fabsf(hrat)/wrat/gl.fontcur->h,hrat/gl.fontcur->h,1.f);
+		return gl.fontcur->h;
+	}
 #endif
+	return 1.f;
 }
 
-void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
+float glfontwidth(const char *txt){
 #if HAVE_FTGL
-	float rect[6];
+	if(gl.fontcur) return ftglGetFontAdvance(gl.fontcur->f,txt);
+#endif
+	return 1.f;
+}
+
+void glfontrender(const char *txt,enum glpos pos){
+#if HAVE_FTGL
+	if(!gl.fontcur) return;
 	glPushMatrix();
-	ftglGetFontBBox(font,txt,-1,rect); /* TODO: line height ? */
-	glpostranslate(pos,rect);
+	glpostranslate(pos,glfontwidth(txt),gl.fontcur->h);
+	glTranslatef(0.f,-gl.fontcur->b,0.f);
 	glmodeslave(GLM_TXT);
-	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
+	ftglRenderFont(gl.fontcur->f,txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
 }
@@ -386,13 +397,13 @@ void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
 void glrendertxtimg(struct txtimg *txt,float a){
 	float col[4];
 	int i;
-	if(!gl.fontbig) return;
+	if(!glfontsel(FT_BIG)) return;
 	for(i=0;i<4;i++) col[i]=txt->col[i];
 	col[3]*=a;
 	glPushMatrix();
 	glColor4fv(col);
-	glfontscale(gl.fontbig,-gl.cfg.hrat_txtimg,1.f);
-	glfontrender(gl.fontbig,txt->txt,GP_CENTER);
+	glfontscale(-gl.cfg.hrat_txtimg,1.f);
+	glfontrender(txt->txt,GP_CENTER);
 	glPopMatrix();
 }
 
@@ -401,8 +412,7 @@ void glrenderimgtext(const char *text,float irat,float a){
 	float w,h,wmax,wclip,hclip;
 	size_t i,l,n=1;
 	char buf[FILELEN],*pos;
-	FTGLfont *font=dplgetzoom()<-1 ? gl.font : gl.fontbig;
-	if(!text || !font) return;
+	if(!text || !glfontsel(dplgetzoom()<-1 ? FT_NOR : FT_BIG)) return;
 
 	for(i=l=0;l<FILELEN-1 && text[i];i++,l++) if(text[i]==' '){
 		if(l && buf[l-1]=='\0') l--;
@@ -416,19 +426,19 @@ void glrenderimgtext(const char *text,float irat,float a){
 
 	glPushMatrix();
 	glTranslatef(-0.0293f,0.0293f,1.f); /* render to center of top image (outof image center) */
-	h=glfontscale(font,-gl.cfg.hrat_dirname,irat);
+	h=glfontscale(-gl.cfg.hrat_dirname,irat);
 	hclip=h/gl.cfg.hrat_dirname*(1.f-2.f*gl.cfg.dir_border);
 	wclip=hclip*irat;
 
 	wmax=0;
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1)
-		if((w=glfontwidth(font,pos))>wmax) wmax=w;
+		if((w=glfontwidth(pos))>wmax) wmax=w;
 	if(wmax>wclip) glScalef(wclip/wmax,1.f,1.f);
 	if((float)n*h>hclip) glScalef(1.f,hclip/(float)n/h,1.f);
 
 	glTranslatef(0.f,(float)(n-1)/2.f*h,0.f);
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1){
-		glfontrender(font,pos,GP_CENTER);
+		glfontrender(pos,GP_CENTER);
 		glTranslatef(0.f,-h,0.f);
 	}
 	glPopMatrix();
@@ -527,14 +537,15 @@ void glrenderimgs(){
 	glLoadName(0);
 }
 
-#if HAVE_FTGL
 void gltextout(const char *text,float x,float y){
+#if HAVE_FTGL
+	if(!gl.fontcur) return;
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
-	ftglRenderFont(gl.font,text,FTGL_RENDER_ALL);
+	ftglRenderFont(gl.fontcur->f,text,FTGL_RENDER_ALL);
 	glPopMatrix();
-}
 #endif
+}
 
 void glrendertext(const char *title,const char *text){
 #if HAVE_FTGL
@@ -549,12 +560,12 @@ void glrendertext(const char *title,const char *text){
 	float lineh;
 	float winw;
 	float tw,tx;
-	if(!gl.font) return;
+	if(!glfontsel(FT_NOR)) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
-		float len=ftglGetFontAdvance(gl.font,_(t));
+		float len=glfontwidth(_(t));
 		if(len>maxw[j]) maxw[j]=len;
 	}
-	lineh=ftglGetFontLineHeight(gl.font);
+	lineh=gl.fontcur->h;
 	w=(maxw[0]+maxw[1])/.75f;
 	h=(float)lines*lineh/.8f;
 	winw=glmode(GLM_TXT);
@@ -566,7 +577,7 @@ void glrendertext(const char *title,const char *text){
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
 	y=.4f*h-lineh;
-	tw=ftglGetFontAdvance(gl.font,title);
+	tw=glfontwidth(title);
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
@@ -603,13 +614,14 @@ void glrendercat(){
 	if(!(f=effcatf())) return;
 	if(!(img=imgget(dplgetimgi()))) return;
 	if(!(cats=markcats())) return;
+	if(!glfontsel(FT_NOR)) return;
 	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
 	mark=imgposmark(img,MPC_NO);
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-w/2.f,0.5f,0.f);
-	h=glfontscale(gl.font,gl.cfg.hrat_cat,1.f);
-	for(cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(gl.font,cat))>w) w=b;
+	h=glfontscale(gl.cfg.hrat_cat,1.f);
+	for(cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(cat))>w) w=b;
 	b=h*gl.cfg.txt_border*2.f;
 	glScalef(f,1.f,1.f);
 	glColor4fv(gl.cfg.col_txtbg);
@@ -624,7 +636,7 @@ void glrendercat(){
 		if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
 		else glColor4fv(colfg);
 		glTranslatef(b/2.f,-h/2.f,0.f);
-		glfontrender(gl.font,cat,GP_VCENTER|GP_LEFT);
+		glfontrender(cat,GP_VCENTER|GP_LEFT);
 		glTranslatef(-b/2.f,-h/2.f,0.f);
 	}
 	glColor4fv(gl.cfg.col_txtbg);
@@ -638,24 +650,24 @@ void glrenderinput(){
 	char *txt=dplgetinput();
 	size_t len;
 	float w1,w2,h,b;
-	if(!txt) return;
+	if(!txt || !glfontsel(FT_NOR)) return;
 	len=strlen(txt)+1;
 	glmode(GLM_TXT);
 	glPushMatrix();
-	h=glfontscale(gl.font,gl.cfg.hrat_input,1.f);
-	w1=glfontwidth(gl.font,txt);
-	w2=txt[len] ? glfontwidth(gl.font,txt+len) : 0.f;
+	h=glfontscale(gl.cfg.hrat_input,1.f);
+	w1=glfontwidth(txt);
+	w2=txt[len] ? glfontwidth(txt+len) : 0.f;
 	b=h*gl.cfg.txt_border*2.f;
 	glTranslatef(-(w1+w2+b)/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(w1+w2+b,h+b,GP_VCENTER|GP_LEFT);
 	glTranslatef(b/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtfg);
-	glfontrender(gl.font,txt,GP_VCENTER|GP_LEFT);
+	glfontrender(txt,GP_VCENTER|GP_LEFT);
 	if(w2){
 		glTranslatef(w1,0.f,0.f);
 		glColor4fv(gl.cfg.col_txtmk);
-		glfontrender(gl.font,txt+len,GP_VCENTER|GP_LEFT);
+		glfontrender(txt+len,GP_VCENTER|GP_LEFT);
 	}
 	glPopMatrix();
 }
@@ -665,13 +677,13 @@ void glrenderstat(){
 	const char *dir=ildir();
 	float winw;
 	float h,w,b;
-	if(!stat->h) return;
+	if(!stat->h || !glfontsel(FT_NOR)) return;
 	winw=glmode(GLM_TXT);
 
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
-	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
-	w=glfontwidth(gl.font,stat->txt);
+	h=glfontscale(gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(stat->txt);
 	b=h*gl.cfg.txt_border*2.f;
 	glTranslatef(0.f,-(h+b)*(1.f-stat->h),0.f);
 
@@ -687,14 +699,14 @@ void glrenderstat(){
 
 	glColor4fv(gl.cfg.col_txtfg);
 	glTranslatef(h+b,(h+b)/2.f,0.f);
-	glfontrender(gl.font,stat->txt,GP_LEFT|GP_VCENTER);
+	glfontrender(stat->txt,GP_LEFT|GP_VCENTER);
 	glPopMatrix();
 
 	if(!dir) return;
 	glPushMatrix();
 	glTranslatef(0.f,0.5f,0.f);
-	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
-	w=glfontwidth(gl.font,dir);
+	h=glfontscale(gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(dir);
 	b=h*gl.cfg.txt_border*2.f;
 	glScalef(1.f,stat->h,1.f);
 	glTranslatef(0.f,-(b+h)/2.f,0.f);
@@ -703,7 +715,7 @@ void glrenderstat(){
 	glrectarc(w,h+b,GP_CENTER,h+b);
 
 	glColor4fv(gl.cfg.col_txtfg);
-	glfontrender(gl.font,dir,GP_CENTER);
+	glfontrender(dir,GP_CENTER);
 	glPopMatrix();
 }
 
