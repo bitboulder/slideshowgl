@@ -205,10 +205,12 @@ void floadfinalize(struct imglist *il,char sort){
 }
 
 void fgetfiles(int argc,char **argv){
-	struct imglist *il=ilnew("[BASE]","");
+	struct imglist *il;
 	int i;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
+	if(argc==1 && isdir(argv[0])){ floaddir(argv[0],""); return; }
+	il=ilnew("[BASE]","");
 	for(i=0;i<argc;i++){
 		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"");
 		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"");
