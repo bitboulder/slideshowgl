@@ -181,6 +181,21 @@ struct sdlimg* sdlimg_gen(SDL_Surface *sf){
 	sdlimg->sf=sf;
 	sdlimg->ref=1;
 	sdlimg_pixelformat(sdlimg);
+	if(!sdlimg->fmt){
+		SDL_PixelFormat fmtnew;
+		memset(&fmtnew,0,sizeof(SDL_PixelFormat));
+		fmtnew.BitsPerPixel=32;
+		fmtnew.BytesPerPixel=4;
+		fmtnew.Rmask=0x000000ff;
+		fmtnew.Gmask=0x0000ff00;
+		fmtnew.Bmask=0x00ff0000;
+		fmtnew.Amask=0xff000000;
+		if((sf=SDL_ConvertSurface(sdlimg->sf,&fmtnew,sdlimg->sf->flags))){
+			SDL_FreeSurface(sdlimg->sf);
+			sdlimg->sf=sf;
+			sdlimg_pixelformat(sdlimg);
+		}
+	}
 	return sdlimg;
 }
 
