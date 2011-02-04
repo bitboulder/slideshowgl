@@ -33,7 +33,7 @@ struct gl {
 #endif
 	float bar;
 	struct glcfg {
-		float hrat_inputnum;
+		float hrat_input;
 		float hrat_stat;
 		float hrat_txtimg;
 		float hrat_dirname;
@@ -135,7 +135,7 @@ void glinit(char done){
 			mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
 			mprintf("GLSL-Version: %s\n",str?str:"NONE");
 		}
-		gl.cfg.hrat_inputnum = cfggetfloat("gl.hrat_inputnum");
+		gl.cfg.hrat_input    = cfggetfloat("gl.hrat_input");
 		gl.cfg.hrat_stat     = cfggetfloat("gl.hrat_stat");
 		gl.cfg.hrat_txtimg   = cfggetfloat("gl.hrat_txtimg");
 		gl.cfg.hrat_dirname  = cfggetfloat("gl.hrat_dirname");
@@ -634,21 +634,29 @@ void glrendercat(){
 	glPopMatrix();
 }
 
-void glrenderinputnum(){
-	int i=dplinputnum();
-	char txt[16];
-	float w,h,b;
-	if(!i) return;
-	snprintf(txt,16,"%i",i);
+void glrenderinput(){
+	char *txt=dplgetinput();
+	size_t len;
+	float w1,w2,h,b;
+	if(!txt) return;
+	len=strlen(txt)+1;
 	glmode(GLM_TXT);
 	glPushMatrix();
-	h=glfontscale(gl.font,gl.cfg.hrat_inputnum,1.f);
-	w=glfontwidth(gl.font,txt);
+	h=glfontscale(gl.font,gl.cfg.hrat_input,1.f);
+	w1=glfontwidth(gl.font,txt);
+	w2=txt[len] ? glfontwidth(gl.font,txt+len) : 0.f;
 	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(-(w1+w2+b)/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w+b,h+b,GP_CENTER);
+	glrect(w1+w2+b,h+b,GP_VCENTER|GP_LEFT);
+	glTranslatef(b/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtfg);
-	glfontrender(gl.font,txt,GP_CENTER);
+	glfontrender(gl.font,txt,GP_VCENTER|GP_LEFT);
+	if(w2){
+		glTranslatef(w1,0.f,0.f);
+		glColor4fv(gl.cfg.col_txtmk);
+		glfontrender(gl.font,txt+len,GP_VCENTER|GP_LEFT);
+	}
 	glPopMatrix();
 }
 
@@ -728,7 +736,7 @@ void glpaint(){
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
-	glrenderinputnum();
+	glrenderinput();
 	glrenderhelp();
 	
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);

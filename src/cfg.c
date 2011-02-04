@@ -48,7 +48,7 @@ struct cfg {
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000",     {NULL}, __("Maximal pixels for panoramas (bigger ones are scaled down)") },
 	{ 0,   "img.holdfolders",     CT_INT, CM_SET,  "3",      {NULL}, __("Number of directories to hold") },
 	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf", {NULL}, __("Filename of the font to use") },
-	{ 0,   "gl.hrat_inputnum",    CT_FLT, CM_SET,  "0.05",   {NULL}, __("Textheight for input number") },
+	{ 0,   "gl.hrat_input",       CT_FLT, CM_SET,  "0.05",   {NULL}, __("Textheight for input") },
 	{ 0,   "gl.hrat_stat",        CT_FLT, CM_SET,  "0.025",  {NULL}, __("Textheight for statusbar") },
 	{ 0,   "gl.hrat_txtimg",      CT_FLT, CM_SET,  "0.1",    {NULL}, __("Textheight for text-images") },
 	{ 0,   "gl.hrat_dirname",     CT_FLT, CM_SET,  "0.15",   {NULL}, __("Textheight for directory names") },

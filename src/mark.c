@@ -107,6 +107,21 @@ void markcatadd(char *fn){
 	cna[i]='\0';
 }
 
+void markcatsel(char *catsel){
+	size_t i;
+	size_t len=strlen(catsel);
+	char *na;
+	if(len) for(i=0;i<mark.ncat;i++) if(!strncasecmp(catsel,na=mark.catna+i*FILELEN,len)){
+		size_t l=strlen(na);
+		memcpy(catsel,na,len);
+		memcpy(catsel+len+1,na+len,l-len+1);
+		*(int*)(catsel+l+2)=(int)i;
+		return;
+	}
+	catsel[len+1]='\0';
+	*(int*)(catsel+len+2)=-1;
+}
+
 const char *mkcmp(const char *fn){
 	size_t c=0,i,len=strlen(fn);
 	for(i=len;i>0 && c<3;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') c++;

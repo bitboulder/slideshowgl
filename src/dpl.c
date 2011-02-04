@@ -14,6 +14,9 @@
 #include "pano.h"
 #include "mark.h"
 
+#define CATSELEMPTY	-127
+#define CATSELBACK	-128
+
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 const char *colmodestr[]={"G","B","C"};
@@ -28,6 +31,7 @@ struct dpl {
 		Uint32 displayduration;
 		char loop;
 	} cfg;
+	char catsel[FILELEN];
 	enum colmode colmode;
 } dpl = {
 	.pos.imgi = IMGI_START,
@@ -40,6 +44,7 @@ struct dpl {
 	.showhelp = 0,
 	.inputnum = 0,
 	.colmode = COL_NONE,
+	.catsel = { CATSELEMPTY },
 };
 
 /***************************** dpl interface **********************************/
@@ -49,8 +54,17 @@ struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetimgi(){ return dpl.pos.imgi; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
-int dplinputnum(){ return dpl.inputnum; }
 char dplloop(){ return dpl.cfg.loop; }
+char *dplgetinput(){
+	if(dpl.inputnum){
+		static char txt[16];
+		snprintf(txt,16,"%i",dpl.inputnum);
+		return txt;
+	}
+	if(dpl.catsel[0]=='\0') return _("\0[Catalog]");
+	if(dpl.catsel[0]!=CATSELEMPTY) return dpl.catsel;
+	return NULL;
+}
 
 /***************************** imgfit *****************************************/
 
@@ -444,8 +458,34 @@ const char *dplhelp(){
 	return dpl.showhelp ? keyboardlayout : NULL;
 }
 
+void dplcatseladd(char c){
+	size_t len=strlen(dpl.catsel);
+	if(c!=CATSELEMPTY){
+		if(c==CATSELBACK) len--; else dpl.catsel[len++]=c;
+		dpl.catsel[len]='\0';
+		markcatsel(dpl.catsel);
+	}else if(len){
+		int catid;
+		len+=2+strlen(dpl.catsel+len+1);
+		catid=*(int*)(dpl.catsel+len);
+		if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
+	}
+}
+
 void dplkey(SDLKey key){
 	debug(DBG_STA,"dpl key %i",key);
+	if(dpl.catsel[0]!=CATSELEMPTY){
+		if(key>=SDLK_a && key<=SDLK_z) dplcatseladd((char)(key-SDLK_a+'a'));
+		else if(key>=SDLK_0 && key<=SDLK_9) dplcatseladd((char)(key-SDLK_0+'0'));
+		else if(key>=SDLK_NUMLOCK && key<=SDLK_COMPOSE) ;
+		else switch(key){
+		case SDLK_SPACE:     dplcatseladd(' '); break;
+		case SDLK_BACKSPACE: dplcatseladd(CATSELBACK); break;
+		case SDLK_RETURN:    dplcatseladd(CATSELEMPTY);
+		default: dpl.catsel[0]=CATSELEMPTY; break;
+		}
+		return;
+	}
 	switch(key){
 	case SDLK_ESCAPE:   if(effcatinit(0)) break;
 						if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
@@ -460,6 +500,7 @@ void dplkey(SDLKey key){
 	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
 	case SDLK_k:        effcatinit(-1); break;
+	case SDLK_s:        if(dpl.pos.writemode) dpl.catsel[0]=dpl.catsel[1]='\0';
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */

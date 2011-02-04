@@ -9,6 +9,7 @@ size_t markncat();
 char *markcats();
 char *markcatfn(int id,const char **na);
 void markcatadd(char *fn);
+void markcatsel(char *catsel);
 
 char *markimgget(struct img *img,enum mkcreate create);
 
