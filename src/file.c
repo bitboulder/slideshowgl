@@ -237,23 +237,19 @@ int floaddir(const char *fn,const char *dir){
 	}
 	if(!dd) fclose(fd);
 	il=ilnew(fn,dir);
-	ld=strlen(fn);
-	memcpy(buf,fn,ld);
-	if(dd){
+	if(!dd) count=faddflst(il,fn,""); else{
+		ld=strlen(fn);
+		memcpy(buf,fn,ld);
 		if(ld && buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
-	}else{
-//		while(buf[ld-1]!='/' && buf[ld-1]!='\\') ld--;
-		ld=0;
-		buf[ld]='\0';
-	}
-	if(!dd) count=faddflst(il,fn,buf); else while((de=readdir(dd))){
-		size_t l=0;
-		while(l<NAME_MAX && de->d_name[l]) l++;
-		if(l>=1 && de->d_name[0]=='.') continue;
-		if(ld+l>=FILELEN) continue;
-		memcpy(buf+ld,de->d_name,l);
-		buf[ld+l]='\0';
-		count+=faddfile(il,buf);
+		while((de=readdir(dd))){
+			size_t l=0;
+			while(l<NAME_MAX && de->d_name[l]) l++;
+			if(l>=1 && de->d_name[0]=='.') continue;
+			if(ld+l>=FILELEN) continue;
+			memcpy(buf+ld,de->d_name,l);
+			buf[ld+l]='\0';
+			count+=faddfile(il,buf);
+		}
 	}
 	if(dd) closedir(dd);
 	if(!count){ ildestroy(il); return IMGI_END; }
