@@ -447,6 +447,7 @@ const char *keyboardlayout=
 	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 	__("i")"\0"                   __("Show image info")"\0"
 	__("k")"\0"                   __("Show image catalog")"\0"
+	__("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
 	__("h")"\0"                   __("Show help")"\0"
 	__("e")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
 	__("q/Esc")"\0"               __("Quit")"\0"
@@ -500,7 +501,7 @@ void dplkey(SDLKey key){
 	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
 	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
 	case SDLK_k:        effcatinit(-1); break;
-	case SDLK_s:        if(dpl.pos.writemode) dpl.catsel[0]=dpl.catsel[1]='\0';
+	case SDLK_s:        if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
 	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
 	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
 	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */
