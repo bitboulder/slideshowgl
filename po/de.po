@@ -527,7 +527,7 @@ msgstr "Ausgewähltes erhöhen/verringern"
 
 #: src/dpl.c:443
 msgid "Del"
-msgstr ""
+msgstr "Entf"
 
 #: src/dpl.c:443
 msgid "Move image to del/ and remove from dpl-list (only in writing mode)"

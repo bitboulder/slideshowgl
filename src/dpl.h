@@ -1,7 +1,6 @@
 #ifndef _DPL_H
 #define _DPL_H
 
-#include <SDL.h>
 #include "img.h"
 
 enum dplev {
@@ -51,7 +50,7 @@ void printixy(float sx,float sy);
 #define dplevputi(e,i)		dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
 #define dplevputpi(e,x,y,i)	dplevputx(e,0,x,y,i,DES_MOUSE)
 #define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,-2,src)
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc src);
+void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum dplevsrc src);
 int dplthread(void *arg);
 
 #endif

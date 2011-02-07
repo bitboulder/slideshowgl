@@ -44,4 +44,6 @@ long filetime(const char *fn);
 
 char fileext(const char *fn,size_t len,const char *ext);
 
+uint32_t unicode2utf8(unsigned short key);
+
 #endif

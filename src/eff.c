@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <SDL.h>
 #include "eff_int.h"
 #include "dpl_int.h"
 #include "exif.h"

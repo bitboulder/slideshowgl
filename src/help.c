@@ -154,3 +154,21 @@ char fileext(const char *fn,size_t len,const char *ext){
 	if(!len) len=strlen(fn);
 	return len>lext+1 && !strncasecmp(fn+len-lext,ext,lext);
 }
+
+uint32_t unicode2utf8(unsigned short key){
+	static iconv_t ic=NULL;
+	static char buf[5];
+	char *in=(char*)&key;
+	char *out=buf;
+	size_t nin=sizeof(unsigned short);
+	size_t nout=4;
+	if(!ic) ic=iconv_open("utf-8","unicode");
+	if(ic!=(iconv_t)-1){
+		memset(buf,0,5*sizeof(char));
+		if(iconv(ic,&in,&nin,&out,&nout)!=(size_t)-1 && !nin){
+			out=buf;
+			return *(uint32_t*)out;
+		}
+	}
+	return key&0xff;
+}

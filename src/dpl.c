@@ -13,9 +13,10 @@
 #include "gl.h"
 #include "pano.h"
 #include "mark.h"
+#include "help.h"
 
-#define CATSELEMPTY	-127
-#define CATSELBACK	-128
+#define CATSELEMPTY	0x81
+#define CATSELBACK	0x80
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
@@ -31,7 +32,7 @@ struct dpl {
 		Uint32 displayduration;
 		char loop;
 	} cfg;
-	char catsel[FILELEN];
+	unsigned char catsel[FILELEN];
 	enum colmode colmode;
 } dpl = {
 	.pos.imgi = IMGI_START,
@@ -59,7 +60,7 @@ char *dplgetinput(){
 	static char txt[16]={'\0'};
 	if(dpl.inputnum){ snprintf(txt,16,"%i",dpl.inputnum); return txt; }
 	if(dpl.catsel[0]=='\0'){ snprintf(txt+1,15,_("[Catalog]")); return txt; }
-	if(dpl.catsel[0]!=CATSELEMPTY) return dpl.catsel;
+	if(dpl.catsel[0]!=CATSELEMPTY) return (char*)dpl.catsel;
 	return NULL;
 }
 
@@ -382,7 +383,7 @@ void dplsetdisplayduration(int dur){
 struct dplevs {
 	struct ev {
 		enum dplev ev;
-		SDLKey key;
+		unsigned short key;
 		float sx,sy;
 		int imgi;
 		enum dplevsrc src;
@@ -398,7 +399,7 @@ struct dplevs {
 };
 
 /* thread: sdl */
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc src){
+void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum dplevsrc src){
 	if(ev&DE_JUMP){
 		dev.move.sy+=sy;
 		dev.move.sx+=sx;
@@ -456,63 +457,68 @@ const char *dplhelp(){
 	return dpl.showhelp ? keyboardlayout : NULL;
 }
 
-void dplcatseladd(char c){
-	size_t len=strlen(dpl.catsel);
+void dplcatseladd(uint32_t c){
+	size_t len=strlen((char*)dpl.catsel);
 	if(c!=CATSELEMPTY){
-		if(c==CATSELBACK) len--; else dpl.catsel[len++]=c;
+		if(c==CATSELBACK){
+			while(len && (dpl.catsel[len-1]&0xc0)==0x80) len--;
+			if(len) len--;
+		}else{
+			unsigned char *buf=(unsigned char *)&c;
+			int i;
+			for(i=0;i<4 && buf[i];i++) dpl.catsel[len++]=buf[i];
+		}
 		dpl.catsel[len]='\0';
-		markcatsel(dpl.catsel);
+		markcatsel((char*)dpl.catsel);
 	}else if(len){
 		int catid;
-		len+=2+strlen(dpl.catsel+len+1);
+		len+=2+strlen((char*)dpl.catsel+len+1);
 		catid=*(int*)(dpl.catsel+len);
 		if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
 	}
 }
 
-void dplkey(SDLKey key){
-	debug(DBG_STA,"dpl key %i",key);
+void dplkey(unsigned short keyu){
+	uint32_t key=unicode2utf8(keyu);
+	if(!key) return;
+	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.catsel[0]!=CATSELEMPTY){
-		if(key>=SDLK_a && key<=SDLK_z) dplcatseladd((char)(key-SDLK_a+'a'));
-		else if(key>=SDLK_0 && key<=SDLK_9) dplcatseladd((char)(key-SDLK_0+'0'));
-		else if(key>=SDLK_NUMLOCK && key<=SDLK_COMPOSE) ;
-		else switch(key){
-		case SDLK_SPACE:     dplcatseladd(' '); break;
-		case SDLK_BACKSPACE: dplcatseladd(CATSELBACK); break;
-		case SDLK_RETURN:    dplcatseladd(CATSELEMPTY);
-		default: dpl.catsel[0]=CATSELEMPTY; break;
-		}
+		if(key<0x20 || key==0x7f) switch(key){
+			case 8:  dplcatseladd(CATSELBACK); break;
+			case 13: dplcatseladd(CATSELEMPTY);
+			default: dpl.catsel[0]=CATSELEMPTY; break;
+		}else dplcatseladd(key);
 		return;
 	}
 	switch(key){
-	case SDLK_ESCAPE:   if(effcatinit(0)) break;
+	case  27:           if(effcatinit(0)) break;
 						if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
-	case SDLK_q:        sdl_quit=1; break;
-	case SDLK_BACKSPACE:if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
-	case SDLK_e:        panoev(PE_FISHMODE); break;
-	case SDLK_f:        sdlfullscreen(); break;
-	case SDLK_w:        dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
-	case SDLK_m:        dplmark(dpl.pos.imgi); break;
-	case SDLK_d:        dplsetdisplayduration(dpl.inputnum); break;
-	case SDLK_g:        if(glprg()) dpl.colmode=COL_G; break;
-	case SDLK_c:        if(glprg()) dpl.colmode=COL_C; break;
-	case SDLK_b:        if(glprg()) dpl.colmode=COL_B; break;
-	case SDLK_k:        effcatinit(-1); break;
-	case SDLK_s:        if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
-	case SDLK_RETURN:   dplsel(dpl.inputnum-1); break;
-	case SDLK_DELETE:   if(dpl.pos.writemode) dpldel(); break;
-	case SDLK_RIGHTBRACKET: /* todo: fix keymap for win32 */
-	case SDLK_PLUS:     dplcol(1); break;
-	case SDLK_SLASH: /* todo: fix keymap for win32 */
-	case SDLK_MINUS:    dplcol(-1); break;
+	case 'q':           sdl_quit=1; break;
+	case   8:           if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
+	case 'r':           dplrotate(DE_ROT1); break;
+	case 'R':           dplrotate(DE_ROT2); break;
+	case 'e':           panoev(PE_FISHMODE); break;
+	case 'f':           sdlfullscreen(); break;
+	case 'w':           dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
+	case 'm':           dplmark(dpl.pos.imgi); break;
+	case 'd':           dplsetdisplayduration(dpl.inputnum); break;
+	case 'g':           if(glprg()) dpl.colmode=COL_G; break;
+	case 'c':           if(glprg()) dpl.colmode=COL_C; break;
+	case 'b':           if(glprg()) dpl.colmode=COL_B; break;
+	case 'k':           effcatinit(-1); break;
+	case 's':           if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
+	case  13:           dplsel(dpl.inputnum-1); break;
+	case 127:           if(dpl.pos.writemode) dpldel(); break;
+	case '+':           dplcol(1); break;
+	case '-':           dplcol(-1); break;
 	default: break;
 	}
-	if(key>=SDLK_0 && key<=SDLK_9){
-		dpl.inputnum = dpl.inputnum*10 + (int)(key-SDLK_0);
+	if(key>='0' && key<='9'){
+		dpl.inputnum = dpl.inputnum*10 + (int)(key-'0');
 	}else dpl.inputnum=0;
-	dpl.showinfo = !dpl.showinfo && key==SDLK_i &&
+	dpl.showinfo = !dpl.showinfo && key=='i' &&
 		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
-	dpl.showhelp = !dpl.showhelp && key==SDLK_h;
+	dpl.showhelp = !dpl.showhelp && key=='h';
 }
 
 char dplev(struct ev *ev){
@@ -529,9 +535,7 @@ char dplev(struct ev *ev){
 	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
 	dpl.pos.imgiold=dpl.pos.imgi;
 	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
-	if( (ev->ev&DE_KEY) && ev->key!=SDLK_PLUS && ev->key!=SDLK_MINUS
-			&& ev->key!=SDLK_RIGHTBRACKET && ev->key!=SDLK_SLASH  /* todo: fix keymap for win32 */
-			) dpl.colmode=COL_NONE;
+	if( (ev->ev&DE_KEY) && ev->key!='+' && ev->key!='-') dpl.colmode=COL_NONE;
 	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
 	case DE_MOVE:
 	case DE_RIGHT:
@@ -543,9 +547,10 @@ char dplev(struct ev *ev){
 	case DE_SEL:     dplsel(clickimg); break;
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
 	case DE_MARK:    if((evdone=dpl.pos.writemode)) dplmark(clickimg); break;
-	case DE_ROT1: 
-	case DE_ROT2:    dplrotate(ev->ev); break;
-	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
+	case DE_STOP:    
+		if(dpl.run) dpl.run=0; else evdone=0;
+		nxttime=1000;
+	break;
 	case DE_PLAY: 
 		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);

@@ -211,6 +211,7 @@ void sdlinit(){
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
+	SDL_EnableUNICODE(1);
 	if(cfggetint("cfg.version")){
 		const SDL_version* v = SDL_Linked_Version();
 		char buf[32];
@@ -236,10 +237,9 @@ void sdlkey(SDL_keysym key){
 		case SDLK_DOWN:     dplevput(DE_DOWN);    break;
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
-		case SDLK_r:        dplevput((key.mod&(KMOD_LSHIFT|KMOD_RSHIFT))?DE_ROT2:DE_ROT1); break;
 		case SDLK_KP_ENTER:
-		case SDLK_SPACE:    dplevput(DE_STOP|DE_DIR|DE_PLAY);    break;
-		default:            dplevputk(key.sym);   break;
+		case SDLK_SPACE:    dplevput(DE_STOP|DE_DIR|DE_PLAY);       break; /* TODO: => dpl (catsel) */
+		default:            if(key.unicode) dplevputk(key.unicode); break;
 	}
 }
 
