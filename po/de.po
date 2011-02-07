@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-04 09:30+0100\n"
+"POT-Creation-Date: 2011-02-07 12:59+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -318,284 +318,284 @@ msgstr "akt"
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/dpl.c:61
+#: src/dpl.c:65
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:97
+#: src/dpl.c:101
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:140
+#: src/dpl.c:144
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:240
+#: src/dpl.c:238
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:342
+#: src/dpl.c:339
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:343
+#: src/dpl.c:340
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:353
+#: src/dpl.c:350
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:354
+#: src/dpl.c:351
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:355
+#: src/dpl.c:352
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:359
+#: src/dpl.c:356
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:360
+#: src/dpl.c:357
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:420
+#: src/dpl.c:417
 msgid "Mouse interface"
 msgstr "Bedienung mit der Maus"
 
-#: src/dpl.c:421
+#: src/dpl.c:418
 msgid "Left drag"
 msgstr "Links ziehen"
 
-#: src/dpl.c:421
+#: src/dpl.c:418
 msgid "Move"
 msgstr "Bewegen"
 
-#: src/dpl.c:422
+#: src/dpl.c:419
 msgid "Left click"
 msgstr "Linksclick"
 
-#: src/dpl.c:422
+#: src/dpl.c:419
 msgid "Goto image / Forward"
 msgstr "Gehe zu Bild / Vorwärts"
 
-#: src/dpl.c:423
+#: src/dpl.c:420
 msgid "Double click on directory"
 msgstr "Doppelclick auf Verzeichnis"
 
-#: src/dpl.c:423
+#: src/dpl.c:420
 msgid "Enter directory"
 msgstr "Verzeichnis öffnen"
 
-#: src/dpl.c:424
+#: src/dpl.c:421
 msgid "Double click on space"
 msgstr "Doppelclick auf Freiraum"
 
-#: src/dpl.c:424
+#: src/dpl.c:421
 msgid "Leave directory"
 msgstr "Verzeichnis verlassen"
 
-#: src/dpl.c:425
+#: src/dpl.c:422
 msgid "Middle click"
 msgstr "Mittelclick"
 
-#: src/dpl.c:425
+#: src/dpl.c:422
 msgid "Play/Stop / Toggle mark (in writing mode)"
 msgstr "Play/Stop / Bildmarkierung umschalten (im Schreibmodus)"
 
-#: src/dpl.c:426
+#: src/dpl.c:423
 msgid "Right click"
 msgstr "Rechtsclick"
 
-#: src/dpl.c:426
+#: src/dpl.c:423
 msgid "Backward"
 msgstr "Zurück"
 
-#: src/dpl.c:427
+#: src/dpl.c:424
 msgid "Scroll"
 msgstr "Scrollen"
 
-#: src/dpl.c:427 src/dpl.c:435
+#: src/dpl.c:424 src/dpl.c:432
 msgid "Zoom in/out"
 msgstr "Herein-/Herauszoomen"
 
-#: src/dpl.c:430
+#: src/dpl.c:427
 msgid "Keyboard interface"
 msgstr "Bedienung mit der Tastatur"
 
-#: src/dpl.c:431
+#: src/dpl.c:428
 msgid "Space"
 msgstr "Leer"
 
-#: src/dpl.c:431
+#: src/dpl.c:428
 msgid "Stop/Play / Enter directory"
 msgstr "Stop/Play / Verzeichnis öffnen"
 
-#: src/dpl.c:432
+#: src/dpl.c:429
 msgid "Back"
 msgstr "Zurück"
 
-#: src/dpl.c:432
+#: src/dpl.c:429
 msgid "Leave directory / Toggle panorama mode (spherical,plain,fisheye)"
 msgstr "Verzeichnis verlassen / Panorama-Modus ändern (kugel,flach,fischauge)"
 
-#: src/dpl.c:433
+#: src/dpl.c:430
 msgid "Right/Left"
 msgstr "Rechts/Links"
 
-#: src/dpl.c:433
+#: src/dpl.c:430
 msgid "Forward/Backward (Zoom: shift right/left)"
 msgstr "Weiter/Zurück (Zoom: rechts/links schieben)"
 
-#: src/dpl.c:434
+#: src/dpl.c:431
 msgid "Up/Down"
 msgstr "Hoch/Runter"
 
-#: src/dpl.c:434
+#: src/dpl.c:431
 msgid "Fast forward/backward (Zoom: shift up/down)"
 msgstr "Schnell weiter/zurück (Zoom: hoch/runter schieben)"
 
-#: src/dpl.c:435
+#: src/dpl.c:432
 msgid "Pageup/Pagedown"
 msgstr "Bild hoch/runter"
 
-#: src/dpl.c:436
+#: src/dpl.c:433
 msgid "[0-9]+Enter"
 msgstr "[0-9]+Enter"
 
-#: src/dpl.c:436
+#: src/dpl.c:433
 msgid "Goto image with number"
 msgstr "Gehe zu Bild mit Nummer"
 
-#: src/dpl.c:437
+#: src/dpl.c:434
 msgid "[0-9]+d"
 msgstr "[0-9]+d"
 
-#: src/dpl.c:437
+#: src/dpl.c:434
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl.c:438
+#: src/dpl.c:435
 msgid "f"
 msgstr ""
 
-#: src/dpl.c:438
+#: src/dpl.c:435
 msgid "Switch fullscreen"
 msgstr "Vollbildmodus umschalten"
 
-#: src/dpl.c:439
+#: src/dpl.c:436
 msgid "r/R"
 msgstr ""
 
-#: src/dpl.c:439
+#: src/dpl.c:436
 msgid "Rotate image"
 msgstr "Bild drehen"
 
-#: src/dpl.c:440
+#: src/dpl.c:437
 msgid "w"
 msgstr ""
 
-#: src/dpl.c:440
+#: src/dpl.c:437
 msgid "Switch writing mode"
 msgstr "Schreibmodus umschalten"
 
-#: src/dpl.c:441
+#: src/dpl.c:438
 msgid "g/b/c"
 msgstr ""
 
-#: src/dpl.c:441
+#: src/dpl.c:438
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
 "+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl.c:442
+#: src/dpl.c:439
 msgid "+/-"
 msgstr ""
 
-#: src/dpl.c:442
+#: src/dpl.c:439
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl.c:443
+#: src/dpl.c:440
 msgid "Del"
 msgstr "Entf"
 
-#: src/dpl.c:443
+#: src/dpl.c:440
 msgid "Move image to del/ and remove from dpl-list (only in writing mode)"
 msgstr ""
 "Bild nach 'del' verschieben und nicht mehr anzeigen (nur im Schreibmodus)"
 
-#: src/dpl.c:444
+#: src/dpl.c:441
 msgid "m"
 msgstr ""
 
-#: src/dpl.c:444
+#: src/dpl.c:441
 msgid "Toggle mark (only in writing mode)"
 msgstr "Bildmarkierung umschalten (nur im Schreibmodus)"
 
-#: src/dpl.c:445
+#: src/dpl.c:442
 msgid "i"
 msgstr ""
 
-#: src/dpl.c:445
+#: src/dpl.c:442
 msgid "Show image info"
 msgstr "Bildinformationen anzeigen"
 
-#: src/dpl.c:446
+#: src/dpl.c:443
 msgid "k"
 msgstr ""
 
-#: src/dpl.c:446
+#: src/dpl.c:443
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl.c:447
+#: src/dpl.c:444
 msgid "s"
 msgstr ""
 
-#: src/dpl.c:447
+#: src/dpl.c:444
 msgid "Enter and toggle image catalog (only in writing mode)"
 msgstr "Bildkatalog eingeben und ändern (nur im Schreibmodus)"
 
-#: src/dpl.c:448
+#: src/dpl.c:445
 msgid "h"
 msgstr ""
 
-#: src/dpl.c:448
+#: src/dpl.c:445
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl.c:449
+#: src/dpl.c:446
 msgid "e"
 msgstr ""
 
-#: src/dpl.c:449
+#: src/dpl.c:446
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
 
-#: src/dpl.c:450
+#: src/dpl.c:447
 msgid "q/Esc"
 msgstr ""
 
-#: src/dpl.c:450
+#: src/dpl.c:447
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl.c:474
+#: src/dpl.c:480
 #, c-format
-msgid "dpl key %i"
+msgid "dpl key 0x%08x"
 msgstr ""
 
-#: src/eff.c:305
+#: src/eff.c:306
 #, c-format
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
@@ -668,7 +668,7 @@ msgstr ""
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:163 src/sdl.c:218
+#: src/exif.c:163 src/sdl.c:219
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -698,49 +698,49 @@ msgstr ""
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:233
+#: src/file.c:235
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
 
-#: src/gl.c:87
+#: src/gl.c:95
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:88
+#: src/gl.c:96
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:98 src/gl.c:100
+#: src/gl.c:106 src/gl.c:108
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:106
+#: src/gl.c:114
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:113
+#: src/gl.c:121
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:130
+#: src/gl.c:139
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:588
+#: src/gl.c:599
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:593
+#: src/gl.c:604
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:742
+#: src/gl.c:754
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -809,42 +809,42 @@ msgstr ""
 msgid "jpeg decompression failure"
 msgstr ""
 
-#: src/load.c:302
+#: src/load.c:317
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:329
+#: src/load.c:344
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:333
+#: src/load.c:348
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:334
+#: src/load.c:349
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:376
+#: src/load.c:391
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:407
+#: src/load.c:422
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:433
+#: src/load.c:448
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:489
+#: src/load.c:504
 msgid "ldreset done"
 msgstr ""
 
