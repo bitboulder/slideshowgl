@@ -487,26 +487,27 @@ void dplkey(unsigned short keyu){
 		return;
 	}
 	switch(key){
-	case  27:           if(effcatinit(0)) break;
-						if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
-	case 'q':           sdl_quit=1; break;
-	case   8:           if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
-	case 'r':           dplrotate(DE_ROT1); break;
-	case 'R':           dplrotate(DE_ROT2); break;
-	case 'e':           panoev(PE_FISHMODE); break;
-	case 'f':           sdlfullscreen(); break;
-	case 'w':           dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
-	case 'm':           dplmark(dpl.pos.imgi); break;
-	case 'd':           dplsetdisplayduration(dpl.inputnum); break;
-	case 'g':           if(glprg()) dpl.colmode=COL_G; break;
-	case 'c':           if(glprg()) dpl.colmode=COL_C; break;
-	case 'b':           if(glprg()) dpl.colmode=COL_B; break;
-	case 'k':           effcatinit(-1); break;
-	case 's':           if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
-	case  13:           dplsel(dpl.inputnum-1); break;
-	case 127:           if(dpl.pos.writemode) dpldel(); break;
-	case '+':           dplcol(1); break;
-	case '-':           dplcol(-1); break;
+	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
+	case  27: if(effcatinit(0)) break;
+			  if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
+	case 'q': sdl_quit=1; break;
+	case   8: if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
+	case 'r': dplrotate(DE_ROT1); break;
+	case 'R': dplrotate(DE_ROT2); break;
+	case 'e': panoev(PE_FISHMODE); break;
+	case 'f': sdlfullscreen(); break;
+	case 'w': dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
+	case 'm': dplmark(dpl.pos.imgi); break;
+	case 'd': dplsetdisplayduration(dpl.inputnum); break;
+	case 'g': if(glprg()) dpl.colmode=COL_G; break;
+	case 'c': if(glprg()) dpl.colmode=COL_C; break;
+	case 'b': if(glprg()) dpl.colmode=COL_B; break;
+	case 'k': effcatinit(-1); break;
+	case 's': if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
+	case  13: dplsel(dpl.inputnum-1); break;
+	case 127: if(dpl.pos.writemode) dpldel(); break;
+	case '+': dplcol(1); break;
+	case '-': dplcol(-1); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){

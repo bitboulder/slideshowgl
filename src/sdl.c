@@ -237,8 +237,7 @@ void sdlkey(SDL_keysym key){
 		case SDLK_DOWN:     dplevput(DE_DOWN);    break;
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
-		case SDLK_KP_ENTER:
-		case SDLK_SPACE:    dplevput(DE_STOP|DE_DIR|DE_PLAY);       break; /* TODO: => dpl (catsel) */
+		case SDLK_KP_ENTER: dplevputk(' ');       break;
 		default:            if(key.unicode) dplevputk(key.unicode); break;
 	}
 }
