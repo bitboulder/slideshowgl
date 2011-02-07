@@ -491,7 +491,7 @@ void dplkey(unsigned short keyu){
 	case  27: if(effcatinit(0)) break;
 			  if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
 	case 'q': sdl_quit=1; break;
-	case   8: if(!panoev(PE_MODE)) dpldir(IMGI_END,0); break;
+	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
 	case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
 	case 'e': panoev(PE_FISHMODE); break;
@@ -504,7 +504,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
-	case  13: dplsel(dpl.inputnum-1); break;
+	case  13: if(dpl.inputnum) dplsel(dpl.inputnum-1); break;
 	case 127: if(dpl.pos.writemode) dpldel(); break;
 	case '+': dplcol(1); break;
 	case '-': dplcol(-1); break;
@@ -534,6 +534,7 @@ char dplevdelay(struct ev *ev){
 		case DE_ZOOMOUT: grp=DEG_ZOOMOUT; if(dpl.pos.zoom!=(panoactive()?2:1)) nxttime=0; break;
 		case DE_PLAY:
 		case DE_STOP:    if(ev->src==DES_KEY) grp=DEG_PLAY; break;
+		case DE_DIR:     grp=DEG_PLAY; nxttime=500; break;
 		}
 		if(grp==DEG_NONE) continue;
 		if(dpl.evdelay[grp]>now) return 0;
@@ -544,13 +545,11 @@ char dplevdelay(struct ev *ev){
 }
 
 char dplev(struct ev *ev){
-	static enum dplev lastev;
 	char ret=0;
 	int clickimg;
 	unsigned int evi;
 	char evdone=0;
 	if(!dplevdelay(ev)) return 0;
-	lastev=ev->ev;
 	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
 	dpl.pos.imgiold=dpl.pos.imgi;
 	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
