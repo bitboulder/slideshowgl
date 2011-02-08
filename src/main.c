@@ -113,13 +113,10 @@ char *finddatafile(const char *fn){
 		char *tmp;
 		if(l){
 			dirs[0]=tmp=malloc(l);
-			strncpy(tmp,progpath,l-1);
-			tmp[l-1]='\0';
+			snprintf(tmp,l,progpath);
 		}
 		dirs[1]=tmp=malloc(l+5);
-		strncpy(tmp,progpath,l);
-		strncpy(tmp+l,"data",4);
-		tmp[l+4]='\0';
+		snprintf(tmp,l+5,"%sdata",progpath);
 	}
 	for(i=0;i<2 || dirs[i];i++) if(dirs[i]){
 		FILE *fd;
@@ -192,10 +189,7 @@ void fileoutput(char doopen){
 			char *fn;
 			size_t l=strlen(paths[i]);
 			fn=malloc(l+9);
-			if(l) strncpy(fn,paths[i],l);
-			if(l && fn[l-1]!='/' && fn[l-1]!='\\') fn[l++]='\\';
-			strncpy(fn+l,"log.txt",7);
-			fn[l+7]='\0';
+			snprintf(fn,l+9,"%s%slog.txt",paths[i],(l && paths[i][l-1]!='/' && paths[i][l-1]!='\\')?"\\":"");
 			fdout=fopen(fn,"w");
 			free(fn);
 		}

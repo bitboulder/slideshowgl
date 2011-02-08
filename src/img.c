@@ -128,8 +128,8 @@ struct img *imgdel(int i){
 /* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
-	strncpy(il->fn,fn,FILELEN);
-	strncpy(il->dir,dir,FILELEN);
+	snprintf(il->fn,FILELEN,fn);
+	snprintf(il->dir,FILELEN,dir);
 	il->parent=curil;
 	il->pos=IMGI_START;
 	il->time=filetime(fn);

@@ -64,7 +64,7 @@ char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *e
 		dst[i]=dsti;
 		if((fd=fopen(fn,"rb"))){
 			fclose(fd);
-			strncpy(dst,fn,len);
+			snprintf(dst,len,fn);
 			return 1;
 		}
 		if(subdir[0]=='\0') break;
@@ -79,7 +79,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext){
 	{
 		static char rfn[MAXPATHLEN];
 		if(realpath(dst,rfn) && findfilesubdir1(rfn,MAXPATHLEN,subdir,ext)){
-			strncpy(dst,rfn,FILELEN);
+			snprintf(dst,FILELEN,rfn);
 			return 1;
 		}
 	}
@@ -90,7 +90,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext){
 /***************************** getfiles ***************************************/
 
 void fthumbinit(struct imgfile *ifl){
-	strncpy(ifl->tfn,ifl->fn,FILELEN);
+	snprintf(ifl->tfn,FILELEN,ifl->fn);
 	if(!findfilesubdir(ifl->tfn,"thumb",NULL)){
 		ifl->tfn[0]='\0';
 		debug(DBG_DBG,"thumbinit no thumb found for '%s'",ifl->fn);
@@ -197,7 +197,7 @@ void finitimg(struct img **img,const char *basefn){
 	const char *fn = finddatafile(basefn);
 	if(!fn) fn="";
 	*img=imginit();
-	strncpy((*img)->file->fn,fn,FILELEN);
+	snprintf((*img)->file->fn,FILELEN,fn);
 }
 
 void floadfinalize(struct imglist *il,char sort){

@@ -153,7 +153,7 @@ struct mk *mkfind(const char *fn,enum mkcreate create){
 	for(mk=mark.mks[hash];mk && strncmp(cmp,mk->cmp,FILELEN);) mk=mk->nxt;
 	if(!mk && create>=MKC_YES){
 		mk=malloc(sizeof(struct mk));
-		strncpy(mk->fn,fn,FILELEN); mk->fn[FILELEN-1]='\0';
+		snprintf(mk->fn,FILELEN,fn);
 		mk->cmp=mk->fn+(cmp-fn);
 		mk->nxt=mark.mks[hash];
 		mark.mks[hash]=mk;
