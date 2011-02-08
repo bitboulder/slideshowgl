@@ -1,10 +1,10 @@
 
-BINS = bin/libintl3.dll
-LIBS = lib/libintl.dll.a
-INCS = include/libintl.h
+BINS = bin/libiconv2.dll
+LIBS = lib/libiconv.dll.a
+INCS = include/iconv.h
 
-SRCBINZIP = gettext-0.14.4-bin.zip
-SRCINCZIP = gettext-0.14.4-lib.zip
+SRCBINZIP = libiconv-1.9.2-1-bin.zip
+SRCINCZIP = libiconv-1.9.2-1-lib.zip
 
 all: $(BINS) $(LIBS) $(INCS)
 

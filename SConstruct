@@ -101,6 +101,10 @@ if not env.GetOption('clean'):
 		env.Append(LIBPATH    = ['#/winlib/gettext/lib'])
 		conf.CheckLibMy('intl',0,0)
 
+		env.Append(CPPPATH    = ['#/winlib/iconv/include'])
+		env.Append(LIBPATH    = ['#/winlib/iconv/lib'])
+		conf.CheckLibMy('iconv',0,'ICONV')
+
 		conf.CheckLibMy('opengl32',1,0)
 		conf.CheckLibMy('glu32',1,0)
 
@@ -127,6 +131,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 		conf.CheckPKG('xinerama >= 1.0',0,'XINERAMA')
+		conf.CheckFuncMy('iconv',0,'ICONV')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')
 	conf.CheckFuncMy('realpath',0,'REALPATH')

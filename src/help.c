@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <math.h>
+#include <iconv.h>
 #include "help.h"
 #include "main.h"
 
@@ -156,7 +157,16 @@ char fileext(const char *fn,size_t len,const char *ext){
 	return len>lext+1 && !strncasecmp(fn+len-lext,ext,lext);
 }
 
+#if HAVE_ICONV
+	#ifdef __WIN32__
+		#define WINCC	(const char **)
+	#else
+		#define WINCC
+	#endif
+#endif
+
 uint32_t unicode2utf8(unsigned short key){
+#if HAVE_ICONV
 	static iconv_t ic=NULL;
 	static char buf[5];
 	char *in=(char*)&key;
@@ -167,15 +177,17 @@ uint32_t unicode2utf8(unsigned short key){
 	if(ic!=(iconv_t)-1){
 		memset(buf,0,5*sizeof(char));
 		iconv(ic,NULL,NULL,NULL,NULL);
-		if(iconv(ic,&in,&nin,&out,&nout)!=(size_t)-1 && !nin){
+		if(iconv(ic,WINCC &in,&nin,&out,&nout)!=(size_t)-1 && !nin){
 			out=buf;
 			return *(uint32_t*)out;
 		}
 	}
+#endif
 	return key&0xff;
 }
 
 void utf8check(char *str){
+#if HAVE_ICONV
 	static iconv_t ic=NULL;
 	size_t nstr=strlen(str);
 	size_t nout=FILELEN;
@@ -184,6 +196,7 @@ void utf8check(char *str){
 	if(!ic) ic=iconv_open("utf-8","utf-8");
 	if(ic==(iconv_t)-1) return;
 	iconv(ic,NULL,NULL,NULL,NULL);
-	iconv(ic,&str,&nstr,&out,&nout);
+	iconv(ic,WINCC &str,&nstr,&out,&nout);
 	if(nstr) *str='\0';
+#endif
 }
