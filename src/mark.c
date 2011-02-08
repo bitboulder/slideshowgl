@@ -105,6 +105,7 @@ void markcatadd(char *fn){
 	memcpy(cna,fn+i,len);
 	for(i=0;i<len;i++) if(cna[i]=='.') break;
 	cna[i]='\0';
+	utf8check(cna);
 }
 
 void markcatsel(char *catsel){

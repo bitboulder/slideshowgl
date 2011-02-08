@@ -122,6 +122,7 @@ int faddfile(struct imglist *il,const char *fn){
 			img->file->dir[l]=c;
 		}
 		img->file->dir[l]='\0';
+		utf8check(img->file->dir);
 		debug(DBG_DBG,"directory found '%s': '%s'",img->file->dir,img->file->fn);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
@@ -133,6 +134,7 @@ int faddfile(struct imglist *il,const char *fn){
 		ltxt = MIN(pos ? (size_t)pos-(size_t)fn : len, FILELEN-1);
 		memcpy(img->file->txt.txt,fn,ltxt);
 		img->file->txt.txt[ltxt]='\0';
+		utf8check(img->file->txt.txt);
 		for(i=0;i<4;i++){
 			while(*pos=='_') pos++;
 			val=(float)strtod(pos,&end);

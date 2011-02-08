@@ -11,6 +11,7 @@
 #include "exif.h"
 #include "main.h"
 #include "cfg.h"
+#include "help.h"
 
 #if HAVE_EXIF
 struct exifinfo {
@@ -151,16 +152,19 @@ char *imgexifgetinfo(ExifData *exdat){
 		unsigned int end=iipos+IILEN;
 		if(end+1>iilen) imginfo=realloc(imginfo,(iilen+=IIINC)*sizeof(char));
 		snprintf(imginfo+iipos,end-iipos,exifinfo[l].name);
+		utf8check(imginfo+iipos);
 		iipos+=(unsigned int)strlen(imginfo+iipos)+1;
 		for(i=0;i<5 && exifinfo[l].tag[i];i++){
 			ExifEntry *exet=exif_data_get_entry(exdat,exifinfo[l].tag[i]);
 			if(!exet) continue;
 			if(i && iipos<end) imginfo[iipos++]=' '; 
 			exif_entry_get_value(exet,imginfo+iipos,end-iipos);
+			utf8check(imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 		if(iipos && imginfo[iipos-1]=='\0'){
 			snprintf(imginfo+iipos,end-iipos,_("(unknown)"));
+			utf8check(imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 		iipos++;

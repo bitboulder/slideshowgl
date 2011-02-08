@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <math.h>
 #include "help.h"
+#include "main.h"
 
 #define SDL_GetPixel(a,b,c)		SDL_GetPixelSw(a,b,c,0)
 Uint32 SDL_GetPixelSw(SDL_Surface *surface, int x, int y, char swap)
@@ -165,10 +166,24 @@ uint32_t unicode2utf8(unsigned short key){
 	if(!ic) ic=iconv_open("utf-8","unicode");
 	if(ic!=(iconv_t)-1){
 		memset(buf,0,5*sizeof(char));
+		iconv(ic,NULL,NULL,NULL,NULL);
 		if(iconv(ic,&in,&nin,&out,&nout)!=(size_t)-1 && !nin){
 			out=buf;
 			return *(uint32_t*)out;
 		}
 	}
 	return key&0xff;
+}
+
+void utf8check(char *str){
+	static iconv_t ic=NULL;
+	size_t nstr=strlen(str);
+	size_t nout=FILELEN;
+	char buf[FILELEN];
+	char *out=buf;
+	if(!ic) ic=iconv_open("utf-8","utf-8");
+	if(ic==(iconv_t)-1) return;
+	iconv(ic,NULL,NULL,NULL,NULL);
+	iconv(ic,&str,&nstr,&out,&nout);
+	if(nstr) *str='\0';
 }
