@@ -263,6 +263,7 @@ int imgsort_datecmp(const void *a,const void *b){
 	return 0;
 }
 
+/* thread: dpl */
 void imgsort(struct imglist *il,char date){
 	int i;
 	if(date){

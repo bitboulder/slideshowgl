@@ -200,6 +200,7 @@ void finitimg(struct img **img,const char *basefn){
 	snprintf((*img)->file->fn,FILELEN,fn);
 }
 
+/* thread: dpl */
 void floadfinalize(struct imglist *il,char sort){
 	if(cfggetint(sort?"ld.datesortdir":"ld.datesort")) imgsort(il,1);
 	else if(cfggetint("ld.random")) imgrandom(il);

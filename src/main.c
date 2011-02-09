@@ -142,6 +142,21 @@ struct mainthread {
 	{ NULL,        0, 0 },
 };
 
+int threadid(){
+	struct mainthread *mt=mainthreads;
+	Uint32 id=SDL_ThreadID();
+	int i=0;
+	for(;mt->fnc;mt++,i++) if(mt->init && mt->pt && SDL_GetThreadID(mt->pt)==id) return i;
+	return 0;
+}
+
+size_t nthreads(){
+	struct mainthread *mt=mainthreads;
+	size_t n=0;
+	for(;mt->fnc;mt++) n++;
+	return n;
+}
+
 void start_threads(){
 	struct mainthread *mt=mainthreads;
 	mainthreads->pt=NULL;

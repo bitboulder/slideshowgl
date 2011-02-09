@@ -165,6 +165,7 @@ char fileext(const char *fn,size_t len,const char *ext){
 	#endif
 #endif
 
+/* thread: dpl */
 uint32_t unicode2utf8(unsigned short key){
 #if HAVE_ICONV
 	static iconv_t ic=NULL;
@@ -186,17 +187,20 @@ uint32_t unicode2utf8(unsigned short key){
 	return key&0xff;
 }
 
+/* thread: all */
 void utf8check(char *str){
 #if HAVE_ICONV
-	static iconv_t ic=NULL;
+	static iconv_t *ic=NULL;
 	size_t nstr=strlen(str);
 	size_t nout=FILELEN;
 	char buf[FILELEN];
 	char *out=buf;
-	if(!ic) ic=iconv_open("utf-8","utf-8");
-	if(ic==(iconv_t)-1) return;
-	iconv(ic,NULL,NULL,NULL,NULL);
-	iconv(ic,WINCC &str,&nstr,&out,&nout);
+	int tid=threadid();
+	if(!ic) ic=calloc(nthreads(),sizeof(iconv_t));
+	if(!ic[tid]) ic[tid]=iconv_open("utf-8","utf-8");
+	if(ic[tid]==(iconv_t)-1) return;
+	iconv(ic[tid],NULL,NULL,NULL,NULL);
+	iconv(ic[tid],WINCC &str,&nstr,&out,&nout);
 	if(nstr) *str='\0';
 #endif
 }

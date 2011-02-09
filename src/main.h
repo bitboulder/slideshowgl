@@ -39,4 +39,7 @@ int mprintf(const char *format,...) FORMAT(1,2);
 
 char *finddatafile(const char *fn);
 
+int threadid();
+size_t nthreads();
+
 #endif
