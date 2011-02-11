@@ -242,14 +242,14 @@ void sdlkey(SDL_keysym key){
 	}
 }
 
-char sdljump(Uint16 x,Uint16 y){
+char sdljump(Uint16 x,Uint16 y,char end){
 	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
 	int zoom=dplgetzoom();
 	int w=100,wthr;
 	enum dplev ev=0;
 	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
 	sdl.move.jump=1;
-	if(zoom<=0){
+	if(zoom<=0 && dplgetactil()<0){
 		switch(zoom){
 			case -1: w=sdl.scr_h/3/2; break;
 			case -2: w=sdl.scr_h/5/2; break;
@@ -269,6 +269,7 @@ char sdljump(Uint16 x,Uint16 y){
 				-(float)yd/(float)sdl.scr_h);
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
+		if(end) dplevput(DE_JUMPEND);
 	}
 	return 1;
 }
@@ -310,11 +311,14 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 }
 
 void sdlmotion(Uint16 x,Uint16 y){
+	float fx = (float)x/(float)sdl.scr_w - .5f;
+	float fy = (float)y/(float)sdl.scr_h - .5f;
 	SDL_ShowCursor(SDL_ENABLE);
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
-	if(sdl.move.base_x!=0xffff) sdljump(x,y);
-	else dplevputs(DE_STAT,DES_MOUSE);
+	if(sdl.move.base_x!=0xffff) sdljump(x,y,0);
+	else if(dplgetactil()<0) dplevputs(DE_STAT,DES_MOUSE);
+	else dplevputx(DE_STAT,0,fx,fy,glselect(x,y),DES_MOUSE);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
@@ -334,7 +338,7 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 		case SDL_BUTTON_WHEELUP:   dplevputpi(DE_ZOOMIN, fx,fy,clickimg); break;
 		case SDL_BUTTON_WHEELDOWN: dplevputpi(DE_ZOOMOUT,fx,fy,clickimg); break;
 	}else if(button==SDL_BUTTON_LEFT){
-		if(!sdljump(x,y)) sdlclick(button,x,y,clickimg);
+		if(!sdljump(x,y,1)) sdlclick(button,x,y,clickimg);
 		sdl.move.base_x=0xffff;
 	}
 }

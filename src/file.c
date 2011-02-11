@@ -98,7 +98,7 @@ void fthumbinit(struct imgfile *ifl){
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
-int faddfile(struct imglist *il,const char *fn){
+int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 	struct img *img;
 	size_t len;
 	char *prg;
@@ -149,16 +149,18 @@ int faddfile(struct imglist *il,const char *fn){
 		if(fileext(fn,len,".jpg")) ok=1;
 		if(fileext(fn,len,".jpeg")) ok=1;
 		if(!ok) return 0;
-		img=imgadd(il,prg);
-		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
-		fthumbinit(img->file);
-		imgpanoload(img->pano,fn);
-		imgposmark(img,MPC_YES);
+		if(!src || !ilmoveimg(il,src,fn,len)){
+			img=imgadd(il,prg);
+			memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
+			fthumbinit(img->file);
+			imgpanoload(img->pano,fn);
+			imgposmark(img,MPC_YES);
+		}
 	}
 	return 1;
 }
 
-int faddflst(struct imglist *il,const char *flst,const char *pfx){
+int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist *src){
 	FILE *fd;
 	char buf[FILELEN];
 	int count=0;
@@ -187,7 +189,7 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx){
 			memcpy(buf,pfx,lpfx);
 			buf[FILELEN-1]='\0';
 		}
-		count+=faddfile(il,buf);
+		count+=faddfile(il,buf,src);
 	}
 	if(prg) pclose(fd); else fclose(fd);
 	return count;
@@ -212,35 +214,39 @@ void fgetfiles(int argc,char **argv){
 	int i;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
-	if(argc==1 && isdir(argv[0])){ floaddir(argv[0],""); return; }
+	if(argc==1 && isdir(argv[0]) && (il=floaddir(argv[0],""))){
+		ilswitch(il);
+		return;
+	}
 	il=ilnew("[BASE]","");
 	for(i=0;i<argc;i++){
-		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"");
-		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"");
-		else faddfile(il,argv[i]);
+		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"",NULL);
+		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"",NULL);
+		else faddfile(il,argv[i],NULL);
 	}
 	floadfinalize(il,0);
 	ilswitch(il);
 }
 
 /* thread: dpl */
-int floaddir(const char *fn,const char *dir){
+struct imglist *floaddir(const char *fn,const char *dir){
 #if HAVE_OPENDIR
 	DIR *dd;
 	FILE *fd;
 	struct dirent *de;
 	char buf[FILELEN];
 	size_t ld;
-	struct imglist *il;
+	struct imglist *il=NULL;
+	struct imglist *src=NULL;
 	int count=0;
-	if((il=ilfind(fn))) return ilswitch(il);
+	if(ilfind(fn,&src)) return src;
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);
-		return IMGI_END;
+		goto end;
 	}
 	if(!dd) fclose(fd);
 	il=ilnew(fn,dir);
-	if(!dd) count=faddflst(il,fn,""); else{
+	if(!dd) count=faddflst(il,fn,"",src); else{
 		ld=strlen(fn);
 		memcpy(buf,fn,ld);
 		if(ld && buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
@@ -251,12 +257,14 @@ int floaddir(const char *fn,const char *dir){
 			if(ld+l>=FILELEN) continue;
 			memcpy(buf+ld,de->d_name,l);
 			buf[ld+l]='\0';
-			count+=faddfile(il,buf);
+			count+=faddfile(il,buf,src);
 		}
 	}
 	if(dd) closedir(dd);
-	if(!count){ ildestroy(il); return IMGI_END; }
-	floadfinalize(il,1);
-	return ilswitch(il);
+	if(!count){ ildestroy(il); il=NULL; }
+	else floadfinalize(il,1);
+end:
+	if(src) ilunused(src);
+	return il;
 #endif
 }

@@ -2,6 +2,7 @@
 #define _FILE_H
 
 #include "main.h"
+#include "img.h"
 
 struct txtimg {
 	char txt[FILELEN];
@@ -19,6 +20,6 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext);
 
 void fgetfiles(int argc,char **argv);
 
-int floaddir(const char *fn,const char *dir);
+struct imglist *floaddir(const char *fn,const char *dir);
 
 #endif

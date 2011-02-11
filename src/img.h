@@ -15,6 +15,7 @@
 #define IMGI_END	INT_MAX
 #define IMGI_CAT	0x40000000
 
+#define IL_NUM	2
 
 #define E2(X,N)	TEX_##X=N
 enum imgtex { IMGTEX };
@@ -36,20 +37,25 @@ extern struct img *delimg;
 
 struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
-struct imglist *ilfind(const char *fn);
+char ilfind(const char *fn,struct imglist **ilret);
 void ilcleanup();
 int ilswitch(struct imglist *il);
+char ilsecswitch(char state);
+char ilreload(int il,const char *cmd);
+void ilunused(struct imglist *il);
+char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
 
-int imggetn();
-struct prg *ilprg();
+struct imglist *ilget(int il);
+int imggetn(int il);
+struct prg *ilprg(int il);
 const char *ildir();
-int imginarrorlimits(int i);
-int imgidiff(int ia,int ib,int *ira,int *irb);
+int imginarrorlimits(int il,int i);
+int imgidiff(int il,int ia,int ib,int *ira,int *irb);
 
-struct img *imgget(int i);
+struct img *imgget(int il,int i);
 struct img *imginit();
 struct img *imgadd(struct imglist *il,const char *prg);
-struct img *imgdel(int i);
+struct img *imgdel(int il,int i);
 
 void imgfinalize();
 void imgrandom(struct imglist *il);

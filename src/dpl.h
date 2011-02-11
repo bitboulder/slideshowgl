@@ -22,6 +22,7 @@ enum dplev {
 	DE_ZOOMIN  = 0x00008000,
 	DE_ZOOMOUT = 0x00010000,
 	DE_SEL     = 0x00020000,
+	DE_JUMPEND = 0x00040000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
@@ -35,21 +36,23 @@ enum dplev {
 
 enum dplevsrc { DES_KEY, DES_MOUSE };
 
-int dplgetimgi();
+int dplgetimgi(int il);
 int dplgetzoom();
 char dplshowinfo();
 char *dplgetinput();
 char dplloop();
 const char *dplhelp();
+int dplgetactil();
+int dplgetactimgi(int il);
 
 void printixy(float sx,float sy);
 
-#define dplevput(e)			dplevputx(e,0,0.f,0.f,-2,DES_KEY)
-#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f,-2,DES_KEY)
-#define dplevputp(e,x,y)	dplevputx(e,0,x,y,-2,DES_MOUSE)
-#define dplevputi(e,i)		dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
-#define dplevputpi(e,x,y,i)	dplevputx(e,0,x,y,i,DES_MOUSE)
-#define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,-2,src)
+#define dplevput(e)				dplevputx(e,0,0.f,0.f,-2,DES_KEY)
+#define dplevputk(k)			dplevputx(DE_KEY,k,0.f,0.f,-2,DES_KEY)
+#define dplevputp(e,x,y)		dplevputx(e,0,x,y,-2,DES_MOUSE)
+#define dplevputi(e,i)			dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
+#define dplevputpi(e,x,y,i)		dplevputx(e,0,x,y,i,DES_MOUSE)
+#define dplevputs(e,src)		dplevputx(e,0,0.f,0.f,-2,src)
 void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum dplevsrc src);
 int dplthread(void *arg);
 

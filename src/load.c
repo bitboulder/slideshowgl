@@ -455,28 +455,33 @@ char ldffree(struct imgld *il,enum imgtex thold){
 /***************************** load check *************************************/
 
 char ldcheck(){
-	int i;
-	int imgi = imginarrorlimits(dplgetimgi());
+	int i,il;
 	struct img *img;
 	struct loadconcept *ldcp=ldconceptget();
 	char ret=0;
 
-	for(img=imgget(0),i=0;img;img=img->nxt,i++){
-		enum imgtex hold=TEX_NONE;
-		int diff=prgimgidiff(imgi,i);
-		if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
-			hold=ldcp->hold[diff-ldcp->hold_min];
-		if(ldffree(img->ld,hold)){ ret=1; break; }
+	for(il=0;il<IL_NUM;il++){
+		int imgi=imginarrorlimits(il,dplgetimgi(il));
+		for(img=imgget(il,0),i=0;img;img=img->nxt,i++){
+			enum imgtex hold=TEX_NONE;
+			int diff=prgimgidiff(il,imgi,i);
+			if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
+				hold=ldcp->hold[diff-ldcp->hold_min];
+			if(ldffree(img->ld,hold)){ ret=1; break; }
+		}
 	}
 
-	for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
-		int imgri;
-		enum imgtex tex;
-		int nimg=imggetn();
-		imgri=imgi+ldcp->load[i].imgi;
-		if(dplloop()) imgri=(imgri+nimg)%nimg;
-		tex=ldcp->load[i].tex;
-		if(prgforoneldfrm(imgri,ldfload,tex)){ ret=1; break; }
+	for(il=0;il<IL_NUM;il++){
+		int imgi=imginarrorlimits(il,dplgetimgi(il));
+		for(i=0;ldcp->load[i].tex!=TEX_NONE;i++){
+			int imgri;
+			enum imgtex tex;
+			int nimg=imggetn(il);
+			imgri=imgi+ldcp->load[i].imgi;
+			if(dplloop()) imgri=(imgri+nimg)%nimg;
+			tex=ldcp->load[i].tex;
+			if(prgforoneldfrm(il,imgri,ldfload,tex)){ ret=1; break; }
+		}
 	}
 
 	return ret;
@@ -492,7 +497,7 @@ void ldresetdoimg(struct img *img,void *UNUSED(arg)){
 }
 
 void ldresetdo(){
-	struct img *img=imgget(0);
+	struct img *img=imgget(0,0);
 	if(!img) return;
 	tlb.wi=tlb.ri; /* todo: cleanup texloadbuf */
 	ldresetdoimg(defimg,NULL);

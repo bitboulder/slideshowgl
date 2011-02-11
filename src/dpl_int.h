@@ -3,11 +3,16 @@
 
 #include "dpl.h"
 
+#define ACTIL			0x0000ffff
+#define ACTIL_PRGED		0x00010000
+
 struct dplpos {
-	int imgi;
+	int imgi[IL_NUM];
 	int imgiold;
 	int zoom;
 	float x,y;
+	int actil;
+	int actimgi;
 	char writemode;
 };
 

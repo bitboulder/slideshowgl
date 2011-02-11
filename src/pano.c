@@ -95,7 +95,7 @@ void panoinit(char done){
 struct img *panoactive(){
 	struct img *img;
 	if(dplgetzoom()<=0) return NULL;
-	if(!(img=imgget(dplgetimgi()))) return NULL;
+	if(!(img=imgget(0,dplgetimgi(-1)))) return NULL;
 	if(!img->pano->enable) return NULL;
 	return img;
 }

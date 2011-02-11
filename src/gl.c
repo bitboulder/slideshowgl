@@ -53,6 +53,7 @@ struct gl {
 		float col_txtmk[4];
 		float col_dirname[4];
 		float col_playicon[4];
+		float prged_w;
 	} cfg;
 	struct glsel {
 		char act;
@@ -156,6 +157,7 @@ void glinit(char done){
 		cfggetcol("gl.col_txtmk",   gl.cfg.col_txtmk);
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
 		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
+		gl.cfg.prged_w       = cfggetfloat("prged.w");
 	}
 	ldmaxtexsize();
 	
@@ -394,7 +396,25 @@ void glfontrender(const char *txt,enum glpos pos){
 #endif
 }
 
-void glrendertxtimg(struct txtimg *txt,float a){
+void glrenderact(float rat){
+	float bw=.05f,bh=.05f;
+	const float bmax=.15f;
+	glmodeslave(GLM_1D);
+	glColor4f(gl.cfg.col_txtmk[0],gl.cfg.col_txtmk[1],gl.cfg.col_txtmk[2],.5f);
+	if(rat>=1.f){
+		if((bh=bw*rat)>bmax) bw=(bh=bmax)/rat;
+	}else{
+		if((bw=bh/rat)>bmax) bh=(bw=bmax)*rat;
+	}
+	glBegin(GL_QUADS);
+	glVertex2f(-0.5f,   -0.5f); glVertex2f(-0.5f+bw,-0.5f); glVertex2f(-0.5f+bw, 0.5f   ); glVertex2f(-0.5f,    0.5f   );
+	glVertex2f( 0.5f,   -0.5f); glVertex2f( 0.5f-bw,-0.5f); glVertex2f( 0.5f-bw, 0.5f   ); glVertex2f( 0.5f,    0.5f   );
+	glVertex2f(-0.5f+bw,-0.5f); glVertex2f( 0.5f-bw,-0.5f); glVertex2f( 0.5f-bw,-0.5f+bh); glVertex2f(-0.5f+bw,-0.5f+bh);
+	glVertex2f(-0.5f+bw, 0.5f); glVertex2f( 0.5f-bw, 0.5f); glVertex2f( 0.5f-bw, 0.5f-bh); glVertex2f(-0.5f+bw, 0.5f-bh);
+	glEnd();
+}
+
+void glrendertxtimg(struct txtimg *txt,float a,char act){
 	float col[4];
 	int i;
 	if(!glfontsel(FT_BIG)) return;
@@ -404,6 +424,11 @@ void glrendertxtimg(struct txtimg *txt,float a){
 	glColor4fv(col);
 	glfontscale(-gl.cfg.hrat_txtimg,1.f);
 	glfontrender(txt->txt,GP_CENTER);
+	if(act){
+		float w=glfontwidth(txt->txt);
+		glScalef(w,gl.fontcur->h,1.f);
+		glrenderact(w/gl.fontcur->h);
+	}
 	glPopMatrix();
 }
 
@@ -425,6 +450,7 @@ void glrenderimgtext(const char *text,float irat,float a){
 	glColor4fv(col);
 
 	glPushMatrix();
+	glmodeslave(GLM_1D);
 	glTranslatef(-0.0293f,0.0293f,1.f); /* render to center of top image (outof image center) */
 	h=glfontscale(-gl.cfg.hrat_dirname,irat);
 	hclip=h/gl.cfg.hrat_dirname*(1.f-2.f*gl.cfg.dir_border);
@@ -472,7 +498,7 @@ void glrendermark(struct ipos *ipos,float rot,float irat){
 	glPopMatrix();
 }
 
-void glrenderimg(struct img *img,char back){
+void glrenderimg(struct img *img,char back,int il,char act){
 	struct ipos *ipos;
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
@@ -488,6 +514,11 @@ void glrenderimg(struct img *img,char back){
 	icol=imgposcol(img->pos);
 	glmodeslave(ipos->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
+	if(il==1){
+		srat*=1.f-gl.cfg.prged_w;
+		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
+		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
+	}
 	glTranslatef(ipos->x,ipos->y,0.);
 	glScalef(ipos->s,ipos->s,1.);
 	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
@@ -516,7 +547,8 @@ void glrenderimg(struct img *img,char back){
 	}
 	// draw img
 	if(dl) glCallList(dl);
-	if(txt) glrendertxtimg(txt,ipos->a);
+	if(txt) glrendertxtimg(txt,ipos->a,act);
+	else if(act) glrenderact(irat);
 	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
 	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif),irat);
 	glPopMatrix();
@@ -525,13 +557,14 @@ void glrenderimg(struct img *img,char back){
 void glrenderimgs(){
 	struct img *img;
 	char back;
+	int il;
 	glmode(GLM_2D);
-	if(delimg) glrenderimg(delimg,1);
-	for(back=2;back>=0;back--){
+	if(delimg) glrenderimg(delimg,1,0,0);
+	for(back=2;back>=0;back--) for(il=0;il<IL_NUM;il++){
 		GLuint imgi=1;
-		for(img=imgget(0);img;img=img->nxt){
+		for(img=imgget(il,0);img;img=img->nxt){
 			glLoadName(imgi++);
-			glrenderimg(img,back);
+			glrenderimg(img,back,il,(int)imgi-2==dplgetactimgi(il));
 		}
 	}
 	glLoadName(0);
@@ -594,7 +627,7 @@ void glrenderinfo(){
 	struct img *img;
 	char *info;
 	if(!dplshowinfo()) return;
-	if(!(img=imgget(dplgetimgi()))) return;
+	if(!(img=imgget(0,dplgetimgi(0)))) return;
 	if(!(info=imgexifinfo(img->exif))) return;
 	glrendertext(_("Image info"),info);
 }
@@ -612,7 +645,7 @@ void glrendercat(){
 	float colfg[4];
 	GLuint name=IMGI_CAT+1;
 	if(!(f=effcatf())) return;
-	if(!(img=imgget(dplgetimgi()))) return;
+	if(!(img=imgget(0,dplgetimgi(0)))) return;
 	if(!(cats=markcats())) return;
 	if(!glfontsel(FT_NOR)) return;
 	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
@@ -736,12 +769,26 @@ void glrenderbar(){
 	glPopMatrix();
 }
 
+void glrenderback(){
+	int actil=dplgetactil();
+	float w;
+	float col[4];
+	int i;
+	if(actil<0) return;
+	w=glmode(GLM_TXT);
+	for(i=0;i<3;i++) col[i]=gl.cfg.col_txtmk[i];
+	col[3]=.5f;
+	glColor4fv(col);
+	glRectf((actil?-.5f:.5f)*w,-.5f,(-.5f+gl.cfg.prged_w)*w,.5f);
+}
+
 void glpaint(){
 	GLenum glerr;
 
 	glClearColor(0.,0.,0.,1.);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glrenderback();
 	if(!panorender()) glrenderimgs();
 	glrendercat();
 	if(gl.sel.act) return;

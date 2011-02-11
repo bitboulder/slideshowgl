@@ -19,9 +19,9 @@ struct img *dirimg;
 struct img *delimg;
 
 struct imglist {
+	struct img **imgs;
 	char fn[FILELEN];
 	char dir[FILELEN];
-	struct img **imgs;
 	int nimg;
 	int nimgo;
 	unsigned int simg;
@@ -33,33 +33,44 @@ struct imglist {
 	long time;
 } *ils=NULL;
 
-struct imglist *curil = NULL;
+struct imglist *curils[IL_NUM] = {NULL, NULL};
 
 /***************************** img index operations ***************************/
 
+struct imglist *ilget(int il){
+	if(il<0 || il>=IL_NUM) return NULL;
+	return curils[il];
+}
+
 /* thread: all */
-int imggetn(){
+int imggetn(int il){
+	struct imglist *curil=ilget(il);
 	if(!curil) return 0;
 	if(curil->prg && dplgetzoom()==0) return prggetn(curil->prg);
 	return curil->nimg;
 }
-struct prg *ilprg(){ return curil ? curil->prg : NULL; }
-const char *ildir(){ return curil && curil->dir[0] ? curil->dir : NULL; }
+struct prg *ilprg(int il){
+	struct imglist *curil=ilget(il);
+	return curil ? curil->prg : NULL;
+}
+const char *ildir(){ return curils[0] && curils[0]->dir[0] ? curils[0]->dir : NULL; }
 
 /* thread: all */
-int imginarrorlimits(int i){
+int imginarrorlimits(int il,int i){
+	struct imglist *curil=ilget(il);
 	if(!curil) return 0;
 	if(i==IMGI_START) return -1;
-	if(i==IMGI_END)   return imggetn();
+	if(i==IMGI_END)   return imggetn(il);
 	return i;
 }
 
 /* thread: all */
-int imgidiff(int ia,int ib,int *ira,int *irb){
+int imgidiff(int il,int ia,int ib,int *ira,int *irb){
 	int diff;
+	struct imglist *curil=ilget(il);
 	if(!curil) return 0;
-	ia=imginarrorlimits(ia);
-	ib=imginarrorlimits(ib);
+	ia=imginarrorlimits(il,ia);
+	ib=imginarrorlimits(il,ib);
 	if(ira) *ira=ia;
 	if(irb) *irb=ib;
 	diff=ib-ia;
@@ -71,10 +82,29 @@ int imgidiff(int ia,int ib,int *ira,int *irb){
 }
 
 /* thread: all */
-struct img *imgget(int i){
+struct img *imgget(int il,int i){
+	struct imglist *curil=ilget(il);
 	if(!curil) return NULL;
 	if(i<0 || i>=curil->nimg) return NULL;
 	return curil->imgs[i];
+}
+
+struct img *ilremoveimg(struct imglist *il,int i,char final){
+	struct img *img=il->imgs[i];
+	if(i>0) il->imgs[i-1]->nxt=img->nxt;
+	il->nimg--;
+	for(;i<il->nimg;i++) il->imgs[i]=il->imgs[i+1];
+	if(!final) il->imgs[i]=img;
+	else if(!--il->nimgo) il->imgs[0]=NULL;
+	return img;
+}
+
+void iladdimg(struct imglist *il,struct img *img,const char *prg){
+	if((unsigned int)il->nimg==il->simg) il->imgs=realloc(il->imgs,sizeof(struct img *)*(il->simg+=16));
+	il->imgs[il->nimg]=img;
+	if(il->nimg) il->imgs[il->nimg-1]->nxt=img;
+	il->nimgo=++il->nimg;
+	if(prg) prgadd(&il->prg,prg,img);
 }
 
 /***************************** image init *************************************/
@@ -101,26 +131,17 @@ void imgfree(struct img *img){
 }
 
 struct img *imgadd(struct imglist *il,const char *prg){
-	struct img *img;
-	if((unsigned int)il->nimg==il->simg) il->imgs=realloc(il->imgs,sizeof(struct img *)*(il->simg+=16));
-	img=il->imgs[il->nimg]=imginit();
-	if(il->nimg) il->imgs[il->nimg-1]->nxt=img;
-	il->nimgo=++il->nimg;
-	if(prg) prgadd(&il->prg,prg,img);
+	struct img *img=imginit();
+	iladdimg(il,img,prg);
 	return img;
 }
 
-struct img *imgdel(int i){
-	struct img *img;
+struct img *imgdel(int il,int i){
+	struct imglist *curil=ilget(il);
 	if(!curil) return NULL;
 	if(i<0 || i>=curil->nimg) return NULL;
-	img=curil->imgs[i];
-	if(imgfiledir(img->file)) return NULL;
-	if(i>0) curil->imgs[i-1]->nxt=curil->imgs[i]->nxt;
-	curil->nimg--;
-	for(;i<curil->nimg;i++) curil->imgs[i]=curil->imgs[i+1];
-	curil->imgs[i]=img;
-	return img;
+	if(imgfiledir(curil->imgs[i]->file)) return NULL;
+	return ilremoveimg(curil,i,0);
 }
 
 /***************************** img list managment *****************************/
@@ -130,7 +151,7 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
 	snprintf(il->fn,FILELEN,fn);
 	snprintf(il->dir,FILELEN,dir);
-	il->parent=curil;
+	il->parent=curils[0];
 	il->pos=IMGI_START;
 	il->time=filetime(fn);
 	il->nxt=ils;
@@ -157,18 +178,17 @@ void ilfree(struct imglist *il){
 	struct img *img;
 	debug(DBG_STA,"imglist free for dir: %s",il->fn);
 	il->last_used=0;
-	for(img=il->imgs[0];img;img=img->nxt) ldffree(img->ld,TEX_NONE);
+	if(il->imgs) for(img=il->imgs[0];img;img=img->nxt) ldffree(img->ld,TEX_NONE);
 }
 
 /* thread: dpl */
-struct imglist *ilfind(const char *fn){
+char ilfind(const char *fn,struct imglist **ilret){
 	struct imglist *il;
-	for(il=ils;il;il=il->nxt) if(!strncmp(il->fn,fn,FILELEN)){
-		if(filetime(fn)==il->time) return il;
-		//ildestroy(il); /* TODO: fix */
-		return NULL;
+	for(il=ils;il;il=il->nxt) if(il->last_used!=1 && !strncmp(il->fn,fn,FILELEN)){
+		*ilret=il;
+		return filetime(fn)==il->time;
 	}
-	return NULL;
+	return 0;
 }
 
 int ilcleanup_cmp(const void *a,const void *b){
@@ -196,8 +216,9 @@ void ilcleanup(){
 				for(j=0;j<nil;j++) if(ilsort[j].il==pa)
 					ilsort[j].last_used=ilsort[i].last_used;
 	qsort(ilsort,nil,sizeof(struct ilsort),ilcleanup_cmp);
-	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s\n",(int)i,ilsort[i].last_used,ilsort[i].il->fn);
+	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s",(int)i,ilsort[i].last_used,ilsort[i].il->fn);
 	for(i=1;i<nil && ilsort[i].last_used;i++){
+		if(ilsort[i].last_used==1) holdfolders=0;
 		if(holdfolders && ilsort[i].last_used!=ilsort[i-1].last_used) holdfolders--;
 		if(!holdfolders) ilfree(ilsort[i].il);
 	}
@@ -206,14 +227,74 @@ void ilcleanup(){
 
 /* thread: dpl */
 int ilswitch(struct imglist *il){
-	if(!il && curil && curil->parent) il=curil->parent;
+	if(!il && curils[0] && curils[0]->parent) il=curils[0]->parent;
 	if(!il) return IMGI_END;
 	debug(DBG_STA,"imglist switch to dir: %s",il->fn);
-	if(curil) curil->pos=dplgetimgi();
-	curil=il;
+	if(curils[0]) curils[0]->pos=dplgetimgi(0);
+	curils[0]=il;
 	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
 	actadd(ACT_ILCLEANUP,NULL);
-	return curil->pos;
+	return curils[0]->pos;
+}
+
+/* thread: dpl */
+char ilsecswitch(char state){
+	char buf[FILELEN];
+	size_t len;
+	struct imglist *il;
+	if(state){
+		if(!curils[1]) return 1;
+		curils[0]=curils[1];
+		curils[1]=NULL;
+		actadd(ACT_ILCLEANUP,NULL);
+		return 1;
+	}
+	if(!curils[0] || !ilprg(0)) return 0;
+	len=strlen(curils[0]->fn);
+	if(len<8 || strncmp(curils[0]->fn+len-7,".effprg",7)) return 0;
+	snprintf(buf,len-6,curils[0]->fn);
+	if(!isdir(buf)){
+		while(len && buf[len-1]!='/' && buf[len-1]!='\\') len--;
+		if(len) buf[len-1]='\0';
+		else strcpy(buf,".");
+		if(!isdir(buf)) return 0;
+	}
+	if(!(il=floaddir(buf,""))) return 0;
+	il->parent=NULL;
+	curils[1]=curils[0];
+	curils[0]=il;
+	curils[0]->last_used=SDL_GetTicks();
+	curils[1]->last_used=SDL_GetTicks();
+	return 1;
+}
+
+char ilreload(int il,const char *cmd){
+	struct imglist *curil=ilget(il);
+	if(!curil) return 0;
+	if(cmd){
+		char buf[FILELEN*3];
+		snprintf(buf,FILELEN*3,"perl \"%s\" \"%s\" %s",finddatafile("effprged.pl"),curil->fn,cmd);
+		debug(DBG_STA,"reload cmd: %s",buf);
+		system(buf);
+	}
+	curil=curils[il]=floaddir(curil->fn,curil->dir);
+	if(curil) curil->last_used=SDL_GetTicks();
+	return curil!=NULL;
+}
+
+void ilunused(struct imglist *il){
+	il->last_used=1;
+	actadd(ACT_ILCLEANUP,NULL);
+}
+
+char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len){
+	int i;
+	for(i=0;i<src->nimg;i++) if(!strncmp(imgfilefn(src->imgs[i]->file),fn,len)){
+		struct img *img=ilremoveimg(src,i,1);
+		iladdimg(dst,img,fn[len]==';'?fn+len+1:NULL);
+		return 1;
+	}
+	return 0;
 }
 
 void imgfinalize(){

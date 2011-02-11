@@ -15,8 +15,8 @@
 #include "mark.h"
 #include "help.h"
 
-#define CATSELEMPTY	0x81
-#define CATSELBACK	0x80
+#define INPUTTXTEMPTY	0x81
+#define INPUTTXTBACK	0x80
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
@@ -33,12 +33,15 @@ struct dpl {
 	struct {
 		Uint32 displayduration;
 		char loop;
+		float prged_w;
 	} cfg;
-	unsigned char catsel[FILELEN];
+	unsigned char inputtxt[FILELEN];
+	enum inputtxt {ITM_CATSEL, ITM_TXTIMG} inputtxtmode;
 	enum colmode colmode;
 	Uint32 evdelay[DEG_NUM];
+	int actimgi;
 } dpl = {
-	.pos.imgi = IMGI_START,
+	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
 	.pos.x = 0.,
 	.pos.y = 0.,
@@ -48,24 +51,33 @@ struct dpl {
 	.showhelp = 0,
 	.inputnum = 0,
 	.colmode = COL_NONE,
-	.catsel = { CATSELEMPTY },
+	.inputtxt = { INPUTTXTEMPTY },
+	.pos.actil = 0,
 };
+
+#define AIL		(dpl.pos.actil&ACTIL)
+#define AIMGI	(dpl.pos.imgi[AIL])
 
 /***************************** dpl interface **********************************/
 
 /* thread: all */
 struct dplpos *dplgetpos(){ return &dpl.pos; }
-int dplgetimgi(){ return dpl.pos.imgi; }
+int dplgetimgi(int il){ if(il<0 || il>=IL_NUM) il=AIL; return dpl.pos.imgi[il]; }
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
 char dplloop(){ return dpl.cfg.loop; }
 char *dplgetinput(){
 	static char txt[16]={'\0'};
 	if(dpl.inputnum){ snprintf(txt,16,"%i",dpl.inputnum); return txt; }
-	if(dpl.catsel[0]=='\0'){ snprintf(txt+1,15,_("[Catalog]")); return txt; }
-	if(dpl.catsel[0]!=CATSELEMPTY) return (char*)dpl.catsel;
+	if(dpl.inputtxt[0]=='\0'){
+		snprintf(txt+1,15,dpl.inputtxtmode==ITM_CATSEL?_("[Catalog]"):_("[Text]"));
+		return txt;
+	}
+	if(dpl.inputtxt[0]!=INPUTTXTEMPTY) return (char*)dpl.inputtxt;
 	return NULL;
 }
+int dplgetactil(){ return (dpl.pos.actil&ACTIL_PRGED) ? AIL : -1; }
+int dplgetactimgi(int il){ return ((dpl.pos.actil&ACTIL_PRGED) && il==1) ? dpl.actimgi : -1; }
 
 /***************************** imgfit *****************************************/
 
@@ -94,7 +106,7 @@ char imgspos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 }
 
 void printixy(float sx,float sy){
-	struct img *img=imgget(dpl.pos.imgi);
+	struct img *img=imgget(AIL,AIMGI);
 	float ix,iy;
 	if(!img || dpl.pos.zoom<0) return;
 	if(!(imgspos2ipos(img,sx,sy,&ix,&iy))) return;
@@ -134,20 +146,29 @@ void dplclippos(struct img *img){
 }
 
 void dplmovepos(float sx,float sy){
-	float ix,iy;
-	struct img *img=imgget(dpl.pos.imgi);
-	if(!img || !imgspos2ipos(img,sx,sy,&ix,&iy)) return;
-	panotrimmovepos(img,&ix,&iy);
-	dpl.pos.x+=ix;
-	dpl.pos.y+=iy;
-	dplclippos(img);
-	debug(DBG_DBG,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+	struct img *img;
+	if(dpl.pos.actil&ACTIL_PRGED){
+		struct ipos *icur;
+		if(AIL!=1 || !(img=imgget(1,dpl.actimgi))) return;
+		sx/=1.f-dpl.cfg.prged_w;
+		icur=imgposcur(img->pos);
+		icur->x-=sx;
+		icur->y-=sy;
+	}else{
+		float ix,iy;
+		if(!(img=imgget(AIL,AIMGI)) || !imgspos2ipos(img,sx,sy,&ix,&iy)) return;
+		panotrimmovepos(img,&ix,&iy);
+		dpl.pos.x+=ix;
+		dpl.pos.y+=iy;
+		dplclippos(img);
+		debug(DBG_DBG,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",AIMGI,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+	}
 }
 
 void dplzoompos(int nzoom,float sx,float sy){
 	float oix,oiy,nix,niy;
 	char o,n;
-	struct img *img=imgget(dpl.pos.imgi);
+	struct img *img=imgget(AIL,AIMGI);
 	o=imgspos2ipos(img,sx,sy,&oix,&oiy);
 	dpl.pos.zoom=nzoom;
 	n=imgspos2ipos(img,sx,sy,&nix,&niy);
@@ -159,8 +180,8 @@ void dplzoompos(int nzoom,float sx,float sy){
 }
 
 void dplclipimgi(int *imgi){
-	int i = imgi ? *imgi : dpl.pos.imgi;
-	int nimg=imggetn();
+	int i = imgi ? *imgi : AIMGI;
+	int nimg=imggetn(AIL);
 	if(dpl.cfg.loop){
 		if(i==IMGI_START) i=0;
 		if(i==IMGI_END)   i=nimg-1;
@@ -175,26 +196,56 @@ void dplclipimgi(int *imgi){
 		if(i<0)     i=0;
 		if(i>=nimg) i=IMGI_END;
 	}
-	if(imgi) *imgi=i; else dpl.pos.imgi=i;
+	if(imgi) *imgi=i; else AIMGI=i;
 }
 
 void dplchgimgi(int dir){
-	dpl.pos.imgi=imginarrorlimits(dpl.pos.imgi)+dir;
+	AIMGI=imginarrorlimits(AIL,AIMGI)+dir;
 }
 
 int dplclickimg(float sx,float sy,int evimgi){
 	int i,x,y;
-	if(evimgi>=-1) return evimgi;
-	if(dpl.pos.imgi==IMGI_START) return IMGI_START;
-	if(dpl.pos.imgi==IMGI_END)   return IMGI_END;
-	if(dpl.pos.zoom>=0)    return dpl.pos.imgi;
+	if(evimgi>=-1)         return evimgi;
+	if(AIMGI==IMGI_START)  return IMGI_START;
+	if(AIMGI==IMGI_END)    return IMGI_END;
+	if(dpl.pos.zoom>=0)    return AIMGI;
 	sx/=effmaxfit().w; if(sx> .49f) sx= .49f; if(sx<-.49f) sx=-.49f;
 	sy/=effmaxfit().h; if(sy> .49f) sy= .49f; if(sy<-.49f) sy=-.49f;
 	x=(int)floorf(sx/zoomtab[-dpl.pos.zoom].size+.5f);
 	y=(int)floorf(sy/zoomtab[-dpl.pos.zoom].size+.5f);
 	i=(int)floorf((float)y/zoomtab[-dpl.pos.zoom].size+.5f);
 	i+=x;
-	return dpl.pos.imgi+i;
+	return AIMGI+i;
+}
+
+void dplprged(const char *cmd,int il,int imgi){
+	struct img *img=NULL;
+	struct prg *prg;
+	char buf[FILELEN*2];
+	if(!(dpl.pos.actil&ACTIL_PRGED)) return;
+	if(il>=0 && AIL!=il) return;
+	if(il<0) il=-il-1;
+	if(!(prg=ilprg(1))) return;
+	if(imgi>=0 && !(img=imgget(il,imgi))) return;
+	if(img && imgfiledir(img->file)) return;
+	if(cmd){
+		const char *fn="";
+		struct txtimg *txt;
+		if(img) fn=imgfilefn(img->file);
+		if(!strcmp(cmd,"addtxt")) fn=(char*)dpl.inputtxt;
+		if(img && (txt=imgfiletxt(img->file))) fn=txt->txt;
+		snprintf(buf,FILELEN*2,"%s \"%s\" %i",cmd,fn,dpl.pos.imgi[1]);
+		if(img && !strcmp(cmd,"pos")){
+			size_t len=strlen(buf);
+			struct ipos *icur=imgposcur(img->pos);
+			snprintf(buf+len,FILELEN*2-len," %.3f %.3f",icur->x,icur->y);
+		}
+	}
+	if(!ilreload(1,cmd?buf:NULL)) return;
+	il=AIL;
+	if(il!=1) dpl.pos.actil=ACTIL_PRGED|1;
+	effinit(EFFREF_ALL,DE_JUMP,-1);
+	if(il!=1) dpl.pos.actil=ACTIL_PRGED|il;
 }
 
 void dplmove(enum dplev ev,float sx,float sy,int clickimg){
@@ -208,40 +259,44 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		}
 	}
 	if(ev&(DE_UP|DE_DOWN)){
-		if(dpl.pos.zoom<0)  dplchgimgi(-dir*zoomtab[-dpl.pos.zoom].move);
-		if(dpl.pos.zoom==0) dplchgimgi( dir*zoomtab[-dpl.pos.zoom].move);
+		if(dpl.pos.actil==ACTIL_PRGED) dplchgimgi(-dir);
+		else if(dpl.pos.zoom<0)  dplchgimgi(-dir*zoomtab[-dpl.pos.zoom].move);
+		else if(dpl.pos.zoom==0) dplchgimgi( dir*zoomtab[-dpl.pos.zoom].move);
 		else dplmovepos(0.f,-(float)dir*.25f);
 	}
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
-		float x,fitw;
-		struct img *img;
-		if(dpl.pos.zoom<0 && clickimg>=0){
-			dpl.pos.imgi=clickimg;
-			dplclipimgi(NULL);
+		if(dpl.pos.actil&ACTIL_PRGED) dplprged(dir<0?"scaleinc":"scaledec",1,clickimg);
+		else{
+			float x,fitw;
+			struct img *img;
+			if(dpl.pos.zoom<0 && clickimg>=0){
+				AIMGI=clickimg;
+				dplclipimgi(NULL);
+			}
+			img=imgget(AIL,AIMGI);
+			if(dpl.pos.zoom==0 && dir>0 && img && imgfiledir(img->file)) return;
+			if(dpl.pos.zoom==0 && dir>0 && imgfit(img,&fitw,NULL) && panostart(img,fitw,&x)){
+				dpl.pos.x=x;
+				dpl.pos.zoom+=dir;
+				dplclippos(img);
+			}else if(dpl.pos.zoom+dir<=0){
+				if(dpl.pos.zoom==1) effpanoend(img);
+				dpl.pos.x=dpl.pos.y=0.;
+				dpl.pos.zoom+=dir;
+			}else dplzoompos(dpl.pos.zoom+dir,sx,sy);
 		}
-		img=imgget(dpl.pos.imgi);
-		if(dpl.pos.zoom==0 && dir>0 && img && imgfiledir(img->file)) return;
-		if(dpl.pos.zoom==0 && dir>0 && imgfit(img,&fitw,NULL) && panostart(img,fitw,&x)){
-			dpl.pos.x=x;
-			dpl.pos.zoom+=dir;
-			dplclippos(img);
-		}else if(dpl.pos.zoom+dir<=0){
-			if(dpl.pos.zoom==1) effpanoend(img);
-			dpl.pos.x=dpl.pos.y=0.;
-			dpl.pos.zoom+=dir;
-		}else dplzoompos(dpl.pos.zoom+dir,sx,sy);
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
 	if(dpl.pos.zoom>0)    dpl.run=0;
 	dplclipimgi(NULL);
-	if((dpl.pos.imgi==IMGI_START || dpl.pos.imgi==IMGI_END) && dpl.pos.zoom>0) dpl.pos.zoom=0;
-	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",dpl.pos.imgi,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+	if((AIMGI==IMGI_START || AIMGI==IMGI_END) && dpl.pos.zoom>0) dpl.pos.zoom=0;
+	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",AIMGI,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 }
 
 void dplsel(int imgi){
 	if(imgi<0 || imgi==IMGI_START || imgi==IMGI_END) return;
-	dpl.pos.imgi=imgi;
+	AIMGI=imgi;
 	dplclipimgi(NULL);
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_SEL,-1);
 }
@@ -254,12 +309,12 @@ void dplmark(int imgi){
 	if(imgi==IMGI_START || imgi==IMGI_END) return;
 	if(imgi>=IMGI_CAT){
 		mkid=(size_t)imgi-IMGI_CAT+1;
-		imgi=dpl.pos.imgi;
+		imgi=AIMGI;
 		if(imgi==IMGI_START || imgi==IMGI_END) return;
 		if(mkid>markncat()) return;
 	}
 	dplclipimgi(&imgi);
-	if(!(img=imgget(imgi))) return;
+	if(!(img=imgget(AIL,imgi))) return;
 	if(imgfiledir(img->file)) return;
 	mark=imgposmark(img,MPC_ALLWAYS);
 	mark[mkid]=!mark[mkid];
@@ -268,7 +323,7 @@ void dplmark(int imgi){
 }
 
 void dplrotate(enum dplev ev){
-	struct img *img=imgget(dpl.pos.imgi);
+	struct img *img=imgget(AIL,AIMGI);
 	int r=DE_DIR(ev);
 	if(!img) return;
 	if(imgfiledir(img->file)) return;
@@ -278,7 +333,7 @@ void dplrotate(enum dplev ev){
 }
 
 void dpldel(){
-	struct img *img=imgdel(dpl.pos.imgi);
+	struct img *img=imgdel(0,AIMGI);
 	if(!img) return;
 	if(dpl.pos.zoom>0) dpl.pos.zoom=0;
 	if(delimg){
@@ -293,41 +348,44 @@ void dpldel(){
 	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
 }
 
-void dplcol(int d){
+char dplcol(int d){
 	struct img *img;
 	float *val;
-	if(dpl.colmode==COL_NONE) return;
-	if(!(img=imgget(dpl.pos.imgi))) return;
-	if(imgfiledir(img->file)) return;
+	if(dpl.colmode==COL_NONE) return 0;
+	if(!(img=imgget(AIL,AIMGI))) return 0;
+	if(imgfiledir(img->file)) return 0;
 	val=((float*)imgposcol(img->pos))+dpl.colmode;
 	*val+=.1f*(float)d;
 	if(*val<-1.f) *val=-1.f;
 	if(*val> 1.f) *val= 1.f;
+	return 1;
 }
 
 char dpldir(int imgi,char noleave){
 	struct img *img;
 	const char *fn=NULL;
 	const char *dir=NULL;
+	if(AIL!=0) return 0;
 	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(fn=markcatfn(imgi-IMGI_CAT,&dir))) return 1;
 	if(imgi==IMGI_START) return 0;
-	if(!fn && !(img=imgget(imgi))){
+	if(!fn && !(img=imgget(AIL,imgi))){
 		if(noleave) return 0;
 		imgi=ilswitch(NULL);
 		if(imgi==IMGI_END) return 1;
 	}else{
+		struct imglist *il;
 		if(!fn){
 			if(!(dir=imgfiledir(img->file))) return 0;
 			fn=imgfilefn(img->file);
-			dpl.pos.imgi=imgi;
+			AIMGI=imgi;
 		}else actforce();
-		imgi=floaddir(fn,dir);
-		if(imgi==IMGI_END) return 1;
-		if(imgi==IMGI_START && !ilprg()) imgi=0;
-		if(ilprg()) dpl.pos.zoom=0;
+		if(!(il=floaddir(fn,dir))) return 1;
+		imgi=ilswitch(il);
+		if(imgi==IMGI_START && !ilprg(0)) imgi=0;
+		if(ilprg(0)) dpl.pos.zoom=0;
 	}
 	dpl.run=0;
-	dpl.pos.imgi=imgi;
+	AIMGI=imgi;
 	effinit(EFFREF_CLR,0,-1);
 	return 1;
 }
@@ -336,15 +394,15 @@ char dpldir(int imgi,char noleave){
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
-	if(dpl.pos.imgi==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
-	else if(dpl.pos.imgi==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
+	if(AIMGI==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
+	else if(AIMGI==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
-		struct img *img=imgget(dpl.pos.imgi);
+		struct img *img=imgget(AIL,AIMGI);
 		struct icol *ic;
 		char *txt=dsttxt;
 		if(!img) return;
 		ic=imgposcol(img->pos);
-		ADDTXT("%i/%i %s",dpl.pos.imgi+1, imggetn(), imgfilefn(img->file));
+		ADDTXT("%i/%i %s",AIMGI+1, imggetn(AIL), imgfilefn(img->file));
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
 			case ROT_90:  ADDTXT(_(" rotated-right")); break;
@@ -364,6 +422,14 @@ void dplstatupdate(){
 		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}
 	effstat()->run=run;
+}
+
+void dplactil(float x,int clickimg){
+	if(!(dpl.pos.actil&ACTIL_PRGED)) dpl.actimgi=-1;
+	else{
+		dpl.pos.actil = (x+.5f>dpl.cfg.prged_w) | ACTIL_PRGED;
+		dpl.actimgi   = AIL?clickimg:-1;
+	}
 }
 
 /***************************** dpl action *************************************/
@@ -414,38 +480,38 @@ void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum 
 }
 
 const char *keyboardlayout=
-	__("Mouse interface")"\0"     "\0"
-	__("Left drag")"\0"           __("Move")"\0"
-	__("Left click")"\0"          __("Goto image / Forward")"\0"
-	__("Double click on directory")"\0" __("Enter directory")"\0"
-	__("Double click on space")"\0"     __("Leave directory")"\0"
-	__("Middle click")"\0"        __("Play/Stop / Toggle mark (in writing mode)")"\0"
-	__("Right click")"\0"         __("Backward")"\0"
-	__("Scroll")"\0"              __("Zoom in/out")"\0"
+__("Mouse interface")"\0"     "\0"
+__("Left drag")"\0"           __("Move")"\0"
+__("Left click")"\0"          __("Goto image / Forward")"\0"
+__("Double click on directory")"\0" __("Enter directory")"\0"
+__("Double click on space")"\0"     __("Leave directory")"\0"
+__("Middle click")"\0"        __("Play/Stop / Toggle mark (in writing mode)")"\0"
+__("Right click")"\0"         __("Backward")"\0"
+__("Scroll")"\0"              __("Zoom in/out")"\0"
 
-	" ""\0"                       "\0"
-	__("Keyboard interface")"\0"  "\0"
-	__("Space")"\0"               __("Stop/Play / Enter directory")"\0"
-	__("Back")"\0"                __("Leave directory / Toggle panorama mode (spherical,plain,fisheye)")"\0"
-	__("Right/Left")"\0"          __("Forward/Backward (Zoom: shift right/left)")"\0"
-	__("Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")"\0"
-	__("Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
-	__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
-	__("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
-	__("f")"\0"                   __("Switch fullscreen")"\0"
-	__("r/R")"\0"                 __("Rotate image")"\0"
-	__("w")"\0"                   __("Switch writing mode")"\0"
-	__("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
-	__("+/-")"\0"                 __("Increase/decrease selected")"\0"
-	__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
-	__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
-	__("i")"\0"                   __("Show image info")"\0"
-	__("k")"\0"                   __("Show image catalog")"\0"
-	__("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
-	__("h")"\0"                   __("Show help")"\0"
-	__("e")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
-	__("q/Esc")"\0"               __("Quit")"\0"
-	"\0"
+" ""\0"                       "\0"
+__("Keyboard interface")"\0"  "\0"
+__("Space")"\0"               __("Stop/Play / Enter directory")"\0"
+__("Back")"\0"                __("Leave directory / Toggle panorama mode (spherical,plain,fisheye)")"\0"
+__("Right/Left")"\0"          __("Forward/Backward (Zoom: shift right/left)")"\0"
+__("Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")"\0"
+__("Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
+__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
+__("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
+__("f")"\0"                   __("Switch fullscreen")"\0"
+__("r/R")"\0"                 __("Rotate image")"\0"
+__("w")"\0"                   __("Switch writing mode")"\0"
+__("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
+__("+/-")"\0"                 __("Increase/decrease selected")"\0"
+__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
+__("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
+__("i")"\0"                   __("Show image info")"\0"
+__("k")"\0"                   __("Show image catalog")"\0"
+__("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
+__("h")"\0"                   __("Show help")"\0"
+__("p")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
+__("q/Esc")"\0"               __("Quit")"\0"
+"\0"
 ;
 
 /* thread: gl */
@@ -453,68 +519,100 @@ const char *dplhelp(){
 	return dpl.showhelp ? keyboardlayout : NULL;
 }
 
-void dplcatseladd(uint32_t c){
-	size_t len=strlen((char*)dpl.catsel);
-	if(c!=CATSELEMPTY){
-		if(c==CATSELBACK){
-			while(len && (dpl.catsel[len-1]&0xc0)==0x80) len--;
+void dplinputtxtadd(uint32_t c){
+	size_t len=strlen((char*)dpl.inputtxt);
+	if(c!=INPUTTXTEMPTY){
+		if(c==INPUTTXTBACK){
+			while(len && (dpl.inputtxt[len-1]&0xc0)==0x80) len--;
 			if(len) len--;
 		}else{
 			unsigned char *buf=(unsigned char *)&c;
 			int i;
-			for(i=0;i<4 && buf[i];i++) dpl.catsel[len++]=buf[i];
+			for(i=0;i<4 && buf[i];i++) dpl.inputtxt[len++]=buf[i];
 		}
-		dpl.catsel[len]='\0';
-		markcatsel((char*)dpl.catsel);
-	}else if(len){
-		int catid;
-		len+=2+strlen((char*)dpl.catsel+len+1);
-		catid=*(int*)(dpl.catsel+len);
-		if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
+		dpl.inputtxt[len]='\0';
+		if(dpl.inputtxtmode==ITM_CATSEL) markcatsel((char*)dpl.inputtxt);
+		else dpl.inputtxt[len+1]='\0';
+	}else if(len) switch(dpl.inputtxtmode){
+		case ITM_CATSEL:
+		{
+			int catid;
+			len+=2+strlen((char*)dpl.inputtxt+len+1);
+			catid=*(int*)(dpl.inputtxt+len);
+			if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
+		}
+		break;
+		case ITM_TXTIMG: dplprged("addtxt",-1,-1); break;
 	}
+}
+
+void dplinputtxtinit(enum inputtxt mode){
+	dpl.inputtxtmode=mode;
+	dpl.inputtxt[0]=dpl.inputtxt[1]='\0';
 }
 
 void dplkey(unsigned short keyu){
 	uint32_t key=unicode2utf8(keyu);
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
-	if(dpl.catsel[0]!=CATSELEMPTY){
+	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
 		if(key<0x20 || key==0x7f) switch(key){
-			case 8:  dplcatseladd(CATSELBACK); break;
-			case 13: dplcatseladd(CATSELEMPTY);
-			default: dpl.catsel[0]=CATSELEMPTY; break;
-		}else dplcatseladd(key);
+			case 8:  dplinputtxtadd(INPUTTXTBACK); break;
+			case 13: dplinputtxtadd(INPUTTXTEMPTY);
+			default: dpl.inputtxt[0]=INPUTTXTEMPTY; break;
+		}else dplinputtxtadd(key);
 		return;
 	}
 	switch(key){
-	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
-	case  27: if(effcatinit(0)) break;
-			  if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
-	case 'q': sdl_quit=1; break;
-	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
-	case 'r': dplrotate(DE_ROT1); break;
+		case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
+		case  27: if(effcatinit(0)) break;
+					  if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
+		case 'q': sdl_quit=1; break;
+		case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
+		case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
-	case 'e': panoev(PE_FISHMODE); break;
+	case 'p': panoev(PE_FISHMODE); break;
 	case 'f': sdlfullscreen(); break;
 	case 'w': dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
-	case 'm': dplmark(dpl.pos.imgi); break;
+	case 'm': dplmark(AIMGI); break;
 	case 'd': dplsetdisplayduration(dpl.inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(glprg()) dpl.colmode=COL_C; break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
-	case 's': if(dpl.pos.writemode){ dpl.catsel[0]=dpl.catsel[1]='\0'; effcatinit(1); }
+	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
 	case  13: if(dpl.inputnum) dplsel(dpl.inputnum-1); break;
 	case 127: if(dpl.pos.writemode) dpldel(); break;
-	case '+': dplcol(1); break;
-	case '-': dplcol(-1); break;
+	case '+': if(!dplcol( 1)) dplprged("add",-1,dpl.pos.imgi[0]); break;
+	case '-': if(!dplcol(-1)) dplprged("del", 1,dpl.actimgi); break;
+	case 'e':
+		if(!ilsecswitch((dpl.pos.actil&ACTIL_PRGED)!=0)) break;
+		dpl.run=0;
+		dpl.pos.zoom=0;
+		if(dpl.pos.actil&ACTIL_PRGED){
+			dpl.pos.imgi[0]=dpl.pos.imgi[1];
+			dpl.pos.actil=0;
+			effinit(EFFREF_ALL,0,-1);
+		}else{
+			dpl.pos.imgi[1]=dpl.pos.imgi[0];
+			dpl.pos.imgi[0]=0;
+			dpl.pos.actil=ACTIL_PRGED;
+			effinit(EFFREF_ALL,0,-1);
+			dpl.pos.actil=ACTIL_PRGED|1;
+			effinit(EFFREF_ALL,0,-1);
+		}
+	break;
+	case 'E': dplprged("reload",-1,-1); break;
+	case 'i': dplprged("frmins",-1,-1); break;
+	case 'x': dplprged("frmdel",-1,-1); break;
+	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){
 		dpl.inputnum = dpl.inputnum*10 + (int)(key-'0');
 	}else dpl.inputnum=0;
-	dpl.showinfo = !dpl.showinfo && key=='i' &&
-		dpl.pos.imgi!=IMGI_START && dpl.pos.imgi!=IMGI_END;
+	dpl.showinfo = !dpl.showinfo && !(dpl.pos.actil&ACTIL_PRGED) && key=='i' &&
+		AIMGI!=IMGI_START && AIMGI!=IMGI_END;
 	dpl.showhelp = !dpl.showhelp && key=='h';
 }
 
@@ -551,7 +649,7 @@ char dplev(struct ev *ev){
 	char evdone=0;
 	if(!dplevdelay(ev)) return 0;
 	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
-	dpl.pos.imgiold=dpl.pos.imgi;
+	dpl.pos.imgiold=AIMGI;
 	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
 	if( (ev->ev&DE_KEY) && ev->key!='+' && ev->key!='-') dpl.colmode=COL_NONE;
 	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
@@ -566,25 +664,23 @@ char dplev(struct ev *ev){
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
 	case DE_MARK:    if((evdone=dpl.pos.writemode)) dplmark(clickimg); break;
 	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
-	case DE_PLAY: 
-		if(!panoev(PE_PLAY) && dpl.pos.zoom<=0){
+	case DE_PLAY:
+		if(!(dpl.pos.actil&ACTIL_PRGED) && !panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);
 			dpl.run=SDL_GetTicks();
 		}
 	break;
 	case DE_KEY: dplkey(ev->key); break;
+	case DE_STAT: dplactil(ev->sx,clickimg); break;
+	case DE_JUMPEND: dplprged("pos",1,dpl.actimgi); break;
 	}
-	if(dpl.pos.imgi==IMGI_END) dpl.run=0;
-	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || dpl.pos.imgi==IMGI_END) ret|=2;
+	if(AIMGI==IMGI_END) dpl.run=0;
+	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;
 	return ret;
 }
 
 void dplcheckev(){
 	char stat=0;
-	while(dev.wi!=dev.ri){
-		stat|=dplev(dev.evs+dev.ri);
-		dev.ri=(dev.ri+1)%DPLEVS_NUM;
-	}
 	if(dev.move.sx || dev.move.sy){
 		enum dplev ev=0;
 		if(dev.move.sx) ev|=DE_JUMPX;
@@ -594,6 +690,10 @@ void dplcheckev(){
 		dev.move.sy=0.f;
 		effinit(EFFREF_IMG,ev,-1);
 	}
+	while(dev.wi!=dev.ri){
+		stat|=dplev(dev.evs+dev.ri);
+		dev.ri=(dev.ri+1)%DPLEVS_NUM;
+	}
 	if(stat&1) dplstatupdate();
 	if(stat&2) effstaton(stat);
 }
@@ -602,7 +702,7 @@ void dplcheckev(){
 
 void dplrun(){
 	Uint32 time=SDL_GetTicks();
-	if(time-dpl.run>effdelay(imginarrorlimits(dpl.pos.imgi),dpl.cfg.displayduration)){
+	if(time-dpl.run>effdelay(imginarrorlimits(0,AIMGI),dpl.cfg.displayduration)){
 		dpl.run=time;
 		dplevput(DE_RIGHT);
 	}
@@ -614,6 +714,7 @@ void dplcfginit(){
 	int z;
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");
+	dpl.cfg.prged_w=cfggetfloat("prged.w");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);
 	for(;z<0;z++) dplevput(DE_ZOOMIN);
