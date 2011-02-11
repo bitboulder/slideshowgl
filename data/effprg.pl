@@ -24,6 +24,7 @@
 # sd     => src+dst
 # on     start:end:layer (defon)
 # off    start:end:layer (defoff)
+# col    0xNNNNNN
 
 ## [OUTPUT-FORMAT]##
 #
@@ -37,7 +38,7 @@ my $fprg=shift;
 
 my %def=(
 	"frm"=>"1:1",
-	"col"=>"1:1:1:1",
+	"col"=>"1:1:1",
 	"pos"=>"1:1:0:0:0",
 	"src"=>"0",
 	"dst"=>"0",
@@ -130,7 +131,7 @@ sub loadprg {
 				$arg=~s/^"|"$//g;
 				$arg="txt_".$arg;
 			}else{
-				$arg=$dir."/".$arg if $arg!~/^(\/|[A-Za-z]:\\)/;
+				$arg=$dir."/".$arg if ""ne$dir && $arg!~/^(\/|[A-Za-z]:\\)/;
 			}
 			$prg[-1]->{"imgs"}->[@{$prg[-1]->{"imgs"}}]->{"file"}=$arg;
 			@{$prg[-1]->{"imgs"}->[-1]->{"pos"}}=();
@@ -180,6 +181,7 @@ sub fillprg {
 		my $frm=$prg[$fi];
 		&fillarg($frm->{"frm"},$def{"frm"});
 		foreach my $img (@{$frm->{"imgs"}}){
+			@{$img->{"col"}}=() if !exists $img->{"col"};
 			&fillarg($img->{"col"},$def{"col"});
 			my $prv=&findimg($fi-1,$img->{"file"},@prg);
 			my $nxt=&findimg($fi+1,$img->{"file"},@prg);
