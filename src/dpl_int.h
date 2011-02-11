@@ -12,7 +12,6 @@ struct dplpos {
 	int zoom;
 	float x,y;
 	int actil;
-	int actimgi;
 	char writemode;
 };
 

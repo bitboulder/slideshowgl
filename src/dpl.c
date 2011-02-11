@@ -77,7 +77,7 @@ char *dplgetinput(){
 	return NULL;
 }
 int dplgetactil(){ return (dpl.pos.actil&ACTIL_PRGED) ? AIL : -1; }
-int dplgetactimgi(int il){ return ((dpl.pos.actil&ACTIL_PRGED) && il==1) ? dpl.actimgi : -1; }
+int dplgetactimgi(int il){ return (dpl.pos.actil==(ACTIL_PRGED|il)) ? dpl.actimgi : -1; }
 
 /***************************** imgfit *****************************************/
 
@@ -425,11 +425,9 @@ void dplstatupdate(){
 }
 
 void dplactil(float x,int clickimg){
-	if(!(dpl.pos.actil&ACTIL_PRGED)) dpl.actimgi=-1;
-	else{
-		dpl.pos.actil = (x+.5f>dpl.cfg.prged_w) | ACTIL_PRGED;
-		dpl.actimgi   = AIL?clickimg:-1;
-	}
+	if(!(dpl.pos.actil&ACTIL_PRGED)) return;
+	dpl.pos.actil = (x+.5f>dpl.cfg.prged_w) | ACTIL_PRGED;
+	dpl.actimgi   = clickimg;
 }
 
 /***************************** dpl action *************************************/
@@ -583,7 +581,7 @@ void dplkey(unsigned short keyu){
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
 	case  13: if(dpl.inputnum) dplsel(dpl.inputnum-1); break;
 	case 127: if(dpl.pos.writemode) dpldel(); break;
-	case '+': if(!dplcol( 1)) dplprged("add",-1,dpl.pos.imgi[0]); break;
+	case '+': if(!dplcol( 1)) dplprged("add",-1,dpl.actimgi>=0?dpl.actimgi:dpl.pos.imgi[0]); break;
 	case '-': if(!dplcol(-1)) dplprged("del", 1,dpl.actimgi); break;
 	case 'e':
 		if(!ilsecswitch((dpl.pos.actil&ACTIL_PRGED)!=0)) break;
@@ -596,6 +594,7 @@ void dplkey(unsigned short keyu){
 		}else{
 			dpl.pos.imgi[1]=dpl.pos.imgi[0];
 			dpl.pos.imgi[0]=0;
+			dpl.actimgi=-1;
 			dpl.pos.actil=ACTIL_PRGED;
 			effinit(EFFREF_ALL,0,-1);
 			dpl.pos.actil=ACTIL_PRGED|1;
