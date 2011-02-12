@@ -319,6 +319,7 @@ void dplmark(int imgi){
 	mark=imgposmark(img,MPC_ALLWAYS);
 	mark[mkid]=!mark[mkid];
 	effinit(EFFREF_IMG,DE_MARK,imgi);
+	markchange(mkid);
 	actadd(ACT_SAVEMARKS,NULL);
 }
 

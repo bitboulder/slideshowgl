@@ -32,12 +32,16 @@ struct mkcat {
 #define MKCHAINS	512
 
 struct mark {
+	struct {
+		char fn[FILELEN];
+		const char *flst2gthumb;
+	} cfg;
 	char init;
-	char fn[FILELEN];
 	struct mk *mks[MKCHAINS];
 	char *catfn;
 	char *catna;
 	size_t ncat;
+	char *mkchange;
 } mark = {
 	.init = 0,
 	.catfn = NULL,
@@ -168,7 +172,7 @@ void marksload(){
 	size_t c;
 	marksfree();
 	for(c=0;c<=mark.ncat;c++){
-		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.fn;
+		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.cfg.fn;
 		if(!(fd=fopen(fn,"r"))) continue;
 		while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
 			int len=(int)strlen(line);
@@ -182,16 +186,21 @@ void marksload(){
 
 void markinit(){
 	const char *fn;
+	FILE *fd;
 	if(mark.init) return;
-	memset(mark.mks,0,sizeof(struct mk *)*MKCHAINS);
+	mark.cfg.flst2gthumb=cfggetstr("mark.flst2gthumb");
+	if((fd=fopen(mark.cfg.flst2gthumb,"r"))) fclose(fd);
+	else mark.cfg.flst2gthumb=NULL;
 	fn=cfggetstr("mark.fn");
-	if(fn && fn[0]) snprintf(mark.fn,FILELEN,fn);
+	if(fn && fn[0]) snprintf(mark.cfg.fn,FILELEN,fn);
 	else{
 		fn=getenv("TEMP");
 		if(!fn) fn=getenv("TMP");
 		if(!fn) fn="/tmp";
-		snprintf(mark.fn,FILELEN,"%s/slideshowgl-mark.flst",fn);
+		snprintf(mark.cfg.fn,FILELEN,"%s/slideshowgl-mark.flst",fn);
 	}
+	mark.mkchange=calloc(mark.ncat+1,sizeof(char));
+	memset(mark.mks,0,sizeof(struct mk *)*MKCHAINS);
 	marksload();
 	mark.init=1;
 }
@@ -203,18 +212,26 @@ char *markimgget(struct img *img,enum mkcreate create){
 	return mk ? mk->mark : NULL;
 }
 
+void markchange(size_t id){ mark.mkchange[id]=1; }
+
 void markssave(){
 	FILE *fd;
 	int i;
 	size_t c;
 	struct mk *mk;
 	markinit();
-	for(c=0;c<=mark.ncat;c++){
-		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.fn;
+	for(c=0;c<=mark.ncat;c++) if(mark.mkchange[c]){
+		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.cfg.fn;
+		mark.mkchange[c]=0;
 		if(!(fd=fopen(fn,"w"))) return;
 		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
 			if(mk->mark[c]) fprintf(fd,"%s\n",mk->fn);
 		fclose(fd);
+		if(mark.cfg.flst2gthumb){
+			char buf[FILELEN*2];
+			snprintf(buf,FILELEN*2,"%s \"%s\"",mark.cfg.flst2gthumb,fn);
+			system(buf);
+		}
 		debug(DBG_STA,"marks saved (%s)",fn);
 	}
 }

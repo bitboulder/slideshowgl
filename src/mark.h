@@ -12,6 +12,7 @@ void markcatadd(char *fn);
 void markcatsel(char *catsel);
 
 char *markimgget(struct img *img,enum mkcreate create);
+void markchange(size_t id);
 
 void markssave();
 
