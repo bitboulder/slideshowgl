@@ -638,18 +638,16 @@ void glrenderhelp(){
 }
 
 void glrendercat(){
-	struct img *img;
-	char *mark;
+	char *mark=NULL;
 	char *cats,*cat;
 	float f,w=0.f,h,b;
 	float colfg[4];
 	GLuint name=IMGI_CAT+1;
 	if(!(f=effcatf())) return;
-	if(!(img=imgget(0,dplgetimgi(0)))) return;
 	if(!(cats=markcats())) return;
 	if(!glfontsel(FT_NOR)) return;
 	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
-	mark=imgposmark(img,MPC_NO);
+	mark=imgposmark(imgget(0,dplgetimgi(0)),MPC_NO);
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-w/2.f,0.5f,0.f);

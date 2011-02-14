@@ -86,6 +86,7 @@ struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
 
 /* thread: act */
 char *imgposmark(struct img *img,enum mpcreate create){
+	if(!img) return NULL;
 	if(create>=MPC_YES && !img->pos->mark) img->pos->mark=markimgget(img,create==MPC_ALLWAYS ? MKC_YES : MKC_NO);
 	return img->pos->mark;
 }
