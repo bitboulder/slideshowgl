@@ -217,6 +217,8 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 		ip->opt.back=(char)pev->layer;
 		ip->way[(int) rev]=pev->way[0];
 		ip->way[(int)!rev]=pev->way[1];
+		ip->way[0].r+=imgexifrotf(img->exif);
+		ip->way[1].r+=imgexifrotf(img->exif);
 		if(iev) ip->waytime[0]=ip->waytime[1];
 		else{
 			float wt = rev ? 1.f-pev->waytime[1] : pev->waytime[0];
