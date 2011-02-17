@@ -110,11 +110,16 @@ int effdiff(struct dplpos *dp,int *pi1,int *pi2){
 	return imgidiff(AIL,dp->imgiold,AIMGI,pi1,pi2);
 }
 
+void effsetnonpos(struct dplpos *dp,struct ipos *ip,struct img *img,char add){
+	if(!add) ip->r=0.f;
+	if(img)  ip->r+=imgexifrotf(img->exif);
+	ip->m = (img && img->pos->mark && img->pos->mark[0] && dp->writemode)?1.f:0.f;
+}
+
 void effmove(struct dplpos *dp,struct ipos *ip,int i){
 	struct img *img=imgget(AIL,i);
+	effsetnonpos(dp,ip,img,0);
 	ip->a = 1.f;
-	ip->m=(img && img->pos->mark && img->pos->mark[0] && dp->writemode)?1.f:0.f;
-	ip->r=img ? imgexifrotf(img->exif) : 0.f;
 	if(dp->actil==ACTIL_PRGED){
 		int diff=imgidiff(AIL,AIMGI,i,NULL,NULL);
 		ip->s=(AIMGI==i ? 1.f : .75f) * eff.cfg.prged_w;
@@ -184,8 +189,7 @@ char efffaston(struct dplpos *dp,struct imgpos *ip,int i){
 	ip->cur.s=1.;
 	ip->cur.x=(float)(i-i1);
 	ip->cur.y=0.;
-	ip->cur.m=(img && img->pos->mark && img->pos->mark[0] && dp->writemode)?1.:0.;
-	ip->cur.r=img ? imgexifrotf(img->exif) : 0.f;
+	effsetnonpos(dp,&ip->cur,img,0);
 	ip->eff=0;
 	return 1;
 }
@@ -217,8 +221,8 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 		ip->opt.back=(char)pev->layer;
 		ip->way[(int) rev]=pev->way[0];
 		ip->way[(int)!rev]=pev->way[1];
-		ip->way[0].r+=imgexifrotf(img->exif);
-		ip->way[1].r+=imgexifrotf(img->exif);
+		effsetnonpos(dp,ip->way+0,img,1);
+		effsetnonpos(dp,ip->way+1,img,1);
 		if(iev) ip->waytime[0]=ip->waytime[1];
 		else{
 			float wt = rev ? 1.f-pev->waytime[1] : pev->waytime[0];
