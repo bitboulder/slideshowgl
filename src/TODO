@@ -13,4 +13,13 @@
 # Want to have
 - load imgexif threaded
 
+- eff: per value start-time, end-time
+- effinit only on changed values and depended on the ev-type
+- interate status and cat
+- dpl.actimgi through eff
+- dpl.showinfo through eff
+- dpl.showhelp through eff
+- imgposmark for cat through eff
+- dpl.pos.actil through eff
+
 ? thread priorities

@@ -6,16 +6,17 @@ CDIR="$DIR/core_dump"
 
 SL="$DIR/build/slideshowgl"
 
-cd $CDIR
+#cd $CDIR
 ulimit -c unlimited
 
 $SL $*
 
 if [ -f "core" ]; then
 	TIME=`date +%Y%m%d_%H%M%S`
+	TIME="$CDIR/$TIME"
 	mkdir $TIME
+	mv core $TIME
 	cd $TIME
-	mv ../core .
 	cp $SL .
 	svn info $DIR >svn-info
 	svn diff $DIR >svn-diff
