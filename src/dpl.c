@@ -391,7 +391,7 @@ char dpldir(int imgi,char noleave){
 	return 1;
 }
 
-#define ADDTXT(...)	txt+=snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__)
+#define ADDTXT(...)	{ snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__); txt+=strlen(txt); }
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
@@ -403,7 +403,10 @@ void dplstatupdate(){
 		char *txt=dsttxt;
 		if(!img) return;
 		ic=imgposcol(img->pos);
-		ADDTXT("%i/%i %s",AIMGI+1, imggetn(AIL), imgfilefn(img->file));
+		ADDTXT("%i/%i ",AIMGI+1,imggetn(AIL));
+		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),imgfilefn(img->file));
+		utf8check(txt);
+		txt+=strlen(txt);
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
 			case ROT_90:  ADDTXT(_(" rotated-right")); break;
