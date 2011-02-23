@@ -28,18 +28,25 @@ struct ac {
 };
 
 
-void runcmd(char *cmd){
+char runcmd(char *cmd){
 	debug(DBG_NONE,"running cmd: %s",cmd);
-	if(ac.cfg.runcmd) system(cmd);
+	if(ac.cfg.runcmd) return system(cmd)==0;
+	return 1;
 }
 
 void actrotate(struct img *img){
 	char *fn=imgfilefn(img->file);
 	float rot=imgexifrotf(img->exif);
 	char cmd[FILELEN+64];
+	char done=0;
 	snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -w \"%s\"",rot,fn);
-	runcmd(cmd);
-	debug(DBG_STA,"img rotated (%s)",fn);
+	done||=runcmd(cmd);
+	if(!done){
+		snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -s -w \"%s\"",rot,fn);
+		done||=runcmd(cmd);
+	}
+	if(done) debug(DBG_STA,"img rotated (%s)",fn);
+	else error(ERR_CONT,"img rotating failed (%s)",fn);
 }
 
 void actdelete(struct img *img){
