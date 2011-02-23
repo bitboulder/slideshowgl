@@ -38,12 +38,12 @@ void actrotate(struct img *img){
 	char *fn=imgfilefn(img->file);
 	float rot=imgexifrotf(img->exif);
 	char cmd[FILELEN+64];
-	char done=0;
+	char done;
 	snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -w \"%s\"",rot,fn);
-	done=done||runcmd(cmd);
+	done=runcmd(cmd);
 	if(!done){
 		snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -s -w \"%s\"",rot,fn);
-		done=done||runcmd(cmd);
+		done=runcmd(cmd);
 	}
 	if(done) debug(DBG_STA,"img rotated (%s)",fn);
 	else error(ERR_CONT,"img rotating failed (%s)",fn);
