@@ -238,6 +238,8 @@ void sdlkey(SDL_keysym key){
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
 		case SDLK_KP_ENTER: dplevputk(' ');       break;
+		case SDLK_HOME:     dplevputi(DE_SEL,0); break;
+		case SDLK_END:      dplevputi(DE_SEL,IMGI_END-1); break;
 		default:            if(key.unicode) dplevputk(key.unicode); break;
 	}
 }

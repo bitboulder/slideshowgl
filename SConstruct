@@ -123,6 +123,7 @@ if not env.GetOption('clean'):
 #		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
+		conf.CheckPKG('glu >= 7.0',1,0)
 		conf.CheckPKG('glew >= 1.5',1,0)
 		conf.CheckPKG('sdl >= 1.2',1,0)
 		conf.CheckPKG('SDL_image >= 1.2',1,0)
