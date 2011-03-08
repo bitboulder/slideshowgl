@@ -56,8 +56,8 @@ my @prg=&loadprg($fprg);
 my %imgs=&compileprg(@prg);
 my $flst=&flstimgs(\%imgs);
 
-#&outprg(@prg);
-#&outimgs(\%imgs);
+&outprg(@prg);
+&outimgs(\%imgs);
 print $flst;
 
 
@@ -315,12 +315,19 @@ sub compilepath {
 	my $img=shift;
 	my $fi=shift;
 	my @path=@_;
-	for(my $pi=1;$pi<@path;$pi++){
-		next if $path[$pi-1]->{"p"}eq$path[$pi]->{"p"};
-		my $f=$img->{"file"};
-		@{$imgs->{$f}}=() if !exists $imgs->{$f};
-		my @ev=&compileev($fi,$path[$pi-1],$path[$pi]);
+	my $f=$img->{"file"};
+	@{$imgs->{$f}}=() if !exists $imgs->{$f};
+	if(@path==1){
+		my @ev=&compileev($fi,$path[0],$path[0]);
 		$imgs->{$f}->[@{$imgs->{$f}}]=\@ev;
+	}else{
+		my $done=0;
+		for(my $pi=1;$pi<@path;$pi++){
+			next if $path[$pi-1]->{"p"}eq$path[$pi]->{"p"} && ($pi<@path-1 || $done);
+			my @ev=&compileev($fi,$path[$pi-1],$path[$pi]);
+			$imgs->{$f}->[@{$imgs->{$f}}]=\@ev;
+			$done=1;
+		}
 	}
 }
 
