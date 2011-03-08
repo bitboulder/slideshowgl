@@ -145,23 +145,25 @@ void dplclippos(struct img *img){
 	if(dpl.pos.x>x[1]){ dpl.pos.x=x[1]; panoev(PE_FLIPLEFT); }
 }
 
-void dplmovepos(float sx,float sy){
+char dplmovepos(float sx,float sy){
 	struct img *img;
 	if(dpl.pos.actil&ACTIL_PRGED){
 		struct ipos *icur;
-		if(AIL!=1 || !(img=imgget(1,dpl.actimgi))) return;
+		if(AIL!=1 || !(img=imgget(1,dpl.actimgi))) return 0;
 		sx/=1.f-dpl.cfg.prged_w;
 		icur=imgposcur(img->pos);
 		icur->x-=sx;
 		icur->y-=sy;
+		return 0;
 	}else{
 		float ix,iy;
-		if(!(img=imgget(AIL,AIMGI)) || !imgspos2ipos(img,sx,sy,&ix,&iy)) return;
+		if(!(img=imgget(AIL,AIMGI)) || !imgspos2ipos(img,sx,sy,&ix,&iy)) return 0;
 		panotrimmovepos(img,&ix,&iy);
 		dpl.pos.x+=ix;
 		dpl.pos.y+=iy;
 		dplclippos(img);
 		debug(DBG_DBG,"dpl move pos => imgi %i zoom %i pos %.2fx%.2f",AIMGI,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+		return 1;
 	}
 }
 
@@ -704,10 +706,9 @@ void dplcheckev(){
 		enum dplev ev=0;
 		if(dev.move.sx) ev|=DE_JUMPX;
 		if(dev.move.sy) ev|=DE_JUMPY;
-		dplmovepos(dev.move.sx,dev.move.sy);
+		if(dplmovepos(dev.move.sx,dev.move.sy)) effinit(EFFREF_IMG,ev,-1);
 		dev.move.sx=0.f;
 		dev.move.sy=0.f;
-		effinit(EFFREF_IMG,ev,-1);
 	}
 	while(dev.wi!=dev.ri){
 		stat|=dplev(dev.evs+dev.ri);
