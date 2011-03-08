@@ -250,15 +250,18 @@ char sdljump(Uint16 x,Uint16 y,char end){
 	int zoom=dplgetzoom();
 	int w=100,wthr;
 	enum dplev ev=0;
+	int actil=dplgetactil();
 	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
 	sdl.move.jump=1;
-	if(zoom<=0 && dplgetactil()<0){
+	if(zoom<=0 && actil<1){
 		switch(zoom){
+			case  0: if(actil==0) w=sdl.scr_h/5/2; break;
 			case -1: w=sdl.scr_h/3/2; break;
 			case -2: w=sdl.scr_h/5/2; break;
 			case -3: w=sdl.scr_h/7/2; break;
 		}
 		if(zoom!=0){ xd*=-1; yd*=-1; }
+		else if(actil==0){ xd=0; yd*=-1; }
 		wthr=w*7/10;
 		if(xd<sdl.move.pos_x*w-wthr){ ev=DE_LEFT;  sdl.move.pos_x--; }
 		if(xd>sdl.move.pos_x*w+wthr){ ev=DE_RIGHT; sdl.move.pos_x++; }
