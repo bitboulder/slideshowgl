@@ -511,6 +511,7 @@ void glrenderimg(struct img *img,char back,int il,char act){
 	if(!irat) return;
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
 	ipos=imgposcur(img->pos);
+	if(!ipos->a || !ipos->s) return;
 	icol=imgposcol(img->pos);
 	glmodeslave(!ilprg(il) && ipos->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
