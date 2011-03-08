@@ -7,7 +7,7 @@ extern char sdl_quit;
 
 float sdlrat();
 
-void sdlfullscreen();
+void sdlfullscreen(char dst);
 
 void sdlinit();
 void sdlquit();

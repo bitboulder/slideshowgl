@@ -434,6 +434,20 @@ void dplactil(float x,int clickimg){
 	dpl.actimgi   = clickimg;
 }
 
+int dplgimprun(void *arg){
+	char cmd[FILELEN+8];
+	snprintf(cmd,FILELEN+8,"gimp %s",imgfilefn(((struct img *)arg)->file));
+	system(cmd);
+	return 0;
+}
+
+void dplgimp(){
+	struct img *img=imgget(AIL,AIMGI);
+	if(!img) return;
+	sdlfullscreen(0);
+	SDL_CreateThread(dplgimprun,img);
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -510,6 +524,7 @@ __("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 __("i")"\0"                   __("Show image info")"\0"
 __("k")"\0"                   __("Show image catalog")"\0"
 __("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
+__("G")"\0"                   __("Edit current image with gimp")"\0"
 __("h")"\0"                   __("Show help")"\0"
 __("p")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
 __("q/Esc")"\0"               __("Quit")"\0"
@@ -574,7 +589,7 @@ void dplkey(unsigned short keyu){
 		case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
 	case 'p': panoev(PE_FISHMODE); break;
-	case 'f': sdlfullscreen(); break;
+	case 'f': sdlfullscreen(-1); break;
 	case 'w': dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case 'm': dplmark(AIMGI); break;
 	case 'd': dplsetdisplayduration(dpl.inputnum); break;
@@ -609,6 +624,7 @@ void dplkey(unsigned short keyu){
 	case 'i': dplprged("frmins",-1,-1); break;
 	case 'x': dplprged("frmdel",-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
+	case 'G': dplgimp(); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){

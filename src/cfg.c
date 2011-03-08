@@ -46,6 +46,7 @@ struct cfg {
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512",    {NULL}, __("Maximal texture size") },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024",   {NULL}, __("Maximal texture size for panoramas") },
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000",     {NULL}, __("Maximal pixels for panoramas (bigger ones are scaled down)") },
+	{ 0,   "ld.filetime_check",   CT_INT, CM_SET,  "5000",   {NULL}, __("File time check delay") },
 	{ 0,   "img.holdfolders",     CT_INT, CM_SET,  "3",      {NULL}, __("Number of directories to hold") },
 	{ 0,   "gl.font",             CT_STR, CM_SET,  "FreeSans.ttf", {NULL}, __("Filename of the font to use") },
 	{ 0,   "gl.hrat_input",       CT_FLT, CM_SET,  "0.05",   {NULL}, __("Textheight for input") },

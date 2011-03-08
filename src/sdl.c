@@ -86,7 +86,8 @@ void switchdpms(char UNUSED(val)){ }
 #endif
 
 /* thread: dpl */
-void sdlfullscreen(){
+void sdlfullscreen(char dst){
+	if(dst==sdl.fullscreen) return;
 	if(sdl.fullscreen){
 		sdl.scr_w=sdl.scrnof_w;
 		sdl.scr_h=sdl.scrnof_h;

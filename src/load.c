@@ -33,6 +33,7 @@ const char *imgtex_str[]={ IMGTEX };
 /***************************** load *******************************************/
 
 struct load {
+	Uint32 ftchk;
 	int  minimgslim[TEX_NUM];
 	int  maximgwide[TEX_NUM];
 	int  maxtexsize;
@@ -50,6 +51,7 @@ struct load {
 /* thread: gl */
 void ldmaxtexsize(){
 	GLint maxtex;
+	load.ftchk=cfggetuint("ld.filetime_check");
 	load.maxtexsize=cfggetint("ld.maxtexsize");
 	load.maxpanotexsize=cfggetint("ld.maxpanotexsize");
 	load.maxpanopixels=cfggetint("ld.maxpanopixels");
@@ -93,6 +95,8 @@ struct imgld {
 	int w,h;
 	struct itex texs[TEX_NUM];
 	struct img *img;
+	long ft;
+	Uint32 ftchk;
 };
 
 /* thread: img */
@@ -333,12 +337,22 @@ char ldfload(struct imgld *il,enum imgtex it){
 	int lastscale=0;
 	char swap=0;
 	char panoenable=0;
+	Uint32 time=SDL_GetTicks();
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
-	if(il->texs[it].loaded) goto end0;
+	if(il->texs[it].loaded){
+		if(il->ftchk+load.ftchk<time){
+			long ft=filetime(fn);
+			if(ft>il->ft){ il->ft=ft; ldffree(il,TEX_NONE); }
+			il->ftchk=time;
+		}
+		goto end0;
+	}
+	il->ft=filetime(fn);
+	il->ftchk=time;
 	imgexifload(il->img->exif,fn);
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
