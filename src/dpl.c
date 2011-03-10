@@ -29,14 +29,13 @@ struct dpl {
 	Uint32 run;
 	char showinfo;
 	char showhelp;
-	int inputnum;
 	struct {
 		Uint32 displayduration;
 		char loop;
 		float prged_w;
 	} cfg;
 	unsigned char inputtxt[FILELEN];
-	enum inputtxt {ITM_CATSEL, ITM_TXTIMG} inputtxtmode;
+	enum inputtxt {ITM_CATSEL, ITM_TXTIMG, ITM_NUM} inputtxtmode;
 	enum colmode colmode;
 	Uint32 evdelay[DEG_NUM];
 	int actimgi;
@@ -49,7 +48,6 @@ struct dpl {
 	.run = 0,
 	.showinfo = 0,
 	.showhelp = 0,
-	.inputnum = 0,
 	.colmode = COL_NONE,
 	.inputtxt = { INPUTTXTEMPTY },
 	.pos.actil = 0,
@@ -68,9 +66,12 @@ char dplshowinfo(){ return dpl.showinfo; }
 char dplloop(){ return dpl.cfg.loop; }
 char *dplgetinput(){
 	static char txt[16]={'\0'};
-	if(dpl.inputnum){ snprintf(txt,16,"%i",dpl.inputnum); return txt; }
 	if(dpl.inputtxt[0]=='\0'){
-		snprintf(txt+1,15,dpl.inputtxtmode==ITM_CATSEL?_("[Catalog]"):_("[Text]"));
+		switch(dpl.inputtxtmode){
+		case ITM_CATSEL: snprintf(txt+1,15,_("[Catalog]")); break;
+		case ITM_TXTIMG: snprintf(txt+1,15,_("[Text]")); break;
+		case ITM_NUM:    snprintf(txt+1,15,_("[Number]")); break;
+		}
 		return txt;
 	}
 	if(dpl.inputtxt[0]!=INPUTTXTEMPTY) return (char*)dpl.inputtxt;
@@ -564,6 +565,7 @@ void dplinputtxtadd(uint32_t c){
 		}
 		break;
 		case ITM_TXTIMG: dplprged("addtxt",-1,-1); break;
+		case ITM_NUM: dplsel(atoi((char*)dpl.inputtxt)-1); break;
 	}
 }
 
@@ -574,6 +576,7 @@ void dplinputtxtinit(enum inputtxt mode){
 
 void dplkey(unsigned short keyu){
 	uint32_t key=unicode2utf8(keyu);
+	int inputnum=0;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
@@ -581,28 +584,31 @@ void dplkey(unsigned short keyu){
 			case 8:  dplinputtxtadd(INPUTTXTBACK); break;
 			case 13: dplinputtxtadd(INPUTTXTEMPTY);
 			default: dpl.inputtxt[0]=INPUTTXTEMPTY; break;
-		}else dplinputtxtadd(key);
+		}else if(dpl.inputtxtmode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
+		else{
+			inputnum=atoi((char*)dpl.inputtxt);
+			dpl.inputtxt[0]=INPUTTXTEMPTY;
+		}
 		return;
 	}
 	switch(key){
-		case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
-		case  27: if(effcatinit(0)) break;
-					  if(dpl.inputnum || dpl.showinfo || dpl.showhelp) break;
-		case 'q': sdl_quit=1; break;
-		case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
-		case 'r': dplrotate(DE_ROT1); break;
+	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
+	case  27: if(effcatinit(0)) break;
+			  if(dpl.showinfo || dpl.showhelp) break;
+	case 'q': sdl_quit=1; break;
+	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
+	case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
 	case 'p': panoev(PE_FISHMODE); break;
 	case 'f': sdlfullscreen(-1); break;
 	case 'w': dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
 	case 'm': dplmark(AIMGI); break;
-	case 'd': dplsetdisplayduration(dpl.inputnum); break;
+	case 'd': if(inputnum) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(glprg()) dpl.colmode=COL_C; break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
-	case  13: if(dpl.inputnum) dplsel(dpl.inputnum-1); break;
 	case 127: if(dpl.pos.writemode) dpldel(); break;
 	case '+': if(!dplprged("add",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0])) dplcol(1); break;
 	case '-': if(!dplprged("del", 1,dpl.actimgi)) dplcol(-1); break;
@@ -632,8 +638,9 @@ void dplkey(unsigned short keyu){
 	default: break;
 	}
 	if(key>='0' && key<='9'){
-		dpl.inputnum = dpl.inputnum*10 + (int)(key-'0');
-	}else dpl.inputnum=0;
+		dplinputtxtinit(ITM_NUM);
+		dplinputtxtadd(key);
+	}
 	dpl.showinfo = !dpl.showinfo && !(dpl.pos.actil&ACTIL_PRGED) && key=='i' &&
 		AIMGI!=IMGI_START && AIMGI!=IMGI_END;
 	dpl.showhelp = !dpl.showhelp && key=='h';
@@ -649,10 +656,10 @@ char dplevdelay(struct ev *ev){
 		enum dplevgrp grp=DEG_NONE;
 		Uint32 nxttime=1000;
 		switch(evi){
-		case DE_RIGHT:   if(ev->src==DES_KEY) grp=DEG_RIGHT; break;
-		case DE_LEFT:    if(ev->src==DES_KEY) grp=DEG_LEFT;  break;
-		case DE_ZOOMIN:  grp=DEG_ZOOMIN;  if(dpl.pos.zoom!=-1) nxttime=0; break;
-		case DE_ZOOMOUT: grp=DEG_ZOOMOUT; if(dpl.pos.zoom!=(panoactive()?2:1)) nxttime=0; break;
+		case DE_RIGHT:   if(ev->src==DES_KEY && !dpl.pos.writemode) grp=DEG_RIGHT; break;
+		case DE_LEFT:    if(ev->src==DES_KEY && !dpl.pos.writemode) grp=DEG_LEFT;  break;
+		case DE_ZOOMIN:  if(dpl.pos.zoom==-1) grp=DEG_ZOOMIN; break;
+		case DE_ZOOMOUT: if(dpl.pos.zoom==(panoactive()?2:1)) grp=DEG_ZOOMOUT; break;
 		case DE_PLAY:
 		case DE_STOP:    if(ev->src==DES_KEY) grp=DEG_PLAY; break;
 		case DE_DIR:     grp=DEG_PLAY; nxttime=500; break;
