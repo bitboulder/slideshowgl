@@ -406,9 +406,11 @@ void dplstatupdate(){
 		if(!img) return;
 		ic=imgposcol(img->pos);
 		ADDTXT("%i/%i ",AIMGI+1,imggetn(AIL));
-		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),imgfilefn(img->file));
-		utf8check(txt);
-		txt+=strlen(txt);
+		if(!ilprg(AIL) || dpl.pos.zoom!=0){
+			snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),imgfilefn(img->file));
+			utf8check(txt);
+			txt+=strlen(txt);
+		}
 		switch(imgexifrot(img->exif)){
 			case ROT_0: break;
 			case ROT_90:  ADDTXT(_(" rotated-right")); break;
