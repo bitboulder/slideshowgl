@@ -3,14 +3,16 @@
 
 #include "img.h"
 
+#define IPOS	E(a), E(s), E(x), E(y), E(r), E(m), E(act), E(back)
+#define E(X)	X
 struct ipos {
-	float a,s,x,y,r,m;
+	float IPOS;
 };
+#undef E
 
 struct iopt {
 	enum imgtex tex;
-	char active;
-	char back;
+	char layer;
 };
 
 #define ISTAT_TXTSIZE	512

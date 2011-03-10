@@ -18,7 +18,7 @@ enum timer { ETIMER };
 
 void timer(enum timer timer,int id,char reset);
 
-#define EDEBUG	E(NONE), E(STA), E(DBG)
+#define EDEBUG	E(NONE), E(STA), E(DBG), E(EFF)
 #define E(X)	DBG_##X
 enum debug { EDEBUG, ERR_QUIT, ERR_CONT };
 #undef E

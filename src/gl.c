@@ -498,19 +498,27 @@ void glrendermark(struct ipos *ipos,float rot,float irat){
 	glPopMatrix();
 }
 
-void glrenderimg(struct img *img,char back,int il,char act){
-	struct ipos *ipos;
+#define CB_TIME	0.2f
+#define CB_SIZE	0.3f
+float glcalcback(float ef){
+	if(ef<CB_TIME)         return 1.f-ef/CB_TIME*(1.f-CB_SIZE);
+	else if(ef<1.-CB_TIME) return CB_SIZE;
+	else                   return 1.f-(1.f-ef)/CB_TIME*(1.f-CB_SIZE);
+}
+
+void glrenderimg(struct img *img,char layer,int il,char act){
+	struct ipos *ipos=imgposcur(img->pos);
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
 	GLuint dl=0;
 	float irat=imgldrat(img->ld);
 	float srat=sdlrat();
 	struct txtimg *txt;
-	if(!iopt->active) return;
-	if(iopt->back!=back) return;
+	float s;
+	if(!ipos->act) return;
+	if(iopt->layer!=layer) return;
 	if(!irat) return;
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
-	ipos=imgposcur(img->pos);
 	if(!ipos->a || !ipos->s) return;
 	icol=imgposcol(img->pos);
 	glmodeslave(!ilprg(il) && ipos->a<1.f ? GLM_2DA : GLM_2D);
@@ -521,7 +529,8 @@ void glrenderimg(struct img *img,char back,int il,char act){
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
 	}
 	glTranslatef(ipos->x,ipos->y,0.);
-	glScalef(ipos->s,ipos->s,1.);
+	s=ipos->s*glcalcback(ipos->back);
+	glScalef(s,s,1.);
 	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
 	else glColor4f(1.f,1.f,1.f,ipos->a);
 	// rotate in real ratio
@@ -557,15 +566,15 @@ void glrenderimg(struct img *img,char back,int il,char act){
 
 void glrenderimgs(){
 	struct img *img;
-	char back;
+	char layer;
 	int il;
 	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1,0,0);
-	for(back=2;back>=0;back--) for(il=0;il<IL_NUM;il++){
+	for(layer=2;layer>=0;layer--) for(il=0;il<IL_NUM;il++){
 		GLuint imgi=1;
 		for(img=imgget(il,0);img;img=img->nxt){
 			glLoadName(imgi++);
-			glrenderimg(img,back,il,(int)imgi-2==dplgetactimgi(il));
+			glrenderimg(img,layer,il,(int)imgi-2==dplgetactimgi(il));
 		}
 	}
 	glLoadName(0);
