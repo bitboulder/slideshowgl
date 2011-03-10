@@ -617,7 +617,7 @@ void dplkey(unsigned short keyu){
 			dpl.pos.imgi[0]=0;
 			dpl.actimgi=-1;
 			dpl.pos.actil=ACTIL_PRGED;
-			effinit(EFFREF_ALL,0,-1);
+			effinit(EFFREF_CLR,0,-1);
 			dpl.pos.actil=ACTIL_PRGED|1;
 			effinit(EFFREF_ALL,0,-1);
 		}
