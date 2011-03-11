@@ -348,6 +348,7 @@ void dpldel(){
 	effdel(img->pos);
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 	delimg=img;
+	dplclipimgi(NULL);
 	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
 }
 
@@ -701,7 +702,7 @@ char dplev(struct ev *ev){
 		}
 	break;
 	case DE_KEY: dplkey(ev->key); break;
-	case DE_STAT: dplactil(ev->sx,clickimg); break;
+	case DE_STAT: dplactil(ev->sx,clickimg); ret=0; break;
 	case DE_JUMPEND: dplprged("pos",1,dpl.actimgi); break;
 	}
 	if(AIMGI==IMGI_END) dpl.run=0;
