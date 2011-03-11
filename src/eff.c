@@ -384,10 +384,11 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 }
 
 void effdel(struct imgpos *imgp){
-	union uipos ip=imgp->dst;
+	union uipos ip=imgp->eff ? imgp->dst : imgp->cur;
 	Uint32 it[NIPOS];
 	if(!imgp->cur.v.act) return;
 	ip.v.s=0.f;
+	ip.v.r+=180.f;
 	ip.v.act=0.f;
 	effinittime(it,0);
 	effinitval(imgp,ip,it,-1);
