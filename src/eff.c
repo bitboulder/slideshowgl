@@ -144,11 +144,11 @@ enum imgtex imgseltex(struct dplpos *dp,int i){
 void effposout(int imgi,struct imgpos *ip,Uint32 time){
 	int i;
 	for(i=0;i<NIPOS;i++){
-		struct eval *p=ip->p.a;
-		if(ip->eff && p->tdst)
-			debug(DBG_EFF,"effpos img %3i (%6i) %4s: %5.2f->%5.2f (%4i->%4i)",imgi,time,ipos_str[i],p->cur,p->dst,p->tcur-time,p->tdst-time);
+		struct eval *e=ip->p.a;
+		if(ip->eff && e->tdst)
+			debug(DBG_EFF,"effpos img %3i (%6i) %4s: %5.2f->%5.2f (%4i->%4i)",imgi,time,ipos_str[i],e->cur,e->dst,e->tcur-time,e->tdst-time);
 		else
-			debug(DBG_EFF,"effpos img %3i (%6i) %4s: %5.2f",imgi,time,ipos_str[i],p->cur);
+			debug(DBG_EFF,"effpos img %3i (%6i) %4s: %5.2f",imgi,time,ipos_str[i],e->cur);
 	}
 }
 
@@ -289,6 +289,21 @@ void effinittime(union uipos *ip,enum dplev ev){
 	if(ev&DE_JUMPY) ip->tcur.y=0;
 }
 
+void effiniteval(struct eval *e,float dst,Uint32 tdst,char off,Uint32 time){
+	if(e->tdst){
+		if(!tdst) e->cur+=dst-e->dst;
+		else e->tdst=time+tdst;
+		e->dst=dst;
+	}else if(dst!=e->cur){
+		if(!tdst || off) e->cur=dst;
+		else{
+			e->dst=dst;
+			e->tdst=time+tdst;
+			e->tcur=time;
+		}
+	}
+}
+
 void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
 	int i;
 	union uipos *ipo=&imgp->p;
@@ -298,18 +313,7 @@ void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
 		struct eval *po=ipo->a+i;
 		struct eval *pn=ipn->a+i;
 		if(!ipo->cur.act) po->tdst=0;
-		if(po->tdst){
-			if(!pn->tcur) po->cur+=pn->cur-po->dst;
-			else po->tdst=time+pn->tcur;
-			po->dst=pn->cur;
-		}else if(pn->cur!=po->cur){
-			if(!pn->tcur || !ipo->cur.act) po->cur=pn->cur;
-			else{
-				po->dst=pn->cur;
-				po->tdst=time+pn->tcur;
-				po->tcur=time;
-			}
-		}
+		effiniteval(po,pn->cur,pn->tcur,!ipo->cur.act,time);
 		if(po->tdst) imgp->eff=1;
 		if(i==IPOS_r && po->tdst){
 			while(po->cur-po->dst> 180.f) po->cur-=360.f;
@@ -464,29 +468,31 @@ float effcalclin(float a,float b,float ef){
 	return (b-a)*ef+a;
 }
 
-void effimg(struct img *img,int imgi){
+char effdoeval(struct eval *e,Uint32 time){
+	if(e->dst!=e->cur && time<e->tdst){
+		if(time>e->tcur){
+			e->cur+=(e->dst-e->cur)
+				/(float)(e->tdst-e->tcur)
+				*(float)(time-e->tcur);
+			e->tcur=time;
+		}
+		return 1;
+	}else if(e->tdst){
+		e->cur=e->dst;
+		e->tcur=e->tdst;
+		e->tdst=0;
+	}
+	return 0;
+}
+
+void effdoimg(struct img *img,int imgi){
 	union uipos *ip=&img->pos->p;
 	Uint32 time=SDL_GetTicks();
 	int i;
 	char effon=0;
 	if(!img->pos->eff) return;
 	if(!ip->cur.act) return;
-	for(i=0;i<NIPOS;i++){
-		struct eval *p=ip->a+i;
-		if(p->dst!=p->cur && time<p->tdst){
-			if(time>p->tcur){
-				p->cur+=(p->dst-p->cur)
-					/(float)(p->tdst-p->tcur)
-					*(float)(time-p->tcur);
-				p->tcur=time;
-			}
-			effon=1;
-		}else if(p->tdst){
-			p->cur=p->dst;
-			p->tcur=p->tdst;
-			p->tdst=0;
-		}
-	}
+	for(i=0;i<NIPOS;i++) effon|=effdoeval(ip->a+i,time);
 	if(!effon && --img->pos->eff)
 		effinitimg(dplgetpos(),0,imgi,img->pos->eff);
 }
@@ -530,11 +536,11 @@ void effdo(){
 	}
 	for(il=0;il<IL_NUM;il++)
 		for(img=imgget(il,0),i=0;img;img=img->nxt,i++) if(img->pos->eff){
-			effimg(img,i);
+			effdoimg(img,i);
 			ineff=1;
 		}
 	if(delimg){
-		if(delimg->pos->eff) effimg(delimg,-1);
+		if(delimg->pos->eff) effdoimg(delimg,-1);
 		if(!delimg->pos->eff){
 			struct img *tmp=delimg;
 			delimg=NULL;
