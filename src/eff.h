@@ -2,12 +2,11 @@
 #define _EFF_H
 
 #include "img.h"
+#include <SDL.h>
 
-#define IPOS	E(a), E(s), E(x), E(y), E(r), E(m), E(act), E(back)
-#define E(X)	X
-struct ipos {
-	float IPOS;
-};
+#define IPOS	E(a) E(s) E(x) E(y) E(r) E(m) E(act) E(back)
+#define E(X)	float X; char FILL_##X[sizeof(float)+2*sizeof(Uint32)];
+struct ecur { IPOS };
 #undef E
 
 struct iopt {
@@ -31,7 +30,7 @@ enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS };
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
 struct iopt *imgposopt(struct imgpos *ip);
-struct ipos *imgposcur(struct imgpos *ip);
+struct ecur *imgposcur(struct imgpos *ip);
 struct icol *imgposcol(struct imgpos *ip);
 char *imgposmark(struct img *img,enum mpcreate create);
 

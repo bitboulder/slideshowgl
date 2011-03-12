@@ -149,12 +149,12 @@ void dplclippos(struct img *img){
 char dplmovepos(float sx,float sy){
 	struct img *img;
 	if(dpl.pos.actil&ACTIL_PRGED){
-		struct ipos *icur;
+		struct ecur *ecur;
 		if(AIL!=1 || !(img=imgget(1,dpl.actimgi))) return 0;
 		sx/=1.f-dpl.cfg.prged_w;
-		icur=imgposcur(img->pos);
-		icur->x-=sx;
-		icur->y-=sy;
+		ecur=imgposcur(img->pos);
+		ecur->x-=sx;
+		ecur->y-=sy;
 		return 0;
 	}else{
 		float ix,iy;
@@ -240,8 +240,8 @@ char dplprged(const char *cmd,int il,int imgi){
 		snprintf(buf,FILELEN*2,"%s \"%s\" %i",cmd,fn,dpl.pos.imgi[1]);
 		if(img && !strcmp(cmd,"pos")){
 			size_t len=strlen(buf);
-			struct ipos *icur=imgposcur(img->pos);
-			snprintf(buf+len,FILELEN*2-len," %.3f %.3f",icur->x,icur->y);
+			struct ecur *ecur=imgposcur(img->pos);
+			snprintf(buf+len,FILELEN*2-len," %.3f %.3f",ecur->x,ecur->y);
 		}
 	}
 	if(!ilreload(1,cmd?buf:NULL)) return 1;

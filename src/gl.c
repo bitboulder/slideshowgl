@@ -481,18 +481,18 @@ void gldrawimg(struct itx *tx){
 	}
 }
 
-void glrendermark(struct ipos *ipos,float rot,float irat){
+void glrendermark(float m,float rot,float irat){
 	glPushMatrix();
 	glRotatef(-rot,0.f,0.f,1.f);
 	glTranslatef(.4f,-.4f,0.f);
 	if(rot==90.f || rot==270.f) irat=1.f/irat;
 	glScalef(1.f/irat,1.f,1.f);
 	glmodeslave(GLM_1D);
-	glColor4f(1.f,1.f,1.f,ipos->m);
+	glColor4f(1.f,1.f,1.f,m);
 	glScalef(.1f,.1f,1.f);
 	glCallList(gl.dls+DLS_BRD);
 	glmodeslave(GLM_1DI);
-	glColor4f(ipos->m,ipos->m,ipos->m,ipos->m);
+	glColor4f(m,m,m,m);
 	glScalef(.9f,.9f,1.f);
 	glCallList(gl.dls+DLS_IMG);
 	glPopMatrix();
@@ -507,7 +507,7 @@ float glcalcback(float ef){
 }
 
 void glrenderimg(struct img *img,char layer,int il,char act){
-	struct ipos *ipos=imgposcur(img->pos);
+	struct ecur *ecur=imgposcur(img->pos);
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
 	GLuint dl=0;
@@ -515,33 +515,33 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	float srat=sdlrat();
 	struct txtimg *txt;
 	float s;
-	if(!ipos->act) return;
+	if(!ecur->act) return;
 	if(iopt->layer!=layer) return;
 	if(!irat) return;
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
-	if(!ipos->a || !ipos->s) return;
+	if(!ecur->a || !ecur->s) return;
 	icol=imgposcol(img->pos);
-	glmodeslave(!ilprg(il) && ipos->a<1.f ? GLM_2DA : GLM_2D);
+	glmodeslave(!ilprg(il) && ecur->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
 	if(il==1){
 		srat*=1.f-gl.cfg.prged_w;
 		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
 	}
-	glTranslatef(ipos->x,ipos->y,0.);
-	s=ipos->s*glcalcback(ipos->back);
+	glTranslatef(ecur->x,ecur->y,0.);
+	s=ecur->s*glcalcback(ecur->back);
 	glScalef(s,s,1.);
-	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
-	else glColor4f(1.f,1.f,1.f,ipos->a);
+	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
+	else glColor4f(1.f,1.f,1.f,ecur->a);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);
-	if(ipos->r) glRotatef(ipos->r,0.,0.,1.);
+	if(ecur->r) glRotatef(ecur->r,0.,0.,1.);
 	if(srat>irat) glScalef(irat,1.f,     1.f);
 	else          glScalef(1.f, 1.f/irat,1.f);
-	if(ipos->r){
+	if(ecur->r){
 		// get rotation near to 90°/270°
-		float rot90 = ipos->r;
+		float rot90 = ecur->r;
 		float schg=1.f;
 		while(rot90>= 90.f) rot90-=180.f;
 		while(rot90< -90.f) rot90+=180.f;
@@ -557,10 +557,10 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	}
 	// draw img
 	if(dl) glCallList(dl);
-	if(txt) glrendertxtimg(txt,ipos->a,act);
+	if(txt) glrendertxtimg(txt,ecur->a,act);
 	else if(act) glrenderact(irat);
-	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
-	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif),irat);
+	glrenderimgtext(imgfiledir(img->file),irat,ecur->a);
+	if(ecur->m) glrendermark(ecur->m,imgexifrotf(img->exif),irat);
 	glPopMatrix();
 }
 

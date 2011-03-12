@@ -7,7 +7,7 @@
 struct prg;
 
 struct pev {
-	struct ipos way[2];
+	float way[2][5];
 	float waytime[2];
 	int layer;
 	char on;

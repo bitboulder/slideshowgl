@@ -264,7 +264,7 @@ char panorender(){
 	struct img *img;
 	struct imgpano *ip;
 	GLuint dl;
-	struct ipos *ipos;
+	struct ecur *ecur;
 	struct icol *icol;
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
@@ -272,27 +272,27 @@ char panorender(){
 	ip=img->pano;
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
-	ipos=imgposcur(img->pos);
+	ecur=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
-	panoperspect(ip,ipos->s,&perspectw,&perspecth);
+	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
 	glmodex(panoglmode[mode], perspecth, mode==PM_FISHEYE?(int)pano.cfg.fm:-1);
 	glPushMatrix();
-	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
-	else glColor4f(1.f,1.f,1.f,ipos->a);
+	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
+	else glColor4f(1.f,1.f,1.f,ecur->a);
 	if(mode==PM_PLAIN){
-		float x=ipos->x;
+		float x=ecur->x;
 		while(x<0.f) x+=1.f;
 		while(x>1.f) x-=1.f;
 		glScalef(ip->gw/perspectw,ip->gh/perspecth,1.f);
-		glTranslatef(x,ipos->y,0.f);
+		glTranslatef(x,ecur->y,0.f);
 		glCallList(dl);
 		glTranslatef(-1.f,0.f,0.f);
 		glCallList(dl);
 	}else{
-		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
-		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
+		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
+		glRotatef(-ecur->x*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
 	}
 	glPopMatrix();
