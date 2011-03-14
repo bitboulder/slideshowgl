@@ -45,6 +45,7 @@ void actrotate(struct img *img){
 		snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -s -w \"%s\"",rot,fn);
 		done=runcmd(cmd);
 	}
+	if(done) imgldfiletimeupdate(img->ld);
 	if(done) debug(DBG_STA,"img rotated (%s)",fn);
 	else error(ERR_CONT,"img rotating failed (%s)",fn);
 }

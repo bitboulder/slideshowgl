@@ -145,6 +145,12 @@ float imgldrat(struct imgld *il){
 	return (!il->h || !il->w) ? 0.f : (float)il->w/(float)il->h;
 }
 
+/* thread: ld, act */
+void imgldfiletimeupdate(struct imgld *il){
+	il->ft=filetime(imgfilefn(il->img->file));
+	il->ftchk=SDL_GetTicks();
+}
+
 /***************************** sdlimg *****************************************/
 
 struct sdlimg {
@@ -337,13 +343,13 @@ char ldfload(struct imgld *il,enum imgtex it){
 	int lastscale=0;
 	char swap=0;
 	char panoenable=0;
-	Uint32 time=SDL_GetTicks();
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0) goto end0;
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
 	if(il->texs[it].loaded){
+		Uint32 time=SDL_GetTicks();
 		if(il->ftchk+load.ftchk<time){
 			long ft=filetime(fn);
 			if(ft>il->ft){ il->ft=ft; ldffree(il,TEX_NONE); }
@@ -351,8 +357,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		}
 		goto end0;
 	}
-	il->ft=filetime(fn);
-	il->ftchk=time;
+	imgldfiletimeupdate(il);
 	imgexifload(il->img->exif,fn);
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
