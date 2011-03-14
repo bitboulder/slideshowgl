@@ -25,7 +25,7 @@ struct icol {
 	float g,c,b;
 };
 
-enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS };
+enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS, MPC_RESET };
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

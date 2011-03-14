@@ -117,6 +117,13 @@ char *strsep(char **stringp, const char *delim){
 #endif
 
 
+char isfile(const char *fn){
+	FILE *fd=fopen(fn,"r");
+	if(!fd) return 0;
+	fclose(fd);
+	return 1;
+}
+
 #if HAVE_STAT
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -139,7 +146,7 @@ long filetime(const char *fn){
 
 #else
 
-char isdir(const char *fn __attribute__((unused))){
+char isdir(const char *fn){
 	if(fileext(fn,".flst")) return 2;
 	if(fileext(fn,".effprg")) return 2;
 	return 0;

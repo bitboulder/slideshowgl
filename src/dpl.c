@@ -337,20 +337,24 @@ void dplrotate(enum dplev ev){
 
 enum edpldel { DD_DEL, DD_ORI };
 void dpldel(enum edpldel act){
-	struct img *img=imgdel(0,AIMGI);
-	if(!img) return;
-	if(dpl.pos.zoom>0) dpl.pos.zoom=0;
-	if(delimg){
-		struct img *tmp=delimg;
-		delimg=NULL;
-		ldffree(tmp->ld,TEX_NONE);
-	}
-	dpl.pos.imgiold--;
-	effdel(img->pos);
-	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
-	delimg=img;
-	dplclipimgi(NULL);
-	if(dpl.pos.writemode) actadd(act==DD_DEL ? ACT_DELETE : ACT_DELORI,img);
+	struct img *img=NULL;
+	if(!dpl.pos.writemode) return;
+	if(act==DD_ORI && (img=imgget(AIL,AIMGI)) && fimgswitchmod(img)){
+		effinit(EFFREF_IMG|EFFREF_FIT,0,-1);
+	}else if((img=imgdel(AIL,AIMGI))){
+		if(dpl.pos.zoom>0) dpl.pos.zoom=0;
+		if(delimg){
+			struct img *tmp=delimg;
+			delimg=NULL;
+			ldffree(tmp->ld,TEX_NONE);
+		}
+		dpl.pos.imgiold--;
+		effdel(img->pos);
+		effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
+		delimg=img;
+		dplclipimgi(NULL);
+	}else return;
+	actadd(act==DD_ORI ? ACT_DELORI : ACT_DELETE,img);
 }
 
 char dplcol(int d){

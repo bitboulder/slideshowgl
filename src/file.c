@@ -30,6 +30,7 @@ struct imgfile {
 	char tfn[FILELEN];
 	char dir[FILELEN];
 	struct txtimg txt;
+	char delfn[FILELEN];
 };
 
 struct imgfile *imgfileinit(){ return calloc(1,sizeof(struct imgfile)); }
@@ -37,6 +38,7 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 
 /* thread: dpl, load */
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
+char *imgfiledelfn(struct imgfile *ifl){ return ifl->delfn; }
 const char *imgfiledir(struct imgfile *ifl){ return ifl->dir[0] ? ifl->dir : NULL; }
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
@@ -267,4 +269,25 @@ end:
 	if(src) ilunused(src);
 	return il;
 #endif
+}
+
+/* thread: dpl */
+char fimgswitchmod(struct img *img){
+	struct imgfile *ifl=img->file;
+	char  fn[FILELEN];
+	char *pos;
+	size_t l;
+	if(ifl->dir[0] || ifl->txt.txt[0]) return 0;
+	if(!(pos=strrchr(ifl->fn,'.'))) return 0;
+	l=(size_t)(pos-ifl->fn);
+	memcpy(fn,ifl->fn,l);
+	snprintf(fn+l,FILELEN-l,"_mod%s",pos);
+	if(!isfile(fn)) return 0;
+	snprintf(ifl->delfn,FILELEN,ifl->fn);
+	snprintf(ifl->fn,FILELEN,fn);
+	fthumbinit(ifl);
+	imgpanoload(img->pano,fn);
+	imgposmark(img,MPC_RESET);
+	imgldfiletime(img->ld,FT_RESET);
+	return 1;
 }

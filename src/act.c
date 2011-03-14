@@ -45,7 +45,7 @@ void actrotate(struct img *img){
 		snprintf(cmd,FILELEN+64,"myjpegtool -x %.0f -s -w \"%s\"",rot,fn);
 		done=runcmd(cmd);
 	}
-	if(done) imgldfiletimeupdate(img->ld);
+	if(done) imgldfiletime(img->ld,FT_UPDATE);
 	if(done) debug(DBG_STA,"img rotated (%s)",fn);
 	else error(ERR_CONT,"img rotating failed (%s)",fn);
 }
@@ -54,14 +54,21 @@ void actdelete(struct img *img,const char *dstdir){
 	static char fn[FILELEN];
 	static char cmd[FILELEN*2+16];
 	char *pos;
-	snprintf(fn,FILELEN-4,imgfilefn(img->file));
+	char *ifn=imgfiledelfn(img->file);
+	char ifnreset=1;
+	if(!ifn){
+		ifn=imgfilefn(img->file);
+		ifnreset=0;
+	}
+	snprintf(fn,FILELEN-4,ifn);
 	if((pos=strrchr(fn,'/'))) pos++; else pos=fn;
 	memmove(pos+4,pos,strlen(pos)+1);
 	strcpy(pos,dstdir);
 	snprintf(cmd,FILELEN*2+16,"mkdir -p \"%s\"",fn);
 	runcmd(cmd);
 	pos[3]='/';
-	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",imgfilefn(img->file),fn);
+	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",ifn,fn);
+	if(ifnreset) ifn[0]='\0';
 	runcmd(cmd);
 	debug(DBG_STA,"img deleted (%s)",fn);
 }
