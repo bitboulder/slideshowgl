@@ -335,7 +335,8 @@ void dplrotate(enum dplev ev){
 	if(dpl.pos.writemode) actadd(ACT_ROTATE,img);
 }
 
-void dpldel(){
+enum edpldel { DD_DEL, DD_ORI };
+void dpldel(enum edpldel act){
 	struct img *img=imgdel(0,AIMGI);
 	if(!img) return;
 	if(dpl.pos.zoom>0) dpl.pos.zoom=0;
@@ -349,7 +350,7 @@ void dpldel(){
 	effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,-1);
 	delimg=img;
 	dplclipimgi(NULL);
-	if(dpl.pos.writemode) actadd(ACT_DELETE,img);
+	if(dpl.pos.writemode) actadd(act==DD_DEL ? ACT_DELETE : ACT_DELORI,img);
 }
 
 char dplcol(int d){
@@ -526,6 +527,7 @@ __("w")"\0"                   __("Switch writing mode")"\0"
 __("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
 __("+/-")"\0"                 __("Increase/decrease selected")"\0"
 __("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
+__("o")"\0"                   __("Move image to ori/ and remove from dpl-list (only in writing mode)")"\0"
 __("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 __("i")"\0"                   __("Show image info")"\0"
 __("k")"\0"                   __("Show image catalog")"\0"
@@ -610,7 +612,8 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
-	case 127: if(dpl.pos.writemode) dpldel(); break;
+	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
+	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("add",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0])) dplcol(1); break;
 	case '-': if(!dplprged("del", 1,dpl.actimgi)) dplcol(-1); break;
 	case 'e':

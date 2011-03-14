@@ -50,14 +50,14 @@ void actrotate(struct img *img){
 	else error(ERR_CONT,"img rotating failed (%s)",fn);
 }
 
-void actdelete(struct img *img){
+void actdelete(struct img *img,const char *dstdir){
 	static char fn[FILELEN];
 	static char cmd[FILELEN*2+16];
 	char *pos;
 	snprintf(fn,FILELEN-4,imgfilefn(img->file));
 	if((pos=strrchr(fn,'/'))) pos++; else pos=fn;
 	memmove(pos+4,pos,strlen(pos)+1);
-	strcpy(pos,"del");
+	strcpy(pos,dstdir);
 	snprintf(cmd,FILELEN*2+16,"mkdir -p \"%s\"",fn);
 	runcmd(cmd);
 	pos[3]='/';
@@ -70,7 +70,8 @@ void actdo(enum act act,struct img *img){
 	switch(act){
 	case ACT_SAVEMARKS: markssave(); break;
 	case ACT_ROTATE:    actrotate(img); break;
-	case ACT_DELETE:    actdelete(img); break;
+	case ACT_DELETE:    actdelete(img,"del"); break;
+	case ACT_DELORI:    actdelete(img,"ori"); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;
 	default: break;
 	}
