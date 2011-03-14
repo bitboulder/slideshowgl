@@ -20,6 +20,11 @@ extern struct zoomtab {
 
 enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
 
+struct eval {
+	float cur,dst;
+	Uint32 tcur,tdst;
+};
+
 struct eff {
 	enum effrefresh refresh;
 	char ineff;
@@ -36,18 +41,13 @@ struct eff {
 		Uint32 in,out;
 		struct istat pos;
 	} stat;
-	struct cat {
-		char on;
-		Uint32 reach;
-		float f;
-	} cat;
+	struct eval ecat;
 } eff = {
 	.refresh = EFFREF_NO,
 	.ineff = 0,
 	.stat.mode = STAT_OFF,
 	.stat.pos.h = 0.f,
-	.cat.on = 0,
-	.cat.f = 0.f,
+	.ecat.cur = 0,
 };
 
 #define AIL		(dp->actil&ACTIL)
@@ -58,7 +58,7 @@ void effrefresh(enum effrefresh val){ eff.refresh|=val; }
 char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
-float effcatf(){ return eff.cat.f; }
+float effcatf(){ return eff.ecat.cur; }
 
 struct wh effmaxfit(){ return eff.maxfit; }
 
@@ -71,11 +71,6 @@ const char *ipos_str[]={IPOS};
 #define E(X)	IPOS_##X,
 enum eipos { IPOS NIPOS };
 #undef E
-
-struct eval {
-	float cur,dst;
-	Uint32 tcur,tdst;
-};
 
 #define E(X)	char FILL1_##X[sizeof(float)]; float X; char FILL2_##X[2*sizeof(Uint32)];
 struct edst { IPOS };
@@ -289,19 +284,21 @@ void effinittime(union uipos *ip,enum dplev ev){
 	if(ev&DE_JUMPY) ip->tcur.y=0;
 }
 
-void effiniteval(struct eval *e,float dst,Uint32 tdst,char off,Uint32 time){
+enum { EI_OFF=0x1, EI_CONSTSPEED=0x2 };
+char effiniteval(struct eval *e,float dst,Uint32 tdst,unsigned int flags,Uint32 time){
 	if(e->tdst){
 		if(!tdst) e->cur+=dst-e->dst;
-		else e->tdst=time+tdst;
+		else e->tdst=time + ((flags&EI_CONSTSPEED) ? (Uint32)(fabsf(e->cur-dst)*(float)tdst) : tdst);
 		e->dst=dst;
 	}else if(dst!=e->cur){
-		if(!tdst || off) e->cur=dst;
+		if(!tdst || (flags&EI_OFF)) e->cur=dst;
 		else{
 			e->dst=dst;
 			e->tdst=time+tdst;
 			e->tcur=time;
 		}
 	}
+	return e->tdst!=0;
 }
 
 void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
@@ -313,7 +310,7 @@ void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
 		struct eval *po=ipo->a+i;
 		struct eval *pn=ipn->a+i;
 		if(!ipo->cur.act) po->tdst=0;
-		effiniteval(po,pn->cur,pn->tcur,!ipo->cur.act,time);
+		effiniteval(po,pn->cur,pn->tcur,ipo->cur.act?0:EI_OFF,time);
 		if(po->tdst) imgp->eff=1;
 		if(i==IPOS_r && po->tdst){
 			while(po->cur-po->dst> 180.f) po->cur-=360.f;
@@ -451,13 +448,13 @@ void effpanoend(struct img *img){
 }
 
 char effcatinit(char dst){
-	float f;
-	if(dst>=0 && eff.cat.on==dst) return 0;
-	if(dst<0) dst=!eff.cat.on;
-	eff.cat.on=dst;
-	f = dst ? 1.f-eff.cat.f : eff.cat.f;
-	eff.cat.reach=SDL_GetTicks()+(Uint32)((float)eff.cfg.cat_delay*f);
-	return 1;
+	float edst;
+	char ret;
+	if(dst>=0) edst=dst?1.f:0.f;
+	else edst=1.f-eff.ecat.dst;
+	ret=eff.ecat.dst!=edst;
+	effiniteval(&eff.ecat,edst,eff.cfg.cat_delay,EI_CONSTSPEED,SDL_GetTicks());
+	return ret;
 }
 
 /***************************** eff do *****************************************/
@@ -517,15 +514,6 @@ void effdostat(){
 	}
 }
 
-void effdocat(){
-	Uint32 now=SDL_GetTicks();
-	if(eff.cat.reach<=now) eff.cat.f = eff.cat.on ? 1.f : 0.f;
-	else{
-		float f=(float)(eff.cat.reach-now)/(float)eff.cfg.cat_delay;
-		eff.cat.f = eff.cat.on ? 1.f-f : f;
-	}
-}
-
 void effdo(){
 	struct img *img;
 	char ineff=0;
@@ -548,7 +536,7 @@ void effdo(){
 		}
 	}
 	effdostat();
-	effdocat();
+	effdoeval(&eff.ecat,SDL_GetTicks());
 	eff.ineff=ineff;
 }
 
