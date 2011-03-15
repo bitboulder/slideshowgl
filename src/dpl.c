@@ -221,7 +221,7 @@ int dplclickimg(float sx,float sy,int evimgi){
 	return AIMGI+i;
 }
 
-char dplprged(const char *cmd,int il,int imgi){
+char dplprged(const char *cmd,int il,int imgi,int arg){
 	struct img *img=NULL;
 	struct prg *prg;
 	char buf[FILELEN*2];
@@ -235,13 +235,21 @@ char dplprged(const char *cmd,int il,int imgi){
 		const char *fn="";
 		struct txtimg *txt;
 		if(img) fn=imgfilefn(img->file);
-		if(!strcmp(cmd,"addtxt")) fn=(char*)dpl.inputtxt;
+		if(!strcmp(cmd,"txtadd")) fn=(char*)dpl.inputtxt;
 		if(img && (txt=imgfiletxt(img->file))) fn=txt->txt;
 		snprintf(buf,FILELEN*2,"%s \"%s\" %i",cmd,fn,dpl.pos.imgi[1]);
-		if(img && !strcmp(cmd,"pos")){
+		if(img && !strcmp(cmd,"imgpos")){
 			size_t len=strlen(buf);
 			struct ecur *ecur=imgposcur(img->pos);
-			snprintf(buf+len,FILELEN*2-len," %.3f %.3f",ecur->x,ecur->y);
+			snprintf(buf+len,FILELEN*2-len," :%.3f:%.3f:%.3f",
+				ecur->s,ecur->x,ecur->y);
+		}
+		if(!strcmp(cmd,"frmmov") || !strcmp(cmd,"frmcpy")){
+			size_t len=strlen(buf);
+			if(arg==-1) arg=dpl.pos.imgi[1]+1;
+			else if(arg==-2) arg=dpl.pos.imgi[1]-1;
+			else arg--;
+			snprintf(buf+len,FILELEN*2-len," %i",arg);
 		}
 	}
 	if(!ilreload(1,cmd?buf:NULL)) return 1;
@@ -271,7 +279,14 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		float x,fitw;
 		struct img *img;
-		if(dpl.pos.actil&ACTIL_PRGED){ dplprged(dir<0?"scaleinc":"scaledec",1,clickimg); return; }
+		if(dpl.pos.actil&ACTIL_PRGED){
+			if((img=imgget(1,clickimg))){
+				// TODO: clickimg by key-press (page-up/down)
+				imgposcur(img->pos)->s *= dir>0 ? sqrtf(2.f) : sqrtf(.5f);
+				dplprged("imgpos",1,clickimg,-1);
+			}
+			return;
+		}
 		if(dpl.pos.zoom<0 && clickimg>=0){
 			AIMGI=clickimg;
 			dplclipimgi(NULL);
@@ -513,7 +528,7 @@ __("Left drag")"\0"           __("Move")"\0"
 __("Left click")"\0"          __("Goto image / Forward")"\0"
 __("Double click on directory")"\0" __("Enter directory")"\0"
 __("Double click on space")"\0"     __("Leave directory")"\0"
-__("Middle click")"\0"        __("Play/Stop / Toggle mark (in writing mode)")"\0"
+__("Middle click")"\0"        __("Play/Stop / Toggle mark (only in writing mode)")"\0"
 __("Right click")"\0"         __("Backward")"\0"
 __("Scroll")"\0"              __("Zoom in/out")"\0"
 
@@ -527,7 +542,7 @@ __("Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 __("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
 __("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
 __("f")"\0"                   __("Switch fullscreen")"\0"
-__("r/R")"\0"                 __("Rotate image")"\0"
+__("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
 __("w")"\0"                   __("Switch writing mode")"\0"
 __("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
 __("+/-")"\0"                 __("Increase/decrease selected")"\0"
@@ -544,9 +559,44 @@ __("q/Esc")"\0"               __("Quit")"\0"
 "\0"
 ;
 
+const char *keyboardlayout_prged=
+__("Mouse interface")"\0"     "\0"
+__("Left drag")"\0"           __("Move image")"\0"
+__("Left click")"\0"          __("Forward")"\0"
+__("Middle click")"\0"        __("Toggle mark (only in writing mode)")"\0"
+__("Right click")"\0"         __("Backward")"\0"
+__("Scroll")"\0"              __("Resize image")"\0"
+
+" ""\0"                       "\0"
+__("Keyboard interface")"\0"  "\0"
+__("Right/Left")"\0"          __("Forward/Backward")"\0"
+__("Up/Down")"\0"             __("Fast forward/backward")"\0"
+__("Pageup/Pagedown")"\0"     __("Resize image")"\0"
+__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
+__("f")"\0"                   __("Switch fullscreen")"\0"
+__("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
+__("w")"\0"                   __("Switch writing mode")"\0"
+__("+/-")"\0"                 __("Add/remove image")"\0"
+__("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
+__("o")"\0"                   __("Move image to ori/ and remove from dpl-list (only in writing mode)")"\0"
+__("i")"\0"                   __("Insert frame")"\0"
+__("x")"\0"                   __("Delete frame")"\0"
+__("m")"\0"                   __("Swap frame with next one")"\0"
+__("M")"\0"                   __("Swap frame with previous one")"\0"
+__("c")"\0"                   __("Duplicate frame")"\0"
+__("[0-9]+m")"\0"             __("Move frame to position")"\0"
+__("[0-9]+c")"\0"             __("Copy frame to position")"\0"
+__("G")"\0"                   __("Edit current image with gimp")"\0"
+__("h")"\0"                   __("Show help")"\0"
+__("q/Esc")"\0"               __("Quit")"\0"
+"\0"
+;
+
 /* thread: gl */
 const char *dplhelp(){
-	return dpl.showhelp ? keyboardlayout : NULL;
+	if(!dpl.showhelp) return NULL;
+	if(dpl.pos.actil&ACTIL_PRGED) return keyboardlayout_prged;
+	return keyboardlayout;
 }
 
 void dplinputtxtadd(uint32_t c){
@@ -572,7 +622,7 @@ void dplinputtxtadd(uint32_t c){
 			if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
 		}
 		break;
-		case ITM_TXTIMG: dplprged("addtxt",-1,-1); break;
+		case ITM_TXTIMG: dplprged("txtadd",-1,-1,-1); break;
 		case ITM_NUM: dplsel(atoi((char*)dpl.inputtxt)-1); break;
 	}
 }
@@ -584,7 +634,7 @@ void dplinputtxtinit(enum inputtxt mode){
 
 void dplkey(unsigned short keyu){
 	uint32_t key=unicode2utf8(keyu);
-	int inputnum=0;
+	int inputnum=-1;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
@@ -594,10 +644,11 @@ void dplkey(unsigned short keyu){
 			default: dpl.inputtxt[0]=INPUTTXTEMPTY; break;
 		}else if(dpl.inputtxtmode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
 		else{
-			inputnum=atoi((char*)dpl.inputtxt);
+			if(key=='m' || key=='c' || key=='d')
+				inputnum=atoi((char*)dpl.inputtxt);
 			dpl.inputtxt[0]=INPUTTXTEMPTY;
 		}
-		return;
+		if(inputnum<0) return;
 	}
 	switch(key){
 	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
@@ -610,17 +661,18 @@ void dplkey(unsigned short keyu){
 	case 'p': panoev(PE_FISHMODE); break;
 	case 'f': sdlfullscreen(-1); break;
 	case 'w': dpl.pos.writemode=!dpl.pos.writemode; effrefresh(EFFREF_ALL); break;
-	case 'm': dplmark(AIMGI); break;
-	case 'd': if(inputnum) dplsetdisplayduration(inputnum); break;
+	case 'm': if(!dplprged("frmmov",1,-1,inputnum)) dplmark(AIMGI); break;
+	case 'M': dplprged("frmmov",1,-1,-2);
+	case 'd': if(inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
-	case 'c': if(glprg()) dpl.colmode=COL_C; break;
+	case 'c': if(!dplprged("frmcpy",1,-1,inputnum) && glprg()) dpl.colmode=COL_C; break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
 	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
 	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
-	case '+': if(!dplprged("add",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0])) dplcol(1); break;
-	case '-': if(!dplprged("del", 1,dpl.actimgi)) dplcol(-1); break;
+	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
+	case '-': if(!dplprged("imgdel", 1,dpl.actimgi,-1)) dplcol(-1); break;
 	case 'e':
 		if(!ilsecswitch((dpl.pos.actil&ACTIL_PRGED)!=0)) break;
 		dpl.run=0;
@@ -639,9 +691,9 @@ void dplkey(unsigned short keyu){
 			effinit(EFFREF_ALL,0,-1);
 		}
 	break;
-	case 'E': dplprged("reload",-1,-1); break;
-	case 'i': dplprged("frmins",-1,-1); break;
-	case 'x': dplprged("frmdel",-1,-1); break;
+	case 'E': dplprged("reload",-1,-1,-1); break;
+	case 'i': dplprged("frmins",-1,-1,-1); break;
+	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'G': dplgimp(); break;
 	default: break;
@@ -711,7 +763,7 @@ char dplev(struct ev *ev){
 	break;
 	case DE_KEY: dplkey(ev->key); break;
 	case DE_STAT: if(!dplactil(ev->sx,clickimg)) ret=0; break;
-	case DE_JUMPEND: dplprged("pos",1,dpl.actimgi); break;
+	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
 	}
 	if(AIMGI==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;

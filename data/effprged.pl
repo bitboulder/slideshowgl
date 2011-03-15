@@ -6,116 +6,217 @@ shift if my $nodo=$ARGV[0]eq"-nodo";
 
 my $file=shift;
 my $cmd=shift;
-my $img=shift;
+my $imgfn=shift;
 my $frmi=shift;
 my @arg=@ARGV;
 
-open FD,"<".$file;
-my @file=<FD>;
-close FD;
+my @prg=&loadprg($file);
+my $chg=0;
+   if("frmins"eq$cmd){ $chg=&frmins(\@prg,$frmi,&cfrm()); }
+elsif("frmdel"eq$cmd){ $chg=&frmdel(\@prg,$frmi); }
+elsif("frmmov"eq$cmd){ $chg=&frmmov(\@prg,$frmi,$arg[0]); }
+elsif("frmcpy"eq$cmd){ $chg=&frmcpy(\@prg,$frmi,$arg[0]); }
+elsif("imgadd"eq$cmd){ $chg=&imgadd(\@prg,$frmi,&cimg($imgfn)); }
+elsif("txtadd"eq$cmd){ $chg=&imgadd(\@prg,$frmi,&ctxt($imgfn)); }
+elsif("imgdel"eq$cmd){ $chg=&imgdel(\@prg,$frmi,$imgfn); }
+elsif("imgpos"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"pos",$arg[0]); }
+elsif("imgon" eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"on", $arg[0]); }
+elsif("imgoff"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"off",$arg[0]); }
+my $prg=&joinprg(@prg);
+&saveprg($file,$prg) if $chg && !$nodo;
+print $prg if $nodo;
+exit 0;
 
-if($cmd=~/^add/){
-	my $frm=-1;
-	my $pos=-1;
-	for(my $i=0;$i<@file;$i++){
-		next if $file[$i]!~/^frm/;
-		next if (++$frm)!=$frmi+1;
-		$pos=$i;
+sub frmins {
+	my $prg=shift;
+	my $frmi=shift;
+	my $frm=shift;
+	return 0 if $frmi<0 || $frmi>=@{$prg};
+	for(my $i=@{$prg};$i>$frmi+1;$i--){
+		$prg->[$i]=$prg->[$i-1];
 	}
-	if($pos<0){
-		while($frm!=$frmi){
-			push @file,"frm\n";
-			$frm++;
-		}
-		$pos=@file;
-	}
-	my @fn=splice @file,0,$pos;
-	if("add"eq$cmd){
-		push @fn,"img $img\n";
-		push @fn,"pos :0.5\n";
-	}elsif("addtxt"eq$cmd){
-		push @fn,"txt \"$img\"\n";
-		push @fn,"col 0xff9900\n";
-		push @fn,"pos :1\n";
-	}
-	push @fn,@file;
-	@file=@fn;
-}elsif($cmd=~/^frm/){
-	my $frm=-1;
-	my $str=-1;
-	my $end=-1;
-	for(my $i=0;$i<@file;$i++){
-		$frm++ if $file[$i]=~/^frm/;
-		next if $frm!=$frmi;
-		$str=$i if $str<=0;
-		$end=$i;
-	}
-	splice @file,$str,$end-$str+1 if "frmdel"eq$cmd;
-	if("frmins"eq$cmd){
-		my @fn=splice @file,0,$str;
-		push @fn,"frm\n";
-		push @fn,@file;
-		@file=@fn;
-	}
-}elsif(""ne$img){
-	my $frm=-1;
-	my $str=-1;
-	my $end=-1;
-	for(my $i=0;$i<@file;$i++){
-		$frm++ if $file[$i]=~/^frm/;
-		next if $frm!=$frmi;
-		last if $str>=0 && $file[$i]=~/^(img|txt)/;
-		$str=$i if $file[$i]=~/^img[[:blank:]]+$img/;
-		$str=$i if $file[$i]=~/^txt[[:blank:]]+\"$img\"/;
-		next if $str<0;
-		$end=$i;
-		&poschg($i) if $cmd=~/^scale/;
-		&posset($i) if $cmd eq "pos";
-	}
-	splice @file,$str,$end-$str+1 if $str>=0 && "del"eq$cmd;
+	$prg[$frmi+1]=$frm;
+	return 1;
 }
 
-if($nodo){
-	print "".join "",@file;
-}else{
+sub frmdel {
+	my $prg=shift;
+	my $frmi=shift;
+	return 0 if $frmi<0 || $frmi>=@{$prg}-1;
+	return splice @{$prg},$frmi+1,1;
+}
+
+sub frmmov {
+	my $prg=shift;
+	my $fsrc=shift;
+	my $fdst=shift;
+	return 0 if ""eq$fdst;
+	my $frm=&frmdel($prg,$fsrc);
+	return 0 if !$frm;
+	return &frmins($prg,$fdst,$frm);
+}
+
+sub frmcpy {
+	my $prg=shift;
+	my $fsrc=shift;
+	my $fdst=shift;
+	return 0 if ""eq$fdst;
+	my $frm=&frmfind($prg,$fsrc);
+	return 0 if !$frm;
+	return &frmins($prg,$fdst,$frm);
+}
+
+sub imgadd {
+	my $prg=shift;
+	my $frmi=shift;
+	my $img=shift;
+	my $frm=&frmfind($prg,$frmi);
+	return 0 if !$frm;
+	push @{$frm->{"img"}},$img;
+	return 1;
+}
+
+sub imgdel {
+	my $prg=shift;
+	my $frmi=shift;
+	my $img=shift;
+	my @img=&imgfind($prg,$frmi,$imgfn);
+	return 0 if !@img;
+	foreach my $img (@img){
+		@{$img}=();
+	}
+	return 1;
+}
+
+sub imgpos {
+	my $prg=shift;
+	my $frmi=shift;
+	my $imgfn=shift;
+	my $key=shift;
+	my $pos=shift;
+	my @img=&imgfind($prg,$frmi,$imgfn);
+	return 0 if !@img;
+	foreach my $img (@img){
+		&imgposi($img,$key,$pos);
+	}
+	return 1;
+}
+
+sub imgposi {
+	my $img=shift;
+	my $key=shift;
+	my $pos=shift;
+	my @posmin=$key=~/on|off/ ? (0,0,0) : (0,0,-0.5,-0.5,0);
+	my @posmax=$key=~/on|off/ ? (1,1,2) : (1,8, 0.5, 0.5,0);
+	my @pos=split /:/,$pos;
+	for(my $i=0;$i<@pos;$i++){
+		next if ""eq$pos[$i];
+		$pos[$i]=$posmax[$i] if $pos[$i]>$posmax[$i];
+		$pos[$i]=$posmin[$i] if $pos[$i]<$posmin[$i];
+	}
+	my $done=0;
+	foreach my $line (@{$img}){
+		next if $line!~/^([ \t]*($key)[ \t]+)([0-9.:+-]+)([ \t\n\r]*)$/;
+		my $pre=$1;
+		my $suf=$4;
+		my @val=split /:/,$3;
+		for(my $i=0;$i<@pos;$i++){
+			$val[$i]=$pos[$i] if $pos[$i]ne"";
+		}
+		$line=$pre.(join ":",@val).$suf;
+		$done=1;
+	}
+	push @{$img},$key." ".(join ":",@pos)."\n" if !$done;
+}
+
+sub frmfind {
+	my $prg=shift;
+	my $frmi=shift;
+	return 0 if $frmi<0 || $frmi>=@{$prg}-1;
+	return $prg->[$frmi+1];
+}
+
+sub imgfind {
+	my $prg=shift;
+	my $frmi=shift;
+	my $imgfn=shift;
+	my @img=();
+	my $frm=&frmfind($prg,$frmi);
+	return @img if !exists $frm->{"img"};
+	my @imgs=@{$frm->{"img"}};
+	my @imgfn=split /\//,$imgfn;
+	while(!@img && @imgfn){
+		$imgfn=join "/",@imgfn;
+		foreach my $img (@imgs){
+			push @img,$img if $img->[0]=~/^[ \t]*(img|txt)[ \t]+\"?$imgfn\"?[ \t\n\r]*$/;
+		}
+		shift @imgfn;
+	}
+	return @img;
+}
+
+sub cfrm {
+	my %frm=();
+	@{$frm{"txt"}}=("frm\n");
+	return \%frm;
+}
+
+sub cimg {
+	my $imgfn=shift;
+	my @img=();
+	push @img,"img ".$imgfn."\n";
+	push @img,sprintf "pos :0.5:%.3f:%.3f\n",(rand()-0.5)/4,(rand()-0.5)/4;
+	return \@img;
+}
+
+sub ctxt {
+	my $imgfn=shift;
+	my @img=();
+	push @img,"txt \"".$imgfn."\"\n";
+	push @img,"col 0xff9900\n";
+	push @img,sprintf "pos :0.5:%.3f:%.3f\n",(rand()-0.5)/4,(rand()-0.5)/4;
+	return \@img;
+}
+
+sub loadprg {
+	my $file=shift;
+	my @prg=();
+	@{$prg[0]->{"txt"}}=();
+	open FD,"<".$file;
+	while(<FD>){
+		my $frm = @prg-1;
+		$frm++ if $_=~/^[ \t]*frm\b/;
+		my $img = -1;
+		$img = @{$prg[$frm]->{"img"}}-1 if exists $prg[$frm]->{"img"};
+		$img++ if $_=~/^[ \t]*(img|txt)\b/;
+		if($img<0){
+			push @{$prg[$frm]->{"txt"}},$_;
+		}else{
+			push @{$prg[$frm]->{"img"}->[$img]},$_;
+		}
+	}
+	close FD;
+	return @prg;
+}
+
+sub saveprg {
+	my $file=shift;
+	my $prg=shift;
 	open FD,">".$file;
-	foreach(@file){ print FD $_; }
+	print FD $prg;
 	close FD;
 }
 
-sub poschg {
-	my @defval=(1,1,0,0,0);
-	my @valmax=(1,8, 0.5, 0.5,0);
-	my @valmin=(0,0,-0.5,-0.5,0);
-	my $i=shift;
-	return if $file[$i]!~/^((pos|src|dst|sd)[[:blank:]]+)([0-9.:+-]+)(.*)$/;
-	my $pre=$1;
-	my $suf=$4;
-	my @val=split /:/,$3;
-	my $vi=-1;
-	$vi=1 if $cmd=~/^scale/;
-	return if $vi<0;
-	$val[$vi]=$defval[$vi] if ""eq$val[$vi];
-	$val[1]*=sqrt(2) if "scaleinc"eq$cmd;
-	$val[1]/=sqrt(2) if "scaledec"eq$cmd;
-	$val[$vi]=sprintf "%.3f",$val[$vi];
-	$val[$vi]=$valmax[$vi] if $val[$vi]>$valmax[$vi];
-	$val[$vi]=$valmin[$vi] if $val[$vi]<$valmin[$vi];
-	$file[$i]=$pre.(join ":",@val).$suf."\n";
+sub joinprg {
+	my @prg=@_;
+	my $prg="";
+	foreach my $frm (@prg){
+		$prg.=join "",@{$frm->{"txt"}};
+		next if !exists $frm->{"img"};
+		foreach my $img (@{$frm->{"img"}}){
+			$prg.=join "",@{$img};
+		}
+	}
+	return $prg;
 }
 
-sub posset {
-	my @valmax=(1,8, 0.5, 0.5,0);
-	my @valmin=(0,0,-0.5,-0.5,0);
-	my $i=shift;
-	return if $file[$i]!~/^((pos|src|dst|sd)[[:blank:]]+)([0-9.:+-]+)(.*)$/;
-	my $pre=$1;
-	my $suf=$4;
-	my @val=split /:/,$3;
-	for(my $i=0;$i<2;$i++){
-		$val[2+$i]=$arg[$i];
-		$val[2+$i]=$valmax[2+$i] if $val[2+$i]>$valmax[2+$i];
-		$val[2+$i]=$valmin[2+$i] if $val[2+$i]<$valmin[2+$i];
-	}
-	$file[$i]=$pre.(join ":",@val).$suf."\n";
-}
