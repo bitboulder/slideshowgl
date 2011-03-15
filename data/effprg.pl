@@ -14,8 +14,8 @@
 # defsrc a:s:x:y:r       (0::::)
 # defdst a:s:x:y:r       (0::::)
 # defsd  => defsrc+defdst
-# defon  start:end:layer (0:1:0)
-# defoff start:end:layer (0:1:0)
+# defon  start:end:layer (0:1:1)
+# defoff start:end:layer (0:1:1)
 #
 # frm    on:stay         (deffrm)
 # pos    a:s:x:y:r       (defpos)
@@ -42,8 +42,8 @@ my %def=(
 	"pos"=>"1:1:0:0:0",
 	"src"=>"0",
 	"dst"=>"0",
-	"on" =>"0:1:0",
-	"off"=>"0:1:0",
+	"on" =>"0:1:1",
+	"off"=>"0:1:1",
 );
 
 foreach my $def (keys %def){

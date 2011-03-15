@@ -251,6 +251,10 @@ char dplprged(const char *cmd,int il,int imgi,int arg){
 			else arg--;
 			snprintf(buf+len,FILELEN*2-len," %i",arg);
 		}
+		if(img && !strcmp(cmd,"imgon")){
+			size_t len=strlen(buf);
+			snprintf(buf+len,FILELEN*2-len," ::%i",imgposopt(img->pos)->layer);
+		}
 	}
 	if(!ilreload(1,cmd?buf:NULL)) return 1;
 	il=AIL;
@@ -258,6 +262,14 @@ char dplprged(const char *cmd,int il,int imgi,int arg){
 	effinit(EFFREF_ALL,DE_JUMP,-1);
 	if(il!=1) dpl.pos.actil=ACTIL_PRGED|il;
 	return 1;
+}
+
+void dpllayer(char dir,int imgi){
+	struct img *img=imgget(1,imgi);
+	if(!img) return;
+	if(dir>0) imgposopt(img->pos)->layer++;
+	else      imgposopt(img->pos)->layer--;
+	dplprged("imgon",-2,imgi,-1);
 }
 
 void dplmove(enum dplev ev,float sx,float sy,int clickimg){
@@ -280,10 +292,9 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		float x,fitw;
 		struct img *img;
 		if(dpl.pos.actil&ACTIL_PRGED){
-			if((img=imgget(1,clickimg))){
-				// TODO: clickimg by key-press (page-up/down)
+			if((img=imgget(1,dpl.actimgi))){
 				imgposcur(img->pos)->s *= dir>0 ? sqrtf(2.f) : sqrtf(.5f);
-				dplprged("imgpos",1,clickimg,-1);
+				dplprged("imgpos",1,dpl.actimgi,-1);
 			}
 			return;
 		}
@@ -552,6 +563,7 @@ __("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
 __("i")"\0"                   __("Show image info")"\0"
 __("k")"\0"                   __("Show image catalog")"\0"
 __("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
+__("e")"\0"                   __("Open program editor")"\0"
 __("G")"\0"                   __("Edit current image with gimp")"\0"
 __("h")"\0"                   __("Show help")"\0"
 __("p")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
@@ -572,20 +584,23 @@ __("Keyboard interface")"\0"  "\0"
 __("Right/Left")"\0"          __("Forward/Backward")"\0"
 __("Up/Down")"\0"             __("Fast forward/backward")"\0"
 __("Pageup/Pagedown")"\0"     __("Resize image")"\0"
-__("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
+__("[0-9]+Enter")"\0"         __("Goto frame with number")"\0"
 __("f")"\0"                   __("Switch fullscreen")"\0"
 __("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
 __("w")"\0"                   __("Switch writing mode")"\0"
 __("+/-")"\0"                 __("Add/remove image")"\0"
+__("t")"\0"                   __("Add text")"\0"
 __("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
 __("o")"\0"                   __("Move image to ori/ and remove from dpl-list (only in writing mode)")"\0"
 __("i")"\0"                   __("Insert frame")"\0"
 __("x")"\0"                   __("Delete frame")"\0"
-__("m")"\0"                   __("Swap frame with next one")"\0"
-__("M")"\0"                   __("Swap frame with previous one")"\0"
+__("m/M")"\0"                 __("Swap frame with next/previous one")"\0"
 __("c")"\0"                   __("Duplicate frame")"\0"
 __("[0-9]+m")"\0"             __("Move frame to position")"\0"
 __("[0-9]+c")"\0"             __("Copy frame to position")"\0"
+__("l/L")"\0"                 __("Move image into foreground/background")"\0"
+__("E")"\0"                   __("Refresh current frame")"\0"
+__("e")"\0"                   __("Leave program editor")"\0"
 __("G")"\0"                   __("Edit current image with gimp")"\0"
 __("h")"\0"                   __("Show help")"\0"
 __("q/Esc")"\0"               __("Quit")"\0"
@@ -695,6 +710,8 @@ void dplkey(unsigned short keyu){
 	case 'i': dplprged("frmins",-1,-1,-1); break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
+	case 'l': dpllayer(-1,dpl.actimgi); break;
+	case 'L': dpllayer( 1,dpl.actimgi); break;
 	case 'G': dplgimp(); break;
 	default: break;
 	}
