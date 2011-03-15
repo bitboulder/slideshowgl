@@ -800,16 +800,17 @@ void glrenderback(){
 	glColor4fv(col);
 	glScalef(w,1.f,1.f);
 	glRectf(actil?-.5f:.5f,-.5f,-.5f+gl.cfg.prged_w,.5f);
-	if(!actil) return;
-	glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
-	glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
-	if(srat<drat){
-		glRectf(-.5f,-.5f,.5f,-srat/drat/2.f);
-		glRectf(-.5f, .5f,.5f, srat/drat/2.f);
-	}
-	if(srat>drat){
-		glRectf(-.5f,-.5f,-drat/srat/2.f,.5f);
-		glRectf( .5f,-.5f, drat/srat/2.f,.5f);
+	if(actil){
+		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
+		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
+		if(srat<drat){
+			glRectf(-.5f,-.5f,.5f,-srat/drat/2.f);
+			glRectf(-.5f, .5f,.5f, srat/drat/2.f);
+		}
+		if(srat>drat){
+			glRectf(-.5f,-.5f,-drat/srat/2.f,.5f);
+			glRectf( .5f,-.5f, drat/srat/2.f,.5f);
+		}
 	}
 	glPopMatrix();
 }
