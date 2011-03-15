@@ -54,6 +54,7 @@ struct gl {
 		float col_dirname[4];
 		float col_playicon[4];
 		float prged_w;
+		float prg_rat;
 	} cfg;
 	struct glsel {
 		char act;
@@ -158,6 +159,7 @@ void glinit(char done){
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
 		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
 		gl.cfg.prged_w       = cfggetfloat("prged.w");
+		gl.cfg.prg_rat       = cfggetfloat("prg.rat");
 	}
 	ldmaxtexsize();
 	
@@ -528,6 +530,12 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
 	}
+	if(ilprg(il)){
+		float drat=gl.cfg.prg_rat;
+		if(srat<drat) glScalef(1.f,srat/drat,1.f);
+		if(srat>drat) glScalef(drat/srat,1.f,1.f);
+		srat=drat;
+	}
 	glTranslatef(ecur->x,ecur->y,0.);
 	s=ecur->s*glcalcback(ecur->back);
 	glScalef(s,s,1.);
@@ -779,6 +787,8 @@ void glrenderbar(){
 
 void glrenderback(){
 	int actil=dplgetactil();
+	float srat=sdlrat()*(1.f-gl.cfg.prged_w);
+	float drat=gl.cfg.prg_rat;
 	float w;
 	float col[4];
 	int i;
@@ -786,8 +796,22 @@ void glrenderback(){
 	w=glmode(GLM_TXT);
 	for(i=0;i<3;i++) col[i]=gl.cfg.col_txtmk[i];
 	col[3]=.5f;
+	glPushMatrix();
 	glColor4fv(col);
-	glRectf((actil?-.5f:.5f)*w,-.5f,(-.5f+gl.cfg.prged_w)*w,.5f);
+	glScalef(w,1.f,1.f);
+	glRectf(actil?-.5f:.5f,-.5f,-.5f+gl.cfg.prged_w,.5f);
+	if(!actil) return;
+	glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
+	glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
+	if(srat<drat){
+		glRectf(-.5f,-.5f,.5f,-srat/drat/2.f);
+		glRectf(-.5f, .5f,.5f, srat/drat/2.f);
+	}
+	if(srat>drat){
+		glRectf(-.5f,-.5f,-drat/srat/2.f,.5f);
+		glRectf( .5f,-.5f, drat/srat/2.f,.5f);
+	}
+	glPopMatrix();
 }
 
 void glpaint(){

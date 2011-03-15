@@ -79,6 +79,7 @@ struct cfg {
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle actions") },
 	{ 0,   "prged.w",             CT_FLT, CM_SET,  ".2",     {NULL}, __("Width of index il in prg edit mode") },
+	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
 	{ 0,   NULL,                  0,      0,       NULL,     {NULL}, NULL },
 };
 #undef E2
