@@ -8,7 +8,7 @@
 
 - xinerama => current screen (svn-branch!)
 
-- fix: keymap for win32
+- fix: load errors
 
 # Want to have
 - load imgexif threaded

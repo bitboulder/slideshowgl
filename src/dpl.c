@@ -439,10 +439,11 @@ void dplstatupdate(){
 	effstat()->run=run;
 }
 
-void dplactil(float x,int clickimg){
-	if(!(dpl.pos.actil&ACTIL_PRGED)) return;
+char dplactil(float x,int clickimg){
+	if(!(dpl.pos.actil&ACTIL_PRGED)) return 0;
 	dpl.pos.actil = (x+.5f>dpl.cfg.prged_w) | ACTIL_PRGED;
 	dpl.actimgi   = clickimg;
+	return 1;
 }
 
 int dplgimprun(void *arg){
@@ -709,7 +710,7 @@ char dplev(struct ev *ev){
 		}
 	break;
 	case DE_KEY: dplkey(ev->key); break;
-	case DE_STAT: dplactil(ev->sx,clickimg); ret=0; break;
+	case DE_STAT: if(!dplactil(ev->sx,clickimg)) ret=0; break;
 	case DE_JUMPEND: dplprged("pos",1,dpl.actimgi); break;
 	}
 	if(AIMGI==IMGI_END) dpl.run=0;
