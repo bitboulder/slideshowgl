@@ -835,7 +835,7 @@ void glpaint(){
 }
 
 int glselect(int x,int y){
-	GLuint ret,selbuf[64]={0};
+	GLuint selbuf[64]={0};
 	GLint hits,i;
 	gl.sel.x=x;
 	gl.sel.y=y;
@@ -848,7 +848,6 @@ int glselect(int x,int y){
 	glpaint();
 	hits=glRenderMode(GL_RENDER);
 	gl.sel.act=0;
-	ret=0;
-	for(i=0;i<hits;i++) if(selbuf[4*i+3]>ret) ret=selbuf[4*i+3];
-	return (int)ret-1;
+	for(i=hits-1;i>=0;i--) if(selbuf[4*i+3]) return (int)selbuf[4*i+3]-1;
+	return -1;
 }
