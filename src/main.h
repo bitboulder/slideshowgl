@@ -1,7 +1,8 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-#define FILELEN		1024
+#define FILELEN			1024
+#define LDFILELEN		20480
 
 #ifndef __GNUC__
 	#define  __attribute__(x)

@@ -164,7 +164,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 
 int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist *src){
 	FILE *fd;
-	char buf[FILELEN];
+	char buf[LDFILELEN];
 	int count=0;
 	size_t lpfx=strlen(pfx);
 	char prg;
@@ -176,7 +176,7 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 		if(!(fd=fopen(flst,"r"))){ error(ERR_CONT,"ld read flst failed \"%s\"",flst); return 0; }
 	while(!feof(fd)){
 		size_t len;
-		if(!fgets(buf,FILELEN,fd)) continue;
+		if(!fgets(buf,LDFILELEN,fd)) continue;
 		len=strlen(buf);
 		while(len && (buf[len-1]=='\n' || buf[len-1]=='\r')) buf[--len]='\0';
 		if(!len) continue;
@@ -187,9 +187,9 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 #endif
 			if(strncmp(buf,"frm;",4) && strncmp(buf,"txt_",4))
 		{
-			memmove(buf+lpfx,buf,MIN(len+1,FILELEN-lpfx-1));
+			memmove(buf+lpfx,buf,MIN(len+1,LDFILELEN-lpfx-1));
 			memcpy(buf,pfx,lpfx);
-			buf[FILELEN-1]='\0';
+			buf[LDFILELEN-1]='\0';
 		}
 		count+=faddfile(il,buf,src);
 	}
@@ -256,7 +256,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 			size_t l=0;
 			while(l<NAME_MAX && de->d_name[l]) l++;
 			if(l>=1 && de->d_name[0]=='.') continue;
-			if(ld+l>=FILELEN) continue;
+			if(ld+l>=LDFILELEN) continue;
 			memcpy(buf+ld,de->d_name,l);
 			buf[ld+l]='\0';
 			count+=faddfile(il,buf,src);
