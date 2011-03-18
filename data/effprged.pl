@@ -148,7 +148,8 @@ sub imgfind {
 	while(!@img && @imgfn){
 		$imgfn=join "/",@imgfn;
 		foreach my $img (@imgs){
-			push @img,$img if $img->[0]=~/^[ \t]*(img|txt)[ \t]+\"?$imgfn\"?[ \t\n\r]*$/;
+			push @img,$img if $img->[0]=~/^[ \t]*img[ \t]+(.*)[ \t\n\r]*$/ && $1 eq $imgfn;
+			push @img,$img if $img->[0]=~/^[ \t]*txt[ \t]+\"(.*)\"[ \t\n\r]*$/ && $1 eq $imgfn;
 		}
 		shift @imgfn;
 	}
