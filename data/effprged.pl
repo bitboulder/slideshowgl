@@ -176,6 +176,7 @@ sub ctxt {
 	push @img,"txt \"".$imgfn."\"\n";
 	push @img,"col 0xff9900\n";
 	push @img,sprintf "pos :0.5:%.3f:%.3f\n",(rand()-0.5)/4,(rand()-0.5)/4;
+	push @img,"on ::0\n";
 	return \@img;
 }
 
