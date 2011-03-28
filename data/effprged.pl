@@ -22,6 +22,7 @@ elsif("imgdel"eq$cmd){ $chg=&imgdel(\@prg,$frmi,$imgfn); }
 elsif("imgpos"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"pos",$arg[0]); }
 elsif("imgon" eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"on", $arg[0]); }
 elsif("imgoff"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"off",$arg[0]); }
+elsif("imgcol"eq$cmd){ $chg=&imgcol(\@prg,$frmi,$imgfn,$arg[0]); }
 my $prg=&joinprg(@prg);
 &saveprg($file,$prg) if $chg && !$nodo;
 print $prg if $nodo;
@@ -127,6 +128,33 @@ sub imgposi {
 		$done=1;
 	}
 	push @{$img},$key." ".(join ":",@pos)."\n" if !$done;
+}
+
+sub imgcoli {
+	my $img=shift;
+	my $col=shift;
+	my $done=0;
+	foreach my $line (@{$img}){
+		next if $line!~/^([ \t]*col[ \t]+)([0-9a-fx]+)([ \t\n\r]*)$/;
+		my $pre=$1;
+		my $suf=$3;
+		$line=$pre.$col.$suf;
+		$done=1;
+	}
+	push @{$img},"col ".$col."\n" if !$done;
+}
+
+sub imgcol {
+	my $prg=shift;
+	my $frmi=shift;
+	my $imgfn=shift;
+	my $col=shift;
+	my @img=&imgfind($prg,$frmi,$imgfn);
+	return 0 if !@img;
+	foreach my $img (@img){
+		&imgcoli($img,$col);
+	}
+	return 1;
 }
 
 sub frmfind {

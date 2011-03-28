@@ -48,4 +48,7 @@ char fileext(const char *fn,size_t len,const char *ext);
 uint32_t unicode2utf8(unsigned short key);
 void utf8check(char *str);
 
+void col_hsl2rgb(float *dst,float *src);
+void col_rgb2hsl(float *dst,float *src);
+
 #endif

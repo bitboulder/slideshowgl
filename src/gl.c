@@ -815,6 +815,67 @@ void glrenderback(){
 	glPopMatrix();
 }
 
+void glrenderbtnclose(){
+	glPushMatrix();
+	glScalef(.8f,.8f,1.f);
+	glColor4f(1.f,1.f,1.f,0.f);
+	glrect(1.f,1.f,GP_CENTER);
+	glColor4fv(gl.cfg.col_txtfg);
+	glRotatef(45.f,0.f,0.f,1.f);
+	glrect(1.f,.2f,GP_CENTER);
+	glRotatef(90.f,0.f,0.f,1.f);
+	glrect(1.f,.2f,GP_CENTER);
+	glPopMatrix();
+}
+
+void glrenderprgcol(){
+	float *col;
+	float colf=effprgcolf(&col);
+	float w;
+	int b,c;
+	float colhsl[4];
+	float chsl[4];
+	float crgb[4];
+	GLuint name=IMGI_COL+1;
+	if(!colf || !col) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,-.5f,0.f);
+	glScalef(.1f*w,.2f,1.f);
+	glScalef(colf,1.f,1.f);
+	glTranslatef(-.5f,.5f,0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(1.f,1.f,GP_CENTER);
+	glScalef(1.f/7.f,1.f/7.f,1.f);
+	glTranslatef(3.f,3.f,0.f);
+	glLoadName(name++);
+	glrenderbtnclose();
+	glTranslatef(-5.f,-.5f,0.f);
+	glScalef(1.f,5.f/(float)NPRGCOL,1.f);
+	glTranslatef(0.f,-.5f,0.f);
+	col_rgb2hsl(colhsl,col);
+	memcpy(chsl,colhsl,sizeof(float)*4);
+	for(b=0;b<3;b++){
+		int p=0;
+		for(c=0;c<NPRGCOL;c++){
+			chsl[b]=(float)c/(float)(NPRGCOL-1);
+			if(chsl[b]<colhsl[b]) p=c;
+			col_hsl2rgb(crgb,chsl);
+			glColor4fv(crgb);
+			glLoadName(name++);
+			glrect(1.f,1.f,GP_CENTER);
+			glTranslatef(0.f,-1.f,0.f);
+		}
+		glLoadName(0);
+		chsl[b]=colhsl[b];
+		glTranslatef(0.f,(float)(NPRGCOL-p),0.f);
+		glColor4fv(col);
+		glrect(2.f,2.f,GP_CENTER);
+		glTranslatef(2.f,(float)p,0.f);
+	}
+	glPopMatrix();
+}
+
 void glpaint(){
 	GLenum glerr;
 
@@ -824,6 +885,7 @@ void glpaint(){
 	glrenderback();
 	if(!panorender()) glrenderimgs();
 	glrendercat();
+	glrenderprgcol();
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();

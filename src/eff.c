@@ -9,6 +9,7 @@
 #include "cfg.h"
 #include "prg.h"
 #include "mark.h"
+#include "help.h"
 
 extern struct zoomtab {
 	int move;
@@ -33,7 +34,7 @@ struct eff {
 		Uint32 efftime;
 		float shrink;
 		Uint32 stat_delay[STAT_NUM];
-		Uint32 cat_delay;
+		Uint32 wnd_delay;
 		float prged_w;
 	} cfg;
 	struct stat {
@@ -42,12 +43,19 @@ struct eff {
 		struct istat pos;
 	} stat;
 	struct eval ecat;
+	struct {
+		struct eval v;
+		float *col;
+		int actimgi;
+	} eprgcol;
 } eff = {
 	.refresh = EFFREF_NO,
 	.ineff = 0,
 	.stat.mode = STAT_OFF,
 	.stat.pos.h = 0.f,
-	.ecat.cur = 0,
+	.ecat.cur = 0.f,
+	.eprgcol.v.cur = 0.f,
+	.eprgcol.col = NULL,
 };
 
 #define AIL		(dp->actil&ACTIL)
@@ -59,6 +67,7 @@ char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
 float effcatf(){ return eff.ecat.cur; }
+float effprgcolf(float **col){ return (*col=eff.eprgcol.col) ? eff.eprgcol.v.cur : 0.f; }
 
 struct wh effmaxfit(){ return eff.maxfit; }
 
@@ -454,8 +463,29 @@ char effcatinit(char dst){
 	if(dst>=0) edst=dst?1.f:0.f;
 	else edst=1.f-eff.ecat.dst;
 	ret=eff.ecat.dst!=edst;
-	effiniteval(&eff.ecat,edst,eff.cfg.cat_delay,EI_CONSTSPEED,SDL_GetTicks());
+	effiniteval(&eff.ecat,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
 	return ret;
+}
+
+int effprgcolinit(float *col,int actimgi){
+	if(col){
+		eff.eprgcol.col=col;
+		eff.eprgcol.actimgi=actimgi;
+	}
+	effiniteval(&eff.eprgcol.v,col?1.f:0.f,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
+	return eff.eprgcol.actimgi;
+}
+
+void effprgcolset(int id){
+	int b=id/NPRGCOL;
+	int c=id%NPRGCOL;
+	float chsl[4];
+	if(!eff.eprgcol.col) return;
+	if(b<0 || b>=3) return;
+	if(c<0 || c>=NPRGCOL) return;
+	col_rgb2hsl(chsl,eff.eprgcol.col);
+	chsl[b]=(float)c/((float)NPRGCOL-1.f);
+	col_hsl2rgb(eff.eprgcol.col,chsl);
 }
 
 /***************************** eff do *****************************************/
@@ -519,6 +549,7 @@ void effdo(){
 	struct img *img;
 	char ineff=0;
 	int il,i;
+	Uint32 now;
 	if(eff.refresh!=EFFREF_NO){
 		effinit(eff.refresh,0,-1);
 		eff.refresh=EFFREF_NO;
@@ -536,8 +567,10 @@ void effdo(){
 			ldffree(tmp->ld,TEX_NONE);
 		}
 	}
+	now=SDL_GetTicks();
 	effdostat();
-	effdoeval(&eff.ecat,SDL_GetTicks());
+	effdoeval(&eff.ecat,now);
+	effdoeval(&eff.eprgcol.v,now);
 	eff.ineff=ineff;
 }
 
@@ -545,10 +578,10 @@ void effcfginit(){
 	eff.cfg.shrink=cfggetfloat("eff.shrink");
 	eff.cfg.efftime=cfggetuint("eff.efftime");
 	eff.cfg.stat_delay[STAT_OFF] = 0;
-	eff.cfg.stat_delay[STAT_RISE]=cfggetuint("dpl.stat_rise");
-	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("dpl.stat_on");
-	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("dpl.stat_fall");
-	eff.cfg.cat_delay=cfggetuint("dpl.cat_delay");
+	eff.cfg.stat_delay[STAT_RISE]=cfggetuint("eff.stat_rise");
+	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("eff.stat_on");
+	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("eff.stat_fall");
+	eff.cfg.wnd_delay=cfggetuint("eff.wnd_delay");
 	eff.cfg.prged_w=cfggetfloat("prged.w");
 }
 

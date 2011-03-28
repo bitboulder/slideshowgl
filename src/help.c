@@ -211,3 +211,39 @@ void utf8check(char *str){
 	if(nstr) *str='\0';
 #endif
 }
+
+/* thread: gl, eff */
+void col_hsl2rgb(float *dst,float *src){
+	float c=(1.f-fabsf(2.f*src[2]-1.f))*src[1];
+	float h=src[0]*6;
+	float h2=h-truncf(h/2.f)*2.f;
+	float x=c*(1.f-fabsf(h2-1.f));
+	float m=src[2]-.5f*c;
+	     if(h<1){ dst[0]=c; dst[1]=x; dst[2]=0; }
+	else if(h<2){ dst[0]=x; dst[1]=c; dst[2]=0; }
+	else if(h<3){ dst[0]=0; dst[1]=c; dst[2]=x; }
+	else if(h<4){ dst[0]=0; dst[1]=x; dst[2]=c; }
+	else if(h<5){ dst[0]=x; dst[1]=0; dst[2]=c; }
+	else        { dst[0]=c; dst[1]=0; dst[2]=x; }
+	dst[0]+=m;
+	dst[1]+=m;
+	dst[2]+=m;
+	dst[3]=src[3];
+}
+
+void col_rgb2hsl(float *dst,float *src){
+	float M=MAX(src[0],MAX(src[1],src[2]));
+	float m=MIN(src[0],MIN(src[1],src[2]));
+	float c=M-m;
+		 if(c==0) dst[0]=0.f;
+	else if(M==src[0]) dst[0]=(src[1]-src[2])/c;
+	else if(M==src[1]) dst[0]=(src[2]-src[0])/c+2.f;
+	else if(M==src[2]) dst[0]=(src[0]-src[1])/c+4.f;
+	else dst[0]=0.f;
+	dst[0]/=6.f; dst[0]-=truncf(dst[0]); if(dst[0]<0.f) dst[0]+=1.f;
+	dst[2]=(M+m)*0.5f;
+	if(c==0) dst[1]=0.f;
+	else dst[1]=c/(1.f-fabsf(2*dst[2]-1.f));
+	dst[3]=src[3];
+}
+

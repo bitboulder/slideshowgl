@@ -11,9 +11,11 @@
 				E2(NONE, -1),\
 				E2(PANO, -2)
 
+#define NPRGCOL		128
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
 #define IMGI_CAT	0x40000000
+#define IMGI_COL	(0x7FFFFFFF-NPRGCOL*3-2)
 
 #define IL_NUM	2
 

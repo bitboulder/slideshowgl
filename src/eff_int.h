@@ -15,6 +15,8 @@ void effdel(struct imgpos *ip);
 void effstaton();
 void effpanoend(struct img *img);
 char effcatinit(char dst);
+int effprgcolinit(float *col,int actimgi);
+void effprgcolset(int id);
 
 void effdo();
 void effcfginit();

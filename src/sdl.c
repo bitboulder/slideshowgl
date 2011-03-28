@@ -298,21 +298,24 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		sdl.clickdelay.y=y;
 		sdl.clickdelay.clickimg=clickimg;
 	}
-	if(clickimg>=IMGI_CAT) switch(btn){
-	case SDL_BUTTON_LEFT:
-		dplevputi(DE_MARK,clickimg);
-		if(doubleclick) dplevputi(DE_DIR,clickimg);
-	break;
-	}
-	else switch(btn){
-	case SDL_BUTTON_LEFT:
-		if(zoom>0)           dplevputp(DE_MOVE,sx,sy);
-		else if(doubleclick) dplevputi(DE_DIR|DE_ZOOMIN,clickimg);
-		else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
-		else                 dplevputi(DE_SEL,clickimg);
-	break;
-	case SDL_BUTTON_MIDDLE: dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
-	case SDL_BUTTON_RIGHT: if(zoom==0) dplevputs(DE_LEFT,DES_MOUSE); break;
+	if(clickimg>=IMGI_COL) switch(btn){
+		case SDL_BUTTON_LEFT:
+			if(!doubleclick) dplevputi(DE_COL,clickimg-IMGI_COL);
+		break;
+	}else if(clickimg>=IMGI_CAT) switch(btn){
+		case SDL_BUTTON_LEFT:
+			dplevputi(DE_MARK,clickimg);
+			if(doubleclick) dplevputi(DE_DIR,clickimg);
+		break;
+	}else switch(btn){
+		case SDL_BUTTON_LEFT:
+			if(zoom>0)           dplevputp(DE_MOVE,sx,sy);
+			else if(doubleclick) dplevputi(DE_DIR|DE_ZOOMIN,clickimg);
+			else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
+			else                 dplevputi(DE_SEL,clickimg);
+		break;
+		case SDL_BUTTON_MIDDLE: dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
+		case SDL_BUTTON_RIGHT: if(zoom==0) dplevputs(DE_LEFT,DES_MOUSE); break;
 	}
 }
 
