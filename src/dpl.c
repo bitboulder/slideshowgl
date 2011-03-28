@@ -255,7 +255,7 @@ char dplprged(const char *cmd,int il,int imgi,int arg){
 			size_t len=strlen(buf);
 			snprintf(buf+len,FILELEN*2-len," ::%i",imgposopt(img->pos)->layer);
 		}
-		if(txt && !strcmp(cmd,"imgcol")){
+		if(txt && (!strcmp(cmd,"imgcol") || !strcmp(cmd,"frmcol"))){
 			size_t len=strlen(buf);
 			snprintf(buf+len,FILELEN*2-len," 0x%02x%02x%02x",
 					(int)(txt->col[0]*255.f),
@@ -621,6 +621,7 @@ __("[0-9]+m")"\0"             __("Move frame to position")"\0"
 __("[0-9]+d")"\0"             __("Copy frame to position")"\0"
 __("l/L")"\0"                 __("Move image into foreground/background")"\0"
 __("c")"\0"                   __("Change color of text")"\0"
+__("C")"\0"                   __("Copy color of text to all text on current frame")"\0"
 __("E")"\0"                   __("Refresh current frame")"\0"
 __("e")"\0"                   __("Leave program editor")"\0"
 __("G")"\0"                   __("Edit current image with gimp")"\0"
@@ -672,6 +673,7 @@ void dplinputtxtinit(enum inputtxt mode){
 void dplkey(unsigned short keyu){
 	uint32_t key=unicode2utf8(keyu);
 	int inputnum=-1;
+	int t;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
@@ -703,6 +705,7 @@ void dplkey(unsigned short keyu){
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
+	case 'C': t=effprgcolinit(NULL,-1); dplprged("frmcol", 1,t>=0?t:dpl.actimgi,-1); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }

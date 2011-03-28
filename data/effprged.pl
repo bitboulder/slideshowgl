@@ -23,6 +23,7 @@ elsif("imgpos"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"pos",$arg[0]); }
 elsif("imgon" eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"on", $arg[0]); }
 elsif("imgoff"eq$cmd){ $chg=&imgpos(\@prg,$frmi,$imgfn,"off",$arg[0]); }
 elsif("imgcol"eq$cmd){ $chg=&imgcol(\@prg,$frmi,$imgfn,$arg[0]); }
+elsif("frmcol"eq$cmd){ $chg=&frmcol(\@prg,$frmi,$arg[0]); }
 my $prg=&joinprg(@prg);
 &saveprg($file,$prg) if $chg && !$nodo;
 print $prg if $nodo;
@@ -153,6 +154,18 @@ sub imgcol {
 	return 0 if !@img;
 	foreach my $img (@img){
 		&imgcoli($img,$col);
+	}
+	return 1;
+}
+
+sub frmcol {
+	my $prg=shift;
+	my $frmi=shift;
+	my $col=shift;
+	my $frm=&frmfind($prg,$frmi);
+	return 0 if !exists $frm->{"img"};
+	foreach my $img (@{$frm->{"img"}}){
+		&imgcoli($img,$col) if $img->[0]=~/^[ \t]*txt/;
 	}
 	return 1;
 }
