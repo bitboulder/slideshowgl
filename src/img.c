@@ -279,6 +279,7 @@ char ilreload(int il,const char *cmd){
 	}
 	curil=curils[il]=floaddir(curil->fn,curil->dir);
 	if(curil) curil->last_used=SDL_GetTicks();
+	actadd(ACT_ILCLEANUP,NULL);
 	return curil!=NULL;
 }
 

@@ -264,6 +264,7 @@ char dplprged(const char *cmd,int il,int imgi,int arg){
 		}
 	}
 	if(!ilreload(1,cmd?buf:NULL)) return 1;
+	effprgcolinit(NULL,-2);
 	il=AIL;
 	if(il!=1) dpl.pos.actil=ACTIL_PRGED|1;
 	effinit(EFFREF_ALL,DE_JUMP,-1);
@@ -281,12 +282,14 @@ void dpllayer(char dir,int imgi){
 
 char dplprgcol(){
 	struct img *img;
-	struct txtimg *txt;
+	struct txtimg *txt=NULL;
+	int saveimgi;
+	int initimgi=dpl.actimgi;
 	if(!(dpl.pos.actil&ACTIL_PRGED)) return 0;
-	if(AIL!=1) return 0;
-	if(!(img=imgget(1,dpl.actimgi))) return 0;
-	if(!(txt=imgfiletxt(img->file))) return 0;
-	effprgcolinit(txt->col,dpl.actimgi);
+	if(AIL!=1 || !(img=imgget(1,dpl.actimgi)) || !(txt=imgfiletxt(img->file)))
+		initimgi=-1;
+	saveimgi=effprgcolinit(txt?txt->col:NULL,initimgi);
+	if(saveimgi>=0) dplprged("imgcol",1,saveimgi,-1);
 	return 1;
 }
 
@@ -800,9 +803,7 @@ char dplev(struct ev *ev){
 	case DE_KEY: dplkey(ev->key); break;
 	case DE_STAT: if(!dplactil(ev->sx,clickimg)) ret=0; break;
 	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
-	case DE_COL: if(!clickimg){
-		dplprged("imgcol",1,effprgcolinit(NULL,-1),-1);
-	}else effprgcolset(clickimg); break;
+	case DE_COL: effprgcolset(clickimg); break;
 	}
 	if(AIMGI==IMGI_END) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;
@@ -869,6 +870,8 @@ int dplthread(void *UNUSED(arg)){
 		sdldelay(&last,16);
 		timer(TI_DPL,3,0);
 	}
+	dpl.actimgi=-1;
+	dplprgcol();
 	sdl_quit|=THR_DPL;
 	return 0;
 }

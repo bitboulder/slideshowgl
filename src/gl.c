@@ -815,19 +815,6 @@ void glrenderback(){
 	glPopMatrix();
 }
 
-void glrenderbtnclose(){
-	glPushMatrix();
-	glScalef(.8f,.8f,1.f);
-	glColor4f(1.f,1.f,1.f,0.f);
-	glrect(1.f,1.f,GP_CENTER);
-	glColor4fv(gl.cfg.col_txtfg);
-	glRotatef(45.f,0.f,0.f,1.f);
-	glrect(1.f,.2f,GP_CENTER);
-	glRotatef(90.f,0.f,0.f,1.f);
-	glrect(1.f,.2f,GP_CENTER);
-	glPopMatrix();
-}
-
 void glrenderprgcol(){
 	float *col;
 	float colf=effprgcolf(&col);
@@ -846,13 +833,8 @@ void glrenderprgcol(){
 	glTranslatef(-.5f,.5f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(1.f,1.f,GP_CENTER);
-	glScalef(1.f/7.f,1.f/7.f,1.f);
-	glTranslatef(3.f,3.f,0.f);
-	glLoadName(name++);
-	glrenderbtnclose();
-	glTranslatef(-5.f,-.5f,0.f);
-	glScalef(1.f,5.f/(float)NPRGCOL,1.f);
-	glTranslatef(0.f,-.5f,0.f);
+	glScalef(1.f/7.f,5.f/7.f/(float)NPRGCOL,1.f);
+	glTranslatef(-2.f,(float)NPRGCOL/2.f-.5f,0.f);
 	col_rgb2hsl(colhsl,col);
 	memcpy(chsl,colhsl,sizeof(float)*4);
 	for(b=0;b<3;b++){

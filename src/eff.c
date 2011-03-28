@@ -10,6 +10,7 @@
 #include "prg.h"
 #include "mark.h"
 #include "help.h"
+#include "file.h"
 
 extern struct zoomtab {
 	int move;
@@ -56,6 +57,7 @@ struct eff {
 	.ecat.cur = 0.f,
 	.eprgcol.v.cur = 0.f,
 	.eprgcol.col = NULL,
+	.eprgcol.actimgi = -1,
 };
 
 #define AIL		(dp->actil&ACTIL)
@@ -468,19 +470,25 @@ char effcatinit(char dst){
 }
 
 int effprgcolinit(float *col,int actimgi){
-	if(col){
-		eff.eprgcol.col=col;
-		eff.eprgcol.actimgi=actimgi;
+	int actimgiold=eff.eprgcol.actimgi;
+	if(actimgi==-2){
+		struct img *img;
+		struct txtimg *txt;
+		if(eff.eprgcol.col && (img=imgget(1,eff.eprgcol.actimgi)) && (txt=imgfiletxt(img->file)))
+			eff.eprgcol.col=txt->col;
+		return -1;
 	}
-	effiniteval(&eff.eprgcol.v,col?1.f:0.f,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
-	return eff.eprgcol.actimgi;
+	if(col) eff.eprgcol.col=col;
+	eff.eprgcol.actimgi=actimgi;
+	effiniteval(&eff.eprgcol.v,actimgi>=0?1.f:0.f,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
+	return actimgiold;
 }
 
 void effprgcolset(int id){
 	int b=id/NPRGCOL;
 	int c=id%NPRGCOL;
 	float chsl[4];
-	if(!eff.eprgcol.col) return;
+	if(eff.eprgcol.actimgi<=0) return;
 	if(b<0 || b>=3) return;
 	if(c<0 || c>=NPRGCOL) return;
 	col_rgb2hsl(chsl,eff.eprgcol.col);

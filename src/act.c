@@ -143,6 +143,7 @@ int actthread(void *UNUSED(arg)){
 			SDL_mutexP(ac.mutex);
 		}
 	}
+	SDL_Delay(20);
 	actcheckdelay(1);
 	sdl_quit|=THR_ACT;
 	return 0;
