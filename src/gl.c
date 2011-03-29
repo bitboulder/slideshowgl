@@ -834,17 +834,19 @@ void glrenderprgcol(){
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(w/2.f,-.5f,0.f);
-	glScalef(.1f*w,.2f,1.f);
+	glScalef(.1f,.4f,1.f);
 	glScalef(colf,1.f,1.f);
 	glTranslatef(-.5f,.5f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(1.f,1.f,GP_CENTER);
-	glScalef(1.f/7.f,5.f/7.f/(float)NPRGCOL,1.f);
-	glTranslatef(-2.f,(float)NPRGCOL/2.f-.5f,0.f);
+	glScalef(1.f/5.f,1.f/20.f,1.f);
+	glTranslatef(-1.f,9.f,0.f);
 	col_rgb2hsl(colhsl,col);
 	memcpy(chsl,colhsl,sizeof(float)*4);
 	for(b=0;b<3;b++){
 		int p=0;
+		glPushMatrix();
+		glScalef(1.f,(b?8.5f:18.f)/(float)NPRGCOL,1.f);
 		for(c=0;c<NPRGCOL;c++){
 			chsl[b]=(float)c/(float)(NPRGCOL-1);
 			if(chsl[b]<colhsl[b]) p=c;
@@ -859,7 +861,10 @@ void glrenderprgcol(){
 		glTranslatef(0.f,(float)(NPRGCOL-p),0.f);
 		glColor4fv(col);
 		glrect(2.f,2.f,GP_CENTER);
-		glTranslatef(2.f,(float)p,0.f);
+		glTranslatef(0.f,(float)p,0.f);
+		glPopMatrix();
+		if(!b) glTranslatef(2.f,0.f,0.f);
+		else   glTranslatef(0.f,-9.5f,0.f);
 	}
 	glPopMatrix();
 }
