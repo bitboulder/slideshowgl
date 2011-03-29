@@ -59,6 +59,7 @@ struct cfg {
 	{ 0,   "gl.col_txtbg",        CT_COL, CM_SET,  "0.8 0.8 0.8 0.7", {NULL}, __("Text background color") },
 	{ 0,   "gl.col_txtfg",        CT_COL, CM_SET,  "0.0 0.0 0.0 1.0", {NULL}, __("Text foreground color") },
 	{ 0,   "gl.col_txtmk",        CT_COL, CM_SET,  "1.0 0.6 0.0 1.0", {NULL}, __("Text mark color") },
+	{ 0,   "gl.col_colmk",        CT_COL, CM_SET,  "0.6 1.0 0.0 1.0", {NULL}, __("Text mark color") },
 	{ 0,   "gl.col_dirname",      CT_COL, CM_SET,  "1.0 1.0 1.0 1.0", {NULL}, __("Text dirname color") },
 	{ 0,   "gl.col_playicon",     CT_COL, CM_SET,  "0.0 0.0 0.0 0.7", {NULL}, __("Text play icon color") },
 	{ 0,   "pano.defrot",         CT_FLT, CM_SET,  "0.125",  {NULL}, __("Default rotation speed for panoramas (screens per second)") },

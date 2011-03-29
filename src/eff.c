@@ -69,7 +69,7 @@ char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
 float effcatf(){ return eff.ecat.cur; }
-float effprgcolf(float **col){ return (*col=eff.eprgcol.col) ? eff.eprgcol.v.cur : 0.f; }
+float effprgcolf(float **col){ *col=eff.eprgcol.col; return eff.eprgcol.v.cur; }
 
 struct wh effmaxfit(){ return eff.maxfit; }
 

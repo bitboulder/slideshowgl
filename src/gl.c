@@ -51,6 +51,7 @@ struct gl {
 		float col_txtbg[4];
 		float col_txtfg[4];
 		float col_txtmk[4];
+		float col_colmk[4];
 		float col_dirname[4];
 		float col_playicon[4];
 		float prged_w;
@@ -156,6 +157,7 @@ void glinit(char done){
 		cfggetcol("gl.col_txtbg",   gl.cfg.col_txtbg);
 		cfggetcol("gl.col_txtfg",   gl.cfg.col_txtfg);
 		cfggetcol("gl.col_txtmk",   gl.cfg.col_txtmk);
+		cfggetcol("gl.col_colmk",   gl.cfg.col_colmk);
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
 		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
 		gl.cfg.prged_w       = cfggetfloat("prged.w");
@@ -398,11 +400,12 @@ void glfontrender(const char *txt,enum glpos pos){
 #endif
 }
 
-void glrenderact(float rat){
+void glrenderact(float rat,char prgcol){
 	float bw=.05f,bh=.05f;
 	const float bmax=.15f;
+	float *col=prgcol ? gl.cfg.col_colmk : gl.cfg.col_txtmk;
 	glmodeslave(GLM_1D);
-	glColor4f(gl.cfg.col_txtmk[0],gl.cfg.col_txtmk[1],gl.cfg.col_txtmk[2],.5f);
+	glColor4f(col[0],col[1],col[2],.5f);
 	if(rat>=1.f){
 		if((bh=bw*rat)>bmax) bw=(bh=bmax)/rat;
 	}else{
@@ -418,18 +421,21 @@ void glrenderact(float rat){
 
 void glrendertxtimg(struct txtimg *txt,float a,char act){
 	float col[4];
+	float *prgcol=NULL;
 	int i;
+	char prgcolact;
 	if(!glfontsel(FT_BIG)) return;
 	for(i=0;i<4;i++) col[i]=txt->col[i];
 	col[3]*=a;
+	prgcolact=!act && effprgcolf(&prgcol)!=0.f && prgcol==txt->col;
 	glPushMatrix();
 	glColor4fv(col);
 	glfontscale(-gl.cfg.hrat_txtimg,1.f);
 	glfontrender(txt->txt,GP_CENTER);
-	if(act){
+	if(act || prgcolact){
 		float w=glfontwidth(txt->txt);
 		glScalef(w,gl.fontcur->h,1.f);
-		glrenderact(w/gl.fontcur->h);
+		glrenderact(w/gl.fontcur->h,prgcolact);
 	}
 	glPopMatrix();
 }
@@ -566,7 +572,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	// draw img
 	if(dl) glCallList(dl);
 	if(txt) glrendertxtimg(txt,ecur->a,act);
-	else if(act) glrenderact(irat);
+	else if(act) glrenderact(irat,0);
 	glrenderimgtext(imgfiledir(img->file),irat,ecur->a);
 	if(ecur->m) glrendermark(ecur->m,imgexifrotf(img->exif),irat);
 	glPopMatrix();
