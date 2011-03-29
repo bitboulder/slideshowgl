@@ -293,6 +293,16 @@ char dplprgcol(){
 	return 1;
 }
 
+char dplprgcolcopy(){
+	int imgi=effprgcolinit(NULL,-1);
+	struct img *img;
+	if(!(dpl.pos.actil&ACTIL_PRGED)) return 0;
+	if(imgi<0)  imgi=dpl.actimgi;
+	if(AIL==1 && (img=imgget(1,imgi)) && imgfiletxt(img->file))
+		dplprged("frmcol", 1,imgi,-1);
+	return 1;
+}
+
 void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
@@ -673,7 +683,6 @@ void dplinputtxtinit(enum inputtxt mode){
 void dplkey(unsigned short keyu){
 	uint32_t key=unicode2utf8(keyu);
 	int inputnum=-1;
-	int t;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
@@ -705,7 +714,7 @@ void dplkey(unsigned short keyu){
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
-	case 'C': t=effprgcolinit(NULL,-1); dplprged("frmcol", 1,t>=0?t:dpl.actimgi,-1); break;
+	case 'C': dplprgcolcopy(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
