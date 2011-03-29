@@ -838,6 +838,7 @@ void glrenderprgcol(){
 	glScalef(colf,1.f,1.f);
 	glTranslatef(-.5f,.5f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
+	glLoadName(name++);
 	glrect(1.f,1.f,GP_CENTER);
 	glScalef(1.f/5.f,1.f/20.f,1.f);
 	glTranslatef(-1.f,9.f,0.f);
@@ -848,7 +849,7 @@ void glrenderprgcol(){
 		glPushMatrix();
 		glScalef(1.f,(b?8.5f:18.f)/(float)NPRGCOL,1.f);
 		for(c=0;c<NPRGCOL;c++){
-			chsl[b]=(float)c/(float)(NPRGCOL-1);
+			chsl[b]=((float)c+0.5f)/(float)NPRGCOL;
 			if(chsl[b]<colhsl[b]) p=c;
 			col_hsl2rgb(crgb,chsl);
 			glColor4fv(crgb);

@@ -235,12 +235,11 @@ void col_rgb2hsl(float *dst,float *src){
 	float M=MAX(src[0],MAX(src[1],src[2]));
 	float m=MIN(src[0],MIN(src[1],src[2]));
 	float c=M-m;
-		 if(c==0) dst[0]=0.f;
+		 if(c==0)      dst[0]=0.6f;
 	else if(M==src[0]) dst[0]=(src[1]-src[2])/c;
 	else if(M==src[1]) dst[0]=(src[2]-src[0])/c+2.f;
-	else if(M==src[2]) dst[0]=(src[0]-src[1])/c+4.f;
-	else dst[0]=0.f;
-	dst[0]/=6.f; dst[0]-=truncf(dst[0]); if(dst[0]<0.f) dst[0]+=1.f;
+	else               dst[0]=(src[0]-src[1])/c+4.f;
+	dst[0]/=6.f; if(dst[0]<0.f) dst[0]+=1.f;
 	dst[2]=(M+m)*0.5f;
 	if(c==0) dst[1]=0.f;
 	else dst[1]=c/(1.f-fabsf(2*dst[2]-1.f));

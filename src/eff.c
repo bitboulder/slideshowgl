@@ -485,14 +485,15 @@ int effprgcolinit(float *col,int actimgi){
 }
 
 void effprgcolset(int id){
-	int b=id/NPRGCOL;
-	int c=id%NPRGCOL;
+	int b=(id-1)/NPRGCOL;
+	int c=(id-1)%NPRGCOL;
 	float chsl[4];
+	if(id<0) return;
 	if(eff.eprgcol.actimgi<=0) return;
 	if(b<0 || b>=3) return;
 	if(c<0 || c>=NPRGCOL) return;
 	col_rgb2hsl(chsl,eff.eprgcol.col);
-	chsl[b]=(float)c/((float)NPRGCOL-1.f);
+	chsl[b]=((float)c+0.5f)/(float)NPRGCOL;
 	col_hsl2rgb(eff.eprgcol.col,chsl);
 }
 
