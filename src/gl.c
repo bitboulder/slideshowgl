@@ -860,8 +860,7 @@ void glrenderprgcol(){
 		chsl[b]=colhsl[b];
 		glTranslatef(0.f,(float)(NPRGCOL-p),0.f);
 		glColor4fv(col);
-		glrect(2.f,2.f,GP_CENTER);
-		glTranslatef(0.f,(float)p,0.f);
+		glrect(2.f,b?2.f:1.f,GP_CENTER);
 		glPopMatrix();
 		if(!b) glTranslatef(2.f,0.f,0.f);
 		else   glTranslatef(0.f,-9.5f,0.f);
