@@ -280,6 +280,13 @@ void dpllayer(char dir,int imgi){
 	dplprged("imgon",-2,imgi,-1);
 }
 
+void dplprgcolreset(){
+	int saveimgi;
+	if(!(dpl.pos.actil&ACTIL_PRGED)) return;
+	saveimgi=effprgcolinit(NULL,-1);
+	if(saveimgi>=0) dplprged("imgcol",1,saveimgi,-1);
+}
+
 char dplprgcol(){
 	struct img *img;
 	struct txtimg *txt=NULL;
@@ -792,8 +799,10 @@ char dplev(struct ev *ev){
 	if(!dplevdelay(ev)) return 0;
 	clickimg=dplclickimg(ev->sx,ev->sy,ev->imgi);
 	dpl.pos.imgiold=AIMGI;
-	if(!(ev->ev&DE_KEY) && !(ev->ev&DE_STAT)) dpl.colmode=COL_NONE;
+	if(!(ev->ev&(DE_KEY|DE_STAT))) dpl.colmode=COL_NONE;
 	if( (ev->ev&DE_KEY) && ev->key!='+' && ev->key!='-') dpl.colmode=COL_NONE;
+	if(!(ev->ev&(DE_STAT|DE_COL|DE_KEY))) dplprgcolreset();
+	if( (ev->ev&DE_KEY) && ev->key!='c' && ev->key!='C') dplprgcolreset();
 	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
 	case DE_MOVE:
 	case DE_RIGHT:
@@ -882,8 +891,7 @@ int dplthread(void *UNUSED(arg)){
 		sdldelay(&last,16);
 		timer(TI_DPL,3,0);
 	}
-	dpl.actimgi=-1;
-	dplprgcol();
+	dplprgcolreset();
 	sdl_quit|=THR_DPL;
 	return 0;
 }
