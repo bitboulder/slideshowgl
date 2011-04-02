@@ -56,7 +56,7 @@ void actdelete(struct img *img,const char *dstdir){
 	char *pos;
 	char *ifn=imgfiledelfn(img->file);
 	char ifnreset=1;
-	if(!ifn){
+	if(!ifn || !ifn[0]){
 		ifn=imgfilefn(img->file);
 		ifnreset=0;
 	}
