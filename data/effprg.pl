@@ -56,8 +56,8 @@ my @prg=&loadprg($fprg);
 my %imgs=&compileprg(@prg);
 my $flst=&flstimgs(\%imgs);
 
-&outprg(@prg);
-&outimgs(\%imgs);
+#&outprg(@prg);
+#&outimgs(\%imgs);
 print $flst;
 
 
