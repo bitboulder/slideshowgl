@@ -90,7 +90,7 @@ void markcatadd(char *fn){
 		markcatadddir(fn);
 		return;
 	}
-	mark.catfn=realloc(mark.catfn,sizeof(char)*FILELEN*(++mark.ncat));
+	mark.catfn=realloc(mark.catfn,sizeof(char)*FILELEN*((++mark.ncat)+1));
 	mark.catna=realloc(mark.catna,sizeof(char)*(FILELEN*mark.ncat+1));
 	for(i=0;i<mark.ncat-1;i++) if(strncmp(fn,mark.catfn+i*FILELEN,FILELEN)<=0) break;
 	if(i<mark.ncat-1){
@@ -98,6 +98,7 @@ void markcatadd(char *fn){
 		memmove(mark.catna+(i+1)*FILELEN,mark.catna+i*FILELEN,(mark.ncat-i-1)*FILELEN);
 	}
 	mark.catfn[mark.ncat*FILELEN]='\0';
+	mark.catna[mark.ncat*FILELEN]='\0';
 	cfn=mark.catfn+FILELEN*i;
 	cna=mark.catna+FILELEN*i;
 	len=strlen(fn);

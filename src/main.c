@@ -186,7 +186,7 @@ char end_threads(){
 void setprogpath(char *pfn){
 	size_t i;
 	for(i=strlen(pfn);i--;) if(pfn[i]=='/' || pfn[i]=='\\'){
-		progpath=malloc(i+1);
+		progpath=malloc(i+2);
 		memcpy(progpath,pfn,i+1);
 		progpath[i+1]='\0';
 		break;
