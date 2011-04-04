@@ -724,7 +724,7 @@ void dplkey(unsigned short keyu){
 	case 'C': dplprgcolcopy(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effcatinit(-1); break;
-	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); }
+	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); } break;
 	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
 	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
