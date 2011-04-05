@@ -252,7 +252,7 @@ char ilsecswitch(char state){
 	if(!curils[0] || !ilprg(0)) return 0;
 	len=strlen(curils[0]->fn);
 	if(len<8 || strncmp(curils[0]->fn+len-7,".effprg",7)) return 0;
-	snprintf(buf,len-6,curils[0]->fn);
+	snprintf(buf,len-=6,curils[0]->fn);
 	if(!isdir(buf)){
 		while(len && buf[len-1]!='/' && buf[len-1]!='\\') len--;
 		if(len) buf[len-1]='\0';
