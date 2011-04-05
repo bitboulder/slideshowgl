@@ -113,19 +113,19 @@ void markcatadd(char *fn){
 	utf8check(cna);
 }
 
-void markcatsel(char *catsel){
+void markcatsel(struct dplinput *in){
 	size_t i;
-	size_t len=strlen(catsel);
+	size_t len=strlen(in->in);
 	char *na;
-	if(len) for(i=0;i<mark.ncat;i++) if(!strncasecmp(catsel,na=mark.catna+i*FILELEN,len)){
+	if(len) for(i=0;i<mark.ncat;i++) if(!strncasecmp(in->in,na=mark.catna+i*FILELEN,len)){
 		size_t l=strlen(na);
-		memcpy(catsel,na,len);
-		memcpy(catsel+len+1,na+len,l-len+1);
-		*(int*)(catsel+l+2)=(int)i;
+		memcpy(in->in,na,len);
+		memcpy(in->post,na+len,l-len+1);
+		in->id=(int)i;
 		return;
 	}
-	catsel[len+1]='\0';
-	*(int*)(catsel+len+2)=-1;
+	in->post[0]='\0';
+	in->id=-1;
 }
 
 const char *mkcmp(const char *fn){

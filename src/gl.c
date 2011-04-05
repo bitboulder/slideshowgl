@@ -702,28 +702,29 @@ void glrendercat(){
 }
 
 void glrenderinput(){
-	char *txt=dplgetinput();
-	size_t len;
-	float w1,w2,h,b;
-	if(!txt || !glfontsel(FT_NOR)) return;
-	len=strlen(txt)+1;
+	struct dplinput *in=dplgetinput();
+	float w[3],wg,h,b;
+	if(!in || !glfontsel(FT_NOR)) return;
 	glmode(GLM_TXT);
 	glPushMatrix();
 	h=glfontscale(gl.cfg.hrat_input,1.f);
-	w1=glfontwidth(txt);
-	w2=txt[len] ? glfontwidth(txt+len) : 0.f;
+	w[0]=in->pre[0]  ? glfontwidth(in->pre)  : 0.f;
+	w[1]=in->in[0]   ? glfontwidth(in->in)   : 0.f;
+	w[2]=in->post[0] ? glfontwidth(in->post) : 0.f;
+	wg=w[0]+w[1]+w[2];
 	b=h*gl.cfg.txt_border*2.f;
-	glTranslatef(-(w1+w2+b)/2.f,0.f,0.f);
+	glTranslatef(-(wg+b)/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w1+w2+b,h+b,GP_VCENTER|GP_LEFT);
+	glrect(wg+b,h+b,GP_VCENTER|GP_LEFT);
 	glTranslatef(b/2.f,0.f,0.f);
+	glColor4fv(gl.cfg.col_txtmk);
+	if(in->pre) glfontrender(in->pre,GP_VCENTER|GP_LEFT);
+	glTranslatef(w[0],0.f,0.f);
 	glColor4fv(gl.cfg.col_txtfg);
-	glfontrender(txt,GP_VCENTER|GP_LEFT);
-	if(w2){
-		glTranslatef(w1,0.f,0.f);
-		glColor4fv(gl.cfg.col_txtmk);
-		glfontrender(txt+len,GP_VCENTER|GP_LEFT);
-	}
+	if(in->in) glfontrender(in->in,GP_VCENTER|GP_LEFT);
+	glTranslatef(w[1],0.f,0.f);
+	glColor4fv(gl.cfg.col_txtmk);
+	if(in->post) glfontrender(in->post,GP_VCENTER|GP_LEFT);
 	glPopMatrix();
 }
 

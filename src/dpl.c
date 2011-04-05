@@ -22,6 +22,8 @@ enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 enum dplevgrp { DEG_RIGHT, DEG_LEFT, DEG_ZOOMIN, DEG_ZOOMOUT, DEG_PLAY, DEG_NUM, DEG_NONE };
 
+enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH};
+
 const char *colmodestr[]={"G","B","C"};
 
 struct dpl {
@@ -34,8 +36,7 @@ struct dpl {
 		char loop;
 		float prged_w;
 	} cfg;
-	unsigned char inputtxt[FILELEN];
-	enum inputtxt {ITM_CATSEL, ITM_TXTIMG, ITM_NUM} inputtxtmode;
+	struct dplinput input;
 	enum colmode colmode;
 	Uint32 evdelay[DEG_NUM];
 	int actimgi;
@@ -49,8 +50,8 @@ struct dpl {
 	.showinfo = 0,
 	.showhelp = 0,
 	.colmode = COL_NONE,
-	.inputtxt = { INPUTTXTEMPTY },
 	.pos.actil = 0,
+	.input.mode = ITM_OFF,
 };
 
 #define AIL		(dpl.pos.actil&ACTIL)
@@ -64,18 +65,19 @@ int dplgetimgi(int il){ if(il<0 || il>=IL_NUM) il=AIL; return dpl.pos.imgi[il]; 
 int dplgetzoom(){ return dpl.pos.zoom; }
 char dplshowinfo(){ return dpl.showinfo; }
 char dplloop(){ return dpl.cfg.loop; }
-char *dplgetinput(){
-	static char txt[16]={'\0'};
-	if(dpl.inputtxt[0]=='\0'){
-		switch(dpl.inputtxtmode){
-		case ITM_CATSEL: snprintf(txt+1,15,_("[Catalog]")); break;
-		case ITM_TXTIMG: snprintf(txt+1,15,_("[Text]")); break;
-		case ITM_NUM:    snprintf(txt+1,15,_("[Number]")); break;
+struct dplinput *dplgetinput(){
+	if(dpl.input.mode==ITM_OFF) return NULL;
+	if(dpl.input.in[0]=='\0'){
+		static struct dplinput in={ .in={'\0'}, .post={'\0'}, .id=-1 };
+		switch(dpl.input.mode){
+		case ITM_CATSEL: snprintf(in.pre,FILELEN,_("[Catalog]")); break;
+		case ITM_TXTIMG: snprintf(in.pre,FILELEN,_("[Text]")); break;
+		case ITM_NUM:    snprintf(in.pre,FILELEN,_("[Number]")); break;
+		case ITM_SEARCH: snprintf(in.pre,FILELEN,_("[Search]")); break;
 		}
-		return txt;
+		return &in;
 	}
-	if(dpl.inputtxt[0]!=INPUTTXTEMPTY) return (char*)dpl.inputtxt;
-	return NULL;
+	return &dpl.input;
 }
 int dplgetactil(){ return (dpl.pos.actil&ACTIL_PRGED) ? AIL : -1; }
 int dplgetactimgi(int il){ return (dpl.pos.actil==(ACTIL_PRGED|il)) ? dpl.actimgi : -1; }
@@ -235,7 +237,7 @@ char dplprged(const char *cmd,int il,int imgi,int arg){
 		const char *fn="";
 		struct txtimg *txt=NULL;
 		if(img) fn=imgfilefn(img->file);
-		if(!strcmp(cmd,"txtadd")) fn=(char*)dpl.inputtxt;
+		if(!strcmp(cmd,"txtadd")) fn=dpl.input.in;
 		if(img && (txt=imgfiletxt(img->file))) fn=txt->txt;
 		snprintf(buf,FILELEN*2,"%s \"%s\" %i",cmd,fn,dpl.pos.imgi[1]);
 		if(img && !strcmp(cmd,"imgpos")){
@@ -654,37 +656,64 @@ const char *dplhelp(){
 	return keyboardlayout;
 }
 
+void dplfilesearch(struct dplinput *in){
+	struct img *img=imgget(0,AIL);
+	int i=0;
+	size_t ilen=strlen(in->in);
+	if(in->in[0]) for(;img;img=img->nxt,i++){
+		char *fn=imgfilefn(img->file);
+		char *pos=strrchr(fn,'/');
+		size_t plen,p;
+		if(pos) pos++; else pos=fn;
+		if((plen=strlen(pos))<ilen) continue;
+		for(p=0;p<=plen-ilen;p++){
+			if(strncasecmp(pos+p,in->in,ilen)) continue;
+			memcpy(in->pre,pos,p);
+			in->pre[p]='\0';
+			memcpy(in->in,pos+p,ilen);
+			memcpy(in->post,pos+p+ilen,plen-p-ilen);
+			in->post[plen-p-ilen]='\0';
+			in->id=i;
+			return;
+		}
+	}
+	in->pre[0]='\0';
+	in->post[0]='\0';
+	in->id=-1;
+}
+
 void dplinputtxtadd(uint32_t c){
-	size_t len=strlen((char*)dpl.inputtxt);
+	size_t len=strlen(dpl.input.in);
 	if(c!=INPUTTXTEMPTY){
 		if(c==INPUTTXTBACK){
-			while(len && (dpl.inputtxt[len-1]&0xc0)==0x80) len--;
+			while(len && (dpl.input.in[len-1]&0xc0)==0x80) len--;
 			if(len) len--;
 		}else{
-			unsigned char *buf=(unsigned char *)&c;
+			char *buf=(char *)&c;
 			int i;
-			for(i=0;i<4 && buf[i];i++) dpl.inputtxt[len++]=buf[i];
+			for(i=0;i<4 && buf[i];i++) dpl.input.in[len++]=buf[i];
 		}
-		dpl.inputtxt[len]='\0';
-		if(dpl.inputtxtmode==ITM_CATSEL) markcatsel((char*)dpl.inputtxt);
-		else dpl.inputtxt[len+1]='\0';
-	}else if(len) switch(dpl.inputtxtmode){
-		case ITM_CATSEL:
-		{
-			int catid;
-			len+=2+strlen((char*)dpl.inputtxt+len+1);
-			catid=*(int*)(dpl.inputtxt+len);
-			if(catid>=0) dplevputi(DE_MARK,catid+IMGI_CAT);
+		dpl.input.in[len]='\0';
+		switch(dpl.input.mode){
+		case ITM_CATSEL: markcatsel(&dpl.input); break;
+		case ITM_SEARCH: dplfilesearch(&dpl.input); break;
 		}
-		break;
+	}else if(len){
+		switch(dpl.input.mode){
+		case ITM_CATSEL: if(dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT); break;
 		case ITM_TXTIMG: dplprged("txtadd",-1,-1,-1); break;
-		case ITM_NUM: dplsel(atoi((char*)dpl.inputtxt)-1); break;
+		case ITM_NUM: dplsel(atoi(dpl.input.in)-1); break;
+		case ITM_SEARCH: if(dpl.input.id>=0) dplsel(dpl.input.id); break;
+		}
 	}
 }
 
 void dplinputtxtinit(enum inputtxt mode){
-	dpl.inputtxtmode=mode;
-	dpl.inputtxt[0]=dpl.inputtxt[1]='\0';
+	dpl.input.pre[0]='\0';
+	dpl.input.in[0]='\0';
+	dpl.input.post[0]='\0';
+	dpl.input.id=-1;
+	dpl.input.mode=mode;
 }
 
 void dplkey(unsigned short keyu){
@@ -692,16 +721,15 @@ void dplkey(unsigned short keyu){
 	int inputnum=-1;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
-	if(dpl.inputtxt[0]!=INPUTTXTEMPTY){
+	if(dpl.input.mode!=ITM_OFF){
 		if(key<0x20 || key==0x7f) switch(key){
 			case 8:  dplinputtxtadd(INPUTTXTBACK); break;
 			case 13: dplinputtxtadd(INPUTTXTEMPTY);
-			default: dpl.inputtxt[0]=INPUTTXTEMPTY; break;
-		}else if(dpl.inputtxtmode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
+			default: dpl.input.mode=ITM_OFF; break;
+		}else if(dpl.input.mode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
 		else{
-			if(key=='m' || key=='d')
-				inputnum=atoi((char*)dpl.inputtxt);
-			dpl.inputtxt[0]=INPUTTXTEMPTY;
+			if(key=='m' || key=='d') inputnum=atoi(dpl.input.in);
+			dpl.input.mode=ITM_OFF;
 		}
 		if(inputnum<0) return;
 	}
@@ -754,6 +782,7 @@ void dplkey(unsigned short keyu){
 	case 'l': dpllayer(-1,dpl.actimgi); break;
 	case 'L': dpllayer( 1,dpl.actimgi); break;
 	case 'G': dplgimp(); break;
+	case '/': dplinputtxtinit(ITM_SEARCH); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){

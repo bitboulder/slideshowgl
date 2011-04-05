@@ -2,6 +2,7 @@
 #define _DPL_H
 
 #include "img.h"
+#include "main.h"
 
 enum dplev {
 	DE_STAT    = 0x00000001,
@@ -38,10 +39,18 @@ enum dplev {
 
 enum dplevsrc { DES_KEY, DES_MOUSE };
 
+struct dplinput {
+	unsigned int mode;
+	int id;
+	char pre[FILELEN];
+	char in[FILELEN];
+	char post[FILELEN];
+};
+
 int dplgetimgi(int il);
 int dplgetzoom();
 char dplshowinfo();
-char *dplgetinput();
+struct dplinput *dplgetinput();
 char dplloop();
 const char *dplhelp();
 int dplgetactil();
