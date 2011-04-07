@@ -35,11 +35,14 @@ struct dpl {
 		char loop;
 		float prged_w;
 		char playmode;
+		char playrecord;
+		unsigned int playrecord_rate;
 	} cfg;
 	struct dplinput input;
 	enum colmode colmode;
 	Uint32 evdelay[DEG_NUM];
 	int actimgi;
+	unsigned int fid;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -52,6 +55,7 @@ struct dpl {
 	.colmode = COL_NONE,
 	.pos.actil = 0,
 	.input.mode = ITM_OFF,
+	.fid = 0,
 };
 
 #define AIL		(dpl.pos.actil&ACTIL)
@@ -81,6 +85,14 @@ struct dplinput *dplgetinput(){
 }
 int dplgetactil(){ return (dpl.pos.actil&ACTIL_PRGED) ? AIL : -1; }
 int dplgetactimgi(int il){ return (dpl.pos.actil==(ACTIL_PRGED|il)) ? dpl.actimgi : -1; }
+
+/* thread: sdl */
+unsigned int dplgetfid(){ return dpl.fid++; }
+
+Uint32 dplgetticks(){
+	if(dpl.cfg.playrecord) return dpl.fid*1000/dpl.cfg.playrecord_rate;
+	return SDL_GetTicks();
+}
 
 /***************************** imgfit *****************************************/
 
@@ -857,7 +869,7 @@ char dplev(struct ev *ev){
 	case DE_PLAY:
 		if(!(dpl.pos.actil&ACTIL_PRGED) && !panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);
-			dpl.run=SDL_GetTicks();
+			dpl.run=dplgetticks();
 		}
 	break;
 	case DE_KEY: dplkey(ev->key); break;
@@ -891,7 +903,7 @@ void dplcheckev(){
 /***************************** dpl run ****************************************/
 
 void dplrun(){
-	Uint32 time=SDL_GetTicks();
+	Uint32 time=dplgetticks();
 	unsigned int dpldur = AIMGI==IMGI_END ? 2000 : dpl.cfg.displayduration;
 	if(time-dpl.run>effdelay(imginarrorlimits(0,AIMGI),dpldur)){
 		if(dpl.cfg.playmode && AIMGI==IMGI_END) sdl_quit=1;
@@ -908,11 +920,14 @@ void dplcfginit(){
 	dpl.cfg.loop=cfggetbool("dpl.loop");
 	dpl.cfg.prged_w=cfggetfloat("prged.w");
 	dpl.cfg.playmode=cfggetbool("dpl.playmode");
+	dpl.cfg.playrecord=cfggetbool("sdpl.playrecord");
+	dpl.cfg.playrecord_rate=cfggetuint("dpl.playrecord_rate");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);
 	for(;z<0;z++) dplevput(DE_ZOOMIN);
 	memset(dpl.evdelay,0,sizeof(Uint32)*DEG_NUM);
-	if(dpl.cfg.playmode) dpl.run=SDL_GetTicks()-dpl.cfg.displayduration+1000;
+	if(dpl.cfg.playrecord) dpl.cfg.playmode=1;
+	if(dpl.cfg.playmode) dpl.run=dplgetticks()-dpl.cfg.displayduration+1000;
 }
 
 int dplthread(void *UNUSED(arg)){

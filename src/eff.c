@@ -247,7 +247,7 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 		ip->cur.act=0;
 	}else{
 		int i;
-		Uint32 time=SDL_GetTicks();
+		Uint32 time=dplgetticks();
 		Uint32 tstart=time;
 		opt->tex=TEX_BIG;
 		opt->layer=(char)pev->layer;
@@ -316,7 +316,7 @@ char effiniteval(struct eval *e,float dst,Uint32 tdst,unsigned int flags,Uint32 
 void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
 	int i;
 	union uipos *ipo=&imgp->p;
-	Uint32 time=SDL_GetTicks();
+	Uint32 time=dplgetticks();
 	if(ipn->cur.act) ipo->cur.act=1.f;
 	for(i=0;i<NIPOS;i++){
 		struct eval *po=ipo->a+i;
@@ -431,15 +431,15 @@ void effstaton(){
 	switch(eff.stat.mode){
 		case STAT_OFF:
 			eff.stat.mode=STAT_RISE;
-			eff.stat.in=SDL_GetTicks();
+			eff.stat.in=dplgetticks();
 			eff.stat.out=eff.stat.in+eff.cfg.stat_delay[STAT_RISE];
 		break;
 		case STAT_ON:
-			eff.stat.out=SDL_GetTicks()+eff.cfg.stat_delay[STAT_ON];
+			eff.stat.out=dplgetticks()+eff.cfg.stat_delay[STAT_ON];
 		break;
 		case STAT_FALL:
 			eff.stat.mode=STAT_RISE;
-			eff.stat.in=SDL_GetTicks();
+			eff.stat.in=dplgetticks();
 			eff.stat.in-=(eff.stat.out-eff.stat.in)*eff.cfg.stat_delay[STAT_RISE]/eff.cfg.stat_delay[STAT_FALL];
 			eff.stat.out=eff.stat.in+eff.cfg.stat_delay[STAT_RISE];
 		break;
@@ -465,7 +465,7 @@ char effcatinit(char dst){
 	if(dst>=0) edst=dst?1.f:0.f;
 	else edst=1.f-eff.ecat.dst;
 	ret=eff.ecat.dst!=edst;
-	effiniteval(&eff.ecat,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
+	effiniteval(&eff.ecat,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,dplgetticks());
 	return ret;
 }
 
@@ -480,7 +480,7 @@ int effprgcolinit(float *col,int actimgi){
 	}
 	if(col) eff.eprgcol.col=col;
 	eff.eprgcol.actimgi=actimgi;
-	effiniteval(&eff.eprgcol.v,actimgi>=0?1.f:0.f,eff.cfg.wnd_delay,EI_CONSTSPEED,SDL_GetTicks());
+	effiniteval(&eff.eprgcol.v,actimgi>=0?1.f:0.f,eff.cfg.wnd_delay,EI_CONSTSPEED,dplgetticks());
 	return actimgiold;
 }
 
@@ -524,7 +524,7 @@ char effdoeval(struct eval *e,Uint32 time){
 
 void effdoimg(struct img *img,int imgi){
 	union uipos *ip=&img->pos->p;
-	Uint32 time=SDL_GetTicks();
+	Uint32 time=dplgetticks();
 	int i;
 	char effon=0;
 	if(!img->pos->eff) return;
@@ -534,7 +534,7 @@ void effdoimg(struct img *img,int imgi){
 		effinitimg(dplgetpos(),0,imgi,img->pos->eff);
 }
 
-float effdostatef(){ return (float)(SDL_GetTicks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in); }
+float effdostatef(){ return (float)(dplgetticks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in); }
 
 void effdostat(){
 	float ef=effdostatef();
@@ -576,7 +576,7 @@ void effdo(){
 			ldffree(tmp->ld,TEX_NONE);
 		}
 	}
-	now=SDL_GetTicks();
+	now=dplgetticks();
 	effdostat();
 	effdoeval(&eff.ecat,now);
 	effdoeval(&eff.eprgcol.v,now);

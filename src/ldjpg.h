@@ -4,5 +4,6 @@
 #include <SDL.h>
 
 SDL_Surface *JPG_LoadSwap(char *fn);
+void jpegsave(char *fn,unsigned int w,unsigned int h,unsigned char *buf);
 
 #endif

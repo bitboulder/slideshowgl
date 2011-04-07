@@ -15,6 +15,8 @@ struct dplpos {
 	char writemode;
 };
 
+Uint32 dplgetticks();
+
 char imgfit(struct img *img,float *fitw,float *fith);
 
 struct dplpos *dplgetpos();

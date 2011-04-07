@@ -22,6 +22,7 @@
 #include "pano.h"
 #include "eff.h"
 #include "help.h"
+#include "ldjpg.h"
 
 char sdl_quit = 0;
 
@@ -31,6 +32,7 @@ struct sdlcfg {
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
 	int fsaa;
+	int playrecord;
 };
 
 struct sdlmove {
@@ -211,6 +213,12 @@ void sdlinit(){
 	sdl.scrnof_h=cfggetint("sdl.height");
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
+	sdl.cfg.playrecord=cfggetbool("sdpl.playrecord");
+	if(sdl.cfg.playrecord){
+		sdl.scrnof_w=cfggetint("sdl.playrecord_w");
+		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
+		sdl.fullscreen=0;
+	}
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_EnableUNICODE(1);
 	if(cfggetint("cfg.version")){
@@ -393,6 +401,21 @@ void sdlframerate(){
 	}
 }
 
+void sdlsaveframe(){
+	static int w=0,h=0;
+	static unsigned char *buf=NULL;
+	char fn[FILELEN];
+	if(w!=sdl.scr_w || h!=sdl.scr_h){
+		w=sdl.scr_w;
+		h=sdl.scr_h;
+		buf=realloc(buf,(size_t)w*(size_t)h*3);
+	}
+	glReadPixels(0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,buf);
+	snprintf(fn,FILELEN,"slideshowgl_rec%06i.jpg",dplgetfid());
+	debug(DBG_STA,"sdl save frame %s",fn);
+	jpegsave(fn,(unsigned int)w,(unsigned int)h,buf);
+}
+
 int sdlthread(void *UNUSED(arg)){
 	Uint32 paint_last=0;
 	switchdpms(0);
@@ -409,6 +432,7 @@ int sdlthread(void *UNUSED(arg)){
 		glpaint();
 		timer(TI_SDL,2,1);
 
+		if(sdl.cfg.playrecord) sdlsaveframe();
 		SDL_GL_SwapBuffers();
 		timer(TI_SDL,3,1);
 

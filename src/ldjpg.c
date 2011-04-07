@@ -90,3 +90,36 @@ end1:
 	return NULL;
 #endif
 }
+
+void jpegsave(char *fn,unsigned int w,unsigned int h,unsigned char *buf){
+#if HAVE_JPEG
+	struct jpeg_compress_struct cinfo;
+	struct jpeg_error_mgr jerr;
+	FILE *fd;
+	JSAMPROW rowptr[1];
+	unsigned int rowstride;
+	cinfo.err=jpeg_std_error(&jerr);
+	jpeg_create_compress(&cinfo);
+	if(!(fd=fopen(fn,"wb"))){
+		error(ERR_CONT,"jpeg compression failure: file open failed");
+		return;
+	}
+	jpeg_stdio_dest(&cinfo,fd);
+	cinfo.image_width=w;
+	cinfo.image_height=h;
+	cinfo.input_components=3;
+	cinfo.in_color_space=JCS_RGB;
+	jpeg_set_defaults(&cinfo);
+	jpeg_set_quality(&cinfo,85,TRUE);
+	jpeg_start_compress(&cinfo,TRUE);
+	rowstride=w*3;
+	buf+=rowstride*(h-1);
+	while(cinfo.next_scanline<cinfo.image_height){
+		rowptr[0]=buf-cinfo.next_scanline*rowstride;
+		jpeg_write_scanlines(&cinfo,rowptr,1);
+	}
+	jpeg_finish_compress(&cinfo);
+	fclose(fd);
+	jpeg_destroy_compress(&cinfo);
+#endif
+}
