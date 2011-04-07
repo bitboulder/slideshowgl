@@ -32,7 +32,7 @@ struct sdlcfg {
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
 	int fsaa;
-	int playrecord;
+	const char *playrecord;
 };
 
 struct sdlmove {
@@ -213,12 +213,12 @@ void sdlinit(){
 	sdl.scrnof_h=cfggetint("sdl.height");
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
-	sdl.cfg.playrecord=cfggetbool("sdpl.playrecord");
-	if(sdl.cfg.playrecord){
+	sdl.cfg.playrecord=cfggetstr("sdpl.playrecord");
+	if(sdl.cfg.playrecord && sdl.cfg.playrecord[0]){
 		sdl.scrnof_w=cfggetint("sdl.playrecord_w");
 		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
 		sdl.fullscreen=0;
-	}
+	}else sdl.cfg.playrecord=NULL;
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_EnableUNICODE(1);
 	if(cfggetint("cfg.version")){
@@ -411,7 +411,7 @@ void sdlsaveframe(){
 		buf=realloc(buf,(size_t)w*(size_t)h*3);
 	}
 	glReadPixels(0,0,w,h,GL_RGB,GL_UNSIGNED_BYTE,buf);
-	snprintf(fn,FILELEN,"slideshowgl_rec%06i.jpg",dplgetfid());
+	snprintf(fn,FILELEN,"%s_%06i.jpg",sdl.cfg.playrecord,dplgetfid());
 	debug(DBG_STA,"sdl save frame %s",fn);
 	jpegsave(fn,(unsigned int)w,(unsigned int)h,buf);
 }

@@ -916,11 +916,13 @@ void dplrun(){
 
 void dplcfginit(){
 	int z;
+	const char *t;
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");
 	dpl.cfg.prged_w=cfggetfloat("prged.w");
 	dpl.cfg.playmode=cfggetbool("dpl.playmode");
-	dpl.cfg.playrecord=cfggetbool("sdpl.playrecord");
+	t=cfggetstr("sdpl.playrecord");
+	dpl.cfg.playrecord=t && t[0];
 	dpl.cfg.playrecord_rate=cfggetuint("dpl.playrecord_rate");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);

@@ -39,7 +39,7 @@ struct cfg {
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0",      {NULL}, __("Toggle image loop") },
 	{ 'z', "dpl.initzoom",        CT_INT, CM_SET,  "0",      {NULL}, __("Set initial zoom") },
 	{ 'g', "dpl.playmode",        CT_INT, CM_FLIP, "0",      {NULL}, __("Play all and exit") },
-	{ 'G', "sdpl.playrecord",     CT_INT, CM_FLIP, "0",      {NULL}, __("Enable playrecord") },
+	{ 'G', "sdpl.playrecord",     CT_STR, CM_SET,  "",       {NULL}, __("Enable playrecord + set file name base") },
 	{ 0,   "dpl.playrecord_rate", CT_INT, CM_SET,  "50",     {NULL}, __("Framerate for playrecord") },
 	{ 0,   "sdl.playrecord_w",    CT_INT, CM_SET,  "720",    {NULL}, __("Window width for playrecord") },
 	{ 0,   "sdl.playrecord_h",    CT_INT, CM_SET,  "576",    {NULL}, __("Window height for playrecord") },
