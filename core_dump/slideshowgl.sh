@@ -4,7 +4,7 @@
 DIR="/home/src/self/slideshowgl/slideshowgl-2.0.0"
 CDIR="$DIR/core_dump"
 
-SL="$DIR/build/slideshowgl.online"
+SL="$DIR/build/slideshowgl"
 
 #cd $CDIR
 ulimit -c unlimited
