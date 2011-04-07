@@ -179,7 +179,7 @@ sub fillprg {
 	my @prg=@_;
 	for(my $fi=0;$fi<@prg;$fi++){
 		my $frm=$prg[$fi];
-		&fillarg($frm->{"frm"},$def{"frm"});
+		my @frmdef=@{$def{"frm"}};
 		foreach my $img (@{$frm->{"imgs"}}){
 			@{$img->{"col"}}=() if !exists $img->{"col"};
 			&fillarg($img->{"col"},$def{"col"});
@@ -207,7 +207,10 @@ sub fillprg {
 			}
 			&fillarg($img->{"on" },$def{"on"});
 			&fillarg($img->{"off"},$def{"off"});
+			$frmdef[0]=$img->{"on"}->[0] if $img->{"on"}->[0]>$frmdef[0];
+			$frmdef[0]=$img->{"on"}->[1] if $img->{"on"}->[1]>$frmdef[0];
 		}
+		&fillarg($frm->{"frm"},\@frmdef);
 	}
 	return @prg;
 }
