@@ -34,6 +34,7 @@ struct dpl {
 		Uint32 displayduration;
 		char loop;
 		float prged_w;
+		char playmode;
 	} cfg;
 	struct dplinput input;
 	enum colmode colmode;
@@ -864,7 +865,7 @@ char dplev(struct ev *ev){
 	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
 	case DE_COL: effprgcolset(clickimg); break;
 	}
-	if(AIMGI==IMGI_END) dpl.run=0;
+	if(AIMGI==IMGI_END && !dpl.cfg.playmode) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;
 	return ret;
 }
@@ -891,7 +892,9 @@ void dplcheckev(){
 
 void dplrun(){
 	Uint32 time=SDL_GetTicks();
-	if(time-dpl.run>effdelay(imginarrorlimits(0,AIMGI),dpl.cfg.displayduration)){
+	unsigned int dpldur = AIMGI==IMGI_END ? 2000 : dpl.cfg.displayduration;
+	if(time-dpl.run>effdelay(imginarrorlimits(0,AIMGI),dpldur)){
+		if(dpl.cfg.playmode && AIMGI==IMGI_END) sdl_quit=1;
 		dpl.run=time;
 		dplevput(DE_RIGHT);
 	}
@@ -904,10 +907,12 @@ void dplcfginit(){
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");
 	dpl.cfg.prged_w=cfggetfloat("prged.w");
+	dpl.cfg.playmode=cfggetbool("dpl.playmode");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);
 	for(;z<0;z++) dplevput(DE_ZOOMIN);
 	memset(dpl.evdelay,0,sizeof(Uint32)*DEG_NUM);
+	if(dpl.cfg.playmode) dpl.run=SDL_GetTicks()-dpl.cfg.displayduration+1000;
 }
 
 int dplthread(void *UNUSED(arg)){
@@ -920,6 +925,7 @@ int dplthread(void *UNUSED(arg)){
 	while(!sdl_quit){
 
 		if(dpl.run) dplrun();
+		else dpl.cfg.playmode=0;
 		panorun();
 		timer(TI_DPL,0,0);
 		dplcheckev();

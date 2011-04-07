@@ -38,6 +38,7 @@ struct cfg {
 	{ 'd', "dpl.displayduration", CT_INT, CM_SET,  "6000",   {NULL}, __("Set display duration") },
 	{ 'l', "dpl.loop",            CT_INT, CM_FLIP, "0",      {NULL}, __("Toggle image loop") },
 	{ 'z', "dpl.initzoom",        CT_INT, CM_SET,  "0",      {NULL}, __("Set initial zoom") },
+	{ 'g', "dpl.playmode",        CT_INT, CM_FLIP, "0",      {NULL}, __("Play all and exit") },
 	{ 'D', "eff.efftime",         CT_INT, CM_SET,  "1000",   {NULL}, __("Set effect duration") },
 	{ 0,   "eff.shrink",          CT_FLT, CM_SET,  "0.75",   {NULL}, __("Factor to shrink all not-current images for zoom<0") },
 	{ 'r', "ld.random",           CT_INT, CM_FLIP, "0",      {NULL}, __("Toggle image random") },
