@@ -523,8 +523,7 @@ char dplactil(float x,int clickimg){
 	int actil;
 	if(!(dpl.pos.actil&ACTIL_PRGED)) return 0;
 	actil = (x+.5f>dpl.cfg.prged_w) | ACTIL_PRGED;
-	if(actil==dpl.pos.actil) return 0;
-	if(dpl.input.mode==ITM_SEARCH) dplinputtxtfinal(1);
+	if(actil!=dpl.pos.actil && dpl.input.mode==ITM_SEARCH) dplinputtxtfinal(1);
 	dpl.pos.actil = actil;
 	dpl.actimgi   = clickimg;
 	return 1;
@@ -797,7 +796,7 @@ void dplkey(unsigned short keyu){
 			effinit(EFFREF_ALL,0,-1);
 		}
 	break;
-	case 'E': dplprged("reload",-1,-1,-1); break;
+	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
 	case 'i': dplprged("frmins",-1,-1,-1); break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
