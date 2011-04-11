@@ -433,14 +433,16 @@ int sdlthread(void *UNUSED(arg)){
 		timer(TI_SDL,2,1);
 
 		if(sdl.cfg.playrecord) sdlsaveframe();
-		SDL_GL_SwapBuffers();
 		timer(TI_SDL,3,1);
+
+		SDL_GL_SwapBuffers();
+		timer(TI_SDL,4,1);
 
 
 		sdlframerate();
 		if(!sdl.sync) sdldelay(&paint_last,16);
 		else paint_last=SDL_GetTicks();
-		timer(TI_SDL,4,1);
+		timer(TI_SDL,5,1);
 	}
 	switchdpms(1);
 	sdl_quit|=THR_SDL;
