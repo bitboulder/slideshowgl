@@ -32,6 +32,8 @@ struct sdlcfg {
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
 	int fsaa;
+	int fsaamaxw;
+	int fsaamaxh;
 	const char *playrecord;
 };
 
@@ -140,12 +142,6 @@ void sdlresize(int w,int h){
 	const SDL_VideoInfo *vi;
 	GLenum glerr;
 	sdl.doresize=0;
-	if(done>=0){
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
-	}
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
 		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
 		flags|=SDL_FULLSCREEN;
@@ -155,9 +151,19 @@ void sdlresize(int w,int h){
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
 		flags|=SDL_RESIZABLE;
 	}
+	if(done>=0){
+		if(w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh){
+			error(ERR_CONT,"disable anti-aliasing for window size");
+			sdl.cfg.fsaa=0;
+		}
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
+	}
 	if(!(screen=SDL_SetVideoMode(w,h,16,flags))){
 		if(!done && sdl.cfg.fsaa){
-			error(ERR_CONT,"disable anti-aliasing");
+			error(ERR_CONT,"disable anti-aliasing for mode failure");
 			sdl.cfg.fsaa=0;
 			sdlresize(w,h);
 			return;
@@ -213,6 +219,8 @@ void sdlinit(){
 	sdl.scrnof_h=cfggetint("sdl.height");
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
+	sdl.cfg.fsaamaxw=cfggetint("sdl.fsaa_max_w");
+	sdl.cfg.fsaamaxh=cfggetint("sdl.fsaa_max_h");
 	sdl.cfg.playrecord=cfggetstr("sdpl.playrecord");
 	if(sdl.cfg.playrecord && sdl.cfg.playrecord[0]){
 		sdl.scrnof_w=cfggetint("sdl.playrecord_w");
