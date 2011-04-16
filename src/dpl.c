@@ -896,7 +896,7 @@ void dplcheckev(){
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
 	if(stat&1) dplstatupdate();
-	if(stat&2) effstaton(stat);
+	if(stat&2 && !dpl.cfg.playrecord) effstaton(stat);
 }
 
 /***************************** dpl run ****************************************/
@@ -936,7 +936,7 @@ int dplthread(void *UNUSED(arg)){
 	dplcfginit();
 	effcfginit();
 	dplstatupdate();
-	effstaton();
+	if(!dpl.cfg.playrecord) effstaton();
 	effinit(EFFREF_CLR,DE_INIT,-1);
 	while(!sdl_quit){
 
