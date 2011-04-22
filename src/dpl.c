@@ -827,14 +827,15 @@ char dplevdelay(struct ev *ev){
 		switch(evi){
 		case DE_RIGHT:   if(ev->src==DES_KEY && !dpl.pos.writemode) grp=DEG_RIGHT; break;
 		case DE_LEFT:    if(ev->src==DES_KEY && !dpl.pos.writemode) grp=DEG_LEFT;  break;
-		case DE_ZOOMIN:  if(dpl.pos.zoom==-1) grp=DEG_ZOOMIN; break;
-		case DE_ZOOMOUT: if(dpl.pos.zoom==(panoactive()?2:1)) grp=DEG_ZOOMOUT; break;
+		case DE_ZOOMIN:  grp=DEG_ZOOMIN;  if(dpl.pos.zoom!=-1) nxttime=0; break;
+		case DE_ZOOMOUT: grp=DEG_ZOOMOUT; if(dpl.pos.zoom!=(panoactive()?2:1)) nxttime=0; break;
 		case DE_PLAY:
 		case DE_STOP:    if(ev->src==DES_KEY) grp=DEG_PLAY; break;
 		case DE_DIR:     grp=DEG_PLAY; nxttime=500; break;
 		}
 		if(grp==DEG_NONE) continue;
 		if(dpl.evdelay[grp]>now) return 0;
+		if(!nxttime) continue;
 		if(nxt[grp]<nxttime) nxt[grp]=nxttime;
 	}
 	for(i=0;i<DEG_NUM;i++) if(nxt[i]) dpl.evdelay[i]=now+nxt[i];
