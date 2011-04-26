@@ -10,8 +10,6 @@
 
 - fix: load errors
 
-- only use thumbs with newer timestamp
-
 # Want to have
 - load imgexif threaded
 

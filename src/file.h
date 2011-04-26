@@ -19,6 +19,7 @@ struct txtimg *imgfiletxt(struct imgfile *ifl);
 
 char findfilesubdir(char *dst,const char *subdir,const char *ext);
 
+char fthumbchecktime(struct imgfile *ifl,long ft);
 void fgetfiles(int argc,char **argv);
 
 struct imglist *floaddir(const char *fn,const char *dir);

@@ -91,12 +91,21 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext){
 
 /***************************** getfiles ***************************************/
 
+char fthumbchecktime(struct imgfile *ifl,long ft){
+	if(!ifl->tfn[0]) return 0;
+	if(ft<0) ft=filetime(ifl->fn);
+	if(ft<=filetime(ifl->tfn)) return 1;
+	ifl->tfn[0]='\0';
+	debug(DBG_DBG,"thumbinit thumb too old for '%s'",ifl->fn);
+	return 0;
+}
+
 void fthumbinit(struct imgfile *ifl){
 	snprintf(ifl->tfn,FILELEN,ifl->fn);
 	if(!findfilesubdir(ifl->tfn,"thumb",NULL)){
 		ifl->tfn[0]='\0';
 		debug(DBG_DBG,"thumbinit no thumb found for '%s'",ifl->fn);
-	}else
+	}else if(fthumbchecktime(ifl,-1))
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 

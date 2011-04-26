@@ -359,7 +359,11 @@ char ldfload(struct imgld *il,enum imgtex it){
 		Uint32 time=SDL_GetTicks();
 		if(il->ftchk+load.ftchk<time){
 			long ft=filetime(fn);
-			if(ft>il->ft){ il->ft=ft; ldffree(il,TEX_NONE); }
+			if(ft>il->ft){
+				il->ft=ft;
+				fthumbchecktime(il->img->file,ft);
+				ldffree(il,TEX_NONE);
+			}
 			il->ftchk=time;
 		}
 		goto end0;
