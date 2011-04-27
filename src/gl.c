@@ -667,7 +667,7 @@ void glrendercat(){
 	float f,w=0.f,h,b;
 	float colfg[4];
 	GLuint name=IMGI_CAT+1;
-	if(!(f=effcatf())) return;
+	if(!(f=effswf(ESW_CAT))) return;
 	if(!(cats=markcats())) return;
 	if(!glfontsel(FT_NOR)) return;
 	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;

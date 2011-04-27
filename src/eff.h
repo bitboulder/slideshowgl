@@ -26,6 +26,7 @@ struct icol {
 };
 
 enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS, MPC_RESET };
+enum esw { ESW_CAT, ESW_N };
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);
@@ -46,8 +47,9 @@ enum effrefresh {
 void effrefresh(enum effrefresh val);
 char effineff();
 struct istat *effstat();
-float effcatf();
+float effswf(enum esw id);
 float effprgcolf(float **col);
+Uint32 efflastchg();
 
 
 #endif

@@ -58,6 +58,7 @@ struct sdl {
 		Uint16 x,y;
 		int clickimg;
 	} clickdelay;
+	Uint32 lastfrm;
 } sdl = {
 	.fullscreen = 0,
 	.scr_w      = 0,
@@ -67,10 +68,15 @@ struct sdl {
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
 	.clickdelay.time = 0,
+	.lastfrm    = 0,
 };
 
 /* thread: gl */
 float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
+
+void sdlforceredraw(){
+	sdl.lastfrm=0;
+}
 
 #if HAVE_X11 && HAVE_XEXT
 void switchdpms(char val){
@@ -187,6 +193,7 @@ void sdlresize(int w,int h){
 		if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
 	}
 	effrefresh(EFFREF_FIT);
+	sdlforceredraw();
 #ifdef __WIN32__
 	done=1;
 #else
@@ -435,22 +442,28 @@ int sdlthread(void *UNUSED(arg)){
 		
 		if(!effineff()) ldtexload();
 		while(SDL_GetTicks()-paint_last < (effineff()?6:20)) if(!ldtexload()) break;
+
 		timer(TI_SDL,1,1);
-
+/*		if(!sdl.cfg.playrecord && sdl.lastfrm && sdl.lastfrm>efflastchg()){
+			SDL_Delay(10);
+			timer(TI_SDL,2,1);
+			continue;
+		}*/
+		sdl.lastfrm=SDL_GetTicks();
 		glpaint();
-		timer(TI_SDL,2,1);
-
-		if(sdl.cfg.playrecord) sdlsaveframe();
 		timer(TI_SDL,3,1);
 
-		SDL_GL_SwapBuffers();
+		if(sdl.cfg.playrecord) sdlsaveframe();
 		timer(TI_SDL,4,1);
+
+		SDL_GL_SwapBuffers();
+		timer(TI_SDL,5,1);
 
 
 		sdlframerate();
 		if(!sdl.sync) sdldelay(&paint_last,16);
 		else paint_last=SDL_GetTicks();
-		timer(TI_SDL,5,1);
+		timer(TI_SDL,6,1);
 	}
 	switchdpms(1);
 	sdl_quit|=THR_SDL;

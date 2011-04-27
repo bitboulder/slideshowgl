@@ -515,6 +515,7 @@ void dplstatupdate(){
 		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}
 	effstat()->run=run;
+	sdlforceredraw();
 }
 
 void dplinputtxtfinal(char ok);
@@ -756,7 +757,7 @@ void dplkey(unsigned short keyu){
 	}
 	switch(key){
 	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
-	case  27: if(effcatinit(0)) break;
+	case  27: if(effsw(ESW_CAT,0)) break;
 			  if(dpl.showinfo || dpl.showhelp) break;
 	case 'q': sdl_quit=1; break;
 	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
@@ -772,8 +773,8 @@ void dplkey(unsigned short keyu){
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
 	case 'C': dplprgcolcopy(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
-	case 'k': effcatinit(-1); break;
-	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effcatinit(1); } break;
+	case 'k': effsw(ESW_CAT,-1); break;
+	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
 	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
 	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;

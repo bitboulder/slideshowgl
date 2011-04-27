@@ -14,9 +14,10 @@
 - load imgexif threaded
 
 - dpl.actimgi through eff
+- dpl.pos.actil through eff
 - dpl.showinfo through eff
 - dpl.showhelp through eff
+- dplgetinput through eff
 - imgposmark for cat through eff
-- dpl.pos.actil through eff
 
 ? thread priorities

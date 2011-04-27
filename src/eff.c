@@ -43,22 +43,14 @@ struct eff {
 		Uint32 in,out;
 		struct istat pos;
 	} stat;
-	struct eval ecat;
+	struct eval esw[ESW_N];
 	struct {
 		struct eval v;
 		float *col;
 		int actimgi;
 	} eprgcol;
-} eff = {
-	.refresh = EFFREF_NO,
-	.ineff = 0,
-	.stat.mode = STAT_OFF,
-	.stat.pos.h = 0.f,
-	.ecat.cur = 0.f,
-	.eprgcol.v.cur = 0.f,
-	.eprgcol.col = NULL,
-	.eprgcol.actimgi = -1,
-};
+	Uint32 lastchg;
+} eff;
 
 #define AIL		(dp->actil&ACTIL)
 #define AIMGI	(dp->imgi[AIL])
@@ -68,8 +60,9 @@ void effrefresh(enum effrefresh val){ eff.refresh|=val; }
 char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
-float effcatf(){ return eff.ecat.cur; }
+float effswf(enum esw id){ return id>=ESW_N ? 0.f : eff.esw[id].cur; }
 float effprgcolf(float **col){ *col=eff.eprgcol.col; return eff.eprgcol.v.cur; }
+Uint32 efflastchg(){ return eff.lastchg; }
 
 struct wh effmaxfit(){ return eff.maxfit; }
 
@@ -459,13 +452,14 @@ void effpanoend(struct img *img){
 	img->pos->p.cur.y*=img->pos->p.cur.s;
 }
 
-char effcatinit(char dst){
+char effsw(enum esw id,char dst){
 	float edst;
 	char ret;
+	if(id>=ESW_N) return 0;
 	if(dst>=0) edst=dst?1.f:0.f;
-	else edst=1.f-eff.ecat.dst;
-	ret=eff.ecat.dst!=edst;
-	effiniteval(&eff.ecat,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,dplgetticks());
+	else edst=1.f-eff.esw[id].dst;
+	ret=eff.esw[id].dst!=edst;
+	effiniteval(eff.esw+id,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,dplgetticks());
 	return ret;
 }
 
@@ -518,26 +512,33 @@ char effdoeval(struct eval *e,Uint32 time){
 		e->cur=e->dst;
 		e->tcur=e->tdst;
 		e->tdst=0;
+		return 1;
 	}
 	return 0;
 }
 
-void effdoimg(struct img *img,int imgi){
+char effdoimg(struct img *img,int imgi){
 	union uipos *ip=&img->pos->p;
 	Uint32 time=dplgetticks();
 	int i;
 	char effon=0;
-	if(!img->pos->eff) return;
-	if(!ip->cur.act) return;
-	for(i=0;i<NIPOS;i++) effon|=effdoeval(ip->a+i,time);
+	char chg=0;
+	if(!img->pos->eff) return 0;
+	if(!ip->cur.act) return 0;
+	for(i=0;i<NIPOS;i++){
+		if(effdoeval(ip->a+i,time)) chg=1;
+		if(ip->a[i].tdst) effon=1;
+	}
 	if(!effon && --img->pos->eff)
 		effinitimg(dplgetpos(),0,imgi,img->pos->eff);
+	return chg;
 }
 
 float effdostatef(){ return (float)(dplgetticks()-eff.stat.in)/(float)(eff.stat.out-eff.stat.in); }
 
-void effdostat(){
+char effdostat(){
 	float ef=effdostatef();
+	float h;
 	if(eff.stat.mode!=STAT_OFF && ef>=1.f){
 		if(eff.stat.mode!=STAT_ON || dplgetimgi(-1)!=IMGI_END){
 			eff.stat.mode=(eff.stat.mode+1)%STAT_NUM;
@@ -547,11 +548,14 @@ void effdostat(){
 		}
 	}
 	switch(eff.stat.mode){
-		case STAT_RISE: eff.stat.pos.h=effcalclin(0.f,1.f,ef); break;
-		case STAT_FALL: eff.stat.pos.h=effcalclin(1.f,0.f,ef); break;
-		case STAT_ON:   eff.stat.pos.h=1.f; break;
-		default:        eff.stat.pos.h=0.f; break;
+		case STAT_RISE: h=effcalclin(0.f,1.f,ef); break;
+		case STAT_FALL: h=effcalclin(1.f,0.f,ef); break;
+		case STAT_ON:   h=1.f; break;
+		default:        h=0.f; break;
 	}
+	if(h==eff.stat.pos.h) return 0;
+	eff.stat.pos.h=h;
+	return 1;
 }
 
 void effdo(){
@@ -559,17 +563,18 @@ void effdo(){
 	char ineff=0;
 	int il,i;
 	Uint32 now;
+	char chg=0;
 	if(eff.refresh!=EFFREF_NO){
 		effinit(eff.refresh,0,-1);
 		eff.refresh=EFFREF_NO;
 	}
 	for(il=0;il<IL_NUM;il++)
 		for(img=imgget(il,0),i=0;img;img=img->nxt,i++) if(img->pos->eff){
-			effdoimg(img,i);
+			if(effdoimg(img,i)) chg=1;
 			ineff=1;
 		}
 	if(delimg){
-		if(delimg->pos->eff) effdoimg(delimg,-1);
+		if(delimg->pos->eff) if(effdoimg(delimg,-1)) chg=1;
 		if(!delimg->pos->eff){
 			struct img *tmp=delimg;
 			delimg=NULL;
@@ -577,13 +582,18 @@ void effdo(){
 		}
 	}
 	now=dplgetticks();
-	effdostat();
-	effdoeval(&eff.ecat,now);
-	effdoeval(&eff.eprgcol.v,now);
+	if(effdostat()) chg=1;
+	for(i=0;i<ESW_N;i++) if(effdoeval(eff.esw+i,now)) chg=1;
+	if(effdoeval(&eff.eprgcol.v,now)) chg=1;
 	eff.ineff=ineff;
+	if(chg) eff.lastchg=SDL_GetTicks();
 }
 
 void effcfginit(){
+	memset(&eff,0,sizeof(struct eff));
+	eff.refresh = EFFREF_NO,
+	eff.stat.mode = STAT_OFF,
+	eff.eprgcol.actimgi = -1,
 	eff.cfg.shrink=cfggetfloat("eff.shrink");
 	eff.cfg.efftime=cfggetuint("eff.efftime");
 	eff.cfg.stat_delay[STAT_OFF] = 0;

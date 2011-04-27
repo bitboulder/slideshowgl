@@ -14,7 +14,7 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi);
 void effdel(struct imgpos *ip);
 void effstaton();
 void effpanoend(struct img *img);
-char effcatinit(char dst);
+char effsw(enum esw id,char dst);
 int effprgcolinit(float *col,int actimgi);
 void effprgcolset(int id);
 
