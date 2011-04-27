@@ -11,7 +11,14 @@
 #include "mark.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
-enum cfgmode { CM_INC, CM_FLIP, CM_SET, CM_DO };
+
+#define CM	E2(INC,0),E2(FLIP,0),E2(SET,1),E2(DO,1)
+#define E2(X,A)	CM_##X
+enum cfgmode { CM, CM_NUM };
+#undef E2
+#define E2(X,A)	A
+char cfgmodearg[CM_NUM]={CM};
+#undef E2
 
 #define E(X)	#X
 #define E2(X,N)	#X
@@ -24,7 +31,7 @@ struct cfg {
 	const char *vals[16];
 	const char *help;
 } cfgs[]={
-	{ 'h', "cfg.usage",           CT_INT, CM_FLIP, "0",      {NULL}, __("Print this usage") },
+	{ 'h', "cfg.usage",           CT_INT, CM_INC,  "0",      {NULL}, __("Print this usage") },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0",      {NULL}, __("Print version") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
@@ -153,6 +160,7 @@ const char *cfggetstr(const char *name){
 void cfgset(struct cfg *cfg, char *val){
 	int ival;
 	char *tmp;
+	if(!val && cfgmodearg[cfg->mode]) error(ERR_QUIT,"cfgset no arg for '%s'",cfg->name);
 	switch(cfg->mode){
 	case CM_INC: case CM_FLIP:
 		if(cfg->type!=CT_INT)
@@ -163,12 +171,12 @@ void cfgset(struct cfg *cfg, char *val){
 		snprintf(tmp,10,"%i",ival);
 	break;
 	case CM_SET:
-		if(!val) error(ERR_QUIT,"cfgset no arg for CM_SET '%s'",cfg->name);
 		cfg->val=val;
 	break;
 	case CM_DO:
 		if(!strcmp(cfg->name,"mark.catalog")) markcatadd(val);
 	break;
+	default: break;
 	}
 }
 
@@ -176,14 +184,22 @@ void version(){
 	mprintf(_("%s version %s\n"),APPNAME,VERSION);
 }
 
-void usage(char *fn) NORETURN;
-void usage(char *fn){
+void usage(char *fn,char extended) NORETURN;
+void usage(char *fn,char extended){
 	int i;
 	version();
 	mprintf(_("Usage: %s [Options] {FILES|FILELISTS.flst}\n"),fn);
 	mprintf("%s:\n",_("Options"));
-	for(i=0;cfgs[i].name;i++) if(cfgs[i].opt){
-		mprintf("  -%c %s  %s",cfgs[i].opt,cfgs[i].mode==CM_FLIP?" ":"X",_(cfgs[i].help?cfgs[i].help:cfgs[i].name));
+	for(i=0;cfgs[i].name;i++) if(extended || cfgs[i].opt){
+		char noarg = !cfgmodearg[cfgs[i].mode];
+		mprintf("  ");
+		if(cfgs[i].opt) mprintf("-%c %c",cfgs[i].opt,noarg?' ':'X'); else mprintf("    ");
+		if(extended){
+			char buf[64];
+			snprintf(buf,64,"%s%s",cfgs[i].name,noarg?"  ":"=X");
+			mprintf("%s -c %-20s",cfgs[i].opt?" /":"  ",buf);
+		}
+		mprintf(" %s",_(cfgs[i].help?cfgs[i].help:cfgs[i].name));
 		if(cfgs[i].type==CT_ENM){
 			int j;
 			for(j=0;cfgs[i].vals[j];j++) mprintf("%s%s",j?",":" [",cfgs[i].vals[j]);
@@ -196,20 +212,37 @@ void usage(char *fn){
 
 char *cfgcompileopt(){
 	static char opt[256];
-	int i,p=0;
+	int i,p=2;
+	opt[0]='c'; opt[1]=':';
 	for(i=0;cfgs[i].name;i++) if(cfgs[i].opt){
 		if(p==254) error(ERR_QUIT,"cfgcompileopt: opt too small");
 		opt[p++]=cfgs[i].opt;
-		if(cfgs[i].mode==CM_SET || cfgs[i].mode==CM_DO) opt[p++]=':';
+		if(cfgmodearg[cfgs[i].mode]) opt[p++]=':';
 	}
 	opt[p++]='\0';
 	return opt;
 }
 
-void cfgparseargs(int argc,char **argv){
+void cfgopt(int c,char *val){
 	size_t i;
+	if(c=='c'){
+		char *pos=strchr(val,'=');
+		if(pos) *(pos++)='\0';
+		for(i=0;cfgs[i].name;i++) if(!strcmp(cfgs[i].name,val)){
+			char noarg = !cfgmodearg[cfgs[i].mode];
+			if(!noarg && !pos) error(ERR_QUIT,"option missing argument: -c %s",val);
+			cfgset(cfgs+i,pos);
+			break;
+		}
+		if(!cfgs[i].name) error(ERR_QUIT,"unknown option: -c %s",val);
+	}else
+		for(i=0;cfgs[i].name;i++) if(cfgs[i].opt==c) cfgset(cfgs+i,val);
+}
+
+void cfgparseargs(int argc,char **argv){
 	int c;
 #if HAVE_GETTEXT
+	size_t i;
 	struct stat st;
 	setlocale(LC_ALL,"");
 	setlocale(LC_NUMERIC,"C");
@@ -223,9 +256,8 @@ void cfgparseargs(int argc,char **argv){
 	textdomain(APPNAME);
 	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
-	while((c=getopt(argc,argv,cfgcompileopt()))>=0)
-		for(i=0;cfgs[i].name;i++) if(cfgs[i].opt==c) cfgset(cfgs+i,optarg);
-	if(cfggetint("cfg.usage")) usage(argv[0]);
+	while((c=getopt(argc,argv,cfgcompileopt()))>=0) cfgopt(c,optarg);
+	if(cfggetint("cfg.usage")) usage(argv[0],cfggetint("cfg.usage")>1);
 	if(cfggetint("cfg.version")) version();
 }
 
