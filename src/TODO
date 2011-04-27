@@ -13,9 +13,9 @@
 # Want to have
 - load imgexif threaded
 
-- dpl.actimgi through eff
-- dpl.pos.actil through eff
-- dplgetinput through eff
+- dpl.actimgi through eff + remove sdlforceredraw
+- dpl.pos.actil through eff + remove sdlforceredraw
+- dplgetinput through eff + remove sdlforceredraw
 - imgposmark for cat through eff
 
 ? thread priorities

@@ -522,6 +522,7 @@ char dplactil(float x,int clickimg){
 	if(actil!=dpl.pos.actil && dpl.input.mode==ITM_SEARCH) dplinputtxtfinal(1);
 	dpl.pos.actil = actil;
 	dpl.actimgi   = clickimg;
+	sdlforceredraw();
 	return 1;
 }
 
@@ -709,6 +710,7 @@ void dplinputtxtadd(uint32_t c){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
 	case ITM_SEARCH: dplfilesearch(&dpl.input); break;
 	}
+	sdlforceredraw();
 }
 
 void dplinputtxtinit(enum inputtxt mode){
@@ -719,6 +721,7 @@ void dplinputtxtinit(enum inputtxt mode){
 	dpl.input.id=-1;
 	dpl.input.mode=mode;
 	if(mode==ITM_SEARCH) dpl.input.id=AIMGI;
+	sdlforceredraw();
 }
 
 void dplinputtxtfinal(char ok){
@@ -730,6 +733,7 @@ void dplinputtxtfinal(char ok){
 	case ITM_SEARCH: if(!ok) dplsel(dpl.input.id);
 	}
 	dpl.input.mode=ITM_OFF;
+	sdlforceredraw();
 }
 
 void dplkey(unsigned short keyu){
@@ -746,6 +750,7 @@ void dplkey(unsigned short keyu){
 		else{
 			if(key=='m' || key=='d') inputnum=atoi(dpl.input.in);
 			dpl.input.mode=ITM_OFF;
+			sdlforceredraw();
 		}
 		if(inputnum<0) return;
 	}
