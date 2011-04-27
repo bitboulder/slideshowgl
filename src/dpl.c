@@ -28,8 +28,6 @@ const char *colmodestr[]={"G","B","C"};
 struct dpl {
 	struct dplpos pos;
 	Uint32 run;
-	char showinfo;
-	char showhelp;
 	struct {
 		Uint32 displayduration;
 		char loop;
@@ -50,8 +48,6 @@ struct dpl {
 	.pos.y = 0.,
 	.pos.writemode = 0,
 	.run = 0,
-	.showinfo = 0,
-	.showhelp = 0,
 	.colmode = COL_NONE,
 	.pos.actil = 0,
 	.input.mode = ITM_OFF,
@@ -67,7 +63,6 @@ struct dpl {
 struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetimgi(int il){ if(il<0 || il>=IL_NUM) il=AIL; return dpl.pos.imgi[il]; }
 int dplgetzoom(){ return dpl.pos.zoom; }
-char dplshowinfo(){ return dpl.showinfo; }
 char dplloop(){ return dpl.cfg.loop; }
 struct dplinput *dplgetinput(){
 	if(dpl.input.mode==ITM_OFF) return NULL;
@@ -669,7 +664,6 @@ __("q/Esc")"\0"               __("Quit")"\0"
 
 /* thread: gl */
 const char *dplhelp(){
-	if(!dpl.showhelp) return NULL;
 	if(dpl.pos.actil&ACTIL_PRGED) return keyboardlayout_prged;
 	return keyboardlayout;
 }
@@ -758,7 +752,8 @@ void dplkey(unsigned short keyu){
 	switch(key){
 	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
 	case  27: if(effsw(ESW_CAT,0)) break;
-			  if(dpl.showinfo || dpl.showhelp) break;
+			  if(effsw(ESW_INFO,0)) break;
+			  if(effsw(ESW_HELP,0)) break;
 	case 'q': sdl_quit=1; break;
 	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
 	case 'r': dplrotate(DE_ROT1); break;
@@ -798,22 +793,23 @@ void dplkey(unsigned short keyu){
 		}
 	break;
 	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
-	case 'i': dplprged("frmins",-1,-1,-1); break;
+	case 'i':
+		if(dpl.pos.actil&ACTIL_PRGED) dplprged("frmins",-1,-1,-1);
+		else effsw(ESW_INFO,AIMGI!=IMGI_START && AIMGI!=IMGI_END ? -1 : 0);
+	break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'l': dpllayer(-1,dpl.actimgi); break;
 	case 'L': dpllayer( 1,dpl.actimgi); break;
 	case 'G': dplgimp(); break;
 	case '/': dplinputtxtinit(ITM_SEARCH); break;
+	case 'h': effsw(ESW_HELP,-1); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){
 		dplinputtxtinit(ITM_NUM);
 		dplinputtxtadd(key);
 	}
-	dpl.showinfo = !dpl.showinfo && !(dpl.pos.actil&ACTIL_PRGED) && key=='i' &&
-		AIMGI!=IMGI_START && AIMGI!=IMGI_END;
-	dpl.showhelp = !dpl.showhelp && key=='h';
 }
 
 char dplevdelay(struct ev *ev){

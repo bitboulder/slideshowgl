@@ -36,6 +36,7 @@ struct eff {
 		float shrink;
 		Uint32 stat_delay[STAT_NUM];
 		Uint32 wnd_delay;
+		Uint32 sw_delay[ESW_N];
 		float prged_w;
 	} cfg;
 	struct stat {
@@ -459,7 +460,7 @@ char effsw(enum esw id,char dst){
 	if(dst>=0) edst=dst?1.f:0.f;
 	else edst=1.f-eff.esw[id].dst;
 	ret=eff.esw[id].dst!=edst;
-	effiniteval(eff.esw+id,edst,eff.cfg.wnd_delay,EI_CONSTSPEED,dplgetticks());
+	effiniteval(eff.esw+id,edst,eff.cfg.sw_delay[id],EI_CONSTSPEED,dplgetticks());
 	return ret;
 }
 
@@ -601,6 +602,9 @@ void effcfginit(){
 	eff.cfg.stat_delay[STAT_ON]  =cfggetuint("eff.stat_on");
 	eff.cfg.stat_delay[STAT_FALL]=cfggetuint("eff.stat_fall");
 	eff.cfg.wnd_delay=cfggetuint("eff.wnd_delay");
+	eff.cfg.sw_delay[ESW_CAT]=eff.cfg.wnd_delay;
+	eff.cfg.sw_delay[ESW_INFO]=cfggetuint("eff.txt_delay");
+	eff.cfg.sw_delay[ESW_HELP]=cfggetuint("eff.txt_delay");
 	eff.cfg.prged_w=cfggetfloat("prged.w");
 }
 

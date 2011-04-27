@@ -604,7 +604,7 @@ void gltextout(const char *text,float x,float y){
 #endif
 }
 
-void glrendertext(const char *title,const char *text){
+void glrendertext(const char *title,const char *text,float f){
 #if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
@@ -617,6 +617,7 @@ void glrendertext(const char *title,const char *text){
 	float lineh;
 	float winw;
 	float tw,tx;
+	float col[4];
 	if(!glfontsel(FT_NOR)) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
 		float len=glfontwidth(_(t));
@@ -629,7 +630,9 @@ void glrendertext(const char *title,const char *text){
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
-	glColor4fv(gl.cfg.col_txtbg);
+	for(i=0;i<4;i++) col[i]=gl.cfg.col_txtbg[i];
+	col[3]*=f;
+	glColor4fv(col);
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
@@ -638,7 +641,9 @@ void glrendertext(const char *title,const char *text){
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
-	glColor4fv(gl.cfg.col_txtfg);
+	for(i=0;i<4;i++) col[i]=gl.cfg.col_txtfg[i];
+	col[3]*=f;
+	glColor4fv(col);
 	gltextout(title,tx,y);
 	y-=lineh*2;
 	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0])
@@ -650,15 +655,17 @@ void glrendertext(const char *title,const char *text){
 void glrenderinfo(){
 	struct img *img;
 	char *info;
-	if(!dplshowinfo()) return;
+	float f;
+	if(!(f=effswf(ESW_INFO))) return;
 	if(!(img=imgget(0,dplgetimgi(0)))) return;
 	if(!(info=imgexifinfo(img->exif))) return;
-	glrendertext(_("Image info"),info);
+	glrendertext(_("Image info"),info,f);
 }
 
 void glrenderhelp(){
-	const char *help;
-	if((help=dplhelp())) glrendertext(_("Interface"),help);
+	const char *help=dplhelp();
+	float f;
+	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f);
 }
 
 void glrendercat(){

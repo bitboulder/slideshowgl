@@ -49,7 +49,6 @@ struct dplinput {
 
 int dplgetimgi(int il);
 int dplgetzoom();
-char dplshowinfo();
 struct dplinput *dplgetinput();
 char dplloop();
 const char *dplhelp();

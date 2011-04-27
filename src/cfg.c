@@ -80,6 +80,7 @@ struct cfg {
 	{ 0,   "eff.stat_on",         CT_INT, CM_SET,  "5000",   {NULL}, __("Time the statusbar remains (ms)") },
 	{ 0,   "eff.stat_fall",       CT_INT, CM_SET,  "1000",   {NULL}, __("Fall time for statusbar (ms)") },
 	{ 0,   "eff.wnd_delay",       CT_INT, CM_SET,  "1000",   {NULL}, __("Rise and fall time for windows (ms)") },
+	{ 0,   "eff.txt_delay",       CT_INT, CM_SET,  "300",    {NULL}, __("Rise and fall time for text windows (ms)") },
 	{ 'm', "mark.fn",             CT_STR, CM_SET,  "",       {NULL}, __("Set mark file (Default: $TEMP/slideshowgl-mark)") },
 	{ 'k', "mark.catalog",        CT_STR, CM_DO,   "",       {NULL}, __("Add catalog (directory also possible)") },
 	{ 0,   "mark.flst2gthumb",    CT_STR, CM_SET,  "/mnt/img/self/scriptz/flst2gthumb.pl", {NULL}, __("Skript for flst conversion") },
