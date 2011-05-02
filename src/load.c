@@ -315,6 +315,7 @@ char ldtexload(){
 			ldgendl(tl->dat.img.itex);
 			tl->dat.img.itex->loaded=1;
 			tl->dat.img.itex->loading=1;
+			sdlforceredraw();
 		}
 		glsetbar(tl->dat.img.bar);
 	}
