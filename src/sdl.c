@@ -444,11 +444,12 @@ int sdlthread(void *UNUSED(arg)){
 		while(SDL_GetTicks()-paint_last < (effineff()?6:20)) if(!ldtexload()) break;
 
 		timer(TI_SDL,1,1);
-/*		if(!sdl.cfg.playrecord && sdl.lastfrm && sdl.lastfrm>efflastchg()){
-			SDL_Delay(10);
+		if(sdl.lastfrm && sdl.lastfrm>efflastchg()){
+			if(sdl.cfg.playrecord) sdlsaveframe();
+			else SDL_Delay(10);
 			timer(TI_SDL,2,1);
 			continue;
-		}*/
+		}
 		sdl.lastfrm=SDL_GetTicks();
 		glpaint();
 		timer(TI_SDL,3,1);
