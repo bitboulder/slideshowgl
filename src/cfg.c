@@ -36,6 +36,7 @@ struct cfg {
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle fullscreen") },
+	{ 0,   "sdl.display",         CT_INT, CM_SET,  "1",      {NULL}, __("Set display id to use in multihead mode") },
 	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024",   {NULL}, __("Set window width") },
 	{ 'H', "sdl.height",          CT_INT, CM_SET,  "768",    {NULL}, __("Set window height") },
 	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle video sync") },

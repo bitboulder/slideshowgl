@@ -35,6 +35,7 @@ struct sdlcfg {
 	int fsaamaxw;
 	int fsaamaxh;
 	const char *playrecord;
+	int display;
 };
 
 struct sdlmove {
@@ -110,7 +111,12 @@ void sdlfullscreen(char dst){
 	sdl.doresize=1;
 }
 
-char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
+struct subdpl {
+	char set;
+	int x,y,w,h;
+};
+
+char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl){
 #if HAVE_X11 && HAVE_XINERAMA
 {
 	Display *display=XOpenDisplay(NULL);
@@ -122,6 +128,13 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h){
 			//info[i].screen_number
 			if(info[i].x_org+info[i].width> *w) *w=info[i].x_org+info[i].width;
 			if(info[i].y_org+info[i].height>*h) *h=info[i].y_org+info[i].height;
+		}
+		if(ninfo>sdl.cfg.display){
+			subdpl->set=1;
+			subdpl->x=info[sdl.cfg.display].x_org;
+			subdpl->y=info[sdl.cfg.display].y_org;
+			subdpl->w=info[sdl.cfg.display].width;
+			subdpl->h=info[sdl.cfg.display].height;
 		}
 		free(info);
 		if(*w && *h) return 1;
@@ -147,8 +160,9 @@ void sdlresize(int w,int h){
 	Uint32 flags=SDL_OPENGL;
 	const SDL_VideoInfo *vi;
 	GLenum glerr;
+	struct subdpl subdpl={.set=0};
 	sdl.doresize=0;
-	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h)){
+	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h,&subdpl)){
 		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
 		flags|=SDL_FULLSCREEN;
 	}else{
@@ -176,11 +190,18 @@ void sdlresize(int w,int h){
 		}else error(ERR_QUIT,"video mode init failed");
 	}
 	vi=SDL_GetVideoInfo();
-	sdl.scr_w=vi->current_w;
-	sdl.scr_h=vi->current_h;
-	debug(DBG_STA,"sdl get video mode %ix%i",sdl.scr_w,sdl.scr_h);
+	debug(DBG_STA,"sdl get video mode %ix%i",vi->current_w,vi->current_h);
+	if(subdpl.set && vi->current_w>=subdpl.x+subdpl.w && vi->current_h>=subdpl.y+subdpl.h){
+		sdl.scr_w=subdpl.w;
+		sdl.scr_h=subdpl.h;
+		debug(DBG_STA,"sdl sub display at %ix%i size %ix%i",subdpl.x,subdpl.y,subdpl.w,subdpl.h);
+	}else{
+		sdl.scr_w=vi->current_w;
+		sdl.scr_h=vi->current_h;
+	}
 	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
-	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
+	if(subdpl.set) glViewport(subdpl.x,subdpl.y,subdpl.w,subdpl.h);
+	else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	if(done>=0){
 		int sync;
 		SDL_WM_SetCaption("Slideshowgl","slideshowgl");
@@ -234,6 +255,7 @@ void sdlinit(){
 		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
 		sdl.fullscreen=0;
 	}else sdl.cfg.playrecord=NULL;
+	sdl.cfg.display=cfggetint("sdl.display");
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_EnableUNICODE(1);
 	if(cfggetint("cfg.version")){
