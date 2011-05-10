@@ -891,6 +891,7 @@ void dplcheckev(){
 		if(dev.move.sx) ev|=DE_JUMPX;
 		if(dev.move.sy) ev|=DE_JUMPY;
 		if(dplmovepos(dev.move.sx,dev.move.sy)) effinit(EFFREF_IMG,ev,-1);
+		sdlforceredraw();
 		dev.move.sx=0.f;
 		dev.move.sy=0.f;
 	}
