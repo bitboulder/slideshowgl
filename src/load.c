@@ -509,7 +509,7 @@ char ldcheck(){
 			enum imgtex tex;
 			int nimg=imggetn(il);
 			imgri=imgi+ldcp->load[i].imgi;
-			if(dplloop()) imgri=(imgri+nimg)%nimg;
+			if(dplloop() && nimg) imgri=(imgri+nimg)%nimg;
 			tex=ldcp->load[i].tex;
 			if(prgforoneldfrm(il,imgri,ldfload,tex)){ ret=1; break; }
 		}
