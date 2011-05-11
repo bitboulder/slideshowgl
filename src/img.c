@@ -31,6 +31,8 @@ struct imglist {
 	Uint32 last_used;
 	struct prg *prg;
 	long time;
+	enum ilsort {ILS_NONE, ILS_DATE, ILS_FILE, ILS_RND, ILS_NUM, ILS_NXT} sort;
+	char sort_chg;
 } *ils=NULL;
 
 struct imglist *curils[IL_NUM] = {NULL, NULL};
@@ -197,32 +199,32 @@ int ilcleanup_cmp(const void *a,const void *b){
 
 /* thread: act */
 void ilcleanup(){
-	struct ilsort {
+	struct ilsorted {
 		Uint32 last_used;
 		struct imglist *il;
-	} *ilsort;
+	} *ilsorted;
 	struct imglist *il,*pa;
 	size_t nil=0,i,j;
 	unsigned int holdfolders=cfggetuint("img.holdfolders");
 	for(il=ils;il;il=il->nxt) nil++;
-	ilsort=malloc(sizeof(struct ilsort)*nil);
+	ilsorted=malloc(sizeof(struct ilsorted)*nil);
 	for(il=ils,i=0;il;il=il->nxt,i++){
-		ilsort[i].il=il;
-		ilsort[i].last_used=il->last_used;
+		ilsorted[i].il=il;
+		ilsorted[i].last_used=il->last_used;
 	}
-	for(i=0;i<nil;i++) if(ilsort[i].last_used)
-		for(pa=ilsort[i].il->parent;pa;pa=pa->parent)
-			if(pa->last_used && ilsort[i].last_used>pa->last_used)
-				for(j=0;j<nil;j++) if(ilsort[j].il==pa)
-					ilsort[j].last_used=ilsort[i].last_used;
-	qsort(ilsort,nil,sizeof(struct ilsort),ilcleanup_cmp);
-	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s",(int)i,ilsort[i].last_used,ilsort[i].il->fn);
-	for(i=1;i<nil && ilsort[i].last_used;i++){
-		if(ilsort[i].last_used==1) holdfolders=0;
-		if(holdfolders && ilsort[i].last_used!=ilsort[i-1].last_used) holdfolders--;
-		if(!holdfolders) ilfree(ilsort[i].il);
+	for(i=0;i<nil;i++) if(ilsorted[i].last_used)
+		for(pa=ilsorted[i].il->parent;pa;pa=pa->parent)
+			if(pa->last_used && ilsorted[i].last_used>pa->last_used)
+				for(j=0;j<nil;j++) if(ilsorted[j].il==pa)
+					ilsorted[j].last_used=ilsorted[i].last_used;
+	qsort(ilsorted,nil,sizeof(struct ilsorted),ilcleanup_cmp);
+	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s",(int)i,ilsorted[i].last_used,ilsorted[i].il->fn);
+	for(i=1;i<nil && ilsorted[i].last_used;i++){
+		if(ilsorted[i].last_used==1) holdfolders=0;
+		if(holdfolders && ilsorted[i].last_used!=ilsorted[i-1].last_used) holdfolders--;
+		if(!holdfolders) ilfree(ilsorted[i].il);
 	}
-	free(ilsort);
+	free(ilsorted);
 }
 
 /* thread: dpl */
@@ -307,10 +309,15 @@ void imgfinalize(){
 
 /***************************** image list work ********************************/
 
-void imgsetnxt(struct imglist *il){
+char imgsetnxt(struct imglist *il){
 	int i;
-	for(i=0;i<il->nimg;i++)
-		il->imgs[i]->nxt = i<il->nimg-1 ? il->imgs[i+1] : NULL;
+	char chg=0;
+	for(i=0;i<il->nimg;i++){
+		struct img *nxt = i<il->nimg-1 ? il->imgs[i+1] : NULL;
+		if(nxt!=il->imgs[i]->nxt) chg=1;
+		il->imgs[i]->nxt=nxt;
+	}
+	return chg;
 }
 
 void imgrandom(struct imglist *il){
@@ -323,6 +330,7 @@ void imgrandom(struct imglist *il){
 		il->imgs[j]=oimgs[i];
 	}
 	free(oimgs);
+	il->sort=ILS_RND;
 	imgsetnxt(il);
 }
 
@@ -346,7 +354,7 @@ int imgsort_datecmp(const void *a,const void *b){
 }
 
 /* thread: dpl */
-void imgsort(struct imglist *il,char date){
+char imgsort(struct imglist *il,char date){
 	int i;
 	if(date){
 		for(i=0;i<il->nimg;i++){
@@ -357,7 +365,45 @@ void imgsort(struct imglist *il,char date){
 		glsetbar(0.f);
 	}
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
-	imgsetnxt(il);
+	il->sort = date ? ILS_DATE : ILS_FILE;
+	return imgsetnxt(il);
+}
+
+/* thread: dpl */
+char ilsort(int il,struct imglist *curil,char init){
+	enum ilsort snew;
+	int i;
+	if(!curil && !(curil=ilget(il))) return 0;
+	snew=curil->sort;
+	if(!init) curil->sort_chg=1;
+	for(i=0;i<ILS_NUM-1;i++){
+		if(init){
+			if(init!=2 && cfggetint("il.random")) snew=ILS_RND;
+			else if(init!=2 && cfggetint("il.datesort")) snew=ILS_DATE;
+			else if(init==2 && cfggetint("il.datesortdir")) snew=ILS_DATE;
+			else if(init==2) snew=ILS_FILE;
+			else snew=ILS_NONE;
+		}else if(++snew==ILS_NUM) snew=ILS_NONE+1;
+		switch(snew){
+		case ILS_DATE: if(imgsort(curil,1)) return 1; break;
+		case ILS_FILE: if(imgsort(curil,0)) return 1; break;
+		case ILS_RND:  imgrandom(curil); return 1;
+		default: return 0;
+		}
+		if(init) return 0;
+	}
+	return 1;
+}
+
+const char *ilsortget(int il){
+	struct imglist *curil;
+	if(!(curil=ilget(il)) || !curil->sort_chg) return NULL;
+	switch(curil->sort){
+	case ILS_RND:  return _("Rnd");
+	case ILS_DATE: return _("Date");
+	case ILS_FILE: return _("File");
+	default:       return _("None");
+	}
 }
 
 void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg){

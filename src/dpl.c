@@ -483,6 +483,7 @@ void dplstatupdate(){
 		struct img *img=imgget(AIL,AIMGI);
 		struct icol *ic;
 		char *txt=dsttxt;
+		const char *tmp;
 		if(!img) return;
 		ic=imgposcol(img->pos);
 		ADDTXT("%i/%i ",AIMGI+1,imggetn(AIL));
@@ -502,6 +503,7 @@ void dplstatupdate(){
 			ADDTXT(_(" (write-mode)"));
 			if((mark=imgposmark(img,MPC_NO)) && mark[0]) ADDTXT(_(" [MARK]"));
 		}
+		if((tmp=ilsortget(AIL))) ADDTXT(" sort:%s",tmp);
 		if(dpl.colmode!=COL_NONE || ic->g || ic->c || ic->b){
 			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",ic->g,dpl.colmode==COL_G?"]":"");
 			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",ic->c,dpl.colmode==COL_C?"]":"");
@@ -606,7 +608,8 @@ __("Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")"
 __("Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 __("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
 __("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
-__("f")"\0"                   __("Switch fullscreen")"\0"
+__("f")"\0"                   __("Toggle fullscreen")"\0"
+__("S")"\0"                   __("Toggle sorting of current image list")"\0"
 __("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
 __("w")"\0"                   __("Switch writing mode")"\0"
 __("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
@@ -639,7 +642,7 @@ __("Right/Left")"\0"          __("Forward/Backward")"\0"
 __("Up/Down")"\0"             __("Fast forward/backward")"\0"
 __("Pageup/Pagedown")"\0"     __("Resize image")"\0"
 __("[0-9]+Enter")"\0"         __("Goto frame with number")"\0"
-__("f")"\0"                   __("Switch fullscreen")"\0"
+__("f")"\0"                   __("Toggle fullscreen")"\0"
 __("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
 __("w")"\0"                   __("Switch writing mode")"\0"
 __("+/-")"\0"                 __("Add/remove image")"\0"
@@ -775,6 +778,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
+	case 'S': if(ilsort(0,NULL,0)) effinit(EFFREF_ALL,0,-1); break;
 	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
 	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;

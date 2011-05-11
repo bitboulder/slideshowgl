@@ -46,6 +46,8 @@ char ilsecswitch(char state);
 char ilreload(int il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
+char ilsort(int il,struct imglist *curil,char init);
+const char *ilsortget(int il);
 
 struct imglist *ilget(int il);
 int imggetn(int il);
@@ -60,8 +62,6 @@ struct img *imgadd(struct imglist *il,const char *prg);
 struct img *imgdel(int il,int i);
 
 void imgfinalize();
-void imgrandom(struct imglist *il);
-void imgsort(struct imglist *il,char date);
 void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg);
 void ilprgfrm(struct imglist *il,const char *prgfrm);
 

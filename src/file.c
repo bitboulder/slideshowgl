@@ -214,10 +214,8 @@ void finitimg(struct img **img,const char *basefn){
 }
 
 /* thread: dpl */
-void floadfinalize(struct imglist *il,char sort){
-	if(cfggetint(sort?"ld.datesortdir":"ld.datesort")) imgsort(il,1);
-	else if(cfggetint("ld.random")) imgrandom(il);
-	else if(sort) imgsort(il,0);
+void floadfinalize(struct imglist *il,char subdir){
+	ilsort(-1,il,subdir?2:1);
 }
 
 void fgetfiles(int argc,char **argv){
@@ -273,7 +271,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	}
 	if(dd) closedir(dd);
 	if(!count){ ildestroy(il); il=NULL; }
-	else floadfinalize(il,1);
+	else floadfinalize(il,dir[0]!='\0');
 end:
 	if(src) ilunused(src);
 	return il;
