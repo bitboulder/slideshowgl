@@ -128,13 +128,13 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl){
 			//info[i].screen_number
 			if(info[i].x_org+info[i].width> *w) *w=info[i].x_org+info[i].width;
 			if(info[i].y_org+info[i].height>*h) *h=info[i].y_org+info[i].height;
-		}
-		if(ninfo>sdl.cfg.display){
-			subdpl->set=1;
-			subdpl->x=info[sdl.cfg.display].x_org;
-			subdpl->y=info[sdl.cfg.display].y_org;
-			subdpl->w=info[sdl.cfg.display].width;
-			subdpl->h=info[sdl.cfg.display].height;
+			if(info[i].screen_number==sdl.cfg.display){
+				subdpl->set=1;
+				subdpl->x=info[i].x_org;
+				subdpl->y=info[i].y_org;
+				subdpl->w=info[i].width;
+				subdpl->h=info[i].height;
+			}
 		}
 		free(info);
 		if(*w && *h) return 1;
@@ -200,7 +200,7 @@ void sdlresize(int w,int h){
 		sdl.scr_h=vi->current_h;
 	}
 	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
-	if(subdpl.set) glViewport(subdpl.x,subdpl.y,subdpl.w,subdpl.h);
+	if(subdpl.set) glViewport(subdpl.x,vi->current_h-subdpl.h-subdpl.y,subdpl.w,subdpl.h);
 	else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	if(done>=0){
 		int sync;
