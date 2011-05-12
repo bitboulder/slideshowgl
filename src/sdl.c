@@ -47,6 +47,7 @@ struct sdlmove {
 struct sdl {
 	struct sdlcfg cfg;
 	int scr_w, scr_h;
+	int off_y;
 	int scrnof_w, scrnof_h;
 	Uint32 hidecursor;
 	struct sdlmove move;
@@ -64,6 +65,7 @@ struct sdl {
 	.fullscreen = 0,
 	.scr_w      = 0,
 	.scr_h      = 0,
+	.off_y      = 0,
 	.doresize   = 0,
 	.sync       = 0,
 	.hidecursor = 0,
@@ -200,8 +202,10 @@ void sdlresize(int w,int h){
 		sdl.scr_h=vi->current_h;
 	}
 	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
-	if(subdpl.set) glViewport(subdpl.x,vi->current_h-subdpl.h-subdpl.y,subdpl.w,subdpl.h);
-	else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
+	if(subdpl.set){
+		sdl.off_y=vi->current_h-subdpl.h-subdpl.y;
+		glViewport(subdpl.x,sdl.off_y,subdpl.w,subdpl.h);
+	}else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	if(done>=0){
 		int sync;
 		SDL_WM_SetCaption("Slideshowgl","slideshowgl");
@@ -372,13 +376,13 @@ void sdlmotion(Uint16 x,Uint16 y){
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdljump(x,y,0);
 	else if(dplgetactil()<0) dplevputs(DE_STAT,DES_MOUSE);
-	else dplevputx(DE_STAT,0,fx,fy,glselect(x,y),DES_MOUSE);
+	else dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
-	int clickimg = glselect(x,y);
+	int clickimg = glselect(x,y+sdl.off_y);
 	if(down) switch(button){
 		case SDL_BUTTON_LEFT:
 			sdl.move.jump=0;
