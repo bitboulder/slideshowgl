@@ -542,6 +542,11 @@ void dplgimp(){
 	SDL_CreateThread(dplgimprun,img);
 }
 
+void dplswloop(){
+	dpl.cfg.loop=!dpl.cfg.loop;
+	effinit(EFFREF_ALL,0,-1);
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -610,6 +615,7 @@ __("[0-9]+Enter")"\0"         __("Goto image with number")"\0"
 __("[0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
 __("f")"\0"                   __("Toggle fullscreen")"\0"
 __("S")"\0"                   __("Toggle sorting of current image list")"\0"
+__("l")"\0"                   __("Toggle loop of image lists")"\0"
 __("r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
 __("w")"\0"                   __("Switch writing mode")"\0"
 __("g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
@@ -808,8 +814,8 @@ void dplkey(unsigned short keyu){
 	break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
-	case 'l': dpllayer(-1,dpl.actimgi); break;
-	case 'L': dpllayer( 1,dpl.actimgi); break;
+	case 'l': if(dpl.pos.actil&ACTIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;
+	case 'L': if(dpl.pos.actil&ACTIL_PRGED) dpllayer( 1,dpl.actimgi); else dplswloop(); break;
 	case 'G': dplgimp(); break;
 	case '/': dplinputtxtinit(ITM_SEARCH); break;
 	case 'h': effsw(ESW_HELP,-1); break;
