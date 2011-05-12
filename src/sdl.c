@@ -36,6 +36,7 @@ struct sdlcfg {
 	int fsaamaxh;
 	const char *playrecord;
 	int display;
+	char envdisplay;
 };
 
 struct sdlmove {
@@ -165,7 +166,12 @@ void sdlresize(int w,int h){
 	struct subdpl subdpl={.set=0};
 	sdl.doresize=0;
 	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h,&subdpl)){
-		debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
+		if(subdpl.set && sdl.cfg.envdisplay){
+			subdpl.set=0;
+			w=subdpl.w;
+			h=subdpl.h;
+			debug(DBG_STA,"sdl set video mode fullscreen %ix%i on display %i",w,h,sdl.cfg.display);
+		}else debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
 		flags|=SDL_FULLSCREEN;
 	}else{
 		if(!w) w=sdl.scr_w;
@@ -244,6 +250,7 @@ void sdlicon(){
 }
 
 void sdlinit(){
+	const char *tmp;
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
@@ -259,7 +266,13 @@ void sdlinit(){
 		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
 		sdl.fullscreen=0;
 	}else sdl.cfg.playrecord=NULL;
-	sdl.cfg.display=cfggetint("sdl.display");
+	if((tmp=getenv("SDL_VIDEO_FULLSCREEN_DISPLAY"))){
+		sdl.cfg.display=atoi(tmp);
+		sdl.cfg.envdisplay=1;
+	}else{
+		sdl.cfg.display=cfggetint("sdl.display");
+		sdl.cfg.envdisplay=0;
+	}
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_EnableUNICODE(1);
 	if(cfggetint("cfg.version")){

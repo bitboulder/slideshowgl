@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-12 07:50+0200\n"
+"POT-Creation-Date: 2011-05-12 14:31+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -63,8 +63,10 @@ msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
 #: src/cfg.c:39
-msgid "Set display id to use in multihead mode"
-msgstr "Display-ID mit mehreren Displays setzen"
+msgid ""
+"Set display id to use in multihead mode (overwritten by "
+"SDL_VIDEO_FULLSCREEN_DISPLAY)"
+msgstr "Display-ID mit mehreren Displays setzen (wird überschrieben von SDL_VIDEO_FULLSCREEN_DISPLAY)"
 
 #: src/cfg.c:40
 msgid "Set window width"
@@ -909,7 +911,7 @@ msgstr ""
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:166 src/sdl.c:269
+#: src/exif.c:166 src/sdl.c:282
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -1150,76 +1152,81 @@ msgstr ""
 msgid "split txt failed (%s)"
 msgstr ""
 
-#: src/sdl.c:149
+#: src/sdl.c:150
 msgid "sdl All fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:150
+#: src/sdl.c:151
 msgid "sdl No fullscreen modes available"
-msgstr ""
-
-#: src/sdl.c:168
-#, c-format
-msgid "sdl set video mode fullscreen %ix%i"
 msgstr ""
 
 #: src/sdl.c:173
 #, c-format
+msgid "sdl set video mode fullscreen %ix%i on display %i"
+msgstr ""
+
+#: src/sdl.c:174
+#, c-format
+msgid "sdl set video mode fullscreen %ix%i"
+msgstr ""
+
+#: src/sdl.c:179
+#, c-format
 msgid "sdl set video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:178
+#: src/sdl.c:184
 msgid "disable anti-aliasing for window size"
 msgstr ""
 
-#: src/sdl.c:188
+#: src/sdl.c:194
 msgid "disable anti-aliasing for mode failure"
 msgstr ""
 
-#: src/sdl.c:192
+#: src/sdl.c:198
 msgid "video mode init failed"
 msgstr ""
 
-#: src/sdl.c:195
+#: src/sdl.c:201
 #, c-format
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:199
+#: src/sdl.c:205
 #, c-format
 msgid "sdl sub display at %ix%i size %ix%i"
 msgstr ""
 
-#: src/sdl.c:204
+#: src/sdl.c:210
 #, c-format
 msgid "in sdl view mode (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:217
+#: src/sdl.c:223
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:218
+#: src/sdl.c:224
 #, c-format
 msgid "in sdlinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:232
+#: src/sdl.c:238
 #, c-format
 msgid "icon load failed (%s)"
 msgstr ""
 
-#: src/sdl.c:263
+#: src/sdl.c:276
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:439
+#: src/sdl.c:452
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:456
+#: src/sdl.c:469
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
