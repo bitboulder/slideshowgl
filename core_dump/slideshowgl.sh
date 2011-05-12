@@ -4,8 +4,9 @@
 DIR="/home/src/self/slideshowgl/slideshowgl-2.0.0"
 CDIR="$DIR/core_dump"
 
-ARG="SDL_VIDEO_FULLSCREEN_DISPLAY=1 "
-SL="$ARG$DIR/build/slideshowgl"
+SL="$DIR/build/slideshowgl"
+
+export SDL_VIDEO_FULLSCREEN_DISPLAY=1
 
 #cd $CDIR
 ulimit -c unlimited
