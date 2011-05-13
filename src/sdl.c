@@ -425,6 +425,7 @@ char sdlgetevent(){
 	if(!SDL_PollEvent(&ev)) return 1;
 	switch(ev.type){
 	case SDL_VIDEORESIZE: sdlresize(ev.resize.w,ev.resize.h); break;
+	case SDL_VIDEOEXPOSE: sdlforceredraw(); break;
 	case SDL_KEYDOWN: sdlkey(ev.key.keysym); break;
 	case SDL_MOUSEMOTION: sdlmotion(ev.motion.x,ev.motion.y); break;
 	case SDL_MOUSEBUTTONDOWN: sdlbutton(1,ev.button.button,ev.button.x,ev.button.y); break;
