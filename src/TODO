@@ -6,8 +6,6 @@
 
 - fix: stop-icon disapears if zoomin and -out on flstln/panorama
 
-- xinerama => current screen (svn-branch!)
-
 - fix: load errors
 
 # Want to have
