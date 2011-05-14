@@ -67,7 +67,7 @@ struct gl {
 };
 
 /* thread: all */
-void glsetbar(float bar){ gl.bar=bar; }
+void glsetbar(float bar){ gl.bar=bar; sdlforceredraw(); }
 char glprg(){ return !!gl.prg; }
 char glprgfish(){ return !!gl.prgfish; }
 
