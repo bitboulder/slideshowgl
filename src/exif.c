@@ -179,15 +179,15 @@ char *imgexifgetinfo(ExifData *exdat){
 }
 #endif
 
-char imgsort(struct imglist *il,char date);
 /* thread: load */
-void imgexifload(struct imgexif *exif,char *fn){
+char imgexifload(struct imgexif *exif,char *fn){
 #if HAVE_EXIF
 	ExifData *exdat;
-	if(exif->load) return;
+	if(exif->load) return 0;
 	if(exif->info) free(exif->info);
 	exif->load=1;
-	if(!(exdat=exif_data_new_from_file(fn))) return;
+	debug(DBG_DBG,"exif loading img %s",fn);
+	if(!(exdat=exif_data_new_from_file(fn))) return 1;
 	exif->rot=imgexifgetrot(exdat);
 	exif->date=imgexifgetdate(exdat);
 	exif->info=imgexifgetinfo(exdat);
@@ -196,8 +196,14 @@ void imgexifload(struct imgexif *exif,char *fn){
 		dplsetresortil(exif->sortil);
 		exif->sortil=NULL;
 	}
+	return 1;
+#else
+	return 0;
 #endif
 }
+
+/* thread: load */
+void imgexifclear(struct imgexif *exif){ exif->load=0; }
 
 /* thread: dpl */
 void exifrotate(struct imgexif *exif,int r){

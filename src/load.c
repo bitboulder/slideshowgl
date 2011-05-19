@@ -39,6 +39,7 @@ struct load {
 	int  maxtexsize;
 	int  maxpanotexsize;
 	int  maxpanopixels;
+	int numexifloadperimg;
 	char vartex;
 	char reset;
 } load = {
@@ -58,6 +59,7 @@ void ldmaxtexsize(){
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex);
 	if(maxtex<load.maxtexsize) load.maxtexsize=maxtex;
 	if(maxtex<load.maxpanotexsize) load.maxpanotexsize=maxtex;
+	load.numexifloadperimg=cfggetint("ld.numexifloadperimg");
 }
 
 /* thread: gl */
@@ -354,7 +356,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
 	if(il->loadfail) goto end0;
-	if(it<0) goto end0;
+	if(it<0){
+		ld=imgexifload(il->img->exif,fn);
+		goto end0;
+	}
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
 	if(il->texs[it].loaded){
 		Uint32 time=SDL_GetTicks();
@@ -364,6 +369,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 				il->ft=ft;
 				fthumbchecktime(il->img->file,ft);
 				ldffree(il,TEX_NONE);
+				imgexifclear(il->img->exif);
 			}
 			il->ftchk=time;
 		}
@@ -489,7 +495,7 @@ char ldcheck(){
 	int i,il;
 	struct img *img;
 	struct loadconcept *ldcp=ldconceptget();
-	char ret=0;
+	int ret=0;
 
 	for(il=0;il<IL_NUM;il++){
 		int imgi=imginarrorlimits(il,dplgetimgi(il));
@@ -515,9 +521,11 @@ char ldcheck(){
 		}
 	}
 
-	// TODO: load exiftex for all images
+	for(il=0;il<IL_NUM;il++)
+		for(img=imgget(il,0),i=0;img && ret<load.numexifloadperimg;img=img->nxt,i++)
+			ret+=ldfload(img->ld,TEX_NONE);
 
-	return ret;
+	return ret!=0;
 }
 
 /***************************** load thread ************************************/
