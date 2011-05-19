@@ -403,7 +403,6 @@ char ilsort(int il,struct imglist *curil,enum ilschg chg){
 		curil->sort_chg=1;
 		return 1;
 	}
-	curil->sort_chg=1; // TODO: remove
 	ilcfginit();
 	if(chg==ILSCHG_INIT_MAINDIR) curil->sort=ilcfg.sort_maindir;
 	if(chg==ILSCHG_INIT_SUBDIR)  curil->sort=ilcfg.sort_subdir;
