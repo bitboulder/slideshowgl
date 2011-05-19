@@ -37,6 +37,8 @@ extern struct img *defimg;
 extern struct img *dirimg;
 extern struct img *delimg;
 
+enum ilschg { ILSCHG_NONE, ILSCHG_INIT_MAINDIR, ILSCHG_INIT_SUBDIR, ILSCHG_INC };
+
 struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
 char ilfind(const char *fn,struct imglist **ilret);
@@ -46,7 +48,7 @@ char ilsecswitch(char state);
 char ilreload(int il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
-char ilsort(int il,struct imglist *curil,char init);
+char ilsort(int il,struct imglist *curil,enum ilschg chg);
 const char *ilsortget(int il);
 
 struct imglist *ilget(int il);

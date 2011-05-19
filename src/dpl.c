@@ -41,6 +41,7 @@ struct dpl {
 	Uint32 evdelay[DEG_NUM];
 	int actimgi;
 	unsigned int fid;
+	struct imglist *resortil;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -52,6 +53,7 @@ struct dpl {
 	.pos.actil = 0,
 	.input.mode = ITM_OFF,
 	.fid = 0,
+	.resortil = NULL,
 };
 
 #define AIL		(dpl.pos.actil&ACTIL)
@@ -83,6 +85,9 @@ int dplgetactimgi(int il){ return (dpl.pos.actil==(ACTIL_PRGED|il)) ? dpl.actimg
 
 /* thread: sdl */
 unsigned int dplgetfid(){ return dpl.fid++; }
+
+/* thread: load */
+void dplsetresortil(struct imglist *il){ dpl.resortil=il; }
 
 Uint32 dplgetticks(){
 	if(dpl.cfg.playrecord) return dpl.fid*1000/dpl.cfg.playrecord_rate;
@@ -784,7 +789,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dpl.pos.writemode){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
-	case 'S': if(ilsort(0,NULL,0)) effinit(EFFREF_ALL,0,-1); break;
+	case 'S': ilsort(0,NULL,ILSCHG_INC); break;
 	case 127: if(dpl.pos.writemode) dpldel(DD_DEL); break;
 	case 'o': if(dpl.pos.writemode) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
@@ -911,6 +916,10 @@ void dplcheckev(){
 	}
 	if(stat&1) dplstatupdate();
 	if(stat&2 && !dpl.cfg.playrecord) effstaton(stat);
+	if(dpl.resortil){
+		ilsort(-1,dpl.resortil,ILSCHG_NONE);
+		dpl.resortil=NULL;
+	}
 }
 
 /***************************** dpl run ****************************************/

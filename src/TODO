@@ -5,12 +5,9 @@
 - load: delete texs for img size reduce
 
 - fix: stop-icon disapears if zoomin and -out on flstln/panorama
-
 - fix: load errors
 
 # Want to have
-- load imgexif threaded
-
 - dpl.actimgi through eff + remove sdlforceredraw
 - dpl.pos.actil through eff + remove sdlforceredraw
 - dplgetinput through eff + remove sdlforceredraw

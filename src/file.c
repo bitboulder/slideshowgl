@@ -215,7 +215,7 @@ void finitimg(struct img **img,const char *basefn){
 
 /* thread: dpl */
 void floadfinalize(struct imglist *il,char subdir){
-	ilsort(-1,il,subdir?2:1);
+	ilsort(-1,il,subdir?ILSCHG_INIT_SUBDIR:ILSCHG_INIT_MAINDIR);
 }
 
 void fgetfiles(int argc,char **argv){

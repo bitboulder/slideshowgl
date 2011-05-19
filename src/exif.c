@@ -12,6 +12,7 @@
 #include "main.h"
 #include "cfg.h"
 #include "help.h"
+#include "dpl.h"
 
 #if HAVE_EXIF
 struct exifinfo {
@@ -39,6 +40,7 @@ struct imgexif {
 	enum rot rot;
 	int64_t date;
 	char *info;
+	struct imglist *sortil;
 };
 
 /* thread: all */
@@ -56,6 +58,9 @@ float imgexifrotf(struct imgexif *exif){
 	}
 	return 0.f;
 }
+
+/* thread: dpl */
+void imgexifsetsortil(struct imgexif *exif,struct imglist *sortil){ if(!exif->load) exif->sortil=sortil; }
 
 /* thread: img */
 struct imgexif *imgexifinit(){
@@ -174,6 +179,7 @@ char *imgexifgetinfo(ExifData *exdat){
 }
 #endif
 
+char imgsort(struct imglist *il,char date);
 /* thread: load */
 void imgexifload(struct imgexif *exif,char *fn){
 #if HAVE_EXIF
@@ -186,6 +192,10 @@ void imgexifload(struct imgexif *exif,char *fn){
 	exif->date=imgexifgetdate(exdat);
 	exif->info=imgexifgetinfo(exdat);
 	exif_data_free(exdat);
+	if(exif->sortil){
+		dplsetresortil(exif->sortil);
+		exif->sortil=NULL;
+	}
 #endif
 }
 

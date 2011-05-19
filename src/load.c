@@ -515,6 +515,8 @@ char ldcheck(){
 		}
 	}
 
+	// TODO: load exiftex for all images
+
 	return ret;
 }
 

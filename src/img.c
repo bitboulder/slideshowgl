@@ -18,6 +18,8 @@ struct img *defimg;
 struct img *dirimg;
 struct img *delimg;
 
+enum ilsort {ILS_NONE, ILS_DATE, ILS_FILE, ILS_RND, ILS_NUM, ILS_NXT};
+
 struct imglist {
 	struct img **imgs;
 	char fn[FILELEN];
@@ -31,10 +33,17 @@ struct imglist {
 	Uint32 last_used;
 	struct prg *prg;
 	long time;
-	enum ilsort {ILS_NONE, ILS_DATE, ILS_FILE, ILS_RND, ILS_NUM, ILS_NXT} sort;
+	enum ilsort sort;
 	char sort_chg;
 } *ils=NULL;
 
+struct ilcfg {
+	char init;
+	enum ilsort sort_maindir;
+	enum ilsort sort_subdir;
+} ilcfg = {
+	.init=0,
+};
 struct imglist *curils[IL_NUM] = {NULL, NULL};
 
 /***************************** img index operations ***************************/
@@ -147,6 +156,13 @@ struct img *imgdel(int il,int i){
 }
 
 /***************************** img list managment *****************************/
+
+void ilcfginit(){
+	if(ilcfg.init) return;
+	ilcfg.sort_maindir = cfggetint("il.random") ? ILS_RND : cfggetint("il.datesort") ? ILS_DATE : ILS_NONE;
+	ilcfg.sort_subdir  = cfggetint("il.datesortdir") ? ILS_DATE : ILS_FILE;
+	ilcfg.init=1;
+}
 
 /* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
@@ -270,6 +286,7 @@ char ilsecswitch(char state){
 	return 1;
 }
 
+/* thread: dpl */
 char ilreload(int il,const char *cmd){
 	struct imglist *curil=ilget(il);
 	if(!curil) return 0;
@@ -330,7 +347,6 @@ void imgrandom(struct imglist *il){
 		il->imgs[j]=oimgs[i];
 	}
 	free(oimgs);
-	il->sort=ILS_RND;
 	imgsetnxt(il);
 }
 
@@ -356,43 +372,42 @@ int imgsort_datecmp(const void *a,const void *b){
 /* thread: dpl */
 char imgsort(struct imglist *il,char date){
 	int i;
-	if(date){
-		for(i=0;i<il->nimg;i++){
-			// todo: load imgexif threaded
-			glsetbar((float)(i+1)/(float)il->nimg);
-			imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
-		}
-		glsetbar(0.f);
-	}
+	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++) imgexifsetsortil(il->imgs[i]->exif,il);
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
-	il->sort = date ? ILS_DATE : ILS_FILE;
 	return imgsetnxt(il);
 }
 
 /* thread: dpl */
-char ilsort(int il,struct imglist *curil,char init){
-	enum ilsort snew;
+char ilsortdo(struct imglist *curil){
+	switch(curil->sort){
+	case ILS_DATE: if(!imgsort(curil,1)) return 0; break;
+	case ILS_FILE: if(!imgsort(curil,0)) return 0; break;
+	case ILS_RND:  imgrandom(curil); break;
+	default: return 0;
+	}
+	effrefresh(EFFREF_ALL);
+	return 1;
+}
+
+/* thread: dpl */
+char ilsort(int il,struct imglist *curil,enum ilschg chg){
 	int i;
 	if(!curil && !(curil=ilget(il))) return 0;
-	snew=curil->sort;
-	if(!init) curil->sort_chg=1;
-	for(i=0;i<ILS_NUM-1;i++){
-		if(init){
-			if(init!=2 && cfggetint("il.random")) snew=ILS_RND;
-			else if(init!=2 && cfggetint("il.datesort")) snew=ILS_DATE;
-			else if(init==2 && cfggetint("il.datesortdir")) snew=ILS_DATE;
-			else if(init==2) snew=ILS_FILE;
-			else snew=ILS_NONE;
-		}else if(++snew==ILS_NUM) snew=ILS_NONE+1;
-		switch(snew){
-		case ILS_DATE: if(imgsort(curil,1)) return 1; break;
-		case ILS_FILE: if(imgsort(curil,0)) return 1; break;
-		case ILS_RND:  imgrandom(curil); return 1;
-		default: return 0;
+	if(chg==ILSCHG_NONE && curil->sort!=ILS_DATE) return 1;
+	if(chg==ILSCHG_INC){
+		for(i=0;i<ILS_NUM-1;i++){
+			if(++curil->sort==ILS_NUM) curil->sort=ILS_NONE+1;
+			if(ilsortdo(curil)) break;
 		}
-		if(init) return 0;
+		if(i==ILS_NUM) return 0;
+		curil->sort_chg=1;
+		return 1;
 	}
-	return 1;
+	curil->sort_chg=1; // TODO: remove
+	ilcfginit();
+	if(chg==ILSCHG_INIT_MAINDIR) curil->sort=ilcfg.sort_maindir;
+	if(chg==ILSCHG_INIT_SUBDIR)  curil->sort=ilcfg.sort_subdir;
+	return ilsortdo(curil);
 }
 
 const char *ilsortget(int il){
