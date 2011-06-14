@@ -636,7 +636,8 @@ __("+/-")"\0"                 __("Increase/decrease selected")"\0"
 __("Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
 __("o")"\0"                   __("Move image to ori/ and remove from dpl-list (only in writing mode)")"\0"
 __("m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
-__("i")"\0"                   __("Show image info")"\0"
+__("i")"\0"                   __("Show selected image info")"\0"
+__("I")"\0"                   __("Show full image info")"\0"
 __("k")"\0"                   __("Show image catalog")"\0"
 __("s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
 __("e")"\0"                   __("Open program editor")"\0"
@@ -902,6 +903,12 @@ char dplev(struct ev *ev){
 	case DE_STAT: if(!dplactil(ev->sx,clickimg)) ret=0; break;
 	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
 	case DE_COL: effprgcolset(clickimg); break;
+	case DE_INFO:
+		if(clickimg>=0 && clickimg<32){
+			if(dpl.infosel&(1U<<clickimg)) dpl.infosel&=~(1U<<clickimg);
+			else dpl.infosel|=1U<<clickimg;
+		}
+	break;
 	}
 	if(AIMGI==IMGI_END && !dpl.cfg.playmode) dpl.run=0;
 	if(dpl.pos.writemode || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;

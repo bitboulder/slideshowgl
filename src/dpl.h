@@ -26,6 +26,7 @@ enum dplev {
 	DE_JUMPEND = 0x00040000,
 	DE_INIT    = 0x00080000,
 	DE_COL     = 0x00100000,
+	DE_INFO    = 0x00200000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)

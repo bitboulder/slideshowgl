@@ -66,6 +66,14 @@ struct gl {
 	.bar = 0.f,
 };
 
+void glcolora(float *col,float a){
+	float c[4];
+	int i;
+	for(i=0;i<4;i++) c[i]=col[i];
+	c[3]*=a;
+	glColor4fv(c);
+}
+
 /* thread: all */
 void glsetbar(float bar){ gl.bar=bar; sdlforceredraw(); }
 char glprg(){ return !!gl.prg; }
@@ -604,7 +612,7 @@ void gltextout(const char *text,float x,float y){
 #endif
 }
 
-void glrendertext(const char *title,const char *text,float f){
+void glrendertext(const char *title,const char *text,float f,unsigned int sel){
 #if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
@@ -617,7 +625,8 @@ void glrendertext(const char *title,const char *text,float f){
 	float lineh;
 	float winw;
 	float tw,tx;
-	float col[4];
+	unsigned int s;
+	GLuint name=IMGI_INFO+1;
 	if(!glfontsel(FT_NOR)) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
 		float len=glfontwidth(_(t));
@@ -630,9 +639,7 @@ void glrendertext(const char *title,const char *text,float f){
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
-	for(i=0;i<4;i++) col[i]=gl.cfg.col_txtbg[i];
-	col[3]*=f;
-	glColor4fv(col);
+	glcolora(gl.cfg.col_txtbg,f);
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
@@ -641,13 +648,22 @@ void glrendertext(const char *title,const char *text,float f){
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
-	for(i=0;i<4;i++) col[i]=gl.cfg.col_txtfg[i];
-	col[3]*=f;
-	glColor4fv(col);
+	glcolora(gl.cfg.col_txtfg,f);
 	gltextout(title,tx,y);
 	y-=lineh*2;
-	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0])
-		gltextout(_(t),x[j],y);
+	for(t=text,i=0,s=sel;t[0];i+=2,y-=lineh,s>>=1) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
+		if(!j && sel!=0xffffffff && (s&1)) glcolora(gl.cfg.col_txtmk,f);
+		else glcolora(gl.cfg.col_txtfg,f);
+		if(!gl.sel.act) gltextout(_(t),x[j],y);
+		else if(!j){
+			glLoadName(name++);
+			glPushMatrix();
+			glTranslatef(x[j],y-lineh*0.2f,0.f);
+			glrect(.8f*w,lineh*0.9f,GP_BOTTOM|GP_LEFT);
+			glPopMatrix();
+		}
+	}
+	glLoadName(0);
 	glPopMatrix();
 #endif
 }
@@ -655,9 +671,10 @@ void glrendertext(const char *title,const char *text,float f){
 void glrenderinfo(){
 	char *info;
 	float f;
+	unsigned int sel;
 	if(!(f=effswf(ESW_INFO))) return;
-	if(!(info=dplgetinfo(NULL))) return;
-	glrendertext(_("Image info"),info,f);
+	if(!(info=dplgetinfo(&sel))) return;
+	glrendertext(_("Image info"),info,f,sel);
 }
 
 void glrenderinfosel(){
@@ -702,19 +719,17 @@ void glrenderinfosel(){
 void glrenderhelp(){
 	const char *help=dplhelp();
 	float f;
-	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f);
+	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f,0xffffffff);
 }
 
 void glrendercat(){
 	char *mark=NULL;
 	char *cats,*cat;
 	float f,w=0.f,h,b;
-	float colfg[4];
 	GLuint name=IMGI_CAT+1;
 	if(!(f=effswf(ESW_CAT))) return;
 	if(!(cats=markcats())) return;
 	if(!glfontsel(FT_NOR)) return;
-	memcpy(colfg,gl.cfg.col_txtfg,sizeof(float)*4); colfg[3]*=0.5f;
 	mark=imgposmark(imgget(0,dplgetimgi(0)),MPC_NO);
 	w=glmode(GLM_TXT);
 	glPushMatrix();
@@ -732,8 +747,9 @@ void glrendercat(){
 		glLoadName(name);
 		glrect(w+b,h,GP_TOP|GP_LEFT);
 		glLoadName(0);
+		if(gl.sel.act) continue;
 		if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
-		else glColor4fv(colfg);
+		else glcolora(gl.cfg.col_txtfg,.5f);
 		glTranslatef(b/2.f,-h/2.f,0.f);
 		glfontrender(cat,GP_VCENTER|GP_LEFT);
 		glTranslatef(-b/2.f,-h/2.f,0.f);
@@ -924,10 +940,10 @@ void glpaint(){
 	if(!panorender()) glrenderimgs();
 	glrendercat();
 	glrenderprgcol();
+	glrenderinfo();
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
-	glrenderinfo();
 	glrenderinfosel();
 	glrenderinput();
 	glrenderhelp();

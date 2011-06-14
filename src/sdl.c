@@ -364,6 +364,9 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		case SDL_BUTTON_LEFT:
 			if(!doubleclick) dplevputi(DE_COL,clickimg-IMGI_COL);
 		break;
+	}else if(clickimg>=IMGI_INFO) switch(btn){
+		case SDL_BUTTON_LEFT: dplevputi(DE_INFO,clickimg-IMGI_INFO);
+		break;
 	}else if(clickimg>=IMGI_CAT) switch(btn){
 		case SDL_BUTTON_LEFT:
 			dplevputi(DE_MARK,clickimg);

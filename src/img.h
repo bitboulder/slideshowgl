@@ -16,6 +16,7 @@
 #define IMGI_END	INT_MAX
 #define IMGI_CAT	0x40000000
 #define IMGI_COL	(0x7FFFFFFF-NPRGCOL*3-2)
+#define IMGI_INFO	(IMGI_COL-32)
 
 #define IL_NUM	2
 
