@@ -678,26 +678,38 @@ void glrenderinfo(){
 }
 
 void glrenderinfosel(){
-	char *info,*i;
+	char *info,*i,*pos,i0[256]={0};
 	unsigned int sel,s;
-	float f,ffull,w=0.f,h,b,n;
+	float f,ffull,w=0.f,w2=0.f,h,b,n;
 	if(!(f=effswf(ESW_INFOSEL))) return;
 	if((ffull=effswf(ESW_INFO))){
 		if(ffull>=1.f) return;
 		else if((f*=1.f-ffull)<=0.f) return;
 	}
 	if(!(info=dplgetinfo(&sel))) return;
+	info+=strlen(info)+1;
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(w/2.f,-0.5f,0.f);
 	h=glfontscale(gl.cfg.hrat_cat,1.f);
 	for(n=0,s=sel,i=info;s;s>>=1){
-		if(i[0]) i+=strlen(i)+1;
 		if(s&1){
+			if(i[0] && (b=glfontwidth(i))>w){
+				w=b;
+				if(n) w2=b;
+			}
 			n++;
-			if(i[0] && (b=glfontwidth(i))>w) w=b;
 		}
 		if(i[0]) i+=strlen(i)+1;
+		if(i[0]) i+=strlen(i)+1;
+	}
+	if((sel&1) && w2<w/2.f && (pos=strchr(info,' '))){
+		snprintf(i0,MIN(256,(size_t)(pos-info)+1),info);
+		info=pos;
+		n++;
+		w=w2;
+		if((b=glfontwidth(i0))>w) w=b;
+		if((b=glfontwidth(info))>w) w=b;
 	}
 	b=h*gl.cfg.txt_border*2.f;
 	glTranslatef(0.f,-(h*n+b)*(1.f-f),0.f);
@@ -705,12 +717,16 @@ void glrenderinfosel(){
 	glrect(w+b*2.f,h*n+b,GP_RIGHT|GP_BOTTOM);
 	glColor4fv(gl.cfg.col_txtfg);
 	glTranslatef(-b,(h+b)/2.f+h*(n-1),0.f);
+	if(i0[0]){
+		glfontrender(i0,GP_RIGHT|GP_VCENTER);
+		glTranslatef(0.f,-h,0.f);
+	}
 	for(n=0,s=sel,i=info;s && i[0];s>>=1){
-		if(i[0]) i+=strlen(i)+1;
 		if(s&1){
 			if(i[0]) glfontrender(i,GP_RIGHT|GP_VCENTER);
 			glTranslatef(0.f,-h,0.f);
 		}
+		if(i[0]) i+=strlen(i)+1;
 		if(i[0]) i+=strlen(i)+1;
 	}
 	glPopMatrix();
