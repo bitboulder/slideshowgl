@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-19 11:54+0200\n"
+"POT-Creation-Date: 2011-06-14 09:59+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -173,7 +173,8 @@ msgstr "Abstand des Überprüfens auf Dateiänderungen"
 
 #: src/cfg.c:65
 msgid "Number of exif-file-loads per one img-file-load"
-msgstr "Anzahl der Exif-Daten, die während einem Datei-Lade-Vorgang geladen werden"
+msgstr ""
+"Anzahl der Exif-Daten, die während einem Datei-Lade-Vorgang geladen werden"
 
 #: src/cfg.c:66
 msgid "Number of directories to hold"
@@ -858,106 +859,110 @@ msgid "Model"
 msgstr "Kamera"
 
 #: src/exif.c:24
+msgid "Lens"
+msgstr "Objektiv"
+
+#: src/exif.c:25
 msgid "Resolution"
 msgstr "Auflösung"
 
-#: src/exif.c:25
+#: src/exif.c:26
 msgid "ISO speed rating"
 msgstr "Empfindlichkeit (ISO)"
 
-#: src/exif.c:26
+#: src/exif.c:27
 msgid "Focal length"
 msgstr "Brennweite"
 
-#: src/exif.c:27
+#: src/exif.c:28
 msgid "Exposure time"
 msgstr "Belichtungszeit"
 
-#: src/exif.c:28
+#: src/exif.c:29
 msgid "Fnumber"
 msgstr "Blende"
 
-#: src/exif.c:29
+#: src/exif.c:30
 msgid "Exposure bias value"
 msgstr "Belichtunskorrektur"
 
-#: src/exif.c:30
+#: src/exif.c:31
 msgid "Flash"
 msgstr "Blitz"
 
-#: src/exif.c:31
+#: src/exif.c:32
 msgid "Exposure program"
 msgstr "Belichtungsprogramm"
 
-#: src/exif.c:32
+#: src/exif.c:33
 msgid "Exposure mode"
 msgstr "Belichtungsmodus"
 
-#: src/exif.c:33
+#: src/exif.c:34
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:95
+#: src/exif.c:96
 #, c-format
 msgid "wrong orientation format (%i)"
 msgstr ""
 
-#: src/exif.c:97
+#: src/exif.c:98
 #, c-format
 msgid "orientation tag with too less components (%lu)"
 msgstr ""
 
-#: src/exif.c:127
+#: src/exif.c:128
 #, c-format
 msgid "date string parse error (%s)"
 msgstr ""
 
-#: src/exif.c:138
+#: src/exif.c:139
 #, c-format
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:171 src/sdl.c:282
+#: src/exif.c:187 src/sdl.c:282
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/exif.c:189
+#: src/exif.c:205
 #, c-format
 msgid "exif loading img %s"
 msgstr ""
 
-#: src/file.c:99
+#: src/file.c:104
 #, c-format
 msgid "thumbinit thumb too old for '%s'"
 msgstr ""
 
-#: src/file.c:107
+#: src/file.c:112
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:109
+#: src/file.c:114
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:137
+#: src/file.c:142
 #, c-format
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:183
+#: src/file.c:188
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:185
+#: src/file.c:190
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:253
+#: src/file.c:258
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""

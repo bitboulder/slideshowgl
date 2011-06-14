@@ -21,6 +21,7 @@ struct exifinfo {
 } exifinfo[]={
 	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
 	{__("Model"), {EXIF_TAG_MODEL,0}},
+	{__("Lens"), {0}},
 	{__("Resolution"), {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
 	{__("ISO speed rating"), {EXIF_TAG_ISO_SPEED_RATINGS,0}},
 	{__("Focal length"), {EXIF_TAG_FOCAL_LENGTH,0}},
@@ -148,7 +149,7 @@ int64_t imgexifgetdate(ExifData *exdat){
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
-char *imgexifgetinfo(ExifData *exdat){
+char *imgexifgetinfo(ExifData *exdat,const char *fn){
 	char *imginfo=NULL;
 	unsigned int iilen=0;
 	unsigned int iipos=0;
@@ -164,6 +165,21 @@ char *imgexifgetinfo(ExifData *exdat){
 			if(!exet) continue;
 			if(i && iipos<end) imginfo[iipos++]=' '; 
 			exif_entry_get_value(exet,imginfo+iipos,end-iipos);
+			utf8check(imginfo+iipos);
+			iipos+=(unsigned int)strlen(imginfo+iipos);
+		}
+		if(!i){
+			char cmd[1024];
+			FILE *p;
+			size_t x;
+			snprintf(cmd,1024,"exiftool \"%s\" | sed -e '/^Lens ID/!d;s/^.*: *//'",fn);
+			p=popen(cmd,"r");
+			fgets(imginfo+iipos,(int)(end-iipos),p);
+			pclose(p);
+			imginfo[end-1]='\0';
+			x=iipos+strlen(imginfo+iipos);
+			while(x>0 && imginfo[x-1]=='\n') x--;
+			imginfo[x]='\0';
 			utf8check(imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
@@ -190,7 +206,7 @@ char imgexifload(struct imgexif *exif,char *fn){
 	if(!(exdat=exif_data_new_from_file(fn))) return 1;
 	exif->rot=imgexifgetrot(exdat);
 	exif->date=imgexifgetdate(exdat);
-	exif->info=imgexifgetinfo(exdat);
+	exif->info=imgexifgetinfo(exdat,fn);
 	exif_data_free(exdat);
 	if(exif->sortil){
 		dplsetresortil(exif->sortil);
