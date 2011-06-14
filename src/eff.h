@@ -26,7 +26,7 @@ struct icol {
 };
 
 enum mpcreate { MPC_NO, MPC_YES, MPC_ALLWAYS, MPC_RESET };
-enum esw { ESW_CAT, ESW_INFO, ESW_HELP, ESW_N };
+enum esw { ESW_CAT, ESW_INFO, ESW_INFOSEL, ESW_HELP, ESW_N };
 
 struct imgpos *imgposinit();
 void imgposfree(struct imgpos * ip);

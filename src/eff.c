@@ -604,6 +604,7 @@ void effcfginit(){
 	eff.cfg.wnd_delay=cfggetuint("eff.wnd_delay");
 	eff.cfg.sw_delay[ESW_CAT]=eff.cfg.wnd_delay;
 	eff.cfg.sw_delay[ESW_INFO]=cfggetuint("eff.txt_delay");
+	eff.cfg.sw_delay[ESW_INFOSEL]=cfggetuint("eff.txt_delay");
 	eff.cfg.sw_delay[ESW_HELP]=cfggetuint("eff.txt_delay");
 	eff.cfg.prged_w=cfggetfloat("prged.w");
 }

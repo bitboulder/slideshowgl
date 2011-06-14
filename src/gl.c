@@ -653,13 +653,50 @@ void glrendertext(const char *title,const char *text,float f){
 }
 
 void glrenderinfo(){
-	struct img *img;
 	char *info;
 	float f;
 	if(!(f=effswf(ESW_INFO))) return;
-	if(!(img=imgget(0,dplgetimgi(0)))) return;
-	if(!(info=imgexifinfo(img->exif))) return;
+	if(!(info=dplgetinfo(NULL))) return;
 	glrendertext(_("Image info"),info,f);
+}
+
+void glrenderinfosel(){
+	char *info,*i;
+	unsigned int sel,s;
+	float f,ffull,w=0.f,h,b,n;
+	if(!(f=effswf(ESW_INFOSEL))) return;
+	if((ffull=effswf(ESW_INFO))){
+		if(ffull>=1.f) return;
+		else if((f*=1.f-ffull)<=0.f) return;
+	}
+	if(!(info=dplgetinfo(&sel))) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,-0.5f,0.f);
+	h=glfontscale(gl.cfg.hrat_cat,1.f);
+	for(n=0,s=sel,i=info;s;s>>=1){
+		if(i[0]) i+=strlen(i)+1;
+		if(s&1){
+			n++;
+			if(i[0] && (b=glfontwidth(i))>w) w=b;
+		}
+		if(i[0]) i+=strlen(i)+1;
+	}
+	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(0.f,-(h*n+b)*(1.f-f),0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b*2.f,h*n+b,GP_RIGHT|GP_BOTTOM);
+	glColor4fv(gl.cfg.col_txtfg);
+	glTranslatef(-b,(h+b)/2.f+h*(n-1),0.f);
+	for(n=0,s=sel,i=info;s && i[0];s>>=1){
+		if(i[0]) i+=strlen(i)+1;
+		if(s&1){
+			if(i[0]) glfontrender(i,GP_RIGHT|GP_VCENTER);
+			glTranslatef(0.f,-h,0.f);
+		}
+		if(i[0]) i+=strlen(i)+1;
+	}
+	glPopMatrix();
 }
 
 void glrenderhelp(){
@@ -891,6 +928,7 @@ void glpaint(){
 	glrenderbar();
 	glrenderstat();
 	glrenderinfo();
+	glrenderinfosel();
 	glrenderinput();
 	glrenderhelp();
 	

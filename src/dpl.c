@@ -42,6 +42,7 @@ struct dpl {
 	int actimgi;
 	unsigned int fid;
 	struct imglist *resortil;
+	unsigned int infosel;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -92,6 +93,13 @@ void dplsetresortil(struct imglist *il){ dpl.resortil=il; }
 Uint32 dplgetticks(){
 	if(dpl.cfg.playrecord) return dpl.fid*1000/dpl.cfg.playrecord_rate;
 	return SDL_GetTicks();
+}
+
+char *dplgetinfo(unsigned int *sel){
+	struct img *img;
+	if(!(img=imgget(AIL,AIMGI))) return NULL;
+	if(sel) *sel=dpl.infosel;
+	return imgexifinfo(img->exif);
 }
 
 /***************************** imgfit *****************************************/
@@ -684,7 +692,7 @@ const char *dplhelp(){
 }
 
 void dplfilesearch(struct dplinput *in){
-	struct img *img=imgget(0,AIL);
+	struct img *img=imgget(AIL,0);
 	int i=0;
 	size_t ilen=strlen(in->in);
 	if(in->in[0]) for(;img;img=img->nxt,i++){
@@ -815,8 +823,9 @@ void dplkey(unsigned short keyu){
 	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
 	case 'i':
 		if(dpl.pos.actil&ACTIL_PRGED) dplprged("frmins",-1,-1,-1);
-		else effsw(ESW_INFO,AIMGI!=IMGI_START && AIMGI!=IMGI_END ? -1 : 0);
+		else if(dplgetinfo(NULL)) effsw(ESW_INFOSEL,-1);
 	break;
+	case 'I': if(dplgetinfo(NULL)) effsw(ESW_INFO,-1); break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'l': if(dpl.pos.actil&ACTIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;
@@ -946,6 +955,7 @@ void dplcfginit(){
 	t=cfggetstr("sdpl.playrecord");
 	dpl.cfg.playrecord=t && t[0];
 	dpl.cfg.playrecord_rate=cfggetuint("dpl.playrecord_rate");
+	dpl.infosel=cfggetuint("dpl.infosel");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);
 	for(;z<0;z++) dplevput(DE_ZOOMIN);
