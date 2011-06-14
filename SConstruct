@@ -160,6 +160,7 @@ if mode == 'debug':
 	env.Append(CCFLAGS = ['-g'])
 else:
 	env.Append(CCFLAGS = ['-O2'])
+	env.Append(CCFLAGS = ['-g'])
 
 Export('env')
 Export('prefix')
