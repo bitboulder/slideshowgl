@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_EXIF
+#if HAVE_EXIV2
+	#include "exiv2.h"
+#elif HAVE_EXIF
 	#include <exif-data.h>
 #endif
 #if HAVE_MKTIME
@@ -14,14 +16,38 @@
 #include "help.h"
 #include "dpl.h"
 
-#if HAVE_EXIF
+#if HAVE_EXIV2
+
+struct exifinfo {
+	const char *name;
+	const char *tag[8];
+} exifinfo[] = {
+	{__("Date"), {"Exif.Photo.DateTimeOriginal","Exif.Image.DateTime","Exif.Photo.DateTimeDigitized",NULL}},
+	{__("Model"), {"Exif.Image.Model",NULL}},
+	{__("Lens"), {"Exif.CanonCs.LensType",/*"Exif.Sony1.LensID",*/NULL}},
+	{__("Resolution"), {"join:x","Exif.Photo.PixelXDimension","Exif.Photo.PixelYDimension",NULL}},
+	{__("ISO speed rating"), {"Exif.Photo.ISOSpeedRatings",NULL}},
+	{__("Focal length"), {"Exif.Photo.FocalLength",NULL}},
+	{__("Exposure time"), {"Exif.Photo.ExposureTime",NULL}},
+	{__("Fnumber"), {"Exif.Photo.FNumber",NULL}},
+	{__("Exposure bias value"), {"Exif.Photo.ExposureBiasValue",NULL}},
+	{__("Flash"), {"Exif.Photo.Flash",NULL}},
+	{__("Exposure program"), {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL}},
+	{__("Exposure mode"), {"Exif.Photo.ExposureMode",NULL}},
+	{__("White blanace"), {"Exif.CanonSi.WhiteBalance","Exif.Photo.WhiteBalance",NULL}},
+	{NULL, {NULL}},
+};
+
+typedef struct exiv2data exifdata;
+
+#elif HAVE_EXIF
+
 struct exifinfo {
 	const char *name;
 	ExifTag tag[4];
 } exifinfo[]={
 	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
 	{__("Model"), {EXIF_TAG_MODEL,0}},
-	{__("Lens"), {0}},
 	{__("Resolution"), {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
 	{__("ISO speed rating"), {EXIF_TAG_ISO_SPEED_RATINGS,0}},
 	{__("Focal length"), {EXIF_TAG_FOCAL_LENGTH,0}},
@@ -34,7 +60,12 @@ struct exifinfo {
 	{__("White blanace"), {EXIF_TAG_WHITE_BALANCE,0}},
 	{NULL, {0}},
 };
+
+typedef ExifData exifdata;
+
 #endif
+
+
 
 struct imgexif {
 	char load;
@@ -89,14 +120,20 @@ enum exifrot {
 };
 
 /* thread: load */
-enum rot imgexifgetrot(ExifData *exdat){
+enum rot imgexifgetrot(exifdata *exdat){
+	int rot;
+#if HAVE_EXIV2
+	rot=exiv2getint(exdat,"Exif.Image.Orientation");
+#elif HAVE_EXIF
 	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_ORIENTATION);
 	if(!exet) return ROT_0;
 	if(exet->format!=EXIF_FORMAT_SHORT)
 	{ error(ERR_CONT,"wrong orientation format (%i)",exet->format); return ROT_0; }
 	if(exet->components<1)
 	{ error(ERR_CONT,"orientation tag with too less components (%lu)",exet->components); return ROT_0; }
-	switch(*(short*)exet->data){
+	rot=*(short*)exet->data;
+#endif
+	switch(rot){
 	case ER_R90:  return ROT_90;
 	case ER_R180: return ROT_180;
 	case ER_R270: return ROT_270;
@@ -105,27 +142,34 @@ enum rot imgexifgetrot(ExifData *exdat){
 }
 
 /* thread: load */
-int64_t imgexifgetdate(ExifData *exdat){
+int64_t imgexifgetdate(exifdata *exdat){
 #if HAVE_MKTIME
-	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_ORIGINAL);
-	char *buf,*pos,c=0;
+	char *pos,c=0;
 	struct tm tm;
 	int64_t ret;
+#if HAVE_EXIV2
+	char buf[64];
+	if(!exiv2getstr(exdat,exifinfo[0].tag,buf,64)) return 0;
+#elif HAVE_EXIF
+	char *buf;
+	ExifEntry *exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_ORIGINAL);
 	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME);
 	if(!exet) exet=exif_data_get_entry(exdat,EXIF_TAG_DATE_TIME_DIGITIZED);
 	if(!exet) return 0;
 	if(exet->format!=EXIF_FORMAT_ASCII) return 0;
-	pos=buf=malloc(exet->components+1);
+	buf=malloc(exet->components+1);
 	memcpy(buf,exet->data,exet->components);
 	buf[exet->components]='\0';
+#endif
 	memset(&tm,0,sizeof(struct tm));
 	tm.tm_isdst=-1;
+	pos=buf;
 	while(*pos && c<6){
 		long int val;
 		char *nxt=NULL;
 		while(*pos==':' || *pos=='.' || *pos==' ') pos++;
 		val=strtol(pos,&nxt,10);
-		if(!nxt || nxt==pos){ error(ERR_CONT,"date string parse error (%s)",buf); return 0; }
+		if(!nxt || nxt==pos){ error(ERR_CONT,"date string parse error (in \"%s\" at \"%s\")",buf,pos); return 0; }
 		pos=nxt;
 		switch(c++){
 		case 0: tm.tm_year=(int)val-1900; break;
@@ -137,7 +181,9 @@ int64_t imgexifgetdate(ExifData *exdat){
 		}
 	}
 	if(c<2){ error(ERR_CONT,"no enought digits for date (%s)",buf); return 0; }
+#if ! HAVE_EXIV2 && HAVE_EXIF
 	free(buf);
+#endif
 	ret=mktime(&tm);
 	if(ret<0) ret=0;
 	return ret;
@@ -149,17 +195,26 @@ int64_t imgexifgetdate(ExifData *exdat){
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
-char *imgexifgetinfo(ExifData *exdat,const char *fn){
+char *imgexifgetinfo(exifdata *exdat){
 	char *imginfo=NULL;
 	unsigned int iilen=0;
 	unsigned int iipos=0;
-	int l,i;
+	int l;
+#if ! HAVE_EXIV2 && HAVE_EXIF
+	int i;
+#endif
 	for(l=0;exifinfo[l].name;l++){
 		unsigned int end=iipos+IILEN;
 		if(end+1>iilen) imginfo=realloc(imginfo,(iilen+=IIINC)*sizeof(char));
 		snprintf(imginfo+iipos,end-iipos,exifinfo[l].name);
 		utf8check(imginfo+iipos);
 		iipos+=(unsigned int)strlen(imginfo+iipos)+1;
+#if HAVE_EXIV2
+		if(exiv2getstr(exdat,exifinfo[l].tag,imginfo+iipos,(int)(end-iipos))){
+			utf8check(imginfo+iipos);
+			iipos+=(unsigned int)strlen(imginfo+iipos);
+		}
+#elif HAVE_EXIF
 		for(i=0;i<5 && exifinfo[l].tag[i];i++){
 			ExifEntry *exet=exif_data_get_entry(exdat,exifinfo[l].tag[i]);
 			if(!exet) continue;
@@ -168,21 +223,7 @@ char *imgexifgetinfo(ExifData *exdat,const char *fn){
 			utf8check(imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
-		if(!i){
-			char cmd[1024];
-			FILE *p;
-			size_t x;
-			snprintf(cmd,1024,"exiftool \"%s\" | sed -e '/^Lens ID/!d;s/^.*: *//'",fn);
-			p=popen(cmd,"r");
-			fgets(imginfo+iipos,(int)(end-iipos),p);
-			pclose(p);
-			imginfo[end-1]='\0';
-			x=iipos+strlen(imginfo+iipos);
-			while(x>0 && imginfo[x-1]=='\n') x--;
-			imginfo[x]='\0';
-			utf8check(imginfo+iipos);
-			iipos+=(unsigned int)strlen(imginfo+iipos);
-		}
+#endif
 		if(iipos && imginfo[iipos-1]=='\0'){
 			snprintf(imginfo+iipos,end-iipos,_("(unknown)"));
 			utf8check(imginfo+iipos);
@@ -197,17 +238,25 @@ char *imgexifgetinfo(ExifData *exdat,const char *fn){
 
 /* thread: load */
 char imgexifload(struct imgexif *exif,char *fn){
-#if HAVE_EXIF
-	ExifData *exdat;
+#if HAVE_EXIV2 || HAVE_EXIF
+	exifdata *exdat;
 	if(exif->load) return 0;
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	debug(DBG_DBG,"exif loading img %s",fn);
+#if HAVE_EXIV2
+	if(!(exdat=exiv2init(fn))) return 1;
+#elif HAVE_EXIF
 	if(!(exdat=exif_data_new_from_file(fn))) return 1;
+#endif
 	exif->rot=imgexifgetrot(exdat);
 	exif->date=imgexifgetdate(exdat);
-	exif->info=imgexifgetinfo(exdat,fn);
+	exif->info=imgexifgetinfo(exdat);
+#if HAVE_EXIV2
+	exiv2free(exdat);
+#elif HAVE_EXIF
 	exif_data_free(exdat);
+#endif
 	if(exif->sortil){
 		dplsetresortil(exif->sortil);
 		exif->sortil=NULL;

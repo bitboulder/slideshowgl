@@ -7,6 +7,7 @@
 #define LOCALEDIR "%(LOCALEDIR)s"
 
 #define HAVE_EXIF		%(HAVE_EXIF)i
+#define HAVE_EXIV2		%(HAVE_EXIV2)i
 
 #define HAVE_FTGL		%(HAVE_FTGL)i
 

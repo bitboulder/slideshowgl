@@ -118,6 +118,7 @@ if not env.GetOption('clean'):
 		env['HAVE_X11'] = 0
 		env['HAVE_XEXT'] = 0
 		env['HAVE_XINERAMA'] = 0
+		env['HAVE_EXIV2'] = 0
 	else:
 #		conf.CheckCHeader('pthread.h')
 #		conf.CheckLibMy('pthread',0,'PTHREAD')
@@ -128,6 +129,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('sdl >= 1.2',1,0)
 		conf.CheckPKG('SDL_image >= 1.2',1,0)
 		conf.CheckPKG('libexif >= 0.6',0,'EXIF')
+		conf.CheckPKG('exiv2 >= 0.2',0,'EXIV2')
 		conf.CheckPKG('ftgl >= 2.1',0,'FTGL')
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
