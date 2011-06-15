@@ -121,7 +121,7 @@ enum exifrot {
 
 /* thread: load */
 enum rot imgexifgetrot(exifdata *exdat){
-	int rot;
+	long rot;
 #if HAVE_EXIV2
 	rot=exiv2getint(exdat,"Exif.Image.Orientation");
 #elif HAVE_EXIF

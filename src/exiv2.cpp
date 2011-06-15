@@ -60,7 +60,9 @@ char exiv2getstr(struct exiv2data *edata,const char **key,char *str,int len){
 	if(!strncmp(key[0],"join:",5)) delm=(key++)[0]+5;
 	for(;key[0];key++) if(edchk(ed,key[0])){
 		std::stringstream sstr;
-		sstr << ed[key[0]];
+		if(!strcmp(key[0],"Exif.CanonCs.LensType")){
+			Exiv2::CanonMakerNote::printCsLensType(sstr,ed[key[0]].value(),&ed);
+		}else sstr << ed[key[0]];
 		if(sstr.str().length()<=0) continue;
 		num+=snprintf(str+num,len-num,"%s%s",num && delm ? delm : "",sstr.str().c_str());
 		if(!delm && num) return 1;
@@ -68,7 +70,7 @@ char exiv2getstr(struct exiv2data *edata,const char **key,char *str,int len){
 	return num!=0;
 }
 
-int exiv2getint(struct exiv2data *edata,const char *key){
+long exiv2getint(struct exiv2data *edata,const char *key){
 	Exiv2::ExifData &ed = edata->img->exifData();
 	if(!edchk(ed,key)) return 0;
 	return ed[key].toLong();
