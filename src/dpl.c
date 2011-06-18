@@ -929,12 +929,13 @@ void dplcheckev(){
 		stat|=dplev(dev.evs+dev.ri);
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
 	}
-	if(stat&1) dplstatupdate();
-	if(stat&2 && !dpl.cfg.playrecord) effstaton(stat);
 	if(dpl.resortil){
 		ilsort(-1,dpl.resortil,ILSCHG_NONE);
 		dpl.resortil=NULL;
+		stat|=1;
 	}
+	if(stat&1) dplstatupdate();
+	if(stat&2 && !dpl.cfg.playrecord) effstaton(stat);
 }
 
 /***************************** dpl run ****************************************/
