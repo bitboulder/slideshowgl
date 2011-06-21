@@ -156,6 +156,7 @@ void imgldfiletime(struct imgld *il,enum ldft act){
 	break;
 	case FT_RESET:
 		il->ft=0;
+		il->ftchk=0;
 	break;
 	}
 }
