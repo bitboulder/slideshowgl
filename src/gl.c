@@ -763,11 +763,12 @@ void glrendercat(){
 		glLoadName(name);
 		glrect(w+b,h,GP_TOP|GP_LEFT);
 		glLoadName(0);
-		if(gl.sel.act) continue;
-		if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
-		else glcolora(gl.cfg.col_txtfg,.5f);
 		glTranslatef(b/2.f,-h/2.f,0.f);
-		glfontrender(cat,GP_VCENTER|GP_LEFT);
+		if(!gl.sel.act){
+			if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
+			else glcolora(gl.cfg.col_txtfg,.5f);
+			glfontrender(cat,GP_VCENTER|GP_LEFT);
+		}
 		glTranslatef(-b/2.f,-h/2.f,0.f);
 	}
 	glColor4fv(gl.cfg.col_txtbg);
