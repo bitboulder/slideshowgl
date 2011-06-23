@@ -15,6 +15,7 @@
 #include "cfg.h"
 #include "help.h"
 #include "dpl.h"
+#include "eff.h"
 
 #if HAVE_EXIV2
 
@@ -239,7 +240,9 @@ char *imgexifgetinfo(exifdata *exdat){
 /* thread: load */
 char imgexifload(struct imgexif *exif,char *fn){
 #if HAVE_EXIV2 || HAVE_EXIF
+	enum rot r;
 	exifdata *exdat;
+	char ret=0x1;
 	if(exif->load) return 0;
 	if(exif->info) free(exif->info);
 	exif->load=1;
@@ -249,7 +252,8 @@ char imgexifload(struct imgexif *exif,char *fn){
 #elif HAVE_EXIF
 	if(!(exdat=exif_data_new_from_file(fn))) return 1;
 #endif
-	exif->rot=imgexifgetrot(exdat);
+	r=imgexifgetrot(exdat);
+	if(r!=exif->rot){ ret|=0x2; exif->rot=r; }
 	exif->date=imgexifgetdate(exdat);
 	exif->info=imgexifgetinfo(exdat);
 #if HAVE_EXIV2
@@ -261,7 +265,7 @@ char imgexifload(struct imgexif *exif,char *fn){
 		dplsetresortil(exif->sortil);
 		exif->sortil=NULL;
 	}
-	return 1;
+	return ret;
 #else
 	return 0;
 #endif

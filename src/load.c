@@ -354,11 +354,14 @@ char ldfload(struct imgld *il,enum imgtex it){
 	int lastscale=0;
 	char swap=0;
 	char panoenable=0;
+	enum effrefresh effref=EFFREF_FIT;
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0){
 		ld=imgexifload(il->img->exif,fn);
+		if(ld&0x2) effrefresh(EFFREF_ROT);
+		ld&=0x1;
 		goto end0;
 	}
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
@@ -377,7 +380,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		goto end0;
 	}
 	imgldfiletime(il,FT_UPDATE);
-	imgexifload(il->img->exif,fn);
+	if(imgexifload(il->img->exif,fn)&0x2) effref|=EFFREF_ROT;
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
@@ -393,7 +396,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		il->w=sdlimg->sf->h;
 		il->h=sdlimg->sf->w;
 	}
-	effrefresh(EFFREF_FIT|(imgexifrot(il->img->exif)!=ROT_0?EFFREF_ROT:0));
+	effrefresh(effref);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
 

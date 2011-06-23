@@ -400,9 +400,10 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		if(effref&EFFREF_IMG)
 			effinitimg(dp,ev,imgi<0?AIMGI:imgi,0);
 		if(effref&EFFREF_ROT) for(i=0,img=imgget(AIL,0);img;img=img->nxt,i++)
-			if((img=imgget(AIL,i)) && img->pos->p.cur.act &&
-					img->pos->p.cur.r != imgexifrotf(img->exif))
-				effinitimg(dp,ev,i,0);
+			if((img=imgget(AIL,i)) && img->pos->p.cur.r != imgexifrotf(img->exif)){
+				if(img->pos->p.cur.act) effinitimg(dp,ev,i,0);
+				else img->pos->p.cur.r=imgexifrotf(img->exif);
+			}
 	}
 }
 
