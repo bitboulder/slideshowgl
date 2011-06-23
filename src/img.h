@@ -42,7 +42,7 @@ enum ilschg { ILSCHG_NONE, ILSCHG_INIT_MAINDIR, ILSCHG_INIT_SUBDIR, ILSCHG_INC }
 
 struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
-char ilfind(const char *fn,struct imglist **ilret);
+char ilfind(const char *fn,struct imglist **ilret,char setparent);
 void ilcleanup();
 int ilswitch(struct imglist *il);
 char ilsecswitch(char state);

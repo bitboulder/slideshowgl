@@ -165,11 +165,16 @@ void ilcfginit(){
 }
 
 /* thread: dpl */
+void ilsetparent(struct imglist *il){
+	il->parent=curils[0];
+}
+
+/* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
 	snprintf(il->fn,FILELEN,fn);
 	snprintf(il->dir,FILELEN,dir);
-	il->parent=curils[0];
+	ilsetparent(il);
 	il->pos=IMGI_START;
 	il->time=filetime(fn);
 	il->nxt=ils;
@@ -200,11 +205,13 @@ void ilfree(struct imglist *il){
 }
 
 /* thread: dpl */
-char ilfind(const char *fn,struct imglist **ilret){
+char ilfind(const char *fn,struct imglist **ilret,char setparent){
 	struct imglist *il;
 	for(il=ils;il;il=il->nxt) if(il->last_used!=1 && !strncmp(il->fn,fn,FILELEN)){
+		char ret=filetime(fn)==il->time;
 		*ilret=il;
-		return filetime(fn)==il->time;
+		if(ret && setparent) ilsetparent(il);
+		return ret;
 	}
 	return 0;
 }
