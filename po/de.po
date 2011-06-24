@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-14 11:55+0200\n"
+"POT-Creation-Date: 2011-06-24 16:02+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -58,7 +58,7 @@ msgstr "Debug level erhöhen"
 msgid "Activate time measurement"
 msgstr "Zeitmessung aktivieren"
 
-#: src/cfg.c:38 src/dpl.c:629 src/dpl.c:664
+#: src/cfg.c:38 src/dpl.c:757 src/dpl.c:792 src/dpl.c:835
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -398,544 +398,564 @@ msgstr ""
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:75
+#: src/dpl.c:82
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:76
+#: src/dpl.c:83
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:77
+#: src/dpl.c:84
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:78
+#: src/dpl.c:85
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:136
+#: src/dpl.c:86
+msgid "[Directory]"
+msgstr "[Verzeichnis]"
+
+#: src/dpl.c:151
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:188
+#: src/dpl.c:203
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:381
+#: src/dpl.c:416
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:493
+#: src/dpl.c:531
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:494
+#: src/dpl.c:532
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:510
+#: src/dpl.c:548
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:511
+#: src/dpl.c:549
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:512
+#: src/dpl.c:550
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:516
+#: src/dpl.c:554
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:517
+#: src/dpl.c:555
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:611 src/dpl.c:651
+#: src/dpl.c:739 src/dpl.c:779 src/dpl.c:817
 msgid "Mouse interface"
 msgstr "Bedienung mit der Maus"
 
-#: src/dpl.c:612 src/dpl.c:652
+#: src/dpl.c:740 src/dpl.c:780 src/dpl.c:818
 msgid "Left drag"
 msgstr "Links ziehen"
 
-#: src/dpl.c:612
+#: src/dpl.c:740 src/dpl.c:818
 msgid "Move"
 msgstr "Bewegen"
 
-#: src/dpl.c:613 src/dpl.c:653
+#: src/dpl.c:741 src/dpl.c:781 src/dpl.c:819
 msgid "Left click"
 msgstr "Linksclick"
 
-#: src/dpl.c:613
+#: src/dpl.c:741 src/dpl.c:819
 msgid "Goto image / Forward"
 msgstr "Gehe zu Bild / Vorwärts"
 
-#: src/dpl.c:614
+#: src/dpl.c:742 src/dpl.c:820
 msgid "Double click on directory"
 msgstr "Doppelclick auf Verzeichnis"
 
-#: src/dpl.c:614
+#: src/dpl.c:742 src/dpl.c:820
 msgid "Enter directory"
 msgstr "Verzeichnis öffnen"
 
-#: src/dpl.c:615
+#: src/dpl.c:743 src/dpl.c:821
 msgid "Double click on space"
 msgstr "Doppelclick auf Freiraum"
 
-#: src/dpl.c:615
+#: src/dpl.c:743 src/dpl.c:821
 msgid "Leave directory"
 msgstr "Verzeichnis verlassen"
 
-#: src/dpl.c:616 src/dpl.c:654
+#: src/dpl.c:744 src/dpl.c:782 src/dpl.c:822
 msgid "Middle click"
 msgstr "Mittelclick"
 
-#: src/dpl.c:616
+#: src/dpl.c:744 src/dpl.c:822
 msgid "Play/Stop / Toggle mark (only in writing mode)"
 msgstr "Play/Stop / Bildmarkierung umschalten (nur im Schreibmodus)"
 
-#: src/dpl.c:617 src/dpl.c:655
+#: src/dpl.c:745 src/dpl.c:783 src/dpl.c:823
 msgid "Right click"
 msgstr "Rechtsclick"
 
-#: src/dpl.c:617 src/dpl.c:655
+#: src/dpl.c:745 src/dpl.c:783 src/dpl.c:823
 msgid "Backward"
 msgstr "Zurück"
 
-#: src/dpl.c:618 src/dpl.c:656
+#: src/dpl.c:746 src/dpl.c:784 src/dpl.c:824
 msgid "Scroll"
 msgstr "Scrollen"
 
-#: src/dpl.c:618 src/dpl.c:626
+#: src/dpl.c:746 src/dpl.c:754 src/dpl.c:824 src/dpl.c:832
 msgid "Zoom in/out"
 msgstr "Herein-/Herauszoomen"
 
-#: src/dpl.c:621 src/dpl.c:659
+#: src/dpl.c:749 src/dpl.c:787 src/dpl.c:827
 msgid "Keyboard interface"
 msgstr "Bedienung mit der Tastatur"
 
-#: src/dpl.c:622
+#: src/dpl.c:750 src/dpl.c:828
 msgid "Space"
 msgstr "Leer"
 
-#: src/dpl.c:622
+#: src/dpl.c:750 src/dpl.c:828
 msgid "Stop/Play / Enter directory"
 msgstr "Stop/Play / Verzeichnis öffnen"
 
-#: src/dpl.c:623
+#: src/dpl.c:751 src/dpl.c:829
 msgid "Back"
 msgstr "Zurück"
 
-#: src/dpl.c:623
+#: src/dpl.c:751 src/dpl.c:829
 msgid "Leave directory / Toggle panorama mode (spherical,plain,fisheye)"
 msgstr "Verzeichnis verlassen / Panorama-Modus ändern (kugel,flach,fischauge)"
 
-#: src/dpl.c:624 src/dpl.c:660
+#: src/dpl.c:752 src/dpl.c:788 src/dpl.c:830
 msgid "Right/Left"
 msgstr "Rechts/Links"
 
-#: src/dpl.c:624
+#: src/dpl.c:752 src/dpl.c:830
 msgid "Forward/Backward (Zoom: shift right/left)"
 msgstr "Weiter/Zurück (Zoom: rechts/links schieben)"
 
-#: src/dpl.c:625 src/dpl.c:661
+#: src/dpl.c:753 src/dpl.c:789 src/dpl.c:831
 msgid "Up/Down"
 msgstr "Hoch/Runter"
 
-#: src/dpl.c:625
+#: src/dpl.c:753 src/dpl.c:831
 msgid "Fast forward/backward (Zoom: shift up/down)"
 msgstr "Schnell weiter/zurück (Zoom: hoch/runter schieben)"
 
-#: src/dpl.c:626 src/dpl.c:662
+#: src/dpl.c:754 src/dpl.c:790 src/dpl.c:832
 msgid "Pageup/Pagedown"
 msgstr "Bild hoch/runter"
 
-#: src/dpl.c:627 src/dpl.c:663
+#: src/dpl.c:755 src/dpl.c:791 src/dpl.c:833
 msgid "[0-9]+Enter"
 msgstr "[0-9]+Enter"
 
-#: src/dpl.c:627
+#: src/dpl.c:755 src/dpl.c:833
 msgid "Goto image with number"
 msgstr "Gehe zu Bild mit Nummer"
 
-#: src/dpl.c:628 src/dpl.c:676
+#: src/dpl.c:756 src/dpl.c:804 src/dpl.c:834
 msgid "[0-9]+d"
 msgstr "[0-9]+d"
 
-#: src/dpl.c:628
+#: src/dpl.c:756 src/dpl.c:834
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl.c:629 src/dpl.c:664
+#: src/dpl.c:757 src/dpl.c:792 src/dpl.c:835
 msgid "f"
 msgstr ""
 
-#: src/dpl.c:630
+#: src/dpl.c:758 src/dpl.c:836
 msgid "S"
 msgstr ""
 
-#: src/dpl.c:630
+#: src/dpl.c:758 src/dpl.c:836
 msgid "Toggle sorting of current image list"
 msgstr "Sortierung der aktuellen Bildliste umschalten"
 
-#: src/dpl.c:631
+#: src/dpl.c:759 src/dpl.c:837
 msgid "l"
 msgstr ""
 
-#: src/dpl.c:631
+#: src/dpl.c:759 src/dpl.c:837
 msgid "Toggle loop of image lists"
 msgstr "Bilder in Schleife darstellen"
 
-#: src/dpl.c:632 src/dpl.c:665
+#: src/dpl.c:760 src/dpl.c:793 src/dpl.c:838
 msgid "r/R"
 msgstr ""
 
-#: src/dpl.c:632 src/dpl.c:665
+#: src/dpl.c:760 src/dpl.c:793 src/dpl.c:838
 msgid "Rotate image (only in writing mode permanent)"
 msgstr "Bild drehen (Speichern im Schreibmodus)"
 
-#: src/dpl.c:633 src/dpl.c:666
+#: src/dpl.c:761 src/dpl.c:794 src/dpl.c:839
 msgid "w"
 msgstr ""
 
-#: src/dpl.c:633 src/dpl.c:666
+#: src/dpl.c:761
 msgid "Switch writing mode"
 msgstr "Schreibmodus umschalten"
 
-#: src/dpl.c:634
+#: src/dpl.c:762 src/dpl.c:840
 msgid "g/b/c"
 msgstr ""
 
-#: src/dpl.c:634
+#: src/dpl.c:762 src/dpl.c:840
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
 "+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl.c:635 src/dpl.c:667
+#: src/dpl.c:763 src/dpl.c:795 src/dpl.c:841
 msgid "+/-"
 msgstr ""
 
-#: src/dpl.c:635
+#: src/dpl.c:763 src/dpl.c:841
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl.c:636 src/dpl.c:669
+#: src/dpl.c:764 src/dpl.c:797 src/dpl.c:842
 msgid "Del"
 msgstr "Entf"
 
-#: src/dpl.c:636 src/dpl.c:669
+#: src/dpl.c:764 src/dpl.c:797 src/dpl.c:842
 msgid "Move image to del/ and remove from dpl-list (only in writing mode)"
 msgstr ""
 "Bild nach 'del' verschieben und nicht mehr anzeigen (nur im Schreibmodus)"
 
-#: src/dpl.c:637 src/dpl.c:670
+#: src/dpl.c:765 src/dpl.c:798 src/dpl.c:843
 msgid "o"
 msgstr ""
 
-#: src/dpl.c:637 src/dpl.c:670
+#: src/dpl.c:765 src/dpl.c:798 src/dpl.c:843
 msgid "Move image to ori/ and remove from dpl-list (only in writing mode)"
 msgstr ""
 "Bild nach 'ori' verschieben und nicht mehr anzeigen (nur im Schreibmodus)"
 
-#: src/dpl.c:638
+#: src/dpl.c:766
 msgid "m"
 msgstr ""
 
-#: src/dpl.c:638 src/dpl.c:654
+#: src/dpl.c:766 src/dpl.c:782
 msgid "Toggle mark (only in writing mode)"
 msgstr "Bildmarkierung umschalten (nur im Schreibmodus)"
 
-#: src/dpl.c:639
+#: src/dpl.c:767 src/dpl.c:846
 msgid "i/I"
 msgstr ""
 
-#: src/dpl.c:639
+#: src/dpl.c:767 src/dpl.c:846
 msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
-#: src/dpl.c:640
+#: src/dpl.c:768 src/dpl.c:847
 msgid "k"
 msgstr ""
 
-#: src/dpl.c:640
+#: src/dpl.c:768 src/dpl.c:847
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl.c:641
+#: src/dpl.c:769 src/dpl.c:848
 msgid "s"
 msgstr ""
 
-#: src/dpl.c:641
+#: src/dpl.c:769 src/dpl.c:848
 msgid "Enter and toggle image catalog (only in writing mode)"
 msgstr "Bildkatalog eingeben und ändern (nur im Schreibmodus)"
 
-#: src/dpl.c:642 src/dpl.c:681
+#: src/dpl.c:770 src/dpl.c:809 src/dpl.c:849
 msgid "e"
 msgstr ""
 
-#: src/dpl.c:642
+#: src/dpl.c:770 src/dpl.c:849
 msgid "Open program editor"
 msgstr "Programm-Editor öffnen"
 
-#: src/dpl.c:643 src/dpl.c:682
+#: src/dpl.c:771 src/dpl.c:810 src/dpl.c:850
 msgid "G"
 msgstr ""
 
-#: src/dpl.c:643 src/dpl.c:682
+#: src/dpl.c:771 src/dpl.c:810 src/dpl.c:850
 msgid "Edit current image with gimp"
 msgstr "Aktuelles Bild mit gimp bearbeiten"
 
-#: src/dpl.c:644 src/dpl.c:683
+#: src/dpl.c:772 src/dpl.c:811 src/dpl.c:851
 msgid "h"
 msgstr ""
 
-#: src/dpl.c:644 src/dpl.c:683
+#: src/dpl.c:772 src/dpl.c:811 src/dpl.c:851
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl.c:645
+#: src/dpl.c:773 src/dpl.c:852
 msgid "p"
 msgstr ""
 
-#: src/dpl.c:645
+#: src/dpl.c:773 src/dpl.c:852
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
 
-#: src/dpl.c:646 src/dpl.c:684
+#: src/dpl.c:774 src/dpl.c:812 src/dpl.c:853
 msgid "q/Esc"
 msgstr ""
 
-#: src/dpl.c:646 src/dpl.c:684
+#: src/dpl.c:774 src/dpl.c:812 src/dpl.c:853
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl.c:652
+#: src/dpl.c:780
 msgid "Move image"
 msgstr "Bild bewegen"
 
-#: src/dpl.c:653
+#: src/dpl.c:781
 msgid "Forward"
 msgstr "Weiter"
 
-#: src/dpl.c:656 src/dpl.c:662
+#: src/dpl.c:784 src/dpl.c:790
 msgid "Resize image"
 msgstr "Bildgröße ändern"
 
-#: src/dpl.c:660
+#: src/dpl.c:788
 msgid "Forward/Backward"
 msgstr "Weiter/Zurück"
 
-#: src/dpl.c:661
+#: src/dpl.c:789
 msgid "Fast forward/backward"
 msgstr "Schnell weiter/zurück"
 
-#: src/dpl.c:663
+#: src/dpl.c:791
 msgid "Goto frame with number"
 msgstr "Gehe zu Seite mit Nummer"
 
-#: src/dpl.c:667
+#: src/dpl.c:794 src/dpl.c:839
+msgid "Switch window"
+msgstr "Fenster wechseln"
+
+#: src/dpl.c:795
 msgid "Add/remove image"
 msgstr "Bild hinzufügen/löschen"
 
-#: src/dpl.c:668
+#: src/dpl.c:796
 msgid "t"
 msgstr ""
 
-#: src/dpl.c:668
+#: src/dpl.c:796
 msgid "Add text"
 msgstr "Text hinzufügen"
 
-#: src/dpl.c:671
+#: src/dpl.c:799
 msgid "i"
 msgstr ""
 
-#: src/dpl.c:671
+#: src/dpl.c:799
 msgid "Insert frame"
 msgstr "Seite einfügen"
 
-#: src/dpl.c:672
+#: src/dpl.c:800
 msgid "x"
 msgstr ""
 
-#: src/dpl.c:672
+#: src/dpl.c:800
 msgid "Delete frame"
 msgstr "Seite löschen"
 
-#: src/dpl.c:673
+#: src/dpl.c:801 src/dpl.c:844
 msgid "m/M"
 msgstr ""
 
-#: src/dpl.c:673
+#: src/dpl.c:801
 msgid "Swap frame with next/previous one"
 msgstr "Seite mit nächster/vorheriger tauschen"
 
-#: src/dpl.c:674
+#: src/dpl.c:802
 msgid "d"
 msgstr ""
 
-#: src/dpl.c:674
+#: src/dpl.c:802
 msgid "Duplicate frame"
 msgstr "Seite verdoppeln"
 
-#: src/dpl.c:675
+#: src/dpl.c:803
 msgid "[0-9]+m"
 msgstr "[0-9]+m"
 
-#: src/dpl.c:675
+#: src/dpl.c:803
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl.c:676
+#: src/dpl.c:804
 msgid "Copy frame to position"
 msgstr "Seite zu Position kopieren"
 
-#: src/dpl.c:677
+#: src/dpl.c:805
 msgid "l/L"
 msgstr ""
 
-#: src/dpl.c:677
+#: src/dpl.c:805
 msgid "Move image into foreground/background"
 msgstr "Bild in den Vordergrund/Hintergrund holen"
 
-#: src/dpl.c:678
+#: src/dpl.c:806
 msgid "c"
 msgstr ""
 
-#: src/dpl.c:678
+#: src/dpl.c:806
 msgid "Change color of text"
 msgstr "Farbe eines Textes ändern"
 
-#: src/dpl.c:679
+#: src/dpl.c:807
 msgid "C"
 msgstr ""
 
-#: src/dpl.c:679
+#: src/dpl.c:807
 msgid "Copy color of text to all text on current frame"
 msgstr "Farbe des aktuellen Textes auf alle Texte kopieren"
 
-#: src/dpl.c:680
+#: src/dpl.c:808
 msgid "E"
 msgstr ""
 
-#: src/dpl.c:680
+#: src/dpl.c:808
 msgid "Refresh current frame"
 msgstr "Aktuelle Seite neu zeichen"
 
-#: src/dpl.c:681
+#: src/dpl.c:809
 msgid "Leave program editor"
 msgstr "Programm-Editor verlassen"
 
-#: src/dpl.c:765
+#: src/dpl.c:844
+msgid "Move images from/up to current one to other or new directory"
+msgstr "Alle Bilder vom/bis zum aktuellen in ein anderes oder neues Verzeichnis verschieben"
+
+#: src/dpl.c:845
+msgid "j"
+msgstr ""
+
+#: src/dpl.c:845
+msgid "Move all images to other directory or rename directory"
+msgstr "Alle Bilder in ein anderes Verzeichnis verschieben oder Verzeichnis umbennen"
+
+#: src/dpl.c:941
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
 
-#: src/eff.c:150
+#: src/eff.c:152
 #, c-format
 msgid "effpos img %3i (%6i) %4s: %5.2f->%5.2f (%4i->%4i)"
 msgstr ""
 
-#: src/eff.c:152
+#: src/eff.c:154
 #, c-format
 msgid "effpos img %3i (%6i) %4s: %5.2f"
 msgstr ""
 
-#: src/eff.c:382
+#: src/eff.c:384
 #, c-format
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:22 src/img.c:417
+#: src/exif.c:26 src/exif.c:50 src/img.c:449
 msgid "Date"
 msgstr "Datum"
 
-#: src/exif.c:23
+#: src/exif.c:27 src/exif.c:51
 msgid "Model"
 msgstr "Kamera"
 
-#: src/exif.c:24
+#: src/exif.c:28
 msgid "Lens"
 msgstr "Objektiv"
 
-#: src/exif.c:25
+#: src/exif.c:29 src/exif.c:52
 msgid "Resolution"
 msgstr "Auflösung"
 
-#: src/exif.c:26
+#: src/exif.c:30 src/exif.c:53
 msgid "ISO speed rating"
 msgstr "Empfindlichkeit (ISO)"
 
-#: src/exif.c:27
+#: src/exif.c:31 src/exif.c:54
 msgid "Focal length"
 msgstr "Brennweite"
 
-#: src/exif.c:28
+#: src/exif.c:32 src/exif.c:55
 msgid "Exposure time"
 msgstr "Belichtungszeit"
 
-#: src/exif.c:29
+#: src/exif.c:33 src/exif.c:56
 msgid "Fnumber"
 msgstr "Blende"
 
-#: src/exif.c:30
+#: src/exif.c:34 src/exif.c:57
 msgid "Exposure bias value"
 msgstr "Belichtunskorrektur"
 
-#: src/exif.c:31
+#: src/exif.c:35 src/exif.c:58
 msgid "Flash"
 msgstr "Blitz"
 
-#: src/exif.c:32
+#: src/exif.c:36 src/exif.c:59
 msgid "Exposure program"
 msgstr "Belichtungsprogramm"
 
-#: src/exif.c:33
+#: src/exif.c:37 src/exif.c:60
 msgid "Exposure mode"
 msgstr "Belichtungsmodus"
 
-#: src/exif.c:34
+#: src/exif.c:38 src/exif.c:61
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:96
+#: src/exif.c:132
 #, c-format
 msgid "wrong orientation format (%i)"
 msgstr ""
 
-#: src/exif.c:98
+#: src/exif.c:134
 #, c-format
 msgid "orientation tag with too less components (%lu)"
 msgstr ""
 
-#: src/exif.c:128
+#: src/exif.c:173
 #, c-format
-msgid "date string parse error (%s)"
+msgid "date string parse error (in \"%s\" at \"%s\")"
 msgstr ""
 
-#: src/exif.c:139
+#: src/exif.c:184
 #, c-format
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:187 src/sdl.c:282
+#: src/exif.c:229 src/sdl.c:282
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/exif.c:205
+#: src/exif.c:249
 #, c-format
 msgid "exif loading img %s"
 msgstr ""
@@ -970,7 +990,7 @@ msgstr ""
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:258
+#: src/file.c:259
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
@@ -1008,54 +1028,54 @@ msgstr ""
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:722
+#: src/gl.c:738
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:951
+#: src/gl.c:969
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
 
-#: src/img.c:177
+#: src/img.c:183
 #, c-format
 msgid "imglist created for dir: %s"
 msgstr ""
 
-#: src/img.c:191
+#: src/img.c:197
 #, c-format
 msgid "imglist destroyed for dir: %s"
 msgstr ""
 
-#: src/img.c:197
+#: src/img.c:203
 #, c-format
 msgid "imglist free for dir: %s"
 msgstr ""
 
-#: src/img.c:237
+#: src/img.c:245
 #, c-format
 msgid "ilcleanup state %2i: %7i %s"
 msgstr ""
 
-#: src/img.c:250
+#: src/img.c:285
 #, c-format
-msgid "imglist switch to dir: %s"
+msgid "imglist %i switch to dir: %s"
 msgstr ""
 
-#: src/img.c:296
+#: src/img.c:339
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/img.c:416
+#: src/img.c:448
 msgid "Rnd"
 msgstr "Zufall"
 
-#: src/img.c:418
+#: src/img.c:450
 msgid "File"
 msgstr "Dateiname"
 
-#: src/img.c:419
+#: src/img.c:451
 msgid "None"
 msgstr "Nichts"
 
@@ -1102,42 +1122,42 @@ msgstr ""
 msgid "jpeg compression failure: file open failed"
 msgstr ""
 
-#: src/load.c:337
+#: src/load.c:338
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:381
+#: src/load.c:385
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:385
+#: src/load.c:389
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:386
+#: src/load.c:390
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:428
+#: src/load.c:432
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:459
+#: src/load.c:463
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:485
+#: src/load.c:489
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:550
+#: src/load.c:554
 msgid "ldreset done"
 msgstr ""
 

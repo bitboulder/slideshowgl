@@ -312,7 +312,7 @@ char sdljump(Uint16 x,Uint16 y,char end){
 	int zoom=dplgetzoom();
 	int w=100,wthr;
 	enum dplev ev=0;
-	int actil=dplgetactil();
+	int actil=dplgetactil(NULL);
 	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
 	sdl.move.jump=1;
 	if(zoom<=0 && actil<1){
@@ -391,7 +391,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdljump(x,y,0);
-	else if(dplgetactil()<0) dplevputs(DE_STAT,DES_MOUSE);
+	else if(dplgetactil(NULL)<0) dplevputs(DE_STAT,DES_MOUSE);
 	else dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
 }
 

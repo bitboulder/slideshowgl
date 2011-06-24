@@ -39,13 +39,14 @@ extern struct img *dirimg;
 extern struct img *delimg;
 
 enum ilschg { ILSCHG_NONE, ILSCHG_INIT_MAINDIR, ILSCHG_INIT_SUBDIR, ILSCHG_INC };
+enum ilsecswitch { ILSS_PRGON,ILSS_PRGOFF,ILSS_DIRON,ILSS_DIROFF };
 
 struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
 char ilfind(const char *fn,struct imglist **ilret,char setparent);
 void ilcleanup();
-int ilswitch(struct imglist *il);
-char ilsecswitch(char state);
+int ilswitch(struct imglist *il,int cil);
+char ilsecswitch(enum ilsecswitch type,int *imgi);
 char ilreload(int il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
@@ -56,6 +57,7 @@ struct imglist *ilget(int il);
 int imggetn(int il);
 struct prg *ilprg(int il);
 const char *ildir();
+const char *ilfn(struct imglist *il);
 int imginarrorlimits(int il,int i);
 int imgidiff(int il,int ia,int ib,int *ira,int *irb);
 

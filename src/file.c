@@ -229,7 +229,7 @@ void fgetfiles(int argc,char **argv){
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
 	if(argc==1 && isdir(argv[0]) && (il=floaddir(argv[0],""))){
-		ilswitch(il);
+		ilswitch(il,0);
 		return;
 	}
 	il=ilnew("[BASE]","");
@@ -239,7 +239,7 @@ void fgetfiles(int argc,char **argv){
 		else faddfile(il,argv[i],NULL);
 	}
 	floadfinalize(il,0);
-	ilswitch(il);
+	ilswitch(il,0);
 }
 
 /* thread: dpl */
@@ -253,6 +253,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	struct imglist *il=NULL;
 	struct imglist *src=NULL;
 	int count=0;
+	if(!dir) dir="";
 	if(ilfind(fn,&src,1)) return src;
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);

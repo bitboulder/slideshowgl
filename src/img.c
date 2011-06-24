@@ -65,6 +65,7 @@ struct prg *ilprg(int il){
 	return curil ? curil->prg : NULL;
 }
 const char *ildir(){ return curils[0] && curils[0]->dir[0] ? curils[0]->dir : NULL; }
+const char *ilfn(struct imglist *il){ return il && il->fn[0] ? il->fn : NULL; }
 
 /* thread: all */
 int imginarrorlimits(int il,int i){
@@ -250,47 +251,82 @@ void ilcleanup(){
 	free(ilsorted);
 }
 
-/* thread: dpl */
-int ilswitch(struct imglist *il){
-	if(!il && curils[0] && curils[0]->parent) il=curils[0]->parent;
-	if(!il) return IMGI_END;
-	debug(DBG_STA,"imglist switch to dir: %s",il->fn);
-	if(curils[0]) curils[0]->pos=dplgetimgi(0);
-	curils[0]=il;
-	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
-	actadd(ACT_ILCLEANUP,NULL);
-	return curils[0]->pos;
+char ilsetnxt(struct imglist *il){
+	int i;
+	char chg=0;
+	for(i=0;i<il->nimg;i++){
+		struct img *nxt = i<il->nimg-1 ? il->imgs[i+1] : NULL;
+		if(nxt!=il->imgs[i]->nxt) chg=1;
+		il->imgs[i]->nxt=nxt;
+	}
+	return chg;
 }
 
 /* thread: dpl */
-char ilsecswitch(char state){
+char ildironly(struct imglist *il,int *imgi){
+	struct img *img;
+	int i,j;
+	for(img=il->imgs[0];img;img=img->nxt) if(imgfiledir(img->file)) break;
+	if(!img) return 0;
+	for(i=j=0;i<il->nimg;i++){
+		if(i==imgi[0]) imgi[0]=j;
+		if(imgfiledir(il->imgs[i]->file)) il->imgs[j++]=il->imgs[i];
+	}
+	il->nimg=j;
+	ilsetnxt(il);
+	return 1;
+}
+
+/* thread: dpl */
+int ilswitch(struct imglist *il,int cil){
+	if(cil<0 || cil>=IL_NUM) return IMGI_END;
+	if(!il && curils[cil] && curils[cil]->parent) il=curils[cil]->parent;
+	if(!il) return IMGI_END;
+	debug(DBG_STA,"imglist %i switch to dir: %s",cil,il->fn);
+	if(curils[cil]) curils[cil]->pos=dplgetimgi(cil);
+	curils[cil]=il;
+	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
+	actadd(ACT_ILCLEANUP,NULL);
+	return curils[cil]->pos;
+}
+
+/* thread: dpl */
+char ilsecswitch(enum ilsecswitch type,int *imgi){
 	char buf[FILELEN];
 	size_t len;
 	struct imglist *il;
-	if(state){
+	switch(type){
+	case ILSS_PRGOFF:
+	case ILSS_DIROFF:
 		if(!curils[1]) return 1;
-		curils[0]=curils[1];
+		if(type==ILSS_PRGOFF) curils[0]=curils[1];
 		curils[1]=NULL;
 		actadd(ACT_ILCLEANUP,NULL);
 		return 1;
+	case ILSS_PRGON:
+		if(!curils[0] || !ilprg(0)) return 0;
+		len=strlen(curils[0]->fn);
+		if(len<8 || strncmp(curils[0]->fn+len-7,".effprg",7)) return 0;
+		snprintf(buf,len-=6,curils[0]->fn);
+		if(!isdir(buf)){
+			while(len && buf[len-1]!='/' && buf[len-1]!='\\') len--;
+			if(len) buf[len-1]='\0';
+			else strcpy(buf,".");
+			if(!isdir(buf)) return 0;
+		}
+		if(!(il=floaddir(buf,""))) return 0;
+		il->parent=NULL;
+		curils[1]=curils[0];
+		curils[0]=il;
+		curils[0]->last_used=SDL_GetTicks();
+		curils[1]->last_used=SDL_GetTicks();
+		return 1;
+	case ILSS_DIRON:
+		if(!curils[0] || !ildironly(curils[0],imgi)) return 0;
+		/* TODO */
+		return 1;
 	}
-	if(!curils[0] || !ilprg(0)) return 0;
-	len=strlen(curils[0]->fn);
-	if(len<8 || strncmp(curils[0]->fn+len-7,".effprg",7)) return 0;
-	snprintf(buf,len-=6,curils[0]->fn);
-	if(!isdir(buf)){
-		while(len && buf[len-1]!='/' && buf[len-1]!='\\') len--;
-		if(len) buf[len-1]='\0';
-		else strcpy(buf,".");
-		if(!isdir(buf)) return 0;
-	}
-	if(!(il=floaddir(buf,""))) return 0;
-	il->parent=NULL;
-	curils[1]=curils[0];
-	curils[0]=il;
-	curils[0]->last_used=SDL_GetTicks();
-	curils[1]->last_used=SDL_GetTicks();
-	return 1;
+	return 0;
 }
 
 /* thread: dpl */
@@ -333,17 +369,6 @@ void imgfinalize(){
 
 /***************************** image list work ********************************/
 
-char imgsetnxt(struct imglist *il){
-	int i;
-	char chg=0;
-	for(i=0;i<il->nimg;i++){
-		struct img *nxt = i<il->nimg-1 ? il->imgs[i+1] : NULL;
-		if(nxt!=il->imgs[i]->nxt) chg=1;
-		il->imgs[i]->nxt=nxt;
-	}
-	return chg;
-}
-
 void imgrandom(struct imglist *il){
 	struct img **oimgs=il->imgs;
 	int i,j;
@@ -354,7 +379,7 @@ void imgrandom(struct imglist *il){
 		il->imgs[j]=oimgs[i];
 	}
 	free(oimgs);
-	imgsetnxt(il);
+	ilsetnxt(il);
 }
 
 int imgsort_filecmp(const void *a,const void *b){
@@ -381,7 +406,7 @@ char imgsort(struct imglist *il,char date){
 	int i;
 	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++) imgexifsetsortil(il->imgs[i]->exif,il);
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
-	return imgsetnxt(il);
+	return ilsetnxt(il);
 }
 
 /* thread: dpl */

@@ -870,7 +870,8 @@ void glrenderbar(){
 }
 
 void glrenderback(){
-	int actil=dplgetactil();
+	char prged;
+	int actil=dplgetactil(&prged);
 	float srat=sdlrat()*(1.f-gl.cfg.prged_w);
 	float drat=gl.cfg.prg_rat;
 	float w;
@@ -884,7 +885,7 @@ void glrenderback(){
 	glColor4fv(col);
 	glScalef(w,1.f,1.f);
 	glRectf(actil?-.5f:.5f,-.5f,-.5f+gl.cfg.prged_w,.5f);
-	if(actil){
+	if(actil && prged){
 		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
 		if(srat<drat){

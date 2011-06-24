@@ -53,7 +53,7 @@ int dplgetzoom();
 struct dplinput *dplgetinput();
 char dplloop();
 const char *dplhelp();
-int dplgetactil();
+int dplgetactil(char *prged);
 int dplgetactimgi(int il);
 unsigned int dplgetfid();
 void dplsetresortil(struct imglist *il);

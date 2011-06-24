@@ -53,8 +53,10 @@ struct eff {
 	Uint32 lastchg;
 } eff;
 
-#define AIL		(dp->actil&ACTIL)
-#define AIMGI	(dp->imgi[AIL])
+#define AIL			(dp->actil&ACTIL)
+#define AIMGI		(dp->imgi[AIL])
+#define AIL_LEFT	((dp->actil&ACTIL_ED) && AIL==0)
+//#define AIL_RIGHT	((dp->actil&ACTIL_ED) && AIL==1)
 
 /* thread: all */
 void effrefresh(enum effrefresh val){ eff.refresh|=val; }
@@ -130,7 +132,7 @@ char *imgposmark(struct img *img,enum mpcreate create){
 char effact(struct dplpos *dp,int i){
 	if(AIMGI==IMGI_START || AIMGI==IMGI_END) return 0;
 	if(i==AIMGI) return 1;
-	if(dp->actil==ACTIL_PRGED) return abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=2;
+	if(AIL_LEFT) return abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=2;
 	if(dp->zoom>=0) return 0;
 	if(abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=zoomtab[-dp->zoom].inc) return 1;
 	return 0;
@@ -155,7 +157,7 @@ void effposout(int imgi,struct imgpos *ip,Uint32 time){
 
 void effsetnonpos(struct dplpos *dp,struct img *img,struct ecur *ip1,struct edst *ip2){
 	float r=imgexifrotf(img->exif);
-	float m=(img->pos->mark && img->pos->mark[0] && dp && dp->writemode)?1.f:0.f;
+	float m=(img->pos->mark && img->pos->mark[0] && dp && dplwritemode())?1.f:0.f;
 	if(ip1){ ip1->r+=r; ip1->m=m; }
 	if(ip2){ ip2->r+=r; ip2->m=m; }
 }
@@ -170,7 +172,7 @@ void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
 	effresetpos(dp,img,ip);
 	ip->act=effact(dp,i) ? 1.f : 0.f;
 	ip->a=1.f;
-	if(dp->actil==ACTIL_PRGED){
+	if(AIL_LEFT){
 		ip->s=(AIMGI==i ? 1.f : .75f) * eff.cfg.prged_w;
 		ip->x=-.4f;
 		ip->y=(float)diff*eff.cfg.prged_w;
@@ -198,9 +200,9 @@ void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
 		}
 	}else{
 		ip->s=1.f;
-		ip->x = dp->writemode ? (float)diff : 0.f;
+		ip->x = dplwritemode() ? (float)diff : 0.f;
 		ip->y=0.f;
-		ip->a = dp->writemode ? 1.f : 0.f;
+		ip->a = dplwritemode() ? 1.f : 0.f;
 	}
 }
 
@@ -337,7 +339,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	img->pos->opt.tex=imgseltex(dp,i);
 	if(dp->zoom==0 && effprg(dp,ev,img,iev)) return;
 	effinitpos(dp,img,&ipn->cur,i);
-	if(!ipn->cur.act && dp->zoom==0 && (ev&DE_VER) && dp->writemode) efffaston(dp,ipo,i);
+	if(!ipn->cur.act && dp->zoom==0 && (ev&DE_VER) && dplwritemode()) efffaston(dp,ipo,i);
 	if(!ipn->cur.act && img->pos->eff==2) return;
 	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
 	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
