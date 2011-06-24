@@ -663,7 +663,7 @@ void dpldired(char *input,int id){
 	if(dpl.diredmode==DEM_ALL && id<0){
 		if(!rename(srcdir,dstdir)) updatedirs=1;
 	}else{
-		if(id<0 && mkdir(dstdir,0xfff)) return;
+		if(id<0 && mkdir(dstdir,00777)) return;
 		img=imgget(1,dpl.diredmode==DEM_FROM ? dpl.pos.imgi[1] : 0);
 		imgend=dpl.diredmode==DEM_TO ? imgget(1,dpl.pos.imgi[1]) : NULL;
 		for(;img;img=img->nxt){
