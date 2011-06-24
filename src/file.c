@@ -159,7 +159,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 			pos=end;
 		}
 		for(;i<4;i++) img->file->txt.col[i]=1.f;
-	}else{
+	}else if(isfile(fn)){
 		char ok=0;
 		if(fileext(fn,len,".png")) ok=1;
 		if(fileext(fn,len,".jpg")) ok=1;
