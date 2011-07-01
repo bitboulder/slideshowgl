@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-30 20:59+0200\n"
+"POT-Creation-Date: 2011-07-01 16:12+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -160,240 +160,244 @@ msgid "Toggle sort by exif date of subdirectories"
 msgstr "Sortierung nach datum für Unterverzeichnisse umschalten"
 
 #: src/cfg.c:62
+msgid "Maximal size of imglist history (for loop protection)"
+msgstr "Maximale Größe der Bildlisten-Vergangenheit (für Schleifenunterdrückung)"
+
+#: src/cfg.c:63
 msgid "Maximal texture size"
 msgstr "Maximale Texturegröße"
 
-#: src/cfg.c:63
+#: src/cfg.c:64
 msgid "Maximal texture size for panoramas"
 msgstr "Maximale Texturgröße im Panoramamodus"
 
-#: src/cfg.c:64
+#: src/cfg.c:65
 msgid "Maximal pixels for panoramas (bigger ones are scaled down)"
 msgstr "Maximale Pixelanzahl für Panoramas (größere werden scaliert)"
 
-#: src/cfg.c:65
+#: src/cfg.c:66
 msgid "File time check delay"
 msgstr "Abstand des Überprüfens auf Dateiänderungen"
 
-#: src/cfg.c:66
+#: src/cfg.c:67
 msgid "Number of exif-file-loads per one img-file-load"
 msgstr ""
 "Anzahl der Exif-Daten, die während einem Datei-Lade-Vorgang geladen werden"
 
-#: src/cfg.c:67
+#: src/cfg.c:68
 msgid "Number of directories to hold"
 msgstr "Anzahl der Verzeichnisse, die gehalten werden"
 
-#: src/cfg.c:68
+#: src/cfg.c:69
 msgid "Filename of the font to use"
 msgstr "Dateiname der Schriftart"
 
-#: src/cfg.c:69
+#: src/cfg.c:70
 msgid "Textheight for input"
 msgstr "Texthöhe der Eingabe"
 
-#: src/cfg.c:70
+#: src/cfg.c:71
 msgid "Textheight for statusbar"
 msgstr "Texthöhe der Statuszeile"
 
-#: src/cfg.c:71
+#: src/cfg.c:72
 msgid "Textheight for text-images"
 msgstr "Texthöhe für Text-Bilder"
 
-#: src/cfg.c:72
+#: src/cfg.c:73
 msgid "Textheight for directory names"
 msgstr "Texthöhe für Verzeichnisnamen"
 
-#: src/cfg.c:73
+#: src/cfg.c:74
 msgid "Textheight for catalog names"
 msgstr "Texthöhe für Katalognamen"
 
-#: src/cfg.c:74
+#: src/cfg.c:75
 msgid "Border around text (in percent of height)"
 msgstr "Rand um Text (in Prozent der Höhe)"
 
-#: src/cfg.c:75
+#: src/cfg.c:76
 msgid "Border around dirname (in percent of height)"
 msgstr "Rand um Verzeichnisnamen (in Prozent der Höhe)"
 
-#: src/cfg.c:76
+#: src/cfg.c:77
 msgid "Text background color"
 msgstr "Hintergrundfarbe für Text"
 
-#: src/cfg.c:77
+#: src/cfg.c:78
 msgid "Text foreground color"
 msgstr "Vordergrundfarbe für Text"
 
-#: src/cfg.c:78 src/cfg.c:79
+#: src/cfg.c:79 src/cfg.c:80
 msgid "Text mark color"
 msgstr "Markierungsfarbe für Text"
 
-#: src/cfg.c:80
+#: src/cfg.c:81
 msgid "Text dirname color"
 msgstr "Farbe für Verzeichnisnamen"
 
-#: src/cfg.c:81
+#: src/cfg.c:82
 msgid "Text play icon color"
 msgstr "Farbe for Play Icon"
 
-#: src/cfg.c:82
+#: src/cfg.c:83
 msgid "Default rotation speed for panoramas (screens per second)"
 msgstr "Standart Drehgeschwindigkeit für Panoramas (Bildschrime pro Sekunde)"
 
-#: src/cfg.c:83
+#: src/cfg.c:84
 msgid "Minimal rotation speed for panoramas"
 msgstr "Minimale Drehgeschwindigkeit für Panoramas"
 
-#: src/cfg.c:84
+#: src/cfg.c:85
 msgid "Maximal texture size for panoramas (in degree)"
 msgstr "Maximale Texturgröße für Panoramas (in Grad)"
 
-#: src/cfg.c:85
+#: src/cfg.c:86
 msgid "Set minimal texture size for panorama mode"
 msgstr "Minimale Texturgröße im Panoramamodus setzen"
 
-#: src/cfg.c:86
+#: src/cfg.c:87
 msgid "Radius of sphere for panoramas"
 msgstr "Radius der Kugel für Panoramas"
 
-#: src/cfg.c:87
+#: src/cfg.c:88
 msgid "Panorama fisheye mode"
 msgstr "Panorama Fishaugen-Modus"
 
-#: src/cfg.c:88
+#: src/cfg.c:89
 msgid "Maximal angle for isogonic panorama fisheye mode"
 msgstr "Maximaler Winkel im winkeltreuen Fishaugen-Modus"
 
-#: src/cfg.c:89
+#: src/cfg.c:90
 msgid "Rise time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile erscheint (ms)"
 
-#: src/cfg.c:90
+#: src/cfg.c:91
 msgid "Time the statusbar remains (ms)"
 msgstr "Zeit die die Statuszeile angezeigt wird (ms)"
 
-#: src/cfg.c:91
+#: src/cfg.c:92
 msgid "Fall time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile verschwindet (ms)"
 
-#: src/cfg.c:92
+#: src/cfg.c:93
 msgid "Rise and fall time for windows (ms)"
 msgstr "Zeit in der Fenster erscheinen/verschwinden (ms)"
 
-#: src/cfg.c:93
+#: src/cfg.c:94
 msgid "Rise and fall time for text windows (ms)"
 msgstr "Zeit in der Textfenster erscheinen/verschwinden (ms)"
 
-#: src/cfg.c:94
+#: src/cfg.c:95
 msgid "Set mark file (Default: $TEMP/slideshowgl-mark)"
 msgstr "Markirungsdatei festlegen (Standart: $TEMP/slideshowgl-mark)"
 
-#: src/cfg.c:95
+#: src/cfg.c:96
 msgid "Add catalog (directory also possible)"
 msgstr "Katalog hinzufügen (Verzeichnis möglich)"
 
-#: src/cfg.c:96
+#: src/cfg.c:97
 msgid "Skript for flst conversion"
 msgstr "Skript zur Konvertierung von Bildlisten"
 
-#: src/cfg.c:97
+#: src/cfg.c:98
 msgid "Delay after that the mark file is written"
 msgstr "Wartedauer zum Schreiben der Markierungsdatei"
 
-#: src/cfg.c:98
+#: src/cfg.c:99
 msgid "Delay after that the img lists are cleaned"
 msgstr "Wartedauer zum Aufräumen der Verzeichnislisten"
 
-#: src/cfg.c:99
+#: src/cfg.c:100
 msgid "Toggle actions"
 msgstr "Aktionen (de-)aktivieren"
 
-#: src/cfg.c:100
+#: src/cfg.c:101
 msgid "Width of index il in prg edit mode"
 msgstr "Breite des Bildindex im Programm-Editier-Modus"
 
-#: src/cfg.c:101
+#: src/cfg.c:102
 msgid "Frame dimension rate for prg"
 msgstr "Seitenverhältnis im Programm-Modus"
 
-#: src/cfg.c:111
+#: src/cfg.c:112
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:119
+#: src/cfg.c:120
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:133
+#: src/cfg.c:134
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:134
+#: src/cfg.c:135
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:142
+#: src/cfg.c:143
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:151
+#: src/cfg.c:152
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:152
+#: src/cfg.c:153
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:159
+#: src/cfg.c:160
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:166
+#: src/cfg.c:167
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:170
+#: src/cfg.c:171
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:187
+#: src/cfg.c:188
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:194
+#: src/cfg.c:195
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:195
+#: src/cfg.c:196
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:211
+#: src/cfg.c:212
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:221
+#: src/cfg.c:222
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:236
+#: src/cfg.c:237
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:240
+#: src/cfg.c:241
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
@@ -886,7 +890,7 @@ msgstr ""
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:26 src/exif.c:50 src/img.c:449
+#: src/exif.c:26 src/exif.c:50 src/img.c:463
 msgid "Date"
 msgstr "Datum"
 
@@ -1045,45 +1049,55 @@ msgstr "Bedienung"
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
 
-#: src/img.c:183
+#: src/img.c:178
+#, c-format
+msgid "ilsetparent: maxhistory (%i) reached (is there a loop in history?)"
+msgstr ""
+
+#: src/img.c:194
 #, c-format
 msgid "imglist created for dir: %s"
 msgstr ""
 
-#: src/img.c:197
+#: src/img.c:208
 #, c-format
 msgid "imglist destroyed for dir: %s"
 msgstr ""
 
-#: src/img.c:203
+#: src/img.c:214
 #, c-format
 msgid "imglist free for dir: %s"
 msgstr ""
 
-#: src/img.c:245
+#: src/img.c:256
+#, c-format
+msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
+msgstr ""
+
+#: src/img.c:259
 #, c-format
 msgid "ilcleanup state %2i: %7i %s"
 msgstr ""
 
-#: src/img.c:285
+#: src/img.c:299
 #, c-format
 msgid "imglist %i switch to dir: %s"
 msgstr ""
 
-#: src/img.c:339
+#: src/img.c:353
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/img.c:448
+#: src/img.c:462
 msgid "Rnd"
 msgstr "Zufall"
 
-#: src/img.c:450
+#: src/img.c:464
 msgid "File"
 msgstr "Dateiname"
 
-#: src/img.c:451
+#: src/img.c:465
 msgid "None"
 msgstr "Nichts"
 

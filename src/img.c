@@ -41,8 +41,10 @@ struct ilcfg {
 	char init;
 	enum ilsort sort_maindir;
 	enum ilsort sort_subdir;
+	int  maxhistory;
 } ilcfg = {
 	.init=0,
+	.maxhistory=200,
 };
 struct imglist *curils[IL_NUM] = {NULL, NULL};
 
@@ -162,11 +164,20 @@ void ilcfginit(){
 	if(ilcfg.init) return;
 	ilcfg.sort_maindir = cfggetint("il.random") ? ILS_RND : cfggetint("il.datesort") ? ILS_DATE : ILS_NONE;
 	ilcfg.sort_subdir  = cfggetint("il.datesortdir") ? ILS_DATE : ILS_FILE;
+	ilcfg.maxhistory   = cfggetint("il.maxhistory");
 	ilcfg.init=1;
 }
 
 /* thread: dpl */
 void ilsetparent(struct imglist *il){
+	if(il==curils[0]) return;
+	if(curils[0]){
+		struct imglist **pa=&(curils[0]->parent);
+		int p=ilcfg.maxhistory;
+		while(p && pa[0] && pa[0]!=il){ pa=&(pa[0]->parent); p--; }
+		if(!p) error(ERR_CONT,"ilsetparent: maxhistory (%i) reached (is there a loop in history?)",ilcfg.maxhistory);
+		if(pa[0]==il) pa[0]=il->parent;
+	}
 	il->parent=curils[0];
 }
 
@@ -230,17 +241,20 @@ void ilcleanup(){
 	struct imglist *il,*pa;
 	size_t nil=0,i,j;
 	unsigned int holdfolders=cfggetuint("img.holdfolders");
+	int p;
 	for(il=ils;il;il=il->nxt) nil++;
 	ilsorted=malloc(sizeof(struct ilsorted)*nil);
 	for(il=ils,i=0;il;il=il->nxt,i++){
 		ilsorted[i].il=il;
 		ilsorted[i].last_used=il->last_used;
 	}
-	for(i=0;i<nil;i++) if(ilsorted[i].last_used)
-		for(pa=ilsorted[i].il->parent;pa;pa=pa->parent)
+	for(i=0;i<nil;i++) if(ilsorted[i].last_used){
+		for(pa=ilsorted[i].il->parent,p=ilcfg.maxhistory;pa && p;pa=pa->parent,p--)
 			if(pa->last_used && ilsorted[i].last_used>pa->last_used)
 				for(j=0;j<nil;j++) if(ilsorted[j].il==pa)
 					ilsorted[j].last_used=ilsorted[i].last_used;
+		if(!p) error(ERR_CONT,"ilcleanup: maxhistory (%i) reached (is there a loop in history?)",ilcfg.maxhistory);
+	}
 	qsort(ilsorted,nil,sizeof(struct ilsorted),ilcleanup_cmp);
 	for(i=0;i<nil;i++) debug(DBG_DBG,"ilcleanup state %2i: %7i %s",(int)i,ilsorted[i].last_used,ilsorted[i].il->fn);
 	for(i=1;i<nil && ilsorted[i].last_used;i++){

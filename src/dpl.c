@@ -512,6 +512,7 @@ char dpldir(int imgi,char noleave){
 			AIMGI=imgi;
 		}else actforce();
 		if(!(il=floaddir(fn,dir))) return 1;
+		if(il==ilget(0)) return 1;
 		imgi=ilswitch(il,0);
 		if(imgi==IMGI_START && !ilprg(0)) imgi=0;
 		if(ilprg(0)){ dpl.pos.zoom=0; imgi=IMGI_START; }
