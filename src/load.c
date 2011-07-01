@@ -170,14 +170,20 @@ struct sdlimg {
 };
 
 void sdlimg_unref(struct sdlimg *sdlimg){
-	if(!sdlimg) return;
+	if(!sdlimg || !sdlimg->ref){
+		error(ERR_CONT,"sdlimg_unref: unref of %s image",sdlimg?"ref=0":"NULL");
+		return;
+	}
 	if(--sdlimg->ref) return;
 	SDL_FreeSurface(sdlimg->sf);
 	free(sdlimg);
 }
 
 void sdlimg_ref(struct sdlimg *sdlimg){
-	if(!sdlimg) return;
+	if(!sdlimg){
+		error(ERR_CONT,"sdlimg_ref: ref of NULL image");
+		return;
+	}
 	sdlimg->ref++;
 }
 
@@ -294,6 +300,7 @@ char ldtexload(){
 	switch(tl->mode){
 	case TLM_IMG: {
 		struct sdlimg *sdlimg=tl->dat.img.sdlimg;
+		if(!sdlimg->ref || !sdlimg->sf){ error(ERR_CONT,"ldtexload: load of free'd image"); break; }
 		if(effineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
 		timer(TI_LD,-1,0);
 		if(!tl->itx->tex) glGenTextures(1,&tl->itx->tex);
