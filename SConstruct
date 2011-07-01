@@ -78,6 +78,10 @@ if not env.GetOption('clean'):
 	env['HAVE_JPEG'] = 0
 	env['HAVE_REALPATH'] = 0
 	env['HAVE_STRSEP'] = 0
+	env['HAVE_GETTEXT'] = 0
+	env['HAVE_STAT'] = 0
+	env['HAVE_MKTIME'] = 0
+	env['HAVE_OPENDIR'] = 0
 
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
@@ -143,9 +147,7 @@ if not env.GetOption('clean'):
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
-	if mode == 'debug':
-		env['HAVE_GETTEXT'] = 0
-	else:
+	if mode != 'debug':
 		conf.CheckFuncMy('gettext',0,'GETTEXT')
 	conf.CheckFuncMy('stat',0,'STAT')
 	conf.CheckFuncMy('mktime',0,'MKTIME')
