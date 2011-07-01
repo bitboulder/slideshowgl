@@ -68,6 +68,17 @@ if not env.GetOption('clean'):
 
 	conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig, 'CheckPKG' : CheckPKG, 'CheckFuncMy': CheckFuncMy, 'CheckLibMy' : CheckLibMy })
 
+	env['HAVE_EXIF'] = 0
+	env['HAVE_EXIV2'] = 0
+	env['HAVE_FTGL'] = 0
+	env['HAVE_X11'] = 0
+	env['HAVE_XEXT'] = 0
+	env['HAVE_XINERAMA'] = 0
+	env['HAVE_ICONV'] = 0
+	env['HAVE_JPEG'] = 0
+	env['HAVE_REALPATH'] = 0
+	env['HAVE_STRSEP'] = 0
+
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
 		env.Replace(CC        = ['i586-mingw32msvc-gcc'])
@@ -113,15 +124,7 @@ if not env.GetOption('clean'):
 		conf.CheckLibMy('glew32',1,0)
 
 		conf.CheckLibMy('stdc++',1,0)
-
-#		env['HAVE_PTHREAD'] = 0
-		env['HAVE_X11'] = 0
-		env['HAVE_XEXT'] = 0
-		env['HAVE_XINERAMA'] = 0
-		env['HAVE_EXIV2'] = 0
 	else:
-#		conf.CheckCHeader('pthread.h')
-#		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
 		conf.CheckPKG('glu >= 7.0',1,0)
