@@ -50,6 +50,7 @@ struct gl {
 		float dir_border;
 		float col_txtbg[4];
 		float col_txtfg[4];
+		float col_txtti[4];
 		float col_txtmk[4];
 		float col_colmk[4];
 		float col_dirname[4];
@@ -164,6 +165,7 @@ void glinit(char done){
 		gl.cfg.dir_border    = cfggetfloat("gl.dir_border");
 		cfggetcol("gl.col_txtbg",   gl.cfg.col_txtbg);
 		cfggetcol("gl.col_txtfg",   gl.cfg.col_txtfg);
+		cfggetcol("gl.col_txtti",   gl.cfg.col_txtti);
 		cfggetcol("gl.col_txtmk",   gl.cfg.col_txtmk);
 		cfggetcol("gl.col_colmk",   gl.cfg.col_colmk);
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
@@ -648,11 +650,12 @@ void glrendertext(const char *title,const char *text,float f,unsigned int sel){
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
-	glcolora(gl.cfg.col_txtfg,f);
+	glcolora(gl.cfg.col_txtti,f);
 	gltextout(title,tx,y);
 	y-=lineh*2;
 	for(t=text,i=0,s=sel;t[0];i+=2,y-=lineh,s>>=1) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
 		if(!j && sel!=0xffffffff && (s&1)) glcolora(gl.cfg.col_txtmk,f);
+		else if(!j && !t[strlen(t)+1]) glcolora(gl.cfg.col_txtti,f);
 		else glcolora(gl.cfg.col_txtfg,f);
 		if(!gl.sel.act) gltextout(_(t),x[j],y);
 		else if(!j){
