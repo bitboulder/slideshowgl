@@ -38,6 +38,6 @@ deb:
 	debuild
 
 gettext:
-	xgettext -o po/template.pot -k_ -k__ -kerror:2 -kdebug:2 src/*.c
+	xgettext -o po/template.pot -k_ -k__ -kerror:2 -kdebug:2 src/*.c src/dpl_help.h
 	[ ! -f po/de.po ] && msginit --locale=de -o po/de.po -i po/template.pot || msgmerge --backup=none -U po/de.po po/template.pot
 	rm po/template.pot
