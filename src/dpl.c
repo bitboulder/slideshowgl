@@ -736,28 +736,23 @@ void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum 
 	}
 }
 
-
-const char *keyboardlayout=
 #include "dpl_help.h"
-;
-
-const char *keyboardlayout_prged=
+#define IF_WRM
+#include "dpl_help.h"
+#undef  IF_WRM
 #define IF_PRGED
 #include "dpl_help.h"
-#undef IF_PRGED
-;
-
-const char *keyboardlayout_dired=
+#undef  IF_PRGED
 #define IF_DIRED
 #include "dpl_help.h"
-#undef IF_DIRED
-;
+#undef  IF_DIRED
 
 /* thread: gl */
 const char *dplhelp(){
-	if(dpl.pos.actil&ACTIL_PRGED) return keyboardlayout_prged;
-	if(dpl.pos.actil&ACTIL_DIRED) return keyboardlayout_dired;
-	return keyboardlayout;
+	if(dpl.pos.actil&ACTIL_PRGED) return dlphelp_prged;
+	if(dpl.pos.actil&ACTIL_DIRED) return dlphelp_dired;
+	if(dpl.writemode)             return dlphelp_wrm;
+	return dlphelp_def;
 }
 
 void dplfilesearch(struct dplinput *in,int il){

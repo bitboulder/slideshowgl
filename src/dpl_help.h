@@ -1,10 +1,20 @@
 
+#if   defined IF_DIRED
+const char *dlphelp_dired =
+#elif defined IF_PRGED
+const char *dlphelp_prged =
+#elif defined IF_WRM
+const char *dlphelp_wrm =
+#else
+const char *dlphelp_def =
+#endif
+
 __("Mouse interface")"\0"               "\0"
 
 #ifdef IF_PRGED
 __(" Left drag")"\0"            __("Move image")"\0"
 __(" Left click")"\0"           __("Forward")"\0"
-__(" Middle click")"\0"         __("Toggle mark (only in writing mode)")"\0"
+__(" Middle click")"\0"         __("Toggle mark")"\0"
 __(" Right click")"\0"          __("Backward")"\0"
 __(" Scroll")"\0"               __("Resize image")"\0"
 #else
@@ -12,13 +22,16 @@ __(" Left drag")"\0"                 __("Move")"\0"
 __(" Left click")"\0"                __("Goto image / Forward")"\0"
 __(" Double click on directory")"\0" __("Enter directory")"\0"
 __(" Double click on space")"\0"     __("Leave directory")"\0"
-__(" Middle click")"\0"              __("Play/Stop / Toggle mark (only in writing mode)")"\0"
+#if defined IF_WRM || defined IF_DIRED
+__(" Middle click")"\0"              __("Play/Stop / Toggle mark")"\0"
+#else
+__(" Middle click")"\0"              __("Play/Stop")"\0"
+#endif
 __(" Right click")"\0"               __("Backward")"\0"
 __(" Scroll")"\0"                    __("Zoom in/out")"\0"
 #endif
 
 
-// TODO: remove "only in writing mode" for DIRED + PRGED
 " ""\0"                        "\0"
 __("Keyboard interface")"\0"   "\0"
 
@@ -74,21 +87,29 @@ __(" e")"\0"                   __("Open directory or program editor")"\0"
 #endif
 
 __(" Image modification")"\0"  "\0"
-#if !defined IF_PRGED && !defined IF_DIRED
-__(" w")"\0"                   __("Switch writing mode")"\0"
+#ifdef IF_WRM
+__(" w")"\0"                   __("Disable writing mode")"\0"
+#elif !defined IF_PRGED && !defined IF_DIRED
+__(" w")"\0"                   __("Enable writing mode")"\0"
 #endif
+#if defined IF_WRM || defined IF_DIRED || defined IF_PRGED
+__(" r/R")"\0"                 __("Rotate image")"\0"
+#else
 __(" r/R")"\0"                 __("Rotate image (only in writing mode permanent)")"\0"
+#endif
 #ifndef IF_PRGED
 __(" g/b/c")"\0"               __("+/- mode: gamma/brightness/contrase (only with opengl shader support)")"\0"
 __(" +/-")"\0"                 __("Increase/decrease selected")"\0"
 #endif
-__(" Del")"\0"                 __("Move image to del/ and remove from dpl-list (only in writing mode)")"\0"
-__(" o")"\0"                   __("Move image to ori/ and remove from dpl-list (only in writing mode)")"\0"
-#if !defined IF_PRGED && !defined IF_DIRED
-__(" m")"\0"                   __("Toggle mark (only in writing mode)")"\0"
+#if defined IF_WRM || defined IF_DIRED || defined IF_PRGED
+__(" Del")"\0"                 __("Move image to del/ and remove from dpl-list")"\0"
+__(" o")"\0"                   __("Move image to ori/ and remove from dpl-list")"\0"
 #endif
-#ifndef IF_PRGED
-__(" s")"\0"                   __("Enter and toggle image catalog (only in writing mode)")"\0"
+#ifdef IF_WRM
+__(" m")"\0"                   __("Toggle mark")"\0"
+#endif
+#if defined IF_WRM || defined IF_DIRED
+__(" s")"\0"                   __("Enter and toggle image catalog")"\0"
 #endif
 __(" G")"\0"                   __("Edit current image with gimp")"\0"
 
@@ -110,4 +131,5 @@ __(" p")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidi
 #endif
 
 "\0"
+;
 
