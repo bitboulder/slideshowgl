@@ -41,6 +41,7 @@ int pclose(FILE *stream);
 
 char isdir(const char *fn);
 char isfile(const char *fn);
+long filesize(const char *fn);
 long filetime(const char *fn);
 
 char fileext(const char *fn,size_t len,const char *ext);

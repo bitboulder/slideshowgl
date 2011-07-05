@@ -405,6 +405,7 @@ char maploadtile(struct tile *ti,char web){
 		system(cmd);
 		if(!strcmp(maptype,"om")) snprintf(cmd,FILELEN*2,"wget -qO %s http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",fn,ti->iz,ti->ix,ti->iy);
 		system(cmd);
+		if(!filesize(fn)){ unlink(fn); return 0; }
 		if(!isfile(fn)) return 0;
 	}
 	if(!(sf=IMG_Load(fn))) return 0;
@@ -589,7 +590,7 @@ void maprenderinfo(){
 	int i;
 	struct mapclti *clti,*ci;
 	double mx,my,sx,sy;
-	float hrat,w,h,b;
+	float hrat,sw,w,h,b;
 	if(map.info<0) return;
 	if(!map.scr_w || !map.scr_h) return;
 	for(i=0,clti=mapimgs.clt[map.pos.iz].clts;clti && i!=map.info;clti=clti->nxtclt) i++;
@@ -599,14 +600,17 @@ void maprenderinfo(){
 	sx=(clti->mx/(double)clti->nimg-mx)*256.f/(double)*map.scr_w;
 	sy=(clti->my/(double)clti->nimg-my)*256.f/(double)*map.scr_h;
 	glPushMatrix();
-	w=glmode(GLM_TXT);
-	glTranslated(sx*w,-sy,0.f);
+	sw=glmode(GLM_TXT);
 	h=glfontscale(hrat=/*gl.cfg.hrat_cat*/0.03f,1.f);
+	hrat/=h;
 	for(w=0.f,ci=clti;ci;ci=ci->nxtimg) if((b=glfontwidth(ci->img->name))>w) w=b;
-//	glTranslated(sx*w*hrat/h,-sy*hrat/h,0.f);
-//	glTranslated(sx*w/hrat*h,-sy/hrat*h,0.f);
 	//b=h*gl.cfg.txt_border*2.f;
 	b=h*.1f*2.f;
+	if((w+b)*hrat/sw+sx>.5f) sx=.5f-(w+b)*hrat/sw;
+	if((b+h*(float)clti->nimg)*hrat-sy>.5f) sy=.5f-(b+h*(float)clti->nimg)*hrat;
+	if(sx<-.5f) sx=-.5f;
+	if(sy<-.5f) sy=-.5f;
+	glTranslated(sx*sw/hrat,-sy/hrat,0.f);
 	//glColor4fv(gl.cfg.col_txtbg);
 	glColor4f(.8f,.8f,.8f,.7f);
 	glrect(w+b,b+h*(float)clti->nimg,GP_TOP|GP_LEFT);

@@ -138,6 +138,12 @@ char isdir(const char *fn){
 	return 0;
 }
 
+long filesize(const char *fn){
+	struct stat st;
+	if(stat(fn,&st)) return 0;
+	return st.st_size;
+}
+
 long filetime(const char *fn){
 	struct stat st;
 	if(stat(fn,&st)) return 0;
@@ -150,6 +156,10 @@ char isdir(const char *fn){
 	if(fileext(fn,".flst")) return 2;
 	if(fileext(fn,".effprg")) return 2;
 	return 0;
+}
+
+long filesize(const char *fn){
+	return 1;
 }
 
 long filetime(const char *fn){
