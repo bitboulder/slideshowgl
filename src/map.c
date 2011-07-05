@@ -35,6 +35,14 @@
 
 #define N_ZOOM	18
 
+#define MAPTYPE E(om)
+#define E(X)	MT_##X
+enum maptype { MAPTYPE, MT_NUM };
+#undef E
+#define E(X)	#X
+const char *maptype_str[]={ MAPTYPE };
+#undef E
+
 struct mappos {
 	double gx,gy;
 	int iz;
@@ -82,14 +90,16 @@ struct mapimgs {
 
 struct map {
 	char init;
+	enum maptype maptype;
 	struct mappos pos;
-	struct tile ***tile;
+	struct tile ****tile;
 	char cachedir[FILELEN];
 	struct texload tl;
 	int *scr_w, *scr_h;
 	struct tile imgdir[2];
 } map = {
 	.init = 0,
+	.maptype = MT_om,
 	.pos.gx = 13.732001,
 	.pos.gy = 51.088938,
 	.pos.iz = 7,
@@ -102,6 +112,10 @@ struct map {
 
 char mapon(){ return !strncmp(ilfn(ilget(0)),"[MAP]",5); }
 void mapsdlsize(int *w,int *h){ map.scr_w=w; map.scr_h=h; }
+void mapswtype(){
+	map.maptype=(map.maptype+1)%MT_NUM;
+	sdlforceredraw();
+}
 
 #define mapp2i(pos,i)	mapg2i(pos.gx,pos.gy,pos.iz,&i##x,&i##y)
 
@@ -137,22 +151,26 @@ struct tile *maptilefind(int ix,int iy,int iz,char create){
 	if(iy<0 || iy>=1<<iz ) return NULL;
 	if(!map.tile){
 		if(!create) return NULL;
-		map.tile=calloc(N_ZOOM,sizeof(struct tile **));
+		map.tile=calloc(MT_NUM,sizeof(struct tile **));
 	}
-	if(!map.tile[iz]){
+	if(!map.tile[map.maptype]){
 		if(!create) return NULL;
-		map.tile[iz]=calloc((size_t)1<<iz,sizeof(struct tile *));
+		map.tile[map.maptype]=calloc(N_ZOOM,sizeof(struct tile **));
 	}
-	if(!map.tile[iz][ix]){
+	if(!map.tile[map.maptype][iz]){
 		if(!create) return NULL;
-		map.tile[iz][ix]=calloc((size_t)1<<iz,sizeof(struct tile));
+		map.tile[map.maptype][iz]=calloc((size_t)1<<iz,sizeof(struct tile *));
+	}
+	if(!map.tile[map.maptype][iz][ix]){
+		if(!create) return NULL;
+		map.tile[map.maptype][iz][ix]=calloc((size_t)1<<iz,sizeof(struct tile));
 	}
 	if(create){
-		map.tile[iz][ix][iy].ix=ix;
-		map.tile[iz][ix][iy].iy=iy;
-		map.tile[iz][ix][iy].iz=iz;
+		map.tile[map.maptype][iz][ix][iy].ix=ix;
+		map.tile[map.maptype][iz][ix][iy].iy=iy;
+		map.tile[map.maptype][iz][ix][iy].iz=iz;
 	}
-	return map.tile[iz][ix]+iy;
+	return map.tile[map.maptype][iz][ix]+iy;
 }
 
 const char *mapimgname(const char *dir){
@@ -349,15 +367,16 @@ char texload(){
 
 char maploadtile(struct tile *ti,char web){
 	char fn[FILELEN];
+	const char *maptype=maptype_str[map.maptype];
 	SDL_Surface *sf,*sfc;
 	SDL_PixelFormat fmt;
-	snprintf(fn,FILELEN,"%s/%i/%i/%i.png",map.cachedir,ti->iz,ti->ix,ti->iy);
+	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",map.cachedir,maptype,ti->iz,ti->ix,ti->iy);
 	if(!isfile(fn)){
 		char cmd[FILELEN*2];
 		if(!web) return 0;
-		snprintf(cmd,FILELEN*2,"mkdir -p %s/%i/%i/",map.cachedir,ti->iz,ti->ix);
+		snprintf(cmd,FILELEN*2,"mkdir -p %s/%s/%i/%i/",map.cachedir,maptype,ti->iz,ti->ix);
 		system(cmd);
-		snprintf(cmd,FILELEN*2,"wget -O %s http://tile.openstreetmap.org/mapnik/%i/%i/%i.png >/dev/null",fn,ti->iz,ti->ix,ti->iy);
+		if(!strcmp(maptype,"om")) snprintf(cmd,FILELEN*2,"wget -qO %s http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",fn,ti->iz,ti->ix,ti->iy);
 		system(cmd);
 		if(!isfile(fn)) return 0;
 	}

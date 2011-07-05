@@ -692,12 +692,12 @@ void dpldired(char *input,int id){
 }
 
 void dplmap(){
-	struct imglist *il;
-	if(mapon()) return;
-	il=mapsetpos(dpl.pos.imgi[0]);
-	ilswitch(il,0);
-	effinit(EFFREF_ALL,0,-1);
-	sdlforceredraw();
+	if(mapon()) mapswtype(); else{
+		struct imglist *il=mapsetpos(dpl.pos.imgi[0]);
+		ilswitch(il,0);
+		effinit(EFFREF_ALL,0,-1);
+		sdlforceredraw();
+	}
 }
 
 /***************************** dpl action *************************************/

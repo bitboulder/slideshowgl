@@ -6,6 +6,7 @@
 
 char mapon();
 void mapsdlsize(int *w,int *h);
+void mapswtype();
 struct imglist *mapsetpos(int imgi);
 void mapinit();
 char mapldcheck();
