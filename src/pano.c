@@ -260,7 +260,7 @@ void panoperspective(float h3d,int fm,float w){
 }
 
 /* thread: gl */
-char panorender(){
+char panorender(char sel){
 	struct img *img;
 	struct imgpano *ip;
 	GLuint dl;
@@ -269,6 +269,7 @@ char panorender(){
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
 	if(!(img=panoactive())) return 0;
+	if(sel) return 1;
 	ip=img->pano;
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;

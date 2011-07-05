@@ -101,6 +101,8 @@ struct cfg {
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle actions") },
 	{ 0,   "prged.w",             CT_FLT, CM_SET,  ".2",     {NULL}, __("Width of index il in prg edit mode") },
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
+	{ 'M', "map.base",            CT_STR, CM_SET,  "/mnt/img/self",{NULL}, __("Base directory for gps.txt files") },
+	{ 0,   "map.cachedir",        CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images") },
 	{ 0,   NULL,                  0,      0,       NULL,     {NULL}, NULL },
 };
 #undef E2

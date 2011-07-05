@@ -23,6 +23,7 @@
 #include "eff.h"
 #include "help.h"
 #include "ldjpg.h"
+#include "map.h"
 
 char sdl_quit = 0;
 
@@ -283,6 +284,7 @@ void sdlinit(){
 	}
 	sdlicon();
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
+	mapsdlsize(&sdl.scr_w,&sdl.scr_h);
 }
 
 void sdlquit(){

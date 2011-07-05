@@ -20,6 +20,7 @@
 #include "file.h"
 #include "help.h"
 #include "mark.h"
+#include "map.h"
 
 enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
 
@@ -958,7 +959,7 @@ void glpaint(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glrenderback();
-	if(!panorender()) glrenderimgs();
+	if(!panorender(gl.sel.act) && !maprender(gl.sel.act)) glrenderimgs();
 	glrendercat();
 	glrenderprgcol();
 	glrenderinfo();

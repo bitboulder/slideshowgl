@@ -20,6 +20,7 @@
 #include "ldcp.h"
 #include "pano.h"
 #include "prg.h"
+#include "map.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };
@@ -507,6 +508,8 @@ char ldcheck(){
 	struct img *img;
 	struct loadconcept *ldcp=ldconceptget();
 	int ret=0;
+
+	if(mapldcheck()) ret=1;
 
 	for(il=0;il<IL_NUM;il++){
 		int imgi=imginarrorlimits(il,dplgetimgi(il));

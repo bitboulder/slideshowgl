@@ -33,6 +33,7 @@ sources = """
 	ldcp.c
 	mark.c
 	prg.c
+	map.c
 	exiv2.cpp
 """.split()
 

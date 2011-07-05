@@ -9,6 +9,7 @@
 #include "file.h"
 #include "eff.h"
 #include "mark.h"
+#include "map.h"
 
 struct actdelay {
 	Uint32 delay;
@@ -135,6 +136,7 @@ void actinit(){
 
 int actthread(void *UNUSED(arg)){
 	actinit();
+	mapinit();
 	while(!sdl_quit){
 		actcheckdelay(0);
 		if(!actpop()){

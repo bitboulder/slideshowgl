@@ -17,6 +17,7 @@
 #include "pano.h"
 #include "mark.h"
 #include "help.h"
+#include "map.h"
 
 #define INPUTTXTBACK	0x80
 
@@ -368,6 +369,7 @@ char dplprgcolcopy(){
 void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
+	if(mapmove(ev,sx,sy)) return;
 	if(ev&DE_MOVE) dplmovepos(sx,sy);
 	if(ev&(DE_RIGHT|DE_LEFT)){
 		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
@@ -689,6 +691,15 @@ void dpldired(char *input,int id){
 	dpl.pos.actil=actil;
 }
 
+void dplmap(){
+	struct imglist *il;
+	if(mapon()) return;
+	il=mapsetpos(dpl.pos.imgi[0]);
+	ilswitch(il,0);
+	effinit(EFFREF_ALL,0,-1);
+	sdlforceredraw();
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -866,7 +877,8 @@ void dplkey(unsigned short keyu){
 	case 'm':
 		if(!dplprged("frmmov",1,-1,inputnum)){
 			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_FROM;
-			else dplmark(AIMGI);
+			else if(dplwritemode()) dplmark(AIMGI);
+			else dplmap();
 		}
 	break;
 	case 'M': if(!dplprged("frmmov",1,-1,-2) && dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO; break;

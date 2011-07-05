@@ -39,6 +39,7 @@ void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...) FORM
 int mprintf(const char *format,...) FORMAT(1,2);
 
 char *finddatafile(const char *fn);
+const char *gettmp();
 
 int threadid();
 size_t nthreads();

@@ -129,6 +129,14 @@ char *finddatafile(const char *fn){
 	return NULL;
 }
 
+const char *gettmp(){
+	const char *fn;
+	fn=getenv("TEMP");
+	if(!fn) fn=getenv("TMP");
+	if(!fn) fn="/tmp";
+	return fn;
+}
+
 struct mainthread {
 	int (*fnc)(void *);
 	int pri;

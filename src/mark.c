@@ -194,12 +194,7 @@ void markinit(){
 	else mark.cfg.flst2gthumb=NULL;
 	fn=cfggetstr("mark.fn");
 	if(fn && fn[0]) snprintf(mark.cfg.fn,FILELEN,fn);
-	else{
-		fn=getenv("TEMP");
-		if(!fn) fn=getenv("TMP");
-		if(!fn) fn="/tmp";
-		snprintf(mark.cfg.fn,FILELEN,"%s/slideshowgl-mark.flst",fn);
-	}
+	else snprintf(mark.cfg.fn,FILELEN,"%s/slideshowgl-mark.flst",gettmp());
 	mark.mkchange=calloc(mark.ncat+1,sizeof(char));
 	memset(mark.mks,0,sizeof(struct mk *)*MKCHAINS);
 	marksload();
