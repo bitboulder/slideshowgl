@@ -499,21 +499,24 @@ char dpldir(int imgi,char noleave){
 	struct img *img;
 	const char *fn=NULL;
 	const char *dir=NULL;
+	struct imglist *il=NULL;
 	if(AIL!=0) return 0;
 	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(fn=markcatfn(imgi-IMGI_CAT,&dir))) return 1;
+	if(imgi>=IMGI_MAP && imgi<IMGI_CAT && !mapgetctl(imgi-IMGI_MAP,&il,&fn,&dir)) return 1;
 	if(imgi==IMGI_START) return 0;
-	if(!fn && !(img=imgget(AIL,imgi))){
+	if(!il && !fn && !(img=imgget(AIL,imgi))){
 		if(noleave) return 0;
 		imgi=ilswitch(NULL,0);
 		if(imgi==IMGI_END) return 1;
 	}else{
-		struct imglist *il;
-		if(!fn){
-			if(!(dir=imgfiledir(img->file))) return 0;
-			fn=imgfilefn(img->file);
-			AIMGI=imgi;
-		}else actforce();
-		if(!(il=floaddir(fn,dir))) return 1;
+		if(!il){
+			if(!fn){
+				if(!(dir=imgfiledir(img->file))) return 0;
+				fn=imgfilefn(img->file);
+				AIMGI=imgi;
+			}else actforce();
+			if(!(il=floaddir(fn,dir))) return 1;
+		}
 		if(il==ilget(0)) return 1;
 		imgi=ilswitch(il,0);
 		if(imgi==IMGI_START && !ilprg(0)) imgi=0;
@@ -523,6 +526,7 @@ char dpldir(int imgi,char noleave){
 	AIMGI=imgi;
 	dpl.pos.imgiold=imgi;
 	effinit(EFFREF_CLR,0,-1);
+	sdlforceredraw(); /* TODO remove (for switch to map which does not use eff) */
 	dplsecdir();
 	return 1;
 }

@@ -22,6 +22,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext);
 char fthumbchecktime(struct imgfile *ifl,long ft);
 void fgetfiles(int argc,char **argv);
 
+int faddfile(struct imglist *il,const char *fn,struct imglist *src); /* TODO: remove (for mapgetctl) */
 struct imglist *floaddir(const char *fn,const char *dir);
 
 char fimgswitchmod(struct img *img);

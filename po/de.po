@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-05 12:31+0200\n"
+"POT-Creation-Date: 2011-07-05 13:16+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -459,37 +459,37 @@ msgstr ""
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:534
+#: src/dpl.c:538
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:535
+#: src/dpl.c:539
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:551
+#: src/dpl.c:555
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:552
+#: src/dpl.c:556
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:553
+#: src/dpl.c:557
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:557
+#: src/dpl.c:561
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:558
+#: src/dpl.c:562
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:846
+#: src/dpl.c:850
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -825,11 +825,15 @@ msgstr ""
 msgid "sdl timeout waiting for threads:%s%s%s%s"
 msgstr ""
 
-#: src/map.c:325
-msgid "[MAP]"
+#: src/map.c:288
+msgid "[Map-Selection]"
+msgstr "[Karte-Auswahl]"
+
+#: src/map.c:342
+msgid "[Map]"
 msgstr "[Karte]"
 
-#: src/map.c:404
+#: src/map.c:421
 #, c-format
 msgid "map loading map %i/%i/%i"
 msgstr ""
@@ -928,12 +932,12 @@ msgstr ""
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:458
+#: src/sdl.c:463
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:475
+#: src/sdl.c:480
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""

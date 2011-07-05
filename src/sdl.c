@@ -374,6 +374,11 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 			dplevputi(DE_MARK,clickimg);
 			if(doubleclick) dplevputi(DE_DIR,clickimg);
 		break;
+	}else if(clickimg>=IMGI_MAP) switch(btn){
+		case SDL_BUTTON_LEFT:
+//			dplevputi(DE_MAPINFO,clickimg); TODO
+			if(doubleclick) dplevputi(DE_DIR,clickimg);
+		break;
 	}else switch(btn){
 		case SDL_BUTTON_LEFT:
 			if(zoom>0)           dplevputp(DE_MOVE,sx,sy);

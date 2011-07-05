@@ -22,6 +22,7 @@
 #include "cfg.h"
 #include "sdl.h"
 #include "gl_int.h"
+#include "file.h"
 
 /* Coordinate abreviations *
  *
@@ -275,6 +276,22 @@ void mapimgclt(){
 	free(cltd);
 }
 
+char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
+	struct mapclti *clti;
+	if(!map.init || !mapon()) return 0;
+	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i;clti=clti->nxtclt) i--;
+	if(!clti || clti->nimg<1) return 0;
+	if(clti->nimg==1){
+		*fn=clti->img->dir;
+		*dir=clti->img->name;
+	}else{
+		*il=ilnew("[MAP-SEL]",_("[Map-Selection]"));
+		for(;clti;clti=clti->nxtimg)
+			faddfile(*il,clti->img->dir,NULL);
+	}
+	return 1;
+}
+
 char mapgetgps(const char *dir,double *gx,double *gy,char cluster){
 	double in[2];
 	if(dir){
@@ -322,7 +339,7 @@ struct imglist *mapsetpos(int imgi){
 		map.pos.iz=12;
 	}
 	if(ilfind("[MAP]",&il,1)) return il;
-	return ilnew("[MAP]",_("[MAP]"));
+	return ilnew("[MAP]",_("[Map]"));
 }
 
 void texloadput(struct tile *ti,SDL_Surface *sf){
@@ -521,6 +538,7 @@ void maprendermap(){
 void maprenderclt(){
 	struct mapclti *clti;
 	double mx,my;
+	GLuint name=IMGI_MAP+1;
 	if(!map.scr_w || !map.scr_h) return;
 	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti;clti=clti->nxtclt){
@@ -528,7 +546,7 @@ void maprenderclt(){
 		glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
 		glTranslated(clti->mx/(double)clti->nimg-mx,clti->my/(double)clti->nimg-my,0.);
 		glScalef(15.f/256.f,10.f/256.f,1.f);
-		/* TODO: glLoadName() */
+		glLoadName(name++);
 		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
 		glBegin(GL_QUADS);
 		glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
@@ -542,12 +560,11 @@ void maprenderclt(){
 
 char maprender(char sel){
 	if(!map.init || !mapon()) return 0;
-	if(sel) return 1;
-	while(texload()) ;
+	if(!sel) while(texload()) ;
 	glmode(GLM_2D);
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 	else        glColor4f(1.f,1.f,1.f,1.f);
-	maprendermap();
+	if(!sel) maprendermap();
 	maprenderclt();
 	return 1;
 }
