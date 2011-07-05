@@ -107,6 +107,8 @@ __(" o")"\0"                   __("Move image to ori/ and remove from dpl-list")
 #endif
 #ifdef IF_WRM
 __(" m")"\0"                   __("Toggle mark")"\0"
+#elif !defined IF_DIRED && !defined IF_PRGED
+__(" m")"\0"                   __("Show map")"\0"
 #endif
 #if defined IF_WRM || defined IF_DIRED
 __(" s")"\0"                   __("Enter and toggle image catalog")"\0"

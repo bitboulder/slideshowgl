@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-03 14:59+0200\n"
+"POT-Creation-Date: 2011-07-05 12:31+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/act.c:32
+#: src/act.c:33
 #, c-format
 msgid "running cmd: %s"
 msgstr ""
 
-#: src/act.c:49
+#: src/act.c:50
 #, c-format
 msgid "img rotated (%s)"
 msgstr ""
 
-#: src/act.c:50
+#: src/act.c:51
 #, c-format
 msgid "img rotating failed (%s)"
 msgstr ""
 
-#: src/act.c:73
+#: src/act.c:74
 #, c-format
 msgid "img deleted (%s)"
 msgstr ""
 
-#: src/act.c:89
+#: src/act.c:90
 #, c-format
 msgid "action %i run %s"
 msgstr ""
@@ -58,7 +58,7 @@ msgstr "Debug level erhöhen"
 msgid "Activate time measurement"
 msgstr "Zeitmessung aktivieren"
 
-#: src/cfg.c:38 src/dpl_help.h:125
+#: src/cfg.c:38 src/dpl_help.h:127
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -329,159 +329,167 @@ msgstr "Breite des Bildindex im Programm-Editier-Modus"
 msgid "Frame dimension rate for prg"
 msgstr "Seitenverhältnis im Programm-Modus"
 
-#: src/cfg.c:113
+#: src/cfg.c:104
+msgid "Base directory for gps.txt files"
+msgstr "Basisverzeichnis für gps.txt Dateien"
+
+#: src/cfg.c:105
+msgid "Cache directory for map images"
+msgstr "Cacheverzeichnis für Kartendateien"
+
+#: src/cfg.c:115
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:121
+#: src/cfg.c:123
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:135
+#: src/cfg.c:137
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:136
+#: src/cfg.c:138
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:144
+#: src/cfg.c:146
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:153
+#: src/cfg.c:155
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:154
+#: src/cfg.c:156
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:161
+#: src/cfg.c:163
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:168
+#: src/cfg.c:170
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:172
+#: src/cfg.c:174
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:189
+#: src/cfg.c:191
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:196
+#: src/cfg.c:198
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:197
+#: src/cfg.c:199
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:213
+#: src/cfg.c:215
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:223
+#: src/cfg.c:225
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:238
+#: src/cfg.c:240
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:242
+#: src/cfg.c:244
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:82
+#: src/dpl.c:83
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:83
+#: src/dpl.c:84
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:84
+#: src/dpl.c:85
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:85
+#: src/dpl.c:86
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:86
+#: src/dpl.c:87
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:151
+#: src/dpl.c:152
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:203
+#: src/dpl.c:204
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:416
+#: src/dpl.c:418
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:532
+#: src/dpl.c:534
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:533
+#: src/dpl.c:535
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:549
+#: src/dpl.c:551
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:550
+#: src/dpl.c:552
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:551
+#: src/dpl.c:553
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:555
+#: src/dpl.c:557
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:556
+#: src/dpl.c:558
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:835
+#: src/dpl.c:846
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -573,7 +581,7 @@ msgstr ""
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:229 src/sdl.c:282
+#: src/exif.c:229 src/sdl.c:283
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -618,44 +626,44 @@ msgstr ""
 msgid "opendir failed (%s)"
 msgstr ""
 
-#: src/gl.c:107
+#: src/gl.c:108
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:108
+#: src/gl.c:109
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:118 src/gl.c:120
+#: src/gl.c:119 src/gl.c:121
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:126
+#: src/gl.c:127
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:133
+#: src/gl.c:134
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:151
+#: src/gl.c:152
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:680
+#: src/gl.c:681
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:741
+#: src/gl.c:742
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:972
+#: src/gl.c:973
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -755,55 +763,55 @@ msgstr ""
 msgid "jpeg compression failure: file open failed"
 msgstr ""
 
-#: src/load.c:174
+#: src/load.c:175
 #, c-format
 msgid "sdlimg_unref: unref of %s image"
 msgstr ""
 
-#: src/load.c:184
+#: src/load.c:185
 msgid "sdlimg_ref: ref of NULL image"
 msgstr ""
 
-#: src/load.c:303
+#: src/load.c:304
 msgid "ldtexload: load of free'd image"
 msgstr ""
 
-#: src/load.c:345
+#: src/load.c:346
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:392
+#: src/load.c:393
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:396
+#: src/load.c:397
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:397
+#: src/load.c:398
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:439
+#: src/load.c:440
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:470
+#: src/load.c:471
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:496
+#: src/load.c:497
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:561
+#: src/load.c:564
 msgid "ldreset done"
 msgstr ""
 
@@ -812,9 +820,18 @@ msgstr ""
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:231
+#: src/main.c:239
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s%s"
+msgstr ""
+
+#: src/map.c:325
+msgid "[MAP]"
+msgstr "[Karte]"
+
+#: src/map.c:404
+#, c-format
+msgid "map loading map %i/%i/%i"
 msgstr ""
 
 #: src/mark.c:184
@@ -822,7 +839,7 @@ msgstr ""
 msgid "marks loaded (%s)"
 msgstr ""
 
-#: src/mark.c:236
+#: src/mark.c:231
 #, c-format
 msgid "marks saved (%s)"
 msgstr ""
@@ -842,81 +859,81 @@ msgstr ""
 msgid "split txt failed (%s)"
 msgstr ""
 
-#: src/sdl.c:150
+#: src/sdl.c:151
 msgid "sdl All fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:151
+#: src/sdl.c:152
 msgid "sdl No fullscreen modes available"
-msgstr ""
-
-#: src/sdl.c:173
-#, c-format
-msgid "sdl set video mode fullscreen %ix%i on display %i"
 msgstr ""
 
 #: src/sdl.c:174
 #, c-format
+msgid "sdl set video mode fullscreen %ix%i on display %i"
+msgstr ""
+
+#: src/sdl.c:175
+#, c-format
 msgid "sdl set video mode fullscreen %ix%i"
 msgstr ""
 
-#: src/sdl.c:179
+#: src/sdl.c:180
 #, c-format
 msgid "sdl set video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:184
+#: src/sdl.c:185
 msgid "disable anti-aliasing for window size"
 msgstr ""
 
-#: src/sdl.c:194
+#: src/sdl.c:195
 msgid "disable anti-aliasing for mode failure"
 msgstr ""
 
-#: src/sdl.c:198
+#: src/sdl.c:199
 msgid "video mode init failed"
 msgstr ""
 
-#: src/sdl.c:201
+#: src/sdl.c:202
 #, c-format
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:205
+#: src/sdl.c:206
 #, c-format
 msgid "sdl sub display at %ix%i size %ix%i"
 msgstr ""
 
-#: src/sdl.c:210
+#: src/sdl.c:211
 #, c-format
 msgid "in sdl view mode (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:223
+#: src/sdl.c:224
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:224
+#: src/sdl.c:225
 #, c-format
 msgid "in sdlinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:238
+#: src/sdl.c:239
 #, c-format
 msgid "icon load failed (%s)"
 msgstr ""
 
-#: src/sdl.c:276
+#: src/sdl.c:277
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:456
+#: src/sdl.c:458
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:473
+#: src/sdl.c:475
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
@@ -1088,7 +1105,7 @@ msgstr " [0-9]+m"
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl_help.h:52 src/dpl_help.h:127
+#: src/dpl_help.h:52 src/dpl_help.h:129
 msgid " [0-9]+d"
 msgstr " [0-9]+d"
 
@@ -1271,8 +1288,7 @@ msgstr ""
 
 #: src/dpl_help.h:105
 msgid "Move image to del/ and remove from dpl-list"
-msgstr ""
-"Bild nach 'del' verschieben und nicht mehr anzeigen"
+msgstr "Bild nach 'del' verschieben und nicht mehr anzeigen"
 
 #: src/dpl_help.h:106
 msgid " o"
@@ -1280,82 +1296,84 @@ msgstr ""
 
 #: src/dpl_help.h:106
 msgid "Move image to ori/ and remove from dpl-list"
-msgstr ""
-"Bild nach 'ori' verschieben und nicht mehr anzeigen"
+msgstr "Bild nach 'ori' verschieben und nicht mehr anzeigen"
 
-#: src/dpl_help.h:109
+#: src/dpl_help.h:109 src/dpl_help.h:111
 msgid " m"
 msgstr ""
 
-#: src/dpl_help.h:112
+#: src/dpl_help.h:111
+msgid "Show map"
+msgstr "Karte anzeigen"
+
+#: src/dpl_help.h:114
 msgid " s"
 msgstr ""
 
-#: src/dpl_help.h:112
+#: src/dpl_help.h:114
 msgid "Enter and toggle image catalog"
 msgstr "Bildkatalog eingeben und ändern"
 
-#: src/dpl_help.h:114
+#: src/dpl_help.h:116
 msgid " G"
 msgstr ""
 
-#: src/dpl_help.h:114
+#: src/dpl_help.h:116
 msgid "Edit current image with gimp"
 msgstr "Aktuelles Bild mit gimp bearbeiten"
 
-#: src/dpl_help.h:117
+#: src/dpl_help.h:119
 msgid " Image information"
 msgstr " Bildinformationen"
 
-#: src/dpl_help.h:118
+#: src/dpl_help.h:120
 msgid " i/I"
 msgstr ""
 
-#: src/dpl_help.h:118
+#: src/dpl_help.h:120
 msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
-#: src/dpl_help.h:119
+#: src/dpl_help.h:121
 msgid " k"
 msgstr ""
 
-#: src/dpl_help.h:119
+#: src/dpl_help.h:121
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl_help.h:122
+#: src/dpl_help.h:124
 msgid " Program interface"
 msgstr " Programmbedienung"
 
-#: src/dpl_help.h:123
+#: src/dpl_help.h:125
 msgid " h"
 msgstr ""
 
-#: src/dpl_help.h:123
+#: src/dpl_help.h:125
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl_help.h:124
+#: src/dpl_help.h:126
 msgid " q/Esc"
 msgstr ""
 
-#: src/dpl_help.h:124
+#: src/dpl_help.h:126
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl_help.h:125
+#: src/dpl_help.h:127
 msgid " f"
 msgstr ""
 
-#: src/dpl_help.h:127
+#: src/dpl_help.h:129
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl_help.h:130
+#: src/dpl_help.h:132
 msgid " p"
 msgstr ""
 
-#: src/dpl_help.h:130
+#: src/dpl_help.h:132
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
-
