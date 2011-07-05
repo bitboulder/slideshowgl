@@ -35,6 +35,7 @@ struct dpl {
 	Uint32 run;
 	struct {
 		Uint32 displayduration;
+		Uint32 holdduration;
 		char loop;
 		float prged_w;
 		char playmode;
@@ -49,6 +50,10 @@ struct dpl {
 	struct imglist *resortil;
 	unsigned int infosel;
 	enum diredmode {DEM_FROM,DEM_TO,DEM_ALL} diredmode;
+	struct dplmousehold {
+		int imgi;
+		Uint32 time;
+	} mousehold;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -61,6 +66,7 @@ struct dpl {
 	.input.mode = ITM_OFF,
 	.fid = 0,
 	.resortil = NULL,
+	.mousehold.time = 0,
 };
 
 #define AIL			(dpl.pos.actil&ACTIL)
@@ -770,6 +776,22 @@ const char *dplhelp(){
 	return dlphelp_def;
 }
 
+void dplmousehold(int clickimg){
+	if(!mapon() || clickimg<IMGI_MAP || clickimg>=IMGI_CAT){
+		mapinfo(-1);
+		dpl.mousehold.time=0;
+	}else{
+		dpl.mousehold.imgi=clickimg-IMGI_MAP;
+		dpl.mousehold.time=SDL_GetTicks()+dpl.cfg.holdduration;
+	}
+}
+
+void dplmouseholdchk(){
+	if(!dpl.mousehold.time || dpl.mousehold.time>SDL_GetTicks()) return;
+	mapinfo(dpl.mousehold.imgi);
+	dpl.mousehold.time=0;
+}
+
 void dplfilesearch(struct dplinput *in,int il){
 	struct img *img=imgget(il,0);
 	int i=0;
@@ -960,6 +982,7 @@ char dplev(struct ev *ev){
 	if( (ev->ev&DE_KEY) && ev->key!='+' && ev->key!='-') dpl.colmode=COL_NONE;
 	if(!(ev->ev&(DE_STAT|DE_COL|DE_KEY))) dplprgcolreset();
 	if( (ev->ev&DE_KEY) && ev->key!='c' && ev->key!='C') dplprgcolreset();
+	if(!(ev->ev&DE_STAT)) dplmousehold(-1);
 	for(evi=1;!evdone && ev->ev>=evi;evi<<=1) if((evdone=(ev->ev&evi)!=0) && (ret=1)) switch(evi){
 	case DE_MOVE:
 	case DE_RIGHT:
@@ -979,7 +1002,10 @@ char dplev(struct ev *ev){
 		}
 	break;
 	case DE_KEY: dplkey(ev->key); break;
-	case DE_STAT: if(!dplactil(ev->sx,clickimg)) ret=0; break;
+	case DE_STAT:
+		if(!dplactil(ev->sx,clickimg)) ret=0;
+		dplmousehold(clickimg);
+	break;
 	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
 	case DE_COL: effprgcolset(clickimg); break;
 	case DE_INFO:
@@ -1036,6 +1062,7 @@ void dplcfginit(){
 	int z;
 	const char *t;
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
+	dpl.cfg.holdduration=cfggetuint("dpl.holdduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");
 	dpl.cfg.prged_w=cfggetfloat("prged.w");
 	dpl.cfg.playmode=cfggetbool("dpl.playmode");
@@ -1065,6 +1092,7 @@ int dplthread(void *UNUSED(arg)){
 		panorun();
 		timer(TI_DPL,0,0);
 		dplcheckev();
+		dplmouseholdchk();
 		timer(TI_DPL,1,0);
 		effdo();
 		timer(TI_DPL,2,0);

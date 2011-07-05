@@ -376,12 +376,12 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		break;
 	}else if(clickimg>=IMGI_MAP) switch(btn){
 		case SDL_BUTTON_LEFT:
-//			dplevputi(DE_MAPINFO,clickimg); TODO
+			dplevputp(DE_MOVE,sx,sy);
 			if(doubleclick) dplevputi(DE_DIR,clickimg);
 		break;
 	}else switch(btn){
 		case SDL_BUTTON_LEFT:
-			if(zoom>0)           dplevputp(DE_MOVE,sx,sy);
+			if(zoom>0 || mapon())dplevputp(DE_MOVE,sx,sy);
 			else if(doubleclick) dplevputi(DE_DIR|DE_ZOOMIN,clickimg);
 			else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
 			else                 dplevputi(DE_SEL,clickimg);
@@ -398,8 +398,9 @@ void sdlmotion(Uint16 x,Uint16 y){
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdljump(x,y,0);
-	else if(dplgetactil(NULL)<0) dplevputs(DE_STAT,DES_MOUSE);
-	else dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
+	else if(dplgetactil(NULL)>=0 || mapon()) 
+		dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
+	else dplevputs(DE_STAT,DES_MOUSE);
 }
 
 void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){

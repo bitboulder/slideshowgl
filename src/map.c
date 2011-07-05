@@ -98,6 +98,7 @@ struct map {
 	struct texload tl;
 	int *scr_w, *scr_h;
 	struct tile imgdir[2];
+	int info;
 } map = {
 	.init = 0,
 	.maptype = MT_om,
@@ -109,12 +110,18 @@ struct map {
 	.tl.ri = 0,
 	.scr_w = NULL,
 	.scr_h = NULL,
+	.info  = -1,
 };
 
 char mapon(){ return !strncmp(ilfn(ilget(0)),"[MAP]",5); }
 void mapsdlsize(int *w,int *h){ map.scr_w=w; map.scr_h=h; }
 void mapswtype(){
 	map.maptype=(map.maptype+1)%MT_NUM;
+	sdlforceredraw();
+}
+void mapinfo(int i){
+	if(map.info==i) return;
+	map.info=i;
 	sdlforceredraw();
 }
 
@@ -246,11 +253,13 @@ int mapcltdcmp(const void *a,const void *b){
 }
 
 void mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
-	if(!cltijoin[0]->nimg) return;
+	struct mapclti *ci;
+	if(!cltijoin[0]->nimg || !cltijoin[1]->nimg) return;
 	cltijoin[0]->nimg+=cltijoin[1]->nimg;
 	cltijoin[0]->mx+=cltijoin[1]->mx;
 	cltijoin[0]->my+=cltijoin[1]->my;
-	cltijoin[0]->nxtimg=cltijoin[1];
+	for(ci=cltijoin[0];ci->nxtimg;) ci=ci->nxtimg;
+	ci->nxtimg=cltijoin[1];
 	for(;clti;clti=clti->nxtclt) if(clti->nxtclt==cltijoin[1])
 		clti->nxtclt=cltijoin[1]->nxtclt;
 	cltijoin[1]->nimg=0;
@@ -262,6 +271,7 @@ void mapimgclt(){
 	struct mapcltd *cltd=malloc(nimg*(nimg-1)/2*sizeof(struct mapcltd));
 	for(iz=0;iz<N_ZOOM;iz++){
 		struct mapclt clt=mapimgcltinit(iz,nimg);
+		printf("%i/%i\n",iz,N_ZOOM);
 		while(1){
 			size_t i,nd=mapimgcltdgen(cltd,clt.clts);
 			if(!nd) break;
@@ -558,6 +568,58 @@ void maprenderclt(){
 	}
 }
 
+/* TODO: move to gl.c */
+enum glft { FT_NOR, FT_BIG, NFT };
+char glfontsel(enum glft i);
+float glfontscale(float hrat,float wrat);
+float glfontwidth(const char *txt);
+enum glpos {
+	GP_LEFT    = 0x01,
+	GP_RIGHT   = 0x02,
+	GP_HCENTER = 0x04,
+	GP_TOP     = 0x10,
+	GP_BOTTOM  = 0x20,
+	GP_VCENTER = 0x40,
+};
+#define glrect(w,h,p)	glrectarc(w,h,p,0.f);
+void glrectarc(float w,float h,enum glpos pos,float barc);
+void glfontrender(const char *txt,enum glpos pos);
+
+void maprenderinfo(){
+	int i;
+	struct mapclti *clti,*ci;
+	double mx,my,sx,sy;
+	float hrat,w,h,b;
+	if(map.info<0) return;
+	if(!map.scr_w || !map.scr_h) return;
+	for(i=0,clti=mapimgs.clt[map.pos.iz].clts;clti && i!=map.info;clti=clti->nxtclt) i++;
+	if(!clti) return;
+	if(!glfontsel(FT_NOR)) return;
+	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
+	sx=(clti->mx/(double)clti->nimg-mx)*256.f/(double)*map.scr_w;
+	sy=(clti->my/(double)clti->nimg-my)*256.f/(double)*map.scr_h;
+	glPushMatrix();
+	w=glmode(GLM_TXT);
+	glTranslated(sx*w,-sy,0.f);
+	h=glfontscale(hrat=/*gl.cfg.hrat_cat*/0.03f,1.f);
+	for(w=0.f,ci=clti;ci;ci=ci->nxtimg) if((b=glfontwidth(ci->img->name))>w) w=b;
+//	glTranslated(sx*w*hrat/h,-sy*hrat/h,0.f);
+//	glTranslated(sx*w/hrat*h,-sy/hrat*h,0.f);
+	//b=h*gl.cfg.txt_border*2.f;
+	b=h*.1f*2.f;
+	//glColor4fv(gl.cfg.col_txtbg);
+	glColor4f(.8f,.8f,.8f,.7f);
+	glrect(w+b,b+h*(float)clti->nimg,GP_TOP|GP_LEFT);
+	glTranslatef(b/2.f,-(b+h)/2.f,0.f);
+	//glColor4fv(gl.cfg.col_txtfg);
+	glColor4f(0.f,0.f,0.f,1.f);
+	for(ci=clti;ci;ci=ci->nxtimg){
+		glfontrender(ci->img->name,GP_VCENTER|GP_LEFT);
+		glTranslatef(0.f,-h,0.f);
+	}
+	glPopMatrix();
+}
+
 char maprender(char sel){
 	if(!map.init || !mapon()) return 0;
 	if(!sel) while(texload()) ;
@@ -566,6 +628,7 @@ char maprender(char sel){
 	else        glColor4f(1.f,1.f,1.f,1.f);
 	if(!sel) maprendermap();
 	maprenderclt();
+	if(!sel) maprenderinfo();
 	return 1;
 }
 
