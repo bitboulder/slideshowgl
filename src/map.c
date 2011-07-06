@@ -14,6 +14,7 @@
 		#define NAME_MAX 255
 	#endif
 #endif
+#include <time.h> // TODO: remove
 #include "map.h"
 #include "img.h"
 #include "help.h"
@@ -271,38 +272,60 @@ int mapcltdcmp(const void *a,const void *b){
 	return 0;
 }
 
+char mapcltncmp(struct mapclti *a,struct mapclti *b){
+	return strncmp(a->img->name,b->img->name,FILELEN)<0;
+}
+
 void mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
-	struct mapclti *ci;
+	struct mapclti *dst,*src0,*src1;
+	int id;
 	if(!cltijoin[0]->nimg || !cltijoin[1]->nimg) return;
-	cltijoin[0]->nimg+=cltijoin[1]->nimg;
-	cltijoin[0]->mx+=cltijoin[1]->mx;
-	cltijoin[0]->my+=cltijoin[1]->my;
-	for(ci=cltijoin[0];ci->nxtimg;) ci=ci->nxtimg;
-	ci->nxtimg=cltijoin[1];
-	for(;clti;clti=clti->nxtclt) if(clti->nxtclt==cltijoin[1])
-		clti->nxtclt=cltijoin[1]->nxtclt;
-	cltijoin[1]->nimg=0;
+	id=mapcltncmp(cltijoin[0],cltijoin[1]);
+	dst=cltijoin[id];
+	src0=cltijoin[!id];
+	dst->nimg+=src0->nimg;
+	dst->mx+=src0->mx;
+	dst->my+=src0->my;
+	src0->nimg=0;
+	for(;clti;clti=clti->nxtclt) if(clti->nxtclt==src0)
+		clti->nxtclt=src0->nxtclt;
+	src1=dst->nxtimg;
+	while(src0 || src1){
+		if(!src1 || (src0 && mapcltncmp(src1,src0))){
+			dst->nxtimg=src0;
+			dst=src0;
+			src0=src0->nxtimg;
+		}else{
+			dst->nxtimg=src1;
+			dst=src1;
+			src1=src1->nxtimg;
+		}
+	}
 }
 
 void mapimgclt(){
 	int iz;
 	size_t nimg=mapimgcltnimg();
 	struct mapcltd *cltd=malloc(nimg*(nimg-1)/2*sizeof(struct mapcltd));
+//	clock_t ck=clock(); // TODO: remove
 	for(iz=0;iz<N_ZOOM;iz++){
 		struct mapclt clt=mapimgcltinit(iz,nimg);
 		printf("%i/%i\n",iz,N_ZOOM);
 		while(1){
-			size_t i,nd=mapimgcltdgen(cltd,clt.clts);
+			size_t i,nd=mapimgcltdgen(cltd,clt.clts); // TODO: heap
+			double thr;
 			if(!nd) break;
 			qsort(cltd,nd,sizeof(struct mapcltd),mapcltdcmp);
 			if(cltd[0].d>25./256.) break;
+			thr=MIN(cltd[0].d+2./256.,25./256.);
 			mapimgcltdjoin(cltd[0].clti,clt.clts);
-			for(i=1;i<nd && cltd[i].d<1./256.;i++) mapimgcltdjoin(cltd[i].clti,clt.clts);
+			for(i=1;i<nd && cltd[i].d<thr;i++) mapimgcltdjoin(cltd[i].clti,clt.clts);
 		}
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
 	}
 	free(cltd);
+//	ck=clock()-ck; printf("%.3f\n",(double)ck/(double)CLOCKS_PER_SEC);
 }
 
 char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
