@@ -693,7 +693,7 @@ char mapmove(enum dplev ev,float sx,float sy){
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		int iz=map.pos.iz+dir;
 		double gx0,gx1,gy0,gy1;
-		if(iz<0 && iz>=N_ZOOM) return 0;
+		if(iz<0 || iz>=N_ZOOM) return 0;
 		maps2g(sx,sy,map.pos.iz,&gx0,&gy0);
 		maps2g(sx,sy,iz,&gx1,&gy1);
 		map.pos.iz=iz;
@@ -701,5 +701,15 @@ char mapmove(enum dplev ev,float sx,float sy){
 		map.pos.gy-=gy1-gy0;
 	}
 	sdlforceredraw();
+	return 1;
+}
+
+char mapmovepos(float sx,float sy){
+	double gx0,gx1,gy0,gy1;
+	if(!map.init || !mapon()) return 0;
+	maps2g(0.,0.,map.pos.iz,&gx0,&gy0);
+	maps2g(sx,sy,map.pos.iz,&gx1,&gy1);
+	map.pos.gx+=gx1-gx0;
+	map.pos.gy+=gy1-gy0;
 	return 1;
 }

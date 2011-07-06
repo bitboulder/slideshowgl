@@ -317,7 +317,7 @@ char sdljump(Uint16 x,Uint16 y,char end){
 	int actil=dplgetactil(NULL);
 	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
 	sdl.move.jump=1;
-	if(zoom<=0 && actil<1){
+	if(zoom<=0 && !mapon() && actil<1){
 		switch(zoom){
 			case  0: if(actil==0) w=sdl.scr_h/5/2; break;
 			case -1: w=sdl.scr_h/3/2; break;

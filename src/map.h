@@ -14,5 +14,6 @@ void mapinit();
 char mapldcheck();
 char maprender(char sel);
 char mapmove(enum dplev ev,float sx,float sy);
+char mapmovepos(float sx,float sy);
 
 #endif

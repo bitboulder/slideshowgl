@@ -200,7 +200,7 @@ char dplmovepos(float sx,float sy){
 		ecur->x-=sx;
 		ecur->y-=sy;
 		return 0;
-	}else{
+	}else if(!mapmovepos(sx,sy)){
 		float ix,iy;
 		if(!(img=imgget(AIL,AIMGI)) || !imgspos2ipos(img,sx,sy,&ix,&iy)) return 0;
 		panotrimmovepos(img,&ix,&iy);
