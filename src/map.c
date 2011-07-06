@@ -137,6 +137,16 @@ void mapg2m(double gx,double gy,int iz,double *mx,double *my){
 	*my=gy*size;
 }
 
+void mapm2g(double mx,double my,int iz,double *gx,double *gy){
+	double size=(double)(1<<iz);
+	mx/=size;
+	my/=size;
+	my=0.5-my;
+	my=atan(sinh(my*2.*M_PI));
+	*gy=my*180./M_PI;
+	*gx=(mx-.5)*360.;
+}
+
 void mapg2i(double gx,double gy,int iz,int *ix,int *iy){
 	double mx,my;
 	mapg2m(gx,gy,iz,&mx,&my);
@@ -151,6 +161,15 @@ void mapg2o(double gx,double gy,int iz,float *ox,float *oy){
 	my-=floor(my);
 	*ox=(float)(.5-mx);
 	*oy=(float)(.5-my);
+}
+
+void maps2g(float sx,float sy,int iz,double *gx,double *gy){
+	double mx,my;
+	if(!map.scr_w || !map.scr_h) return;
+	mapg2m(map.pos.gx,map.pos.gy,iz,&mx,&my);
+	mx+=(double)sx/256.**map.scr_w;
+	my+=(double)sy/256.**map.scr_h;
+	mapm2g(mx,my,iz,gx,gy);
 }
 
 struct tile *maptilefind(int ix,int iy,int iz,char create){
@@ -504,6 +523,7 @@ void mapinit(){
 void maprendertile(int ix,int iy,int iz){
 	struct tile *ti;
 	float tx0=0.f,tx1=1.f,ty0=0.f,ty1=1.f;
+	if(ix<0 || iy<0 || ix>=(1<<iz) || iy>=(1<<iz)) return;
 	while(!(ti=maptilefind(ix,iy,iz,0)) || !ti->tex){
 		if(!iz--) return;
 		tx0/=2.f; tx1/=2.f;
@@ -591,6 +611,7 @@ void maprenderinfo(){
 	struct mapclti *clti,*ci;
 	double mx,my,sx,sy;
 	float hrat,sw,w,h,b;
+	int nl,nc;
 	if(map.info<0) return;
 	if(!map.scr_w || !map.scr_h) return;
 	for(i=0,clti=mapimgs.clt[map.pos.iz].clts;clti && i!=map.info;clti=clti->nxtclt) i++;
@@ -606,20 +627,32 @@ void maprenderinfo(){
 	for(w=0.f,ci=clti;ci;ci=ci->nxtimg) if((b=glfontwidth(ci->img->name))>w) w=b;
 	//b=h*gl.cfg.txt_border*2.f;
 	b=h*.1f*2.f;
-	if((w+b)*hrat/sw+sx>.5f) sx=.5f-(w+b)*hrat/sw;
-	if((b+h*(float)clti->nimg)*hrat-sy>.5f) sy=.5f-(b+h*(float)clti->nimg)*hrat;
+	nl=clti->nimg; nc=1;
+	if((b+h*(float)nl)*hrat>1.f){
+		nl=(int)((1.f/hrat-b)/h);
+		while(nl*nc<clti->nimg) nc++; // TODO
+	}
+	if((w+b)*(float)nc*hrat/sw+sx>.5f) sx=.5f-(w+b)*(float)nc*hrat/sw;
+	if((b+h*(float)nl)*hrat+sy>.5f) sy=.5f-(b+h*(float)nl)*hrat;
 	if(sx<-.5f) sx=-.5f;
 	if(sy<-.5f) sy=-.5f;
 	glTranslated(sx*sw/hrat,-sy/hrat,0.f);
 	//glColor4fv(gl.cfg.col_txtbg);
 	glColor4f(.8f,.8f,.8f,.7f);
-	glrect(w+b,b+h*(float)clti->nimg,GP_TOP|GP_LEFT);
+	if(nc>1) glrect((w+b)*(float)(nc-1),b+h*(float)clti->nimg,GP_TOP|GP_LEFT);
+	glTranslatef((w+b)*(float)(nc-1),0.f,0.f);
+	glrect(w+b,b+h*(float)(clti->nimg-(nc-1)*nl),GP_TOP|GP_LEFT);
+	glTranslatef(-(w+b)*(float)(nc-1),0.f,0.f);
 	glTranslatef(b/2.f,-(b+h)/2.f,0.f);
 	//glColor4fv(gl.cfg.col_txtfg);
 	glColor4f(0.f,0.f,0.f,1.f);
-	for(ci=clti;ci;ci=ci->nxtimg){
+	for(ci=clti,i=1;ci;ci=ci->nxtimg,i++){
 		glfontrender(ci->img->name,GP_VCENTER|GP_LEFT);
 		glTranslatef(0.f,-h,0.f);
+		if(i==nl){
+			i=0;
+			glTranslatef(w+b,h*(float)nl,0.f);
+		}
 	}
 	glPopMatrix();
 }
@@ -659,7 +692,13 @@ char mapmove(enum dplev ev,float sx,float sy){
 	}
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		int iz=map.pos.iz+dir;
-		if(iz>=0 && iz<N_ZOOM) map.pos.iz=iz;
+		double gx0,gx1,gy0,gy1;
+		if(iz<0 && iz>=N_ZOOM) return 0;
+		maps2g(sx,sy,map.pos.iz,&gx0,&gy0);
+		maps2g(sx,sy,iz,&gx1,&gy1);
+		map.pos.iz=iz;
+		map.pos.gx-=gx1-gx0;
+		map.pos.gy-=gy1-gy0;
 	}
 	sdlforceredraw();
 	return 1;
