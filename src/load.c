@@ -44,7 +44,7 @@ struct load {
 	char vartex;
 	char reset;
 } load = {
-	.minimgslim = { 128, 384, 1024,    0, },
+	.minimgslim = { 160, 384, 1024,    0, },
 	.maximgwide = { 512, 512, 2048, 8192, },
 	.vartex = 0,
 	.reset = 0,

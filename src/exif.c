@@ -49,6 +49,7 @@ struct exifinfo {
 } exifinfo[]={
 	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
 	{__("Model"), {EXIF_TAG_MODEL,0}},
+	{__("Lens"), {0}},
 	{__("Resolution"), {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
 	{__("ISO speed rating"), {EXIF_TAG_ISO_SPEED_RATINGS,0}},
 	{__("Focal length"), {EXIF_TAG_FOCAL_LENGTH,0}},
