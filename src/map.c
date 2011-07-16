@@ -105,7 +105,7 @@ struct map {
 	.maptype = MT_om,
 	.pos.gx = 13.732001,
 	.pos.gy = 51.088938,
-	.pos.iz = 7,
+	.pos.iz = 12,
 	.tile = NULL,
 	.tl.wi = 0,
 	.tl.ri = 0,
@@ -388,7 +388,7 @@ struct imglist *mapsetpos(int imgi){
 	if(set){
 		map.pos.gx=gx;
 		map.pos.gy=gy;
-		map.pos.iz=12;
+		map.pos.iz=15;
 	}
 	if(ilfind("[MAP]",&il,1)) return il;
 	return ilnew("[MAP]",_("[Map]"));

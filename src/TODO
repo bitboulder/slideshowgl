@@ -15,4 +15,7 @@
 
 ? thread priorities
 
-- gps-rendering (http://tile.openstreetmap.org/mapnik/10/550/341.png)
+
+- <100 => load exif on dir load
+- map: middle -> open input for setting pos
+- move thumbs in diredit mode
