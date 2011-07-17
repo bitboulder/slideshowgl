@@ -624,7 +624,7 @@ void dpledit(){
 		if(ilprg(0)) type=ILSS_PRGON;
 		else type=ILSS_DIRON;
 	}
-	if(!ilsecswitch(type,dpl.pos.imgi)) return;
+	if(!ilsecswitch(type)) return;
 	dpl.run=0;
 	switch(type){
 	case ILSS_PRGOFF:

@@ -277,21 +277,6 @@ char ilsetnxt(struct imglist *il){
 }
 
 /* thread: dpl */
-char ildironly(struct imglist *il,int *imgi){
-	struct img *img;
-	int i,j;
-	for(img=il->imgs[0];img;img=img->nxt) if(imgfiledir(img->file)) break;
-	if(!img) return 0;
-	for(i=j=0;i<il->nimg;i++){
-		if(i==imgi[0]) imgi[0]=j;
-		if(imgfiledir(il->imgs[i]->file)) il->imgs[j++]=il->imgs[i];
-	}
-	il->nimg=j;
-	ilsetnxt(il);
-	return 1;
-}
-
-/* thread: dpl */
 int ilswitch(struct imglist *il,int cil){
 	if(cil<0 || cil>=IL_NUM) return IMGI_END;
 	if(!il && curils[cil] && curils[cil]->parent) il=curils[cil]->parent;
@@ -305,7 +290,7 @@ int ilswitch(struct imglist *il,int cil){
 }
 
 /* thread: dpl */
-char ilsecswitch(enum ilsecswitch type,int *imgi){
+char ilsecswitch(enum ilsecswitch type){
 	char buf[FILELEN];
 	size_t len;
 	struct imglist *il;
@@ -336,9 +321,7 @@ char ilsecswitch(enum ilsecswitch type,int *imgi){
 		curils[1]->last_used=SDL_GetTicks();
 		return 1;
 	case ILSS_DIRON:
-		if(!curils[0] || !ildironly(curils[0],imgi)) return 0;
-		/* TODO */
-		return 1;
+		return curils[0]!=NULL;
 	}
 	return 0;
 }

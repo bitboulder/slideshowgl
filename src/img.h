@@ -47,7 +47,7 @@ void ildestroy(struct imglist *il);
 char ilfind(const char *fn,struct imglist **ilret,char setparent);
 void ilcleanup();
 int ilswitch(struct imglist *il,int cil);
-char ilsecswitch(enum ilsecswitch type,int *imgi);
+char ilsecswitch(enum ilsecswitch type);
 char ilreload(int il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
