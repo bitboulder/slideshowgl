@@ -436,26 +436,27 @@ void dplsel(int imgi){
 	dplsecdir();
 }
 
-void dplmark(int imgi){
+char dplmark(int imgi){
 	struct img *img;
 	char *mark;
 	size_t mkid=0;
-	if(!dplwritemode()) return;
-	if(imgi==IMGI_START || imgi==IMGI_END) return;
+	if(!dplwritemode()) return 0;
+	if(imgi==IMGI_START || imgi==IMGI_END) return 0;
 	if(imgi>=IMGI_CAT){
 		mkid=(size_t)imgi-IMGI_CAT+1;
 		imgi=AIMGI;
-		if(imgi==IMGI_START || imgi==IMGI_END) return;
-		if(mkid>markncat()) return;
+		if(imgi==IMGI_START || imgi==IMGI_END) return 0;
+		if(mkid>markncat()) return 0;
 	}
 	dplclipimgi(&imgi);
-	if(!(img=imgget(AIL,imgi))) return;
-	if(imgfiledir(img->file)) return;
+	if(!(img=imgget(AIL,imgi))) return 0;
+	if(imgfiledir(img->file)) return 0;
 	mark=imgposmark(img,MPC_ALLWAYS);
 	mark[mkid]=!mark[mkid];
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	markchange(mkid);
 	actadd(ACT_SAVEMARKS,NULL);
+	return 1;
 }
 
 void dplrotate(enum dplev ev){
@@ -905,8 +906,7 @@ void dplkey(unsigned short keyu){
 	case 'm':
 		if(!dplprged("frmmov",1,-1,inputnum)){
 			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_FROM;
-			else if(dplwritemode()) dplmark(AIMGI);
-			else dplmap();
+			else if(!dplmark(AIMGI)) dplmap();
 		}
 	break;
 	case 'M': if(!dplprged("frmmov",1,-1,-2) && dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO; break;
