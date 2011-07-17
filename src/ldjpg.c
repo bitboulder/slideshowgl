@@ -24,7 +24,7 @@ METHODDEF(void) ldjpg_error (j_common_ptr cinfo)
 }
 
 
-SDL_Surface *JPG_LoadSwap(char *fn){
+SDL_Surface *JPG_LoadSwap(const char *fn){
 #if HAVE_JPEG
 	FILE *fd;
 	struct jpeg_decompress_struct cinfo;

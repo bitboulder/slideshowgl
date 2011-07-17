@@ -43,7 +43,7 @@ const char *imgfiledir(struct imgfile *ifl){ return ifl->dir[0] ? ifl->dir : NUL
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
 /* thread: load */
-char imgfiletfn(struct imgfile *ifl,char **tfn){
+char imgfiletfn(struct imgfile *ifl,const char **tfn){
 	if(!ifl->tfn[0]) return 0;
 	*tfn=ifl->tfn;
 	return 1;

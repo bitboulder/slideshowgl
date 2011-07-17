@@ -356,7 +356,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
-	char *fn = imgfilefn(il->img->file);
+	const char *fn = imgfilefn(il->img->file);
 	char thumb=0;
 	int wide,slim;
 	int lastscale=0;

@@ -13,7 +13,7 @@ struct imgfile *imgfileinit();
 void imgfilefree(struct imgfile *ifl);
 char *imgfilefn(struct imgfile *ifl);
 char *imgfiledelfn(struct imgfile *ifl);
-char imgfiletfn(struct imgfile *ifl,char **tfn);
+char imgfiletfn(struct imgfile *ifl,const char **tfn);
 const char *imgfiledir(struct imgfile *ifl);
 struct txtimg *imgfiletxt(struct imgfile *ifl);
 

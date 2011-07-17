@@ -239,7 +239,7 @@ char *imgexifgetinfo(exifdata *exdat){
 #endif
 
 /* thread: load */
-char imgexifload(struct imgexif *exif,char *fn){
+char imgexifload(struct imgexif *exif,const char *fn){
 #if HAVE_EXIV2 || HAVE_EXIF
 	enum rot r;
 	exifdata *exdat;

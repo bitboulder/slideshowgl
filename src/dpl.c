@@ -658,8 +658,9 @@ void dpldired(char *input,int id){
 	const char *dstdir,*srcdir;
 	struct img *img,*imgend;
 	struct imglist *il;
-	char dstbuf[FILELEN];
+	char dstbuf[FILELEN],srctdir[FILELEN],dsttdir[FILELEN];
 	int actil;
+	size_t i;
 	if(!(img=imgget(0,dpl.pos.imgi[0]))) return;
 	srcdir=imgfilefn(img->file);
 //	if(!dir(srcdir)) return;
@@ -676,10 +677,24 @@ void dpldired(char *input,int id){
 		dstdir=imgfilefn(img->file);
 		// if(!dir(dstdir)) return;
 	}
+	dsttdir[0]='\0';
+	for(i=strlen(srcdir);i--;) if((srcdir[i]=='/' || srcdir[i]=='\\') && !strncmp(srcdir,dstdir,i+1)){
+		memcpy(srctdir,srcdir,i);
+		snprintf(srctdir+i,FILELEN-i,"/thumb/%s",srcdir+i+1);
+		if(isdir(srctdir)==1){
+			memcpy(dsttdir,srcdir,i);
+			snprintf(dsttdir+i,FILELEN-i,"/thumb/%s",dstdir+i+1);
+			break;
+		}
+	}
 	if(dpl.diredmode==DEM_ALL && id<0){
-		if(!rename(srcdir,dstdir)) updatedirs=1;
+		if(!rename(srcdir,dstdir)){
+			updatedirs=1;
+			if(dsttdir[0]) rename(srctdir,dsttdir);
+		}
 	}else{
 		if(id<0 && mkdir(dstdir,00777)) return;
+		if(dsttdir[0] && !isdir(dsttdir)) mkdir(dsttdir,00777);
 		img=imgget(1,dpl.diredmode==DEM_FROM ? dpl.pos.imgi[1] : 0);
 		imgend=dpl.diredmode==DEM_TO ? imgget(1,dpl.pos.imgi[1]) : NULL;
 		for(;img;img=img->nxt){
@@ -689,9 +704,16 @@ void dpldired(char *input,int id){
 			if(!base) base=fn;
 			snprintf(imgbuf,FILELEN,"%s/%s",dstdir,base);
 			rename(fn,imgbuf);
+			if(dsttdir[0] && imgfiletfn(img->file,&fn)){
+				snprintf(imgbuf,FILELEN,"%s/%s",dsttdir,base);
+				rename(fn,imgbuf);
+			}
 			if(img==imgend) break;
 		}
-		if(dpl.diredmode==DEM_ALL && !rmdir(srcdir)) updatedirs=1;
+		if(dpl.diredmode==DEM_ALL){
+			if(!rmdir(srcdir)) updatedirs=1;
+			if(dsttdir[0]) rmdir(srctdir);
+		}
 	}
 	actil=dpl.pos.actil;
 	dpl.pos.actil&=~ACTIL;
@@ -800,8 +822,8 @@ void dplfilesearch(struct dplinput *in,int il){
 	int i=0;
 	size_t ilen=strlen(in->in);
 	if(in->in[0]) for(;img;img=img->nxt,i++){
-		char *fn=imgfilefn(img->file);
-		char *pos=strrchr(fn,'/');
+		const char *fn=imgfilefn(img->file);
+		const char *pos=strrchr(fn,'/');
 		size_t plen,p;
 		if(pos) pos++; else pos=fn;
 		if((plen=strlen(pos))<ilen) continue;

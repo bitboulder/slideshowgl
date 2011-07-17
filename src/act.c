@@ -36,7 +36,7 @@ char runcmd(char *cmd){
 }
 
 void actrotate(struct img *img){
-	char *fn=imgfilefn(img->file);
+	const char *fn=imgfilefn(img->file);
 	float rot=imgexifrotf(img->exif);
 	char cmd[FILELEN+64];
 	char done;
