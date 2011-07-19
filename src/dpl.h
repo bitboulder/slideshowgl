@@ -27,6 +27,7 @@ enum dplev {
 	DE_INIT    = 0x00080000,
 	DE_COL     = 0x00100000,
 	DE_INFO    = 0x00200000,
+	DE_MAPMK   = 0x00400000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
@@ -42,10 +43,12 @@ enum dplevsrc { DES_KEY, DES_MOUSE };
 
 struct dplinput {
 	unsigned int mode;
+	float x,y;
 	int id;
 	char pre[FILELEN];
 	char in[FILELEN];
 	char post[FILELEN];
+	char res[FILELEN];
 };
 
 int dplgetimgi(int il);

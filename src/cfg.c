@@ -99,10 +99,11 @@ struct cfg {
 	{ 0,   "mark.flst2gthumb",    CT_STR, CM_SET,  "/mnt/img/self/scriptz/flst2gthumb.pl", {NULL}, __("Skript for flst conversion") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
+	{ 0,   "act.mapclt_delay",    CT_INT, CM_SET,  "1000",   {NULL}, __("Delay after that the map clusters are refreshed") },
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle actions") },
 	{ 0,   "prged.w",             CT_FLT, CM_SET,  ".2",     {NULL}, __("Width of index il in prg edit mode") },
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
-	{ 'M', "map.base",            CT_STR, CM_SET,  "/mnt/img/self",{NULL}, __("Base directory for gps.txt files") },
+	{ 'M', "map.base",            CT_STR, CM_SET,  "",       {NULL}, __("Base directory for gps.txt files") },
 	{ 0,   "map.cachedir",        CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images") },
 	{ 0,   NULL,                  0,      0,       NULL,     {NULL}, NULL },
 };

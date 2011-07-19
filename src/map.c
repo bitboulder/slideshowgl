@@ -24,6 +24,7 @@
 #include "sdl.h"
 #include "gl_int.h"
 #include "file.h"
+#include "act.h"
 
 /* Coordinate abreviations *
  *
@@ -92,6 +93,7 @@ struct mapimgs {
 
 struct map {
 	char init;
+	char *basedirs;
 	enum maptype maptype;
 	struct mappos pos;
 	struct tile ****tile;
@@ -101,7 +103,8 @@ struct map {
 	struct tile imgdir[2];
 	int info;
 } map = {
-	.init = 0,
+	.init = 2,
+	.basedirs = NULL,
 	.maptype = MT_om,
 	.pos.gx = 13.732001,
 	.pos.gy = 51.088938,
@@ -125,6 +128,7 @@ void mapinfo(int i){
 	map.info=i;
 	sdlforceredraw();
 }
+const char *mapgetbasedirs(){ return map.basedirs; }
 
 #define mapp2i(pos,i)	mapg2i(pos.gx,pos.gy,pos.iz,&i##x,&i##y)
 
@@ -208,19 +212,25 @@ const char *mapimgname(const char *dir){
 	return dir+i;
 }
 
-void mapimgadd(const char *dir,double gx,double gy){
+void mapimgadd(const char *dir,double gx,double gy,char clt){
 	struct mapimg *img;
 	const char *name=mapimgname(dir);
 	for(img=mapimgs.img;img;img=img->nxt)
-		if(img->gx==gx && img->gy==gy && !strncmp(img->name,name,FILELEN)) break;
-	if(img) return;
-	img=malloc(sizeof(struct mapimg));
-	snprintf(img->dir,FILELEN,dir);
-	img->name=img->dir+(name-dir);
+		if(!strncmp(img->name,name,FILELEN)) break;
+	if(!img){
+		img=malloc(sizeof(struct mapimg));
+		snprintf(img->dir,FILELEN,dir);
+		img->name=img->dir+(name-dir);
+		img->nxt=mapimgs.img;
+		mapimgs.img=img;
+	}
+	if(img->gx==gx && img->gy==gy) return;
 	img->gx=gx;
 	img->gy=gy;
-	img->nxt=mapimgs.img;
-	mapimgs.img=img;
+	if(clt){
+		mapimgclt(map.pos.iz);
+		actadd(ACT_MAPCLT,NULL);
+	}
 }
 
 size_t mapimgcltnimg(){
@@ -303,12 +313,13 @@ void mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
 	}
 }
 
-void mapimgclt(){
+/* thread: act */
+void mapimgclt(int izsel){
 	int iz;
 	size_t nimg=mapimgcltnimg();
 	struct mapcltd *cltd=malloc(nimg*(nimg-1)/2*sizeof(struct mapcltd));
 //	clock_t ck=clock(); // TODO: remove
-	for(iz=0;iz<N_ZOOM;iz++){
+	for(iz=izsel<0?0:izsel;izsel<0 ? iz<N_ZOOM : iz==izsel;iz++){
 		struct mapclt clt=mapimgcltinit(iz,nimg);
 		printf("%i/%i\n",iz,N_ZOOM);
 		while(1){
@@ -323,6 +334,7 @@ void mapimgclt(){
 		}
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
+		if(iz==map.pos.iz) sdlforceredraw();
 	}
 	free(cltd);
 //	ck=clock()-ck; printf("%.3f\n",(double)ck/(double)CLOCKS_PER_SEC);
@@ -330,7 +342,7 @@ void mapimgclt(){
 
 char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
 	struct mapclti *clti;
-	if(!map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return 0;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i;clti=clti->nxtclt) i--;
 	if(!clti || clti->nimg<1) return 0;
 	if(clti->nimg==1){
@@ -339,27 +351,25 @@ char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
 	}else{
 		*il=ilnew("[MAP-SEL]",_("[Map-Selection]"));
 		for(;clti;clti=clti->nxtimg)
-			faddfile(*il,clti->img->dir,NULL);
+			faddfile(*il,clti->img->dir,NULL,0);
 	}
 	return 1;
 }
 
-char mapgetgps(const char *dir,double *gx,double *gy,char cluster){
+char mapgetgps(const char *dir,double *gx,double *gy,char clt){
 	double in[2];
-	if(dir){
-		char fn[FILELEN];
-		FILE *fd;
-		int scan;
-		snprintf(fn,FILELEN,"%s/gps.txt",dir);
-		if(!(fd=fopen(fn,"r"))) return 0;
-		scan=fscanf(fd,"%lg,%lg",in,in+1);
-		fclose(fd);
-		if(scan!=2) return 0;
-		if(gx) *gx=in[1];
-		if(gy) *gy=in[0];
-		mapimgadd(dir,in[1],in[0]);
-	}
-	if(cluster) mapimgclt();
+	char fn[FILELEN];
+	FILE *fd;
+	int scan;
+	if(!dir) return 0;
+	snprintf(fn,FILELEN,"%s/gps.txt",dir);
+	if(!(fd=fopen(fn,"r"))) return 0;
+	scan=fscanf(fd,"%lg,%lg",in,in+1);
+	fclose(fd);
+	if(scan!=2) return 0;
+	if(gx) *gx=in[1];
+	if(gy) *gy=in[0];
+	mapimgadd(dir,in[1],in[0],clt);
 	return 1;
 }
 
@@ -369,7 +379,7 @@ struct imglist *mapsetpos(int imgi){
 	char set=0;
 	double gx=0.,gy=0.;
 	struct imglist *il;
-	if(!map.init) return NULL;
+	if(map.init) return NULL;
 	if((fn=ilfn(ilget(0))) && isdir(fn)==1){
 		set=mapgetgps(fn,&gx,&gy,1);
 	}
@@ -485,7 +495,7 @@ char mapldcheck(){
 	int ix,iy,ixc,iyc;
 	int iw,ih,ir,r,i;
 	char web;
-	if(!map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
@@ -529,18 +539,37 @@ void mapfindgps(char *dir){
 #endif
 }
 
+void mapaddbasedir(const char *dir,const char *name){
+	size_t ndir;
+	char *bdir;
+	if(!dir){ map.init=1; return; }
+	if(!dir[0]) return;
+	for(ndir=0,bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2) ndir++;
+	map.basedirs=realloc(map.basedirs,(ndir+1)*FILELEN*2+1);
+	snprintf(map.basedirs+ndir*FILELEN*2,FILELEN,dir);
+	snprintf(map.basedirs+ndir*FILELEN*2+FILELEN,FILELEN,name);
+	map.basedirs[(ndir+1)*FILELEN*2]='\0';
+}
+
+/* thread: act */
 void mapinit(){
-	char dir[FILELEN];
-	const char *cd=cfggetstr("map.cachedir");
+	const char *cd;
+	char *bdir;
+	while(map.init>1) SDL_Delay(500);
+	mapaddbasedir(cfggetstr("map.base"),"");
+	cd=cfggetstr("map.cachedir");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
 	if(cd && cd[0]) snprintf(map.cachedir,FILELEN,cd);
 	else snprintf(map.cachedir,FILELEN,"%s/slideshowgl-cache",gettmp());
-	snprintf(dir,FILELEN,cfggetstr("map.base"));
-	mapfindgps(dir);
-	mapgetgps(NULL,NULL,NULL,1);
+	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
+		char dir[FILELEN];
+		snprintf(dir,FILELEN,bdir);
+		mapfindgps(dir);
+	}
 	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
 	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
-	map.init=1;
+	map.init=0;
+	actadd(ACT_MAPCLT,NULL);
 }
 
 void maprendertile(int ix,int iy,int iz){
@@ -681,7 +710,7 @@ void maprenderinfo(){
 }
 
 char maprender(char sel){
-	if(!map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return 0;
 	if(!sel) while(texload()) ;
 	glmode(GLM_2D);
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
@@ -705,7 +734,7 @@ char mapscrsize(double *gw,double *gh){
 char mapmove(enum dplev ev,float sx,float sy){
 	int dir=DE_DIR(ev);
 	double gw,gh;
-	if(!map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return 0;
 	if(!mapscrsize(&gw,&gh)) return 1;
 	if(ev&(DE_RIGHT|DE_LEFT)){
 		map.pos.gx+=(double)dir*gw/3.f;
@@ -727,12 +756,29 @@ char mapmove(enum dplev ev,float sx,float sy){
 	return 1;
 }
 
+/* thread: dpl */
 char mapmovepos(float sx,float sy){
 	double gx0,gx1,gy0,gy1;
-	if(!map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return 0;
 	maps2g(0.,0.,map.pos.iz,&gx0,&gy0);
 	maps2g(sx,sy,map.pos.iz,&gx1,&gy1);
 	map.pos.gx+=gx1-gx0;
 	map.pos.gy+=gy1-gy0;
+	return 1;
+}
+
+/* thread: dpl */
+char mapmarkpos(float sx,float sy,const char *dir){
+	double gx,gy;
+	FILE *fd;
+	char buf[FILELEN];
+	if(map.init || !mapon()) return 0;
+	if(isdir(dir)!=1) return 0;
+	maps2g(sx,sy,map.pos.iz,&gx,&gy);
+	mapimgadd(dir,gx,gy,1);
+	snprintf(buf,FILELEN,"%s/gps.txt",dir);
+	if(!(fd=fopen(buf,"w"))) return 1;
+	fprintf(fd,"%.6f,%.6f\n",gy,gx);
+	fclose(fd);
 	return 1;
 }

@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdlib.h>
 #include <SDL.h>
 #include <math.h>
@@ -20,12 +21,13 @@
 #include "map.h"
 
 #define INPUTTXTBACK	0x80
+#define INPUTTXTTAB 	0x81
 
 enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 enum dplevgrp { DEG_RIGHT, DEG_LEFT, DEG_ZOOMIN, DEG_ZOOMOUT, DEG_PLAY, DEG_NUM, DEG_NONE };
 
-enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_DIRED};
+enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_DIRED, ITM_MAPMK};
 
 const char *colmodestr[]={"G","B","C"};
 
@@ -90,7 +92,8 @@ struct dplinput *dplgetinput(){
 		case ITM_TXTIMG: snprintf(in.pre,FILELEN,_("[Text]")); break;
 		case ITM_NUM:    snprintf(in.pre,FILELEN,_("[Number]")); break;
 		case ITM_SEARCH: snprintf(in.pre,FILELEN,_("[Search]")); break;
-		case ITM_DIRED:  snprintf(in.pre,FILELEN,_("[Directory]")); break;
+		case ITM_DIRED:
+		case ITM_MAPMK:  snprintf(in.pre,FILELEN,_("[Directory]")); break;
 		}
 		return &in;
 	}
@@ -845,32 +848,74 @@ void dplfilesearch(struct dplinput *in,int il){
 	else dpl.input.id=-1;
 }
 
+void dplmapsearch(struct dplinput *in){
+	const char *bdir=mapgetbasedirs();
+	int id;
+	size_t len=strlen(in->in);
+	in->id=-1;
+	in->pre[0]='\0';
+	in->post[0]='\0';
+	in->res[0]='\0';
+	if(bdir) for(id=0;bdir[0];bdir+=FILELEN*2,id++){
+		const char *bname=bdir+FILELEN;
+		size_t l=strlen(bname);
+		if(!l){
+			finddirmatch(in->in,in->post,in->res,bdir);
+			if(in->post[0]) break;
+		}else if(len<=l && !strncmp(bname,in->in,len) && strncmp(in->post,bname+len,l-len)<0){
+			snprintf(in->post,MAX(FILELEN,l-len),bname+len);
+			snprintf(in->res,FILELEN,bdir);
+		}else if(len>l && !strncmp(bname,in->in,l) && (in->in[l]=='/' || in->in[l]=='\\')){
+			finddirmatch(in->in+l+1,in->post,in->res,bdir);
+			if(in->post[0]) break;
+		}
+	}
+}
+
 void dplinputtxtadd(uint32_t c){
 	size_t len=strlen(dpl.input.in);
-	if(c==INPUTTXTBACK){
+	switch(c){
+	case INPUTTXTBACK:
 		while(len && (dpl.input.in[len-1]&0xc0)==0x80) len--;
 		if(len) len--;
-	}else{
+	break;
+	case INPUTTXTTAB:
+		if(dpl.input.pre[0] || dpl.input.post[0]){
+			char buf[FILELEN];
+			snprintf(buf,FILELEN,"%s%s%s",dpl.input.pre,dpl.input.in,dpl.input.post);
+			snprintf(dpl.input.in,FILELEN,buf);
+			len=strlen(dpl.input.in);
+		}
+	break;
+	default:
+	{
 		char *buf=(char *)&c;
 		int i;
 		for(i=0;i<4 && buf[i];i++) dpl.input.in[len++]=buf[i];
+	}
+	break;
 	}
 	dpl.input.in[len]='\0';
 	switch(dpl.input.mode){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
 	case ITM_SEARCH: dplfilesearch(&dpl.input,AIL); break;
 	case ITM_DIRED:  dplfilesearch(&dpl.input,0);   break;
+	case ITM_MAPMK:  dplmapsearch(&dpl.input); break;
 	}
 	sdlforceredraw();
 }
 
-char dplinputtxtinit(enum inputtxt mode){
+#define dplinputtxtinit(mode)	dplinputtxtinitp(mode,0.f,0.f)
+char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	if(mode==ITM_SEARCH && ilprg(AIL)) return 0;
 	if(mode==ITM_DIRED  && !(dpl.pos.actil&ACTIL_DIRED)) return 0;
+	if(mode==ITM_MAPMK  && (!dpl.writemode || !mapon())) return 0;
 	dpl.input.pre[0]='\0';
 	dpl.input.in[0]='\0';
 	dpl.input.post[0]='\0';
 	dpl.input.id=-1;
+	dpl.input.x=x;
+	dpl.input.y=y;
 	dpl.input.mode=mode;
 	if(mode==ITM_SEARCH) dpl.input.id=AIMGI;
 	sdlforceredraw();
@@ -885,6 +930,9 @@ void dplinputtxtfinal(char ok){
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
 	case ITM_SEARCH: if(!ok) dplsel(dpl.input.id);
 	case ITM_DIRED:  if(ok) dpldired(dpl.input.in,dpl.input.id); break;
+	case ITM_MAPMK:
+		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
+	break;
 	}
 	dpl.input.mode=ITM_OFF;
 	sdlforceredraw();
@@ -898,6 +946,7 @@ void dplkey(unsigned short keyu){
 	if(dpl.input.mode!=ITM_OFF){
 		if(key<0x20 || key==0x7f) switch(key){
 			case 8:  dplinputtxtadd(INPUTTXTBACK); break;
+			case 9:  dplinputtxtadd(INPUTTXTTAB); break;
 			case 13: dplinputtxtfinal(1); break;
 			default: dplinputtxtfinal(0); break;
 		}else if(dpl.input.mode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
@@ -1038,6 +1087,7 @@ char dplev(struct ev *ev){
 			else dpl.infosel|=1U<<clickimg;
 		}
 	break;
+	case DE_MAPMK: dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy); break;
 	}
 	if(AIMGI==IMGI_END && !dpl.cfg.playmode) dpl.run=0;
 	if(dplwritemode() || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;

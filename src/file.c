@@ -22,6 +22,7 @@
 #include "help.h"
 #include "dpl.h"
 #include "eff.h"
+#include "map.h"
 
 /***************************** imgfile ******************************************/
 
@@ -94,6 +95,33 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext){
 	return 0;
 }
 
+char finddirmatch(char *in,char *post,char *res,const char *basedir){
+#if HAVE_OPENDIR
+	DIR *dd;
+	struct dirent *de;
+	size_t len=strlen(in);
+	size_t blen=strlen(basedir);
+	if(!(dd=opendir(basedir))) return 0;
+	while((de=readdir(dd))){
+		char buf[FILELEN];
+		size_t l=0;
+		while(l<NAME_MAX && de->d_name[l]) l++;
+		snprintf(buf,MAX(FILELEN,blen+1+l),"%s/%s",basedir,de->d_name);
+		if(isdir(buf)!=1) continue;
+		if(len<=l && !strncmp(de->d_name,in,len) && strncmp(post,de->d_name+len,l-len)<0){
+			snprintf(post,MAX(FILELEN,l-len),de->d_name+len);
+			snprintf(res,FILELEN,"%s/%s%s",basedir,in,post);
+		}
+		if(len>l && !strncmp(de->d_name,in,l) && (in[l]=='/' || in[l]=='\\')){
+			finddirmatch(in+l+1,post,res,buf);
+			break;
+		}
+	}
+	closedir(dd);
+	return 0;
+#endif
+}
+
 /***************************** getfiles ***************************************/
 
 char fthumbchecktime(struct imgfile *ifl,long ft){
@@ -114,10 +142,11 @@ void fthumbinit(struct imgfile *ifl){
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
-int faddfile(struct imglist *il,const char *fn,struct imglist *src){
+int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase){
 	struct img *img;
 	size_t len;
 	char *prg;
+	char isd;
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	len=strlen(fn);
 	if((prg=strchr(fn,';'))){
@@ -126,7 +155,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 		if(len==3 && !strncmp(fn,"frm",3)) ilprgfrm(il,prg);
 	}
 	if(len>=FILELEN) return 0;
-	if(isdir(fn)){
+	if((isd=isdir(fn))){
 		int i=(int)len-2, l;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
@@ -140,6 +169,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 		img->file->dir[l]='\0';
 		utf8check(img->file->dir);
 		debug(DBG_DBG,"directory found '%s': '%s'",img->file->dir,img->file->fn);
+		if(mapbase && isd==1) mapaddbasedir(img->file->fn,img->file->dir);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
 		size_t ltxt;
@@ -176,7 +206,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src){
 	return 1;
 }
 
-int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist *src){
+int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist *src,char mapbase){
 	FILE *fd;
 	char buf[LDFILELEN];
 	int count=0;
@@ -205,7 +235,7 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 			memcpy(buf,pfx,lpfx);
 			buf[LDFILELEN-1]='\0';
 		}
-		count+=faddfile(il,buf,src);
+		count+=faddfile(il,buf,src,mapbase);
 	}
 	if(prg) pclose(fd); else fclose(fd);
 	return count;
@@ -226,20 +256,23 @@ void floadfinalize(struct imglist *il,char subdir){
 void fgetfiles(int argc,char **argv){
 	struct imglist *il;
 	int i;
+	char id;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
-	if(argc==1 && isdir(argv[0]) && (il=floaddir(argv[0],""))){
-		ilswitch(il,0);
-		return;
+	if(argc==1 && (id=isdir(argv[0])) && (il=floaddir(argv[0],""))){
+		if(id==1) mapaddbasedir(argv[0],"");
+		goto end;
 	}
 	il=ilnew("[BASE]","");
 	for(i=0;i<argc;i++){
-		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"",NULL);
-		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"",NULL);
-		else faddfile(il,argv[i],NULL);
+		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"",NULL,1);
+		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"",NULL,1);
+		else faddfile(il,argv[i],NULL,1);
 	}
 	floadfinalize(il,0);
+end:
 	ilswitch(il,0);
+	mapaddbasedir(NULL,NULL);
 }
 
 /* thread: dpl */
@@ -261,7 +294,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	}
 	if(!dd) fclose(fd);
 	il=ilnew(fn,dir);
-	if(!dd) count=faddflst(il,fn,"",src); else{
+	if(!dd) count=faddflst(il,fn,"",src,0); else{
 		ld=strlen(fn);
 		memcpy(buf,fn,ld);
 		if(ld && buf[ld-1]!='/' && buf[ld-1]!='\\' && ld<FILELEN) buf[ld++]='/';
@@ -272,7 +305,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 			if(ld+l>=LDFILELEN) continue;
 			memcpy(buf+ld,de->d_name,l);
 			buf[ld+l]='\0';
-			count+=faddfile(il,buf,src);
+			count+=faddfile(il,buf,src,0);
 		}
 	}
 	if(dd) closedir(dd);

@@ -16,6 +16,6 @@
 ? thread priorities
 
 
+- refresh sec-il after exif load
 - <100 => load exif on dir load
-- map: right -> open input for setting pos
 - map: right drag => move cluster

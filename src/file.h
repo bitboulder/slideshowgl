@@ -18,11 +18,12 @@ const char *imgfiledir(struct imgfile *ifl);
 struct txtimg *imgfiletxt(struct imgfile *ifl);
 
 char findfilesubdir(char *dst,const char *subdir,const char *ext);
+char finddirmatch(char *in,char *post,char *res,const char *basedir);
 
 char fthumbchecktime(struct imgfile *ifl,long ft);
 void fgetfiles(int argc,char **argv);
 
-int faddfile(struct imglist *il,const char *fn,struct imglist *src); /* TODO: remove (for mapgetctl) */
+int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase); /* TODO: remove (for mapgetctl) */
 struct imglist *floaddir(const char *fn,const char *dir);
 
 char fimgswitchmod(struct img *img);

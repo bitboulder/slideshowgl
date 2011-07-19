@@ -81,6 +81,7 @@ void actdo(enum act act,struct img *img){
 	case ACT_DELETE:    actdelete(img,"del"); break;
 	case ACT_DELORI:    actdelete(img,"ori"); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;
+	case ACT_MAPCLT:    mapimgclt(-1); break;
 	default: break;
 	}
 }
@@ -132,6 +133,7 @@ void actinit(){
 	memset(ac.cfg.delay,0,sizeof(struct actdelay)*ACT_NUM);
 	ac.cfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
 	ac.cfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
+	ac.cfg.delay[ACT_MAPCLT].delay    = cfggetuint("act.mapclt_delay");
 }
 
 int actthread(void *UNUSED(arg)){
