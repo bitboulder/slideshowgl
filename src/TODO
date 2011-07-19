@@ -17,5 +17,4 @@
 
 
 - refresh sec-il after exif load
-- <100 => load exif on dir load
 - map: right drag => move cluster

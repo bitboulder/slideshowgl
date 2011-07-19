@@ -42,9 +42,11 @@ struct ilcfg {
 	enum ilsort sort_maindir;
 	enum ilsort sort_subdir;
 	int  maxhistory;
+	int  maxloadexif;
 } ilcfg = {
 	.init=0,
 	.maxhistory=200,
+	.maxloadexif=100,
 };
 struct imglist *curils[IL_NUM] = {NULL, NULL};
 
@@ -165,6 +167,7 @@ void ilcfginit(){
 	ilcfg.sort_maindir = cfggetint("il.random") ? ILS_RND : cfggetint("il.datesort") ? ILS_DATE : ILS_NONE;
 	ilcfg.sort_subdir  = cfggetint("il.datesortdir") ? ILS_DATE : ILS_FILE;
 	ilcfg.maxhistory   = cfggetint("il.maxhistory");
+	ilcfg.maxloadexif  = cfggetint("il.maxloadexif");
 	ilcfg.init=1;
 }
 
@@ -401,7 +404,9 @@ int imgsort_datecmp(const void *a,const void *b){
 /* thread: dpl */
 char imgsort(struct imglist *il,char date){
 	int i;
-	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++) imgexifsetsortil(il->imgs[i]->exif,il);
+	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++)
+		if(il->nimg<ilcfg.maxloadexif) imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
+		else imgexifsetsortil(il->imgs[i]->exif,il);
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
 	return ilsetnxt(il);
 }

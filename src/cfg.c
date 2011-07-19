@@ -61,6 +61,7 @@ struct cfg {
 	{ 'e', "il.datesort",         CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle sort by exif date") },
 	{ 'E', "il.datesortdir",      CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle sort by exif date of subdirectories") },
 	{ 0,   "il.maxhistory",       CT_INT, CM_SET,  "200",    {NULL}, __("Maximal size of imglist history (for loop protection)") },
+	{ 0,   "il.maxloadexif",      CT_INT, CM_SET,  "100",    {NULL}, __("Maximal imglist size for instant exif load") },
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512",    {NULL}, __("Maximal texture size") },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024",   {NULL}, __("Maximal texture size for panoramas") },
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000",     {NULL}, __("Maximal pixels for panoramas (bigger ones are scaled down)") },
