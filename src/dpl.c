@@ -805,7 +805,7 @@ const char *dplhelp(){
 }
 
 void dplmousehold(int clickimg){
-	if(!mapon() || clickimg<IMGI_MAP || clickimg>=IMGI_CAT){
+	if(!mapon() || clickimg<=IMGI_MAP || clickimg>=IMGI_CAT){
 		mapinfo(-1);
 		dpl.mousehold.time=0;
 	}else{
