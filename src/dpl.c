@@ -547,6 +547,7 @@ char dpldir(int imgi,char noleave){
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
+	if(mapstatupdate(dsttxt)) return;
 	if(AIMGI==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(AIMGI==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{

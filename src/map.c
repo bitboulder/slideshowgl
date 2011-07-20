@@ -25,6 +25,8 @@
 #include "gl_int.h"
 #include "file.h"
 #include "act.h"
+#include "eff.h"     //ISTAT_TXTSIZE
+#include "dpl_int.h" //dplwritemode
 
 /* Coordinate abreviations *
  *
@@ -149,8 +151,8 @@ void mapm2g(double mx,double my,int iz,double *gx,double *gy){
 	my/=size;
 	my=0.5-my;
 	my=atan(sinh(my*2.*M_PI));
-	*gy=my*180./M_PI;
-	*gx=(mx-.5)*360.;
+	if(gy) *gy=my*180./M_PI;
+	if(gx) *gx=(mx-.5)*360.;
 }
 
 void mapg2i(double gx,double gy,int iz,int *ix,int *iy){
@@ -820,5 +822,26 @@ void mapsavepos(){
 char maprestorepos(){
 	if(map.init || !mapon()) return 0;
 	map.pos=map.possave;
+	return 1;
+}
+
+char mapstatupdate(char *dsttxt){
+	double gsx0,gsx1,gsy0,gsy1;
+	char fmt[128];
+	if(map.init || !mapon()) return 0;
+	maps2g( .5f,.0f,map.pos.iz,&gsx0,NULL);
+	maps2g(-.5f,.0f,map.pos.iz,&gsx1,NULL);
+	maps2g(.0f, .5f,map.pos.iz,NULL,&gsy0);
+	maps2g(.0f,-.5f,map.pos.iz,NULL,&gsy1);
+	gsx0=fabs(gsx1-gsx0);
+	gsy0=fabs(gsy1-gsy0);
+	gsx0*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
+	gsy0*=(6356.752314*2.*M_PI)/360.;
+	snprintf(fmt,128,"%%.3f%%c %%.3f%%c %%.%ifx%%.%ifkm%%s",gsx0>20.?0:gsx0>5.?1:2,gsy0>20.?0:gsy0>5.?1:2);
+	snprintf(dsttxt,ISTAT_TXTSIZE,fmt,
+			 fabs(map.pos.gy),map.pos.gy<0?'S':'N',
+			 fabs(map.pos.gx),map.pos.gx<0?'W':'E',
+			 gsx0,gsy0,
+			 dplwritemode()?_(" (write-mode)"):"");
 	return 1;
 }

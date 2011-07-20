@@ -22,5 +22,6 @@ char mapmarkpos(float sx,float sy,const char *dir);
 char mapsearch(struct dplinput *in);
 void mapsavepos();
 char maprestorepos();
+char mapstatupdate(char *dsttxt);
 
 #endif
