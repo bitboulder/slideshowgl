@@ -328,10 +328,11 @@ void mapimgclt(int izsel){
 			double thr;
 			if(!nd) break;
 			qsort(cltd,nd,sizeof(struct mapcltd),mapcltdcmp);
+			if(iz==N_ZOOM-1 && cltd[0].d) break;
 			if(cltd[0].d>25./256.) break;
-			thr=MIN(cltd[0].d+2./256.,25./256.);
+			thr = iz==N_ZOOM-1 ? 0. : MIN(cltd[0].d+2./256.,25./256.);
 			mapimgcltdjoin(cltd[0].clti,clt.clts);
-			for(i=1;i<nd && cltd[i].d<thr;i++) mapimgcltdjoin(cltd[i].clti,clt.clts);
+			for(i=1;i<nd && cltd[i].d<=thr;i++) mapimgcltdjoin(cltd[i].clti,clt.clts);
 		}
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
