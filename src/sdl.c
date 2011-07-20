@@ -216,8 +216,7 @@ void sdlresize(int w,int h){
 	if(done>=0){
 		int sync;
 		SDL_WM_SetCaption("Slideshowgl","slideshowgl");
-		SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync);
-		if(sync!=1) sdl.sync=0;
+		if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync)<0 || sync!=1) sdl.sync=0;
 		glinit(done);
 		panoinit(done);
 		if(done>0) ldreset();

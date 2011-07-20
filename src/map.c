@@ -226,8 +226,7 @@ void mapimgadd(const char *dir,double gx,double gy,char clt){
 		img->name=img->dir+(name-dir);
 		img->nxt=mapimgs.img;
 		mapimgs.img=img;
-	}
-	if(img->gx==gx && img->gy==gy) return;
+	}else if(img->gx==gx && img->gy==gy) return;
 	img->gx=gx;
 	img->gy=gy;
 	if(clt){
