@@ -898,7 +898,7 @@ void dplinputtxtadd(uint32_t c){
 	dpl.input.in[len]='\0';
 	switch(dpl.input.mode){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
-	case ITM_SEARCH: dplfilesearch(&dpl.input,AIL); break;
+	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplfilesearch(&dpl.input,AIL); break;
 	case ITM_DIRED:  dplfilesearch(&dpl.input,0);   break;
 	case ITM_MAPMK:  dplmapsearch(&dpl.input); break;
 	}
@@ -910,6 +910,7 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	if(mode==ITM_SEARCH && ilprg(AIL)) return 0;
 	if(mode==ITM_DIRED  && !(dpl.pos.actil&ACTIL_DIRED)) return 0;
 	if(mode==ITM_MAPMK  && (!dpl.writemode || !mapon())) return 0;
+	if(mode==ITM_SEARCH) mapsavepos();
 	dpl.input.pre[0]='\0';
 	dpl.input.in[0]='\0';
 	dpl.input.post[0]='\0';
@@ -928,7 +929,7 @@ void dplinputtxtfinal(char ok){
 	case ITM_CATSEL: if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT); break;
 	case ITM_TXTIMG: if(ok && len) dplprged("txtadd",-1,-1,-1); break;
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
-	case ITM_SEARCH: if(!ok) dplsel(dpl.input.id);
+	case ITM_SEARCH: if(!ok && !maprestorepos()) dplsel(dpl.input.id);
 	case ITM_DIRED:  if(ok) dpldired(dpl.input.in,dpl.input.id); break;
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);

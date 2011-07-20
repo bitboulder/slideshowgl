@@ -96,6 +96,7 @@ struct map {
 	char *basedirs;
 	enum maptype maptype;
 	struct mappos pos;
+	struct mappos possave;
 	struct tile ****tile;
 	char cachedir[FILELEN];
 	struct texload tl;
@@ -780,5 +781,43 @@ char mapmarkpos(float sx,float sy,const char *dir){
 	if(!(fd=fopen(buf,"w"))) return 1;
 	fprintf(fd,"%.6f,%.6f\n",gy,gx);
 	fclose(fd);
+	return 1;
+}
+
+char mapsearch(struct dplinput *in){
+	struct mapimg *img,*imgf=NULL;
+	size_t pf=1000,ilen=strlen(in->in);
+	int id;
+	if(map.init || !mapon()) return 0;
+	in->pre[0]='\0';
+	in->post[0]='\0';
+	in->id=-1;
+	for(id=0,img=mapimgs.img;img;img=img->nxt,id++){
+		size_t n,p,nlen=strlen(img->name);
+		for(n=p=0;n<=nlen-ilen;n++){
+			if(img->name[n]=='/' || img->name[n]=='\\') p++;
+			if(strncasecmp(img->name+n,in->in,ilen)) continue;
+			if(imgf && p>pf) continue;
+			if(imgf && p==pf && strncmp(img->name,imgf->name,FILELEN)<=0) continue;
+			imgf=img;
+			pf=p;
+			in->id=id;
+			snprintf(in->pre,n+1,img->name);
+			snprintf(in->post,FILELEN,img->name+n+ilen);
+			map.pos.gx=img->gx;
+			map.pos.gy=img->gy;
+		}
+	}
+	return 1;
+}
+
+void mapsavepos(){
+	if(map.init || !mapon()) return;
+	map.possave=map.pos;
+}
+
+char maprestorepos(){
+	if(map.init || !mapon()) return 0;
+	map.pos=map.possave;
 	return 1;
 }

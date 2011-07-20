@@ -19,5 +19,8 @@ char maprender(char sel);
 char mapmove(enum dplev ev,float sx,float sy);
 char mapmovepos(float sx,float sy);
 char mapmarkpos(float sx,float sy,const char *dir);
+char mapsearch(struct dplinput *in);
+void mapsavepos();
+char maprestorepos();
 
 #endif
