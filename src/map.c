@@ -665,6 +665,7 @@ void maprenderclt(){
 		glEnd();
 		glPopMatrix();
 	}
+	glLoadName(0);
 }
 
 /* TODO: move to gl.c */
