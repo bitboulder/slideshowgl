@@ -180,6 +180,14 @@ void maps2g(float sx,float sy,int iz,double *gx,double *gy){
 	mapm2g(mx,my,iz,gx,gy);
 }
 
+void mapm2s(double mx,double my,int iz,float *sx,float *sy){
+	double mxg,myg;
+	if(!map.scr_w || !map.scr_h) return;
+	mapg2m(map.pos.gx,map.pos.gy,iz,&mxg,&myg);
+	if(sx) *sx=(float)((mx-mxg)*256./ (double)*map.scr_w);
+	if(sy) *sy=(float)((my-myg)*256./ (double)*map.scr_h);
+}
+
 struct tile *maptilefind(int ix,int iy,int iz,char create){
 	if(iz<0 || iz>=N_ZOOM) return NULL;
 	if(ix<0 || ix>=1<<iz ) return NULL;
@@ -343,11 +351,18 @@ void mapimgclt(int izsel){
 //	ck=clock()-ck; printf("%.3f\n",(double)ck/(double)CLOCKS_PER_SEC);
 }
 
-char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
+struct mapclti *mapfindclt(int i){
 	struct mapclti *clti;
-	if(map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return NULL;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i;clti=clti->nxtclt) i--;
-	if(!clti || clti->nimg<1) return 0;
+	if(!clti || clti->nimg<1) return NULL;
+	return clti;
+}
+
+/* thread: dpl */
+char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir){
+	struct mapclti *clti=mapfindclt(i);
+	if(!clti) return 0;
 	if(clti->nimg==1){
 		*fn=clti->img->dir;
 		*dir=clti->img->name;
@@ -356,6 +371,14 @@ char mapgetctl(int i,struct imglist **il,const char **fn,const char **dir){
 		for(;clti;clti=clti->nxtimg)
 			faddfile(*il,clti->img->dir,NULL,0);
 	}
+	return 1;
+}
+
+/* thread: sdl */
+char mapgetcltpos(int i,float *sx,float *sy){
+	struct mapclti *clti=mapfindclt(i);
+	if(!clti) return 0;
+	mapm2s(clti->mx/(double)clti->nimg,clti->my/(double)clti->nimg,map.pos.iz,sx,sy);
 	return 1;
 }
 
@@ -844,3 +867,4 @@ char mapstatupdate(char *dsttxt){
 			 dplwritemode()?_(" (write-mode)"):"");
 	return 1;
 }
+

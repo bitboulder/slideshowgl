@@ -379,7 +379,7 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 			if(doubleclick) dplevputi(DE_DIR,clickimg);
 		break;
 		case SDL_BUTTON_RIGHT:
-			dplevputp(DE_MAPMK,sx,sy);
+			if(mapgetcltpos(clickimg-IMGI_MAP,&sx,&sy)) dplevputp(DE_MAPMK,sx,sy);
 		break;
 	}else switch(btn){
 		case SDL_BUTTON_LEFT:

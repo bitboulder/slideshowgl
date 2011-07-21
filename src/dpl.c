@@ -276,6 +276,7 @@ void dplchgimgi(int dir){
 int dplclickimg(float sx,float sy,int evimgi){
 	int i,x,y;
 	if(evimgi>=-1)         return evimgi;
+	if(mapon())            return -1;
 	if(AIMGI==IMGI_START)  return IMGI_START;
 	if(AIMGI==IMGI_END)    return IMGI_END;
 	if(dpl.pos.zoom>=0)    return AIMGI;
@@ -514,7 +515,7 @@ char dpldir(int imgi,char noleave){
 	struct imglist *il=NULL;
 	if(AIL!=0) return 0;
 	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(fn=markcatfn(imgi-IMGI_CAT,&dir))) return 1;
-	if(imgi>=IMGI_MAP && imgi<IMGI_CAT && !mapgetctl(imgi-IMGI_MAP,&il,&fn,&dir)) return 1;
+	if(imgi>=IMGI_MAP && imgi<IMGI_CAT && !mapgetclt(imgi-IMGI_MAP,&il,&fn,&dir)) return 1;
 	if(imgi==IMGI_START) return 0;
 	if(!il && !fn && !(img=imgget(AIL,imgi))){
 		if(noleave) return 0;
@@ -1089,7 +1090,9 @@ char dplev(struct ev *ev){
 			else dpl.infosel|=1U<<clickimg;
 		}
 	break;
-	case DE_MAPMK: dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy); break;
+	case DE_MAPMK:
+		dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
+	break;
 	}
 	if(AIMGI==IMGI_END && !dpl.cfg.playmode) dpl.run=0;
 	if(dplwritemode() || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || AIMGI==IMGI_END) ret|=2;
