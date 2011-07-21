@@ -108,7 +108,7 @@ char finddirmatch(char *in,char *post,char *res,const char *basedir){
 		while(l<NAME_MAX && de->d_name[l]) l++;
 		snprintf(buf,MAX(FILELEN,blen+1+l),"%s/%s",basedir,de->d_name);
 		if(isdir(buf)!=1) continue;
-		if(len<=l && !strncmp(de->d_name,in,len) && strncmp(post,de->d_name+len,l-len)<0){
+		if(len<=l && !strncmp(de->d_name,in,len) && (l==len || strncmp(post,de->d_name+len,l-len)<0)){
 			snprintf(post,MAX(FILELEN,l-len),de->d_name+len);
 			snprintf(res,FILELEN,"%s/%s%s",basedir,in,post);
 		}

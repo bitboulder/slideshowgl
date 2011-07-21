@@ -807,7 +807,7 @@ const char *dplhelp(){
 }
 
 void dplmousehold(int clickimg){
-	if(!mapon() || clickimg<IMGI_MAP || clickimg>=IMGI_CAT){
+	if(!mapon() || clickimg<IMGI_MAP || clickimg>=IMGI_CAT || dpl.input.mode!=ITM_OFF){
 		mapinfo(-1);
 		dpl.mousehold.time=0;
 	}else{
@@ -864,7 +864,7 @@ void dplmapsearch(struct dplinput *in){
 		if(!l){
 			finddirmatch(in->in,in->post,in->res,bdir);
 			if(in->post[0]) break;
-		}else if(len<=l && !strncmp(bname,in->in,len) && strncmp(in->post,bname+len,l-len)<0){
+		}else if(len<=l && !strncmp(bname,in->in,len) && (l==len || strncmp(in->post,bname+len,l-len)<0)){
 			snprintf(in->post,MAX(FILELEN,l-len),bname+len);
 			snprintf(in->res,FILELEN,bdir);
 		}else if(len>l && !strncmp(bname,in->in,l) && (in->in[l]=='/' || in->in[l]=='\\')){
@@ -913,6 +913,7 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	if(mode==ITM_DIRED  && !(dpl.pos.actil&ACTIL_DIRED)) return 0;
 	if(mode==ITM_MAPMK  && (!dpl.writemode || !mapon())) return 0;
 	if(mode==ITM_SEARCH) mapsavepos();
+	if(mode==ITM_SEARCH || mode==ITM_MAPMK) mapinfo(-1);
 	dpl.input.pre[0]='\0';
 	dpl.input.in[0]='\0';
 	dpl.input.post[0]='\0';
