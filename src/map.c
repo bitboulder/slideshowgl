@@ -392,11 +392,12 @@ void mapimgclt(int izsel){
 		while(ncltd && cltd[1].d<=thr){
 			struct mapcltd cd=cltd[1];
 			int dstid=mapimgcltdjoin(cd.clti,clt.clts);
-			if(dstid<0){ error(ERR_CONT,"mapimgclt: join of pre-join clusters"); break; }
+			if(dstid<0) break;
 			mapimgcltdupdate(cltd,&ncltd,cd.clti[!dstid],-1);
 			mapimgcltdupdate(cltd,&ncltd,cd.clti[dstid],++todo);
 		}
 		if(ncltd && cltd[1].d<=thr){
+			error(ERR_CONT,"mapimgclt: join of pre-join clusters");
 			if(clt.cltbuf) free(clt.cltbuf);
 			continue;
 		}
