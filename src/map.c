@@ -268,38 +268,68 @@ struct mapclt mapimgcltinit(int iz,size_t nimg){
 
 struct mapcltd {
 	double d;
+	int done;
 	struct mapclti *clti[2];
 };
+#define MAPCLT_MINTHR	(2./256.)
+#define MAPCLT_MAXTHR	(25./256.)
 
-size_t mapimgcltdgen(struct mapcltd *cltd,struct mapclti *clti){
-	size_t i=0;
-	struct mapclti *ca,*cb;
-	for(ca=clti;ca;ca=ca->nxtclt) for(cb=ca->nxtclt;cb;cb=cb->nxtclt,i++){
-		double xd=ca->mx/(double)ca->nimg-cb->mx/(double)cb->nimg;
-		double yd=ca->my/(double)ca->nimg-cb->my/(double)cb->nimg;
-		cltd[i].d=sqrt(xd*xd+yd*yd);
-		cltd[i].clti[0]=ca;
-		cltd[i].clti[1]=cb;
+void mapimgcltdheapify(struct mapcltd *cltd,size_t ncltd,size_t pn,struct mapcltd cd){
+	register size_t p2,p=pn;
+	register double d=cd.d;
+	if(p<1 || p>ncltd) return;
+	while(p>1){
+		p2=p>>1;
+		if(cltd[p2].d<=d) break;
+		cltd[p]=cltd[p2];
+		// updatepos [p]
+		p=p2;
 	}
-	return i;
+	while(1){
+		register double d1,d2;
+		register size_t p3;
+		p2=p<<1;
+		if(p2>ncltd) break;
+		p3=p2+1;
+		d2=p3>ncltd ? 1000. : cltd[p3].d;
+		d1=cltd[p2].d;
+		if(d2<d){ if(d1>=d2) p2=p3; }else if(d1>=d) break;
+		cltd[p]=cltd[p2];
+		// updatepos [p]
+		p=p2;
+	}
+	cltd[p]=cd;
+	// updatepos [p]
 }
 
-int mapcltdcmp(const void *a,const void *b){
-	const struct mapcltd *ca=(const struct mapcltd *)a;
-	const struct mapcltd *cb=(const struct mapcltd *)b;
-	if(ca->d<cb->d) return -1;
-	if(ca->d>cb->d) return 1;
-	return 0;
+double mapimgcltddist(struct mapclti **ci){
+	double xd=ci[0]->mx/(double)ci[0]->nimg-ci[1]->mx/(double)ci[1]->nimg;
+	double yd=ci[0]->my/(double)ci[0]->nimg-ci[1]->my/(double)ci[1]->nimg;
+	return sqrt(xd*xd+yd*yd);
+}
+
+char mapimgcltdheapifyd(struct mapcltd *cltd,size_t *ncltd,size_t pn,struct mapclti **ci,int todo){
+	struct mapcltd cd = {
+		.clti={ci[0],ci[1]},
+		.done=todo,
+		.d=mapimgcltddist(ci),
+	};
+	if(cd.d>MAPCLT_MAXTHR*3.){
+		ncltd[0]--;
+		mapimgcltdheapify(cltd,ncltd[0],pn,cltd[ncltd[0]+1]);
+	}else
+		mapimgcltdheapify(cltd,ncltd[0],pn,cd);
+	return 1;
 }
 
 char mapcltncmp(struct mapclti *a,struct mapclti *b){
 	return strncmp(a->img->name,b->img->name,FILELEN)<0;
 }
 
-void mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
+int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
 	struct mapclti *dst,*src0,*src1;
 	int id;
-	if(!cltijoin[0]->nimg || !cltijoin[1]->nimg) return;
+	if(!cltijoin[0]->nimg || !cltijoin[1]->nimg) return -1;
 	id=mapcltncmp(cltijoin[0],cltijoin[1]);
 	dst=cltijoin[id];
 	src0=cltijoin[!id];
@@ -321,34 +351,60 @@ void mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
 			src1=src1->nxtimg;
 		}
 	}
+	return id;
+}
+
+size_t mapimgcltdgen(struct mapcltd *cltd,size_t *ncltd,struct mapclti *clti,double minthr){
+	size_t i=0;
+	struct mapclti *ci[2];
+	double d;
+	for(ci[0]=clti;ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];ci[1]=ci[1]->nxtclt,i++)
+		if((d=mapimgcltddist(ci))<minthr) mapimgcltdjoin(ci,clti);
+	for(ci[0]=clti;ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];ci[1]=ci[1]->nxtclt,i++){
+		ncltd[0]++;
+		mapimgcltdheapifyd(cltd,ncltd,ncltd[0],ci,0);
+	}
+	return i;
+}
+
+void mapimgcltdupdate(struct mapcltd *cltd,size_t *ncltd,struct mapclti *cmp,int todo){
+	size_t p;
+	for(p=ncltd[0];p>=1;) if(p<=ncltd[0] && cltd[p].done!=todo && (cltd[p].clti[0]==cmp || cltd[p].clti[1]==cmp)){
+		if(todo<0){
+			ncltd[0]--;
+			mapimgcltdheapify(cltd,ncltd[0],p,cltd[ncltd[0]+1]);
+		}else
+			mapimgcltdheapifyd(cltd,ncltd,p,cltd[p].clti,todo);
+	}else p--;
 }
 
 /* thread: act */
 void mapimgclt(int izsel){
 	int iz;
 	size_t nimg=mapimgcltnimg();
-	struct mapcltd *cltd=malloc(nimg*(nimg-1)/2*sizeof(struct mapcltd));
-//	clock_t ck=clock(); // TODO: remove
+	struct mapcltd *cltd=malloc((nimg*(nimg-1)/2+1)*sizeof(struct mapcltd));
 	for(iz=izsel<0?0:izsel;izsel<0 ? iz<N_ZOOM : iz==izsel;iz++){
+		size_t ncltd=0;
 		struct mapclt clt=mapimgcltinit(iz,nimg);
-		printf("%i/%i\n",iz,N_ZOOM);
-		while(1){
-			size_t i,nd=mapimgcltdgen(cltd,clt.clts); // TODO: heap
-			double thr;
-			if(!nd) break;
-			qsort(cltd,nd,sizeof(struct mapcltd),mapcltdcmp);
-			if(iz==N_ZOOM-1 && cltd[0].d) break;
-			if(cltd[0].d>25./256.) break;
-			thr = iz==N_ZOOM-1 ? 0. : MIN(cltd[0].d+2./256.,25./256.);
-			mapimgcltdjoin(cltd[0].clti,clt.clts);
-			for(i=1;i<nd && cltd[i].d<=thr;i++) mapimgcltdjoin(cltd[i].clti,clt.clts);
+		double thr=iz==N_ZOOM-1 ? 0. : MAPCLT_MAXTHR;
+		int todo=0;
+		mapimgcltdgen(cltd,&ncltd,clt.clts,iz==N_ZOOM-1 ? 0. : MAPCLT_MINTHR);
+		while(ncltd && cltd[1].d<=thr){
+			struct mapcltd cd=cltd[1];
+			int dstid=mapimgcltdjoin(cd.clti,clt.clts);
+			if(dstid<0){ error(ERR_CONT,"mapimgclt: join of pre-join clusters"); break; }
+			mapimgcltdupdate(cltd,&ncltd,cd.clti[!dstid],-1);
+			mapimgcltdupdate(cltd,&ncltd,cd.clti[dstid],++todo);
+		}
+		if(ncltd && cltd[1].d<=thr){
+			if(clt.cltbuf) free(clt.cltbuf);
+			continue;
 		}
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
 		if(iz==map.pos.iz) sdlforceredraw();
 	}
 	free(cltd);
-//	ck=clock()-ck; printf("%.3f\n",(double)ck/(double)CLOCKS_PER_SEC);
 }
 
 struct mapclti *mapfindclt(int i){
