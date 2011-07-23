@@ -171,7 +171,7 @@ long filetime(const char *fn){
 char fileext(const char *fn,size_t len,const char *ext){
 	size_t lext=strlen(ext);
 	if(!len) len=strlen(fn);
-	return len>lext+1 && !strncasecmp(fn+len-lext,ext,lext);
+	return len>lext && !strncasecmp(fn+len-lext,ext,lext);
 }
 
 #if HAVE_ICONV
