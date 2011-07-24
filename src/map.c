@@ -71,6 +71,7 @@ struct texload {
 struct mapimg {
 	struct mapimg *nxt;
 	char dir[FILELEN];
+	int  dirid;
 	char *name;
 	double gx,gy;
 };
@@ -223,15 +224,16 @@ const char *mapimgname(const char *dir){
 	return dir+i;
 }
 
-void mapimgadd(const char *dir,double gx,double gy,char clt){
+void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
 	struct mapimg *img;
 	const char *name=mapimgname(dir);
 	for(img=mapimgs.img;img;img=img->nxt)
-		if(!strncmp(img->name,name,FILELEN)) break;
+		if(img->dirid==dirid && !strncmp(img->name,name,FILELEN)) break;
 	if(!img){
 		img=malloc(sizeof(struct mapimg));
 		snprintf(img->dir,FILELEN,dir);
 		img->name=img->dir+(name-dir);
+		img->dirid=dirid;
 		img->nxt=mapimgs.img;
 		mapimgs.img=img;
 	}else if(img->gx==gx && img->gy==gy) return;
@@ -326,8 +328,8 @@ char mapcltncmp(struct mapclti *a,struct mapclti *b){
 	return strncmp(a->img->name,b->img->name,FILELEN)<0;
 }
 
-int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
-	struct mapclti *dst,*src0,*src1;
+int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti **clti){
+	struct mapclti *dst,*src0,*src1,*ci;
 	int id;
 	if(!cltijoin[0]->nimg || !cltijoin[1]->nimg) return -1;
 	id=mapcltncmp(cltijoin[0],cltijoin[1]);
@@ -337,8 +339,9 @@ int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
 	dst->mx+=src0->mx;
 	dst->my+=src0->my;
 	src0->nimg=0;
-	for(;clti;clti=clti->nxtclt) if(clti->nxtclt==src0)
-		clti->nxtclt=src0->nxtclt;
+	if(clti[0]==src0) clti[0]=src0->nxtclt;
+	else for(ci=clti[0];ci;ci=ci->nxtclt) if(ci->nxtclt==src0)
+		ci->nxtclt=src0->nxtclt;
 	src1=dst->nxtimg;
 	while(src0 || src1){
 		if(!src1 || (src0 && mapcltncmp(src1,src0))){
@@ -354,13 +357,16 @@ int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti *clti){
 	return id;
 }
 
-size_t mapimgcltdgen(struct mapcltd *cltd,size_t *ncltd,struct mapclti *clti,double minthr){
+size_t mapimgcltdgen(struct mapcltd *cltd,size_t *ncltd,struct mapclti **clti,double minthr){
 	size_t i=0;
 	struct mapclti *ci[2];
 	double d;
-	for(ci[0]=clti;ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];ci[1]=ci[1]->nxtclt,i++)
-		if((d=mapimgcltddist(ci))<minthr) mapimgcltdjoin(ci,clti);
-	for(ci[0]=clti;ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];ci[1]=ci[1]->nxtclt,i++){
+	for(ci[0]=clti[0];ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];i++)
+		if((d=mapimgcltddist(ci))<minthr && mapimgcltdjoin(ci,clti)==1){
+			ci[0]=ci[0]->nxtclt;
+			ci[1]=ci[0]->nxtclt;
+		}else ci[1]=ci[1]->nxtclt;
+	for(ci[0]=clti[0];ci[0];ci[0]=ci[0]->nxtclt) for(ci[1]=ci[0]->nxtclt;ci[1];ci[1]=ci[1]->nxtclt,i++){
 		ncltd[0]++;
 		mapimgcltdheapifyd(cltd,ncltd,ncltd[0],ci,0);
 	}
@@ -378,6 +384,13 @@ void mapimgcltdupdate(struct mapcltd *cltd,size_t *ncltd,struct mapclti *cmp,int
 	}else p--;
 }
 
+void mapimgcltcheck(struct mapclti *ci,int checkpoint){
+	for(;ci;ci=ci->nxtclt) if(ci->nimg==0){
+		error(ERR_CONT,"mapimgclt: cluster with zero elements -> correcting (checkpoint: %i)",checkpoint);
+		ci->nimg=1;
+	}
+}
+
 /* thread: act */
 void mapimgclt(int izsel){
 	int iz;
@@ -388,10 +401,10 @@ void mapimgclt(int izsel){
 		struct mapclt clt=mapimgcltinit(iz,nimg);
 		double thr=iz==N_ZOOM-1 ? 0. : MAPCLT_MAXTHR;
 		int todo=0;
-		mapimgcltdgen(cltd,&ncltd,clt.clts,iz==N_ZOOM-1 ? 0. : MAPCLT_MINTHR);
+		mapimgcltdgen(cltd,&ncltd,&clt.clts,iz==N_ZOOM-1 ? 0. : MAPCLT_MINTHR);
 		while(ncltd && cltd[1].d<=thr){
 			struct mapcltd cd=cltd[1];
-			int dstid=mapimgcltdjoin(cd.clti,clt.clts);
+			int dstid=mapimgcltdjoin(cd.clti,&clt.clts);
 			if(dstid<0) break;
 			mapimgcltdupdate(cltd,&ncltd,cd.clti[!dstid],-1);
 			mapimgcltdupdate(cltd,&ncltd,cd.clti[dstid],++todo);
@@ -404,6 +417,7 @@ void mapimgclt(int izsel){
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
 		if(iz==map.pos.iz) sdlforceredraw();
+		mapimgcltcheck(clt.clts,0);
 	}
 	free(cltd);
 }
@@ -443,17 +457,20 @@ char mapgetgps(const char *dir,double *gx,double *gy,char clt){
 	double in[2];
 	char fn[FILELEN];
 	FILE *fd;
-	int scan;
+	int dirid;
 	if(!dir) return 0;
 	snprintf(fn,FILELEN,"%s/gps.txt",dir);
 	if(!(fd=fopen(fn,"r"))) return 0;
-	scan=fscanf(fd,"%lg,%lg",in,in+1);
+	if(gx) *gx=0.;
+	if(gy) *gy=0.;
+	for(dirid=0;fscanf(fd,"%lg,%lg",in,in+1)==2;dirid++){
+		if(gx) *gx=in[1];
+		if(gy) *gy=in[0];
+		mapimgadd(dir,dirid,in[1],in[0],clt);
+		fscanf(fd,",");
+	}
 	fclose(fd);
-	if(scan!=2) return 0;
-	if(gx) *gx=in[1];
-	if(gy) *gy=in[0];
-	mapimgadd(dir,in[1],in[0],clt);
-	return 1;
+	return dirid!=0;
 }
 
 struct imglist *mapsetpos(int imgi){
@@ -708,11 +725,11 @@ void maprenderclt(){
 	if(!map.scr_w || !map.scr_h) return;
 	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti;clti=clti->nxtclt){
+		glLoadName(name++);
 		glPushMatrix();
 		glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
 		glTranslated(clti->mx/(double)clti->nimg-mx,clti->my/(double)clti->nimg-my,0.);
 		glScalef(15.f/256.f,10.f/256.f,1.f);
-		glLoadName(name++);
 		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
 		glBegin(GL_QUADS);
 		glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
@@ -859,7 +876,7 @@ char mapmarkpos(float sx,float sy,const char *dir){
 	if(map.init || !mapon()) return 0;
 	if(isdir(dir)!=1) return 0;
 	maps2g(sx,sy,map.pos.iz,&gx,&gy);
-	mapimgadd(dir,gx,gy,1);
+	mapimgadd(dir,0,gx,gy,1); /* TODO: multiple dirid's */
 	snprintf(buf,FILELEN,"%s/gps.txt",dir);
 	if(!(fd=fopen(buf,"w"))) return 1;
 	fprintf(fd,"%.6f,%.6f\n",gy,gx);
