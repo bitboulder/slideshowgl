@@ -4,7 +4,7 @@
 DIR="/home/src/self/slideshowgl/slideshowgl-2.0.0"
 CDIR="$DIR/core_dump"
 
-SL="$DIR/build/slideshowgl"
+SL="$DIR/build/slideshowgl -c map.cachedir=/mnt/iso/slideshowgl-cache"
 
 export SDL_VIDEO_FULLSCREEN_DISPLAY=1
 
