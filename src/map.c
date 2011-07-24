@@ -401,7 +401,7 @@ void mapimgclt(int izsel){
 		struct mapclt clt=mapimgcltinit(iz,nimg);
 		double thr=iz==N_ZOOM-1 ? 0. : MAPCLT_MAXTHR;
 		int todo=0;
-		mapimgcltdgen(cltd,&ncltd,&clt.clts,iz==N_ZOOM-1 ? 0. : MAPCLT_MINTHR);
+		mapimgcltdgen(cltd,&ncltd,&clt.clts,iz==N_ZOOM-1 ? 1e-6 : MAPCLT_MINTHR);
 		while(ncltd && cltd[1].d<=thr){
 			struct mapcltd cd=cltd[1];
 			int dstid=mapimgcltdjoin(cd.clti,&clt.clts);
