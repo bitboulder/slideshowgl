@@ -105,6 +105,7 @@ struct map {
 	int *scr_w, *scr_h;
 	struct tile imgdir[2];
 	int info;
+	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 } map = {
 	.init = 2,
 	.basedirs = NULL,
@@ -118,6 +119,7 @@ struct map {
 	.scr_w = NULL,
 	.scr_h = NULL,
 	.info  = -1,
+	.editmode  = MEM_REPLACE,
 };
 
 char mapon(){ return !strncmp(ilfn(ilget(0)),"[MAP]",5); }
@@ -132,6 +134,11 @@ void mapinfo(int i){
 	sdlforceredraw();
 }
 const char *mapgetbasedirs(){ return map.basedirs; }
+char mapeditmode(){
+	if(map.init || !mapon()) return 0;
+	map.editmode=(map.editmode+1)%N_MEM;
+	return 1;
+}
 
 #define mapp2i(pos,i)	mapg2i(pos.gx,pos.gy,pos.iz,&i##x,&i##y)
 
@@ -223,12 +230,34 @@ const char *mapimgname(const char *dir){
 	return dir+i;
 }
 
+#define N_DIRID	128
+struct mapimg *mapimgfind(const char *name,int *dirid,double gx,double gy){
+	struct mapimg *img=NULL,*i;
+	double dimg=0.;
+	char freedirid[N_DIRID];
+	for(i=mapimgs.img;i;i=i->nxt){
+		if(strncmp(i->name,name,FILELEN)) continue;
+		if(*dirid<0){
+			double d=sqrt((gx-i->gx)*(gx-i->gx)+(gy-i->gy)*(gy-i->gy));
+			if(i->dirid>=0 && i->dirid<N_DIRID) freedirid[i->dirid]=1;
+			if(img && d>=dimg) continue;
+			img=i; dimg=d;
+		}else if(i->dirid==*dirid){ img=i; break; }
+	}
+	if(*dirid<0){
+		int di=0;
+		while(di<N_DIRID && freedirid[di]) di++;
+		if(di<N_DIRID) *dirid=di;
+	}
+	return img;
+}
+
 void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
-	struct mapimg *img;
+	enum mapeditmode mode = dirid<0 ? map.editmode : MEM_REPLACE;
 	const char *name=mapimgname(dir);
-	for(img=mapimgs.img;img;img=img->nxt)
-		if(img->dirid==dirid && !strncmp(img->name,name,FILELEN)) break;
-	if(!img){
+	struct mapimg *img=mapimgfind(name,&dirid,gx,gy);
+	if(!img || mode==MEM_ADD){
+		if(dirid<0){ error(ERR_CONT,"mapimgadd: no free dirid found for \"%s\"",dir); return; }
 		img=malloc(sizeof(struct mapimg));
 		snprintf(img->dir,FILELEN,dir);
 		img->name=img->dir+(name-dir);
@@ -462,11 +491,10 @@ char mapgetgps(const char *dir,double *gx,double *gy,char clt){
 	if(!(fd=fopen(fn,"r"))) return 0;
 	if(gx) *gx=0.;
 	if(gy) *gy=0.;
-	for(dirid=0;fscanf(fd,"%lg,%lg",in,in+1)==2;dirid++){
+	for(dirid=0;fscanf(fd,"%lg,%lg\n",in,in+1)==2;dirid++){
 		if(gx) *gx=in[1];
 		if(gy) *gy=in[0];
 		mapimgadd(dir,dirid,in[1],in[0],clt);
-		fscanf(fd,",");
 	}
 	fclose(fd);
 	return dirid!=0;
@@ -868,19 +896,31 @@ char mapmovepos(float sx,float sy){
 	return 1;
 }
 
+void mapimgsave(const char *dir){
+	const char *name=mapimgname(dir);
+	struct mapimg *imgs[N_DIRID];
+	struct mapimg *i;
+	int di;
+	char buf[FILELEN];
+	FILE *fd;
+	snprintf(buf,FILELEN,"%s/gps.txt",dir);
+	if(!(fd=fopen(buf,"w"))) return;
+	memset(imgs,0,sizeof(struct mapimg *)*N_DIRID);
+	for(i=mapimgs.img;i;i=i->nxt) if(!strncmp(i->name,name,FILELEN) && i->dirid>=0 && i->dirid<N_DIRID)
+		imgs[i->dirid]=i;
+	for(di=0;di<N_DIRID;di++) if(imgs[di])
+		fprintf(fd,"%.6f,%.6f\n",imgs[di]->gy,imgs[di]->gx);
+	fclose(fd);
+}
+
 /* thread: dpl */
 char mapmarkpos(float sx,float sy,const char *dir){
 	double gx,gy;
-	FILE *fd;
-	char buf[FILELEN];
 	if(map.init || !mapon()) return 0;
 	if(isdir(dir)!=1) return 0;
 	maps2g(sx,sy,map.pos.iz,&gx,&gy);
-	mapimgadd(dir,0,gx,gy,1); /* TODO: multiple dirid's */
-	snprintf(buf,FILELEN,"%s/gps.txt",dir);
-	if(!(fd=fopen(buf,"w"))) return 1;
-	fprintf(fd,"%.6f,%.6f\n",gy,gx);
-	fclose(fd);
+	mapimgadd(dir,-1,gx,gy,1);
+	mapimgsave(dir);
 	return 1;
 }
 
@@ -925,6 +965,7 @@ char maprestorepos(){
 char mapstatupdate(char *dsttxt){
 	double gsx0,gsx1,gsy0,gsy1;
 	char fmt[128];
+	char *txt;
 	if(map.init || !mapon()) return 0;
 	maps2g( .5f,.0f,map.pos.iz,&gsx0,NULL);
 	maps2g(-.5f,.0f,map.pos.iz,&gsx1,NULL);
@@ -934,12 +975,16 @@ char mapstatupdate(char *dsttxt){
 	gsy0=fabs(gsy1-gsy0);
 	gsx0*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
 	gsy0*=(6356.752314*2.*M_PI)/360.;
-	snprintf(fmt,128,"%%.3f%%c %%.3f%%c %%.%ifx%%.%ifkm%%s",gsx0>20.?0:gsx0>5.?1:2,gsy0>20.?0:gsy0>5.?1:2);
+	snprintf(fmt,128,"%%.3f%%c %%.3f%%c %%.%ifx%%.%ifkm",gsx0>20.?0:gsx0>5.?1:2,gsy0>20.?0:gsy0>5.?1:2);
 	snprintf(dsttxt,ISTAT_TXTSIZE,fmt,
 			 fabs(map.pos.gy),map.pos.gy<0?'S':'N',
 			 fabs(map.pos.gx),map.pos.gx<0?'W':'E',
-			 gsx0,gsy0,
-			 dplwritemode()?_(" (write-mode)"):"");
+			 gsx0,gsy0);
+	txt=dsttxt+strlen(dsttxt);
+	if(dplwritemode())
+		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",
+			 _(" (write-mode)"),
+			 (map.editmode==MEM_ADD?"Add":"Replace"));
 	return 1;
 }
 

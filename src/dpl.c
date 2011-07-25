@@ -548,7 +548,7 @@ char dpldir(int imgi,char noleave){
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
-	if(mapstatupdate(dsttxt)) return;
+	if(mapstatupdate(dsttxt)) goto end;
 	if(AIMGI==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(AIMGI==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
 	else{
@@ -584,6 +584,7 @@ void dplstatupdate(){
 		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}
 	effstat()->run=run;
+end:
 	sdlforceredraw();
 }
 
@@ -998,7 +999,7 @@ void dplkey(unsigned short keyu){
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
 	case '-': if(!dplprged("imgdel", 1,dpl.actimgi,-1)) dplcol(-1); break;
-	case 'e': dpledit(); break;
+	case 'e': if(!mapeditmode()) dpledit(); break;
 	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
 	case 'i':
 		if(dpl.pos.actil&ACTIL_PRGED) dplprged("frmins",-1,-1,-1);
