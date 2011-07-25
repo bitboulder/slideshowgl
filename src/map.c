@@ -26,6 +26,7 @@
 #include "act.h"
 #include "eff.h"     //ISTAT_TXTSIZE
 #include "dpl_int.h" //dplwritemode
+#include "mapld.h"
 
 /* Coordinate abreviations *
  *
@@ -100,7 +101,6 @@ struct map {
 	struct mappos pos;
 	struct mappos possave;
 	struct tile ****tile;
-	char cachedir[FILELEN];
 	struct texload tl;
 	int *scr_w, *scr_h;
 	struct tile imgdir[2];
@@ -571,22 +571,11 @@ char texload(){
 	return 1;
 }
 
-char maploadtile(struct tile *ti,char web){
+char maploadtile(struct tile *ti){
 	char fn[FILELEN];
-	const char *maptype=maptype_str[map.maptype];
 	SDL_Surface *sf,*sfc;
 	SDL_PixelFormat fmt;
-	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",map.cachedir,maptype,ti->iz,ti->ix,ti->iy);
-	if(!isfile(fn)){
-		char cmd[FILELEN*2];
-		if(!web) return 0;
-		snprintf(cmd,FILELEN*2,"mkdir -p %s/%s/%i/%i/",map.cachedir,maptype,ti->iz,ti->ix);
-		system(cmd);
-		if(!strcmp(maptype,"om")) snprintf(cmd,FILELEN*2,"wget -qO %s http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",fn,ti->iz,ti->ix,ti->iy);
-		system(cmd);
-		if(!filesize(fn)){ unlink(fn); return 0; }
-		if(!isfile(fn)) return 0;
-	}
+	if(!mapld_check(maptype_str[map.maptype],ti->iz,ti->ix,ti->iy,fn)) return 0;
 	if(!(sf=IMG_Load(fn))) return 0;
 	if(sf->w!=256 || sf->h!=256) return 0;
 	memset(&fmt,0,sizeof(SDL_PixelFormat));
@@ -603,11 +592,11 @@ char maploadtile(struct tile *ti,char web){
 	return 1;
 }
 
-char mapldchecktile(int ix,int iy,int iz,char web){
+char mapldchecktile(int ix,int iy,int iz){
 	struct tile *ti=maptilefind(ix,iy,iz,1);
 	if(!ti || ti->loading || ti->tex) return 0;
 	debug(DBG_STA,"map loading map %i/%i/%i",iz,ix,iy);
-	if(!maploadtile(ti,web)) return 0;
+	if(!maploadtile(ti)) return 0;
 	return 1;
 }
 
@@ -621,26 +610,23 @@ char mapscrtis(int *iw,int *ih){
 char mapldcheck(){
 	int ix,iy,ixc,iyc;
 	int iw,ih,ir,r,i;
-	char web;
 	if(map.init || !mapon()) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
 	mapp2i(map.pos,i);
-	for(web=0;web<2;web++){
-		for(r=0;r<=ir;r++){
-			for(i=0;i<(r?r*8:1);i++){
-				if(!r) ixc=iyc=0;
-				else if(i<r*4-2){
-					ixc=(i%2?-1:1)*r;
-					iyc=((i/2)%2?-1:1)*((i+2)/4);
-				}else{
-					ixc=((i/2)%2?-1:1)*((i-r*4+4)/4);
-					iyc=(i%2?-1:1)*r;
-				}
-				if(mapldchecktile(ix+ixc,iy+iyc,map.pos.iz,web)) return 1;
+	for(r=0;r<=ir;r++){
+		for(i=0;i<(r?r*8:1);i++){
+			if(!r) ixc=iyc=0;
+			else if(i<r*4-2){
+				ixc=(i%2?-1:1)*r;
+				iyc=((i/2)%2?-1:1)*((i+2)/4);
+			}else{
+				ixc=((i/2)%2?-1:1)*((i-r*4+4)/4);
+				iyc=(i%2?-1:1)*r;
 			}
+			if(mapldchecktile(ix+ixc,iy+iyc,map.pos.iz)) return 1;
 		}
 	}
 	return 0;
@@ -680,14 +666,10 @@ void mapaddbasedir(const char *dir,const char *name){
 
 /* thread: act */
 void mapinit(){
-	const char *cd;
 	char *bdir;
 	while(map.init>1) SDL_Delay(500);
 	mapaddbasedir(cfggetstr("map.base"),"");
-	cd=cfggetstr("map.cachedir");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
-	if(cd && cd[0]) snprintf(map.cachedir,FILELEN,cd);
-	else snprintf(map.cachedir,FILELEN,"%s/slideshowgl-cache",gettmp());
 	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
 		char dir[FILELEN];
 		snprintf(dir,FILELEN,bdir);
@@ -984,7 +966,7 @@ char mapstatupdate(char *dsttxt){
 	if(dplwritemode())
 		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",
 			 _(" (write-mode)"),
-			 (map.editmode==MEM_ADD?"Add":"Replace"));
+			 (map.editmode==MEM_ADD?_("Add"):_("Replace")));
 	return 1;
 }
 

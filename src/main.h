@@ -29,7 +29,9 @@ enum debug { EDEBUG, ERR_QUIT, ERR_CONT };
 #define THR_DPL 0x04
 #define THR_LD  0x08
 #define THR_ACT 0x10
-#define THR_OTH (THR_DPL|THR_LD|THR_ACT)
+#define THR_ML1 0x20
+#define THR_ML2 0x40
+#define THR_OTH (THR_DPL|THR_LD|THR_ACT|THR_ML1|THR_ML2)
 
 #define debug(lvl,...)	debug_ex(lvl,__FILE__,__LINE__,__VA_ARGS__)
 #define error(lvl,...)	debug_ex(lvl,__FILE__,__LINE__,__VA_ARGS__)

@@ -13,6 +13,7 @@
 #include "cfg.h"
 #include "act.h"
 #include "file.h"
+#include "mapld.h"
 
 #if 0
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -141,13 +142,16 @@ struct mainthread {
 	int (*fnc)(void *);
 	int pri;
 	char init;
+	void *data;
 	SDL_Thread *pt;
 } mainthreads[] = {
-	{ &sdlthread, 15, 0 },
-	{ &dplthread, 10, 0 },
-	{ &ldthread,   5, 0 },
-	{ &actthread,  1, 0 },
-	{ NULL,        0, 0 },
+	{ &sdlthread, 15, 0, NULL },
+	{ &dplthread, 10, 0, NULL },
+	{ &ldthread,   5, 0, NULL },
+	{ &actthread,  2, 0, NULL },
+	{ &mapldthread,1, 0, (void*)0 },
+	{ &mapldthread,1, 0, (void*)1 },
+	{ NULL,        0, 0, NULL },
 };
 
 int threadid(){
@@ -170,7 +174,7 @@ void start_threads(){
 	mainthreads->pt=NULL;
 	mainthreads->init=1;
 	for(;mt->fnc;mt++) if(!mt->init){
-		mt->pt=SDL_CreateThread(mt->fnc,NULL);
+		mt->pt=SDL_CreateThread(mt->fnc,mt->data);
 		mt->init=1;
 	}
 #if 0
@@ -236,11 +240,13 @@ int main(int argc,char **argv){
 	sdlinit();
 	start_threads();
 	if(!end_threads())
-		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s%s",
+		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s%s%s%s",
 			(sdl_quit&THR_SDL)?"":" sdl",
 			(sdl_quit&THR_DPL)?"":" dpl",
 			(sdl_quit&THR_LD )?"":" ld",
-			(sdl_quit&THR_ACT)?"":" act");
+			(sdl_quit&THR_ACT)?"":" act",
+			(sdl_quit&THR_ML1)?"":" mapld1",
+			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
 	fileoutput(0);
 	return 0;

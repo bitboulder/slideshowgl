@@ -34,6 +34,7 @@ sources = """
 	mark.c
 	prg.c
 	map.c
+	mapld.c
 	exiv2.cpp
 """.split()
 

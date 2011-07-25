@@ -42,6 +42,7 @@ struct sdlcfg {
 
 struct sdlmove {
 	Uint16 base_x, base_y;
+	Uint8 button;
 	int pos_x, pos_y;
 	char jump;
 };
@@ -414,19 +415,23 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	int clickimg = glselect(x,y+sdl.off_y);
 	if(down) switch(button){
 		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_RIGHT:
 			sdl.move.jump=0;
 			sdl.move.pos_x=0;
 			sdl.move.pos_y=0;
 			sdl.move.base_x=x;
 			sdl.move.base_y=y;
+			sdl.move.button=button;
 		break;
-		case SDL_BUTTON_MIDDLE:
-		case SDL_BUTTON_RIGHT:     sdlclick(button,x,y,clickimg);         break;
+	}else switch(button){
+		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_RIGHT:     
+			if(!sdljump(x,y,1)) sdlclick(button,x,y,clickimg);
+			sdl.move.base_x=0xffff;
+		break;
+		case SDL_BUTTON_MIDDLE:    sdlclick(button,x,y,clickimg);         break;
 		case SDL_BUTTON_WHEELUP:   dplevputpi(DE_ZOOMIN, fx,fy,clickimg); break;
 		case SDL_BUTTON_WHEELDOWN: dplevputpi(DE_ZOOMOUT,fx,fy,clickimg); break;
-	}else if(button==SDL_BUTTON_LEFT){
-		if(!sdljump(x,y,1)) sdlclick(button,x,y,clickimg);
-		sdl.move.base_x=0xffff;
 	}
 }
 
