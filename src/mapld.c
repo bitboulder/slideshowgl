@@ -37,6 +37,16 @@ static size_t mapld_load_data(void *data,size_t size,size_t nmemb,void *arg){
 	return fwrite(data,size,nmemb,*fd);
 }
 
+char mapld_filecheck(const char *fn){
+	FILE *fd=fopen(fn,"rb");
+	char buf[8];
+	if(!fd) return 0;
+	if(fread(buf,1,8,fd)!=8){ fclose(fd); return 0; }
+	fclose(fd);
+	if(!strncmp(buf,"<html>",6)) return 0;
+	return 1;
+}
+
 void mapld_load(struct mapldti ti){
 	char url[FILELEN*2]={'\0'},*txt=url;
 	char fn[FILELEN];
@@ -44,6 +54,7 @@ void mapld_load(struct mapldti ti){
 	CURL *curl;
 	CURLcode res;
 	int i;
+	struct curl_slist *lst=NULL;
 	for(i=0;i<3;i++){
 		switch(i){
 		case 0: snprintf(txt,(size_t)(txt+FILELEN*2-url),"%s/%s",mapld.cachedir,ti.maptype); break;
@@ -65,12 +76,17 @@ void mapld_load(struct mapldti ti){
 		return;
 	}
 	curl_easy_setopt(curl,CURLOPT_URL,url);
+	curl_easy_setopt(curl,CURLOPT_USERAGENT,"Opera/9.80 (X11; Linux x86_64; U; de) Presto/2.9.168 Version/11.50");
+	lst=curl_slist_append(lst,"Accept-Language: de");
+	lst=curl_slist_append(lst,"Accept: image/png, image/jpeg, image/gif, */*");
+	curl_easy_setopt(curl,CURLOPT_HTTPHEADER,lst);
 	curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,mapld_load_data);
 	curl_easy_setopt(curl,CURLOPT_WRITEDATA,&fd);
 	res=curl_easy_perform(curl);
+	curl_slist_free_all(lst);
 	curl_easy_cleanup(curl);
 	fclose(fd);
-	if(res==CURLE_OK && filesize(fn)){
+	if(res==CURLE_OK && filesize(fn) && mapld_filecheck(fn)){
 		snprintf(url,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
 		rename(fn,url);
 	}else{
