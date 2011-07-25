@@ -14,7 +14,6 @@
 		#define NAME_MAX 255
 	#endif
 #endif
-#include <time.h> // TODO: remove
 #include "map.h"
 #include "img.h"
 #include "help.h"
@@ -783,7 +782,8 @@ void maprenderinfo(){
 	nl=clti->nimg; nc=1;
 	if((b+h*(float)nl)*hrat>1.f){
 		nl=(int)((1.f/hrat-b)/h);
-		while(nl*nc<clti->nimg) nc++; // TODO
+		nc=clti->nimg/nl;
+		if(nl*nc<clti->nimg) nc++;
 	}
 	if((w+b)*(float)nc*hrat/sw+sx>.5f) sx=.5f-(w+b)*(float)nc*hrat/sw;
 	if((b+h*(float)nl)*hrat+sy>.5f) sy=.5f-(b+h*(float)nl)*hrat;
