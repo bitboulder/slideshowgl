@@ -12,6 +12,9 @@
 #endif
 
 #define M_PIf		3.14159265358979323846f
+#ifndef M_PI
+	#define M_PI		3.14159265358979323846
+#endif
 #define RAD(x)		((x)/180.f*M_PIf)
 #define SIN(x)		sinf(RAD(x))
 #define COS(x)		cosf(RAD(x))
@@ -43,6 +46,7 @@ char isdir(const char *fn);
 char isfile(const char *fn);
 long filesize(const char *fn);
 long filetime(const char *fn);
+char mkdirm(const char *dir);
 
 char fileext(const char *fn,size_t len,const char *ext);
 

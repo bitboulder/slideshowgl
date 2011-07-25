@@ -35,12 +35,13 @@ sources = """
 	prg.c
 	map.c
 	mapld.c
-	exiv2.cpp
-""".split()
+"""
+if env['HAVE_EXIV2'] == 1:
+	sources = sources + "exiv2.cpp"
 
 env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))
 
-objects = env.Object(sources)
+objects = env.Object(sources.split())
 
 prog = env.Program('../slideshowgl', objects, install=True)
 

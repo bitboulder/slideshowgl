@@ -168,6 +168,18 @@ long filetime(const char *fn){
 
 #endif
 
+#ifndef __WIN32__
+	#include <sys/stat.h>
+	#include <sys/types.h>
+#endif
+char mkdirm(const char *dir){
+#ifdef __WIN32__
+	return mkdir(dir)==0;
+#else
+	return mkdir(dir,00777)==0;
+#endif
+}
+
 char fileext(const char *fn,size_t len,const char *ext){
 	size_t lext=strlen(ext);
 	if(!len) len=strlen(fn);

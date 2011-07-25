@@ -25,6 +25,8 @@
 #define HAVE_MKTIME		%(HAVE_MKTIME)i
 #define HAVE_OPENDIR	%(HAVE_OPENDIR)i
 
+#define HAVE_CURL		%(HAVE_CURL)i
+
 /*#define HAVE_PTHREAD*/
 
 #endif

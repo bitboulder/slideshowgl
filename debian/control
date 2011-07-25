@@ -2,11 +2,11 @@ Source: slideshowgl
 Section: graphics
 Priority: optional
 Maintainer: Frank Duckhorn <frank@bitboulder.net>
-Build-Depends: scons, libgl-dev, libglu-dev, libglew-dev, libsdl1.2-dev, libsdl-image1.2-dev, libexif-dev, libftgl-dev, libx11-dev, libjpeg-dev, libxext-dev
+Build-Depends: scons, libgl-dev, libglu-dev, libglew-dev, libsdl1.2-dev, libsdl-image1.2-dev, libexif-dev, libftgl-dev, libx11-dev, libjpeg-dev, libxext-dev, libcurl3-dev
 Standards-Version: 2.0.0
 
 Package: slideshowgl
 Architecture: any
-Depends: libgl1, libglu1, libglew1.5, libsdl1.2debian, libsdl-image1.2, libexif12, libftgl2, libx11-6, libxext6
+Depends: libgl1, libglu1, libglew1.5, libsdl1.2debian, libsdl-image1.2, libexif12, libftgl2, libx11-6, libxext6, libcurl3
 Description: myjpegtool
 

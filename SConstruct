@@ -82,6 +82,7 @@ if not env.GetOption('clean'):
 	env['HAVE_STAT'] = 0
 	env['HAVE_MKTIME'] = 0
 	env['HAVE_OPENDIR'] = 0
+	env['HAVE_CURL'] = 0
 
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
@@ -136,11 +137,12 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('sdl >= 1.2',1,0)
 		conf.CheckPKG('SDL_image >= 1.2',1,0)
 		conf.CheckPKG('libexif >= 0.6',0,'EXIF')
-#		conf.CheckPKG('exiv2 >= 0.2',0,'EXIV2')
+		conf.CheckPKG('exiv2 >= 0.2',0,'EXIV2')
 		conf.CheckPKG('ftgl >= 2.1',0,'FTGL')
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 		conf.CheckPKG('xinerama >= 1.0',0,'XINERAMA')
+		conf.CheckPKG('libcurl >= 0.2',0,'CURL')
 		conf.CheckFuncMy('iconv',0,'ICONV')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')

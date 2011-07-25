@@ -3,8 +3,6 @@
 #include <SDL.h>
 #include <math.h>
 #include <unistd.h> // rename, rmdir
-#include <sys/stat.h> // mkdir
-#include <sys/types.h> // mkdir
 #include "dpl_int.h"
 #include "sdl.h"
 #include "load.h"
@@ -699,8 +697,8 @@ void dpldired(char *input,int id){
 			if(dsttdir[0]) rename(srctdir,dsttdir);
 		}
 	}else{
-		if(id<0 && mkdir(dstdir,00777)) return;
-		if(dsttdir[0] && !isdir(dsttdir)) mkdir(dsttdir,00777);
+		if(id<0 && !mkdirm(dstdir)) return;
+		if(dsttdir[0] && !isdir(dsttdir)) mkdirm(dsttdir);
 		img=imgget(1,dpl.diredmode==DEM_FROM ? dpl.pos.imgi[1] : 0);
 		imgend=dpl.diredmode==DEM_TO ? imgget(1,dpl.pos.imgi[1]) : NULL;
 		for(;img;img=img->nxt){
