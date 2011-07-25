@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <SDL.h>
 #if HAVE_CURL
+	#undef DATADIR
 	#include <curl/curl.h>
 #endif
 #include "mapld.h"
@@ -55,9 +56,14 @@ void mapld_load(struct mapldti ti){
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
 	if(!strcmp(ti.maptype,"om")) snprintf(url,FILELEN*2,"http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
 	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",ti.maptype); return; }
+	debug(DBG_STA,"mapld_load: \"%s\" => \"%s\"",url,fn);
 	curl=curl_easy_init();
-	if(!curl) return;
-	if(!(fd=fopen(fn,"w"))){ curl_easy_cleanup(curl); return; }
+	if(!curl){ error(ERR_CONT,"mapld_load: curl-init failed"); return; }
+	if(!(fd=fopen(fn,"wb"))){
+		error(ERR_CONT,"mapld_load: cache-file open failed (%s)",fn);
+		curl_easy_cleanup(curl);
+		return;
+	}
 	curl_easy_setopt(curl,CURLOPT_URL,url);
 	curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,mapld_load_data);
 	curl_easy_setopt(curl,CURLOPT_WRITEDATA,&fd);
@@ -67,7 +73,10 @@ void mapld_load(struct mapldti ti){
 	if(res==CURLE_OK && filesize(fn)){
 		snprintf(url,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
 		rename(fn,url);
-	}else unlink(fn);
+	}else{
+		error(ERR_CONT,"mapld_load: file loading failed (res: %i)",res);
+		unlink(fn);
+	}
 }
 #endif
 

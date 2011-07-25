@@ -124,9 +124,13 @@ if not env.GetOption('clean'):
 		conf.CheckLibMy('opengl32',1,0)
 		conf.CheckLibMy('glu32',1,0)
 
-		env.Append(CPPPATH    = ['#/winlib/glew/include/'])
-		env.Append(LIBPATH    = ['#/winlib/glew/lib/'])
+		env.Append(CPPPATH    = ['#/winlib/glew/include'])
+		env.Append(LIBPATH    = ['#/winlib/glew/lib'])
 		conf.CheckLibMy('glew32',1,0)
+
+		env.Append(CPPPATH    = ['#/winlib/curl/include'])
+		env.Append(LIBPATH    = ['#/winlib/curl/lib'])
+		conf.CheckLibMy('curldll',0,'CURL')
 
 		conf.CheckLibMy('stdc++',1,0)
 	else:
