@@ -742,7 +742,12 @@ void dplmap(){
 void dpljump(int mid,float sx,float sy,int imgi,enum dplev ev){
 	switch(mid){
 	case 0: if(dplmovepos(sx,sy)) effinit(EFFREF_IMG,ev,-1); break;
-	case 1: if(dplwritemode()) mapcltmove(imgi-IMGI_MAP,sx,sy); break;
+	case 1:
+		if(dplwritemode()){
+			mapinfo(-1);
+			mapcltmove(imgi-IMGI_MAP,sx,sy);
+		}
+	break;
 	}
 }
 

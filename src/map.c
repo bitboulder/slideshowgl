@@ -985,31 +985,37 @@ char mapstatupdate(char *dsttxt){
 }
 
 void mapcltmove(int i,float sx,float sy){
-	struct mapclti *clti,*ci;
-	double mx=0.,my=0.;
+	struct mapclti *clti;
+	float csx,csy;
 	if(map.init || !mapon()) return;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
 	if(!clti) return;
-	for(ci=clti;ci;ci=ci->nxtimg){
-		float csx,csy;
-		double cmx,cmy;
-		mapg2s(ci->img->gx,ci->img->gy,map.pos.iz,&csx,&csy);
-		csx-=sx;
-		csy-=sy;
-		maps2m(csx,csy,map.pos.iz,&cmx,&cmy);
-		mapm2g(cmx,cmy,map.pos.iz,&ci->img->gx,&ci->img->gy);
-		mx+=cmx;
-		my+=cmy;
-	}
-	clti->mx=mx/(double)clti->nimg;
-	clti->my=my/(double)clti->nimg;
+	mapm2s(clti->mx,clti->my,map.pos.iz,&csx,&csy);
+	csx-=sx;
+	csy-=sy;
+	maps2m(csx,csy,map.pos.iz,&clti->mx,&clti->my);
 	sdlforceredraw();
 }
 
 char mapcltsave(int i){
-	struct mapclti *clti;
+	struct mapclti *clti,*ci;
+	double mx=0.,my=0.;
 	if(map.init || !mapon()) return 0;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
-	for(;clti;clti=clti->nxtimg) mapimgsave(clti->img->dir);
+	for(ci=clti;ci;ci=ci->nxtimg){
+		double cmx,cmy;
+		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,&cmx,&cmy);
+		mx+=cmx; my+=cmy;
+	}
+	mx/=(double)clti->nimg; my/=(double)clti->nimg;
+	mx-=clti->mx; my-=clti->my;
+	for(ci=clti;ci;ci=ci->nxtimg){
+		double cmx,cmy;
+		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,&cmx,&cmy);
+		cmx-=mx; cmy-=my;
+		mapm2g(cmx,cmy,map.pos.iz,&ci->img->gx,&ci->img->gy);
+		mapimgsave(ci->img->dir);
+	}
+	actadd(ACT_MAPCLT,NULL);
 	return 1;
 }
