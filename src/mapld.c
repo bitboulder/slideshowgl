@@ -14,7 +14,7 @@
 #include "cfg.h"
 #include "sdl.h"
 
-#define N_TIS 4
+#define N_TIS 6
 
 struct mapld {
 	int wi,ri;
@@ -116,7 +116,10 @@ char mapld_get(){
 
 void mapld_put(const char *maptype,int iz,int ix,int iy){
 	int nwi=(mapld.wi+1)%N_TIS;
-	if(nwi==mapld.ri) return;
+	while(nwi==mapld.ri){
+		if(sdl_quit) return;
+		SDL_Delay(10);
+	}
 	mapld.tis[mapld.wi].maptype=maptype;
 	mapld.tis[mapld.wi].iz=iz;
 	mapld.tis[mapld.wi].ix=ix;
