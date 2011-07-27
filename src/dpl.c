@@ -739,6 +739,13 @@ void dplmap(){
 	}
 }
 
+void dpljump(int mid,float sx,float sy,int imgi,enum dplev ev){
+	switch(mid){
+	case 0: if(dplmovepos(sx,sy)) effinit(EFFREF_IMG,ev,-1); break;
+	case 1: if(dplwritemode()) mapcltmove(imgi-IMGI_MAP,sx,sy); break;
+	}
+}
+
 /***************************** dpl action *************************************/
 
 void dplsetdisplayduration(int dur){
@@ -749,6 +756,7 @@ void dplsetdisplayduration(int dur){
 /***************************** dpl key ****************************************/
 
 #define DPLEVS_NUM	128
+#define DPLEV_NMOVE	2
 struct dplevs {
 	struct ev {
 		enum dplev ev;
@@ -759,19 +767,22 @@ struct dplevs {
 	} evs[DPLEVS_NUM];
 	struct {
 		float sx,sy;
-	} move;
+		int imgi;
+	} move[DPLEV_NMOVE];
 	int wi,ri;
 } dev = {
 	.wi = 0,
 	.ri = 0,
-	.move.sx = 0.f,
 };
 
 /* thread: sdl */
 void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum dplevsrc src){
 	if(ev&DE_JUMP){
-		dev.move.sy+=sy;
-		dev.move.sx+=sx;
+		if(key<DPLEV_NMOVE){
+			dev.move[key].sy+=sy;
+			dev.move[key].sx+=sx;
+			dev.move[key].imgi=imgi;
+		}
 		ev&=~(unsigned int)DE_JUMP;
 	}
 	if(ev){
@@ -1082,7 +1093,9 @@ char dplev(struct ev *ev){
 		if(!dplactil(ev->sx,clickimg)) ret=0;
 		dplmousehold(clickimg);
 	break;
-	case DE_JUMPEND: dplprged("imgpos",1,dpl.actimgi,-1); break;
+	case DE_JUMPEND:
+		if(!dplwritemode() || !mapcltsave(clickimg-IMGI_MAP)) dplprged("imgpos",1,dpl.actimgi,-1);
+	break;
 	case DE_COL: effprgcolset(clickimg); break;
 	case DE_INFO:
 		if(clickimg>=0 && clickimg<32){
@@ -1101,14 +1114,14 @@ char dplev(struct ev *ev){
 
 void dplcheckev(){
 	char statchg=0;
-	if(dev.move.sx || dev.move.sy){
+	int mid;
+	for(mid=0;mid<DPLEV_NMOVE;mid++) if(dev.move[mid].sx || dev.move[mid].sy){
 		enum dplev ev=0;
-		if(dev.move.sx) ev|=DE_JUMPX;
-		if(dev.move.sy) ev|=DE_JUMPY;
-		if(dplmovepos(dev.move.sx,dev.move.sy)) effinit(EFFREF_IMG,ev,-1);
-		sdlforceredraw();
-		dev.move.sx=0.f;
-		dev.move.sy=0.f;
+		if(dev.move[mid].sx) ev|=DE_JUMPX;
+		if(dev.move[mid].sy) ev|=DE_JUMPY;
+		dpljump(mid,dev.move[mid].sx,dev.move[mid].sy,dev.move[mid].imgi,ev);
+		dev.move[mid].sx=0.f;
+		dev.move[mid].sy=0.f;
 	}
 	while(dev.wi!=dev.ri){
 		statchg|=dplev(dev.evs+dev.ri);
@@ -1140,6 +1153,7 @@ void dplrun(){
 void dplcfginit(){
 	int z;
 	const char *t;
+	memset(dev.move,0,sizeof(dev.move));
 	dpl.cfg.displayduration=cfggetuint("dpl.displayduration");
 	dpl.cfg.holdduration=cfggetuint("dpl.holdduration");
 	dpl.cfg.loop=cfggetbool("dpl.loop");

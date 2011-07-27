@@ -11,6 +11,7 @@
 #include "mark.h"
 #include "help.h"
 #include "file.h"
+#include "sdl.h"
 
 extern struct zoomtab {
 	int move;
@@ -407,6 +408,7 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 				else img->pos->p.cur.r=imgexifrotf(img->exif);
 			}
 	}
+	if(ev&(DE_JUMP|DE_INIT)) sdlforceredraw();
 }
 
 void effdel(struct imgpos *imgp){

@@ -43,6 +43,8 @@ struct sdlcfg {
 struct sdlmove {
 	Uint16 base_x, base_y;
 	int pos_x, pos_y;
+	int clickimg;
+	unsigned short mid;
 	char jump;
 };
 
@@ -314,6 +316,7 @@ char sdljump(Uint16 x,Uint16 y,char end){
 	int w=100,wthr;
 	enum dplev ev=0;
 	int actil=dplgetactil(NULL);
+	if(sdl.move.base_x==0xffff) return 0;
 	if(!sdl.move.jump && abs(x-sdl.move.base_x)<10 && abs(y-sdl.move.base_y)<10) return 0;
 	sdl.move.jump=1;
 	if(zoom<=0 && !mapon() && actil<1){
@@ -333,12 +336,15 @@ char sdljump(Uint16 x,Uint16 y,char end){
 		if(ev) dplevputs(ev,DES_MOUSE);
 	}else{
 		if(xd || yd)
-			dplevputp(DE_JUMP,
+			dplevputx(DE_JUMP,
+				sdl.move.mid,
 				-(float)xd/(float)sdl.scr_w,
-				-(float)yd/(float)sdl.scr_h);
+				-(float)yd/(float)sdl.scr_h,
+				sdl.move.clickimg,
+				DES_MOUSE);
 		sdl.move.base_x=x;
 		sdl.move.base_y=y;
-		if(end) dplevput(DE_JUMPEND);
+		if(end) dplevputx(DE_JUMPEND,sdl.move.mid,0.f,0.f,sdl.move.clickimg,DES_MOUSE);
 	}
 	return 1;
 }
@@ -413,20 +419,26 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 	float fy = (float)y/(float)sdl.scr_h - .5f;
 	int clickimg = glselect(x,y+sdl.off_y);
 	if(down) switch(button){
+		case SDL_BUTTON_RIGHT:
+			if(clickimg<IMGI_MAP || clickimg>=IMGI_CAT) break;
 		case SDL_BUTTON_LEFT:
 			sdl.move.jump=0;
 			sdl.move.pos_x=0;
 			sdl.move.pos_y=0;
 			sdl.move.base_x=x;
 			sdl.move.base_y=y;
+			sdl.move.mid = button==SDL_BUTTON_RIGHT ? 1 : 0;
+			sdl.move.clickimg = clickimg;
 		break;
-		case SDL_BUTTON_MIDDLE:
-		case SDL_BUTTON_RIGHT:     sdlclick(button,x,y,clickimg);         break;
+	}else switch(button){
+		case SDL_BUTTON_LEFT:
+		case SDL_BUTTON_RIGHT:
+			if(!sdljump(x,y,1)) sdlclick(button,x,y,clickimg);
+			sdl.move.base_x=0xffff;
+		break;
+		case SDL_BUTTON_MIDDLE:    sdlclick(button,x,y,clickimg);         break;
 		case SDL_BUTTON_WHEELUP:   dplevputpi(DE_ZOOMIN, fx,fy,clickimg); break;
 		case SDL_BUTTON_WHEELDOWN: dplevputpi(DE_ZOOMOUT,fx,fy,clickimg); break;
-	}else if(button==SDL_BUTTON_LEFT){
-		if(!sdljump(x,y,1)) sdlclick(button,x,y,clickimg);
-		sdl.move.base_x=0xffff;
 	}
 }
 

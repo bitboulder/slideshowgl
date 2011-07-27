@@ -148,8 +148,8 @@ void mapg2m(double gx,double gy,int iz,double *mx,double *my){
 	gy=asinh(tan(gy))/M_PI/2.;
 	gy=0.5-gy;
 	gx=gx/360.+.5;
-	*mx=gx*size;
-	*my=gy*size;
+	if(mx) *mx=gx*size;
+	if(my) *my=gy*size;
 }
 
 void mapm2g(double mx,double my,int iz,double *gx,double *gy){
@@ -178,12 +178,16 @@ void mapg2o(double gx,double gy,int iz,float *ox,float *oy){
 	*oy=(float)(.5-my);
 }
 
+void maps2m(float sx,float sy,int iz,double *mx,double *my){
+	if(!map.scr_w || !map.scr_h) return;
+	mapg2m(map.pos.gx,map.pos.gy,iz,mx,my);
+	if(mx) mx[0]+=(double)sx/256.**map.scr_w;
+	if(my) my[0]+=(double)sy/256.**map.scr_h;
+}
+
 void maps2g(float sx,float sy,int iz,double *gx,double *gy){
 	double mx,my;
-	if(!map.scr_w || !map.scr_h) return;
-	mapg2m(map.pos.gx,map.pos.gy,iz,&mx,&my);
-	mx+=(double)sx/256.**map.scr_w;
-	my+=(double)sy/256.**map.scr_h;
+	maps2m(sx,sy,iz,&mx,&my);
 	mapm2g(mx,my,iz,gx,gy);
 }
 
@@ -193,6 +197,12 @@ void mapm2s(double mx,double my,int iz,float *sx,float *sy){
 	mapg2m(map.pos.gx,map.pos.gy,iz,&mxg,&myg);
 	if(sx) *sx=(float)((mx-mxg)*256./ (double)*map.scr_w);
 	if(sy) *sy=(float)((my-myg)*256./ (double)*map.scr_h);
+}
+
+void mapg2s(double gx,double gy,int iz,float *sx,float *sy){
+	double mx,my;
+	mapg2m(gx,gy,iz,&mx,&my);
+	mapm2s(mx,my,iz,sx,sy);
 }
 
 struct tile *maptilefind(int ix,int iy,int iz,char create){
@@ -412,10 +422,14 @@ void mapimgcltdupdate(struct mapcltd *cltd,size_t *ncltd,struct mapclti *cmp,int
 	}else p--;
 }
 
-void mapimgcltcheck(struct mapclti *ci,int checkpoint){
-	for(;ci;ci=ci->nxtclt) if(ci->nimg==0){
-		error(ERR_CONT,"mapimgclt: cluster with zero elements -> correcting (checkpoint: %i)",checkpoint);
-		ci->nimg=1;
+void mapimgcltnorm(struct mapclti *ci){
+	for(;ci;ci=ci->nxtclt){
+		if(ci->nimg==0){
+			error(ERR_CONT,"mapimgclt: cluster with zero elements -> correcting");
+			ci->nimg=1;
+		}
+		ci->mx/=(double)ci->nimg;
+		ci->my/=(double)ci->nimg;
 	}
 }
 
@@ -442,10 +456,10 @@ void mapimgclt(int izsel){
 			if(clt.cltbuf) free(clt.cltbuf);
 			continue;
 		}
+		mapimgcltnorm(clt.clts);
 		if(mapimgs.clt[iz].cltbuf) free(mapimgs.clt[iz].cltbuf);
 		mapimgs.clt[iz]=clt;
 		if(iz==map.pos.iz) sdlforceredraw();
-		mapimgcltcheck(clt.clts,0);
 	}
 	free(cltd);
 }
@@ -477,7 +491,7 @@ char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir){
 char mapgetcltpos(int i,float *sx,float *sy){
 	struct mapclti *clti=mapfindclt(i);
 	if(!clti) return 0;
-	mapm2s(clti->mx/(double)clti->nimg,clti->my/(double)clti->nimg,map.pos.iz,sx,sy);
+	mapm2s(clti->mx,clti->my,map.pos.iz,sx,sy);
 	return 1;
 }
 
@@ -737,7 +751,7 @@ void maprenderclt(){
 		glLoadName(name++);
 		glPushMatrix();
 		glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
-		glTranslated(clti->mx/(double)clti->nimg-mx,clti->my/(double)clti->nimg-my,0.);
+		glTranslated(clti->mx-mx,clti->my-my,0.);
 		glScalef(15.f/256.f,10.f/256.f,1.f);
 		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
 		glBegin(GL_QUADS);
@@ -780,8 +794,8 @@ void maprenderinfo(){
 	if(!clti) return;
 	if(!glfontsel(FT_NOR)) return;
 	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
-	sx=(clti->mx/(double)clti->nimg-mx)*256.f/(double)*map.scr_w;
-	sy=(clti->my/(double)clti->nimg-my)*256.f/(double)*map.scr_h;
+	sx=(clti->mx-mx)*256.f/(double)*map.scr_w;
+	sy=(clti->my-my)*256.f/(double)*map.scr_h;
 	glPushMatrix();
 	sw=glmode(GLM_TXT);
 	h=glfontscale(hrat=/*gl.cfg.hrat_cat*/0.03f,1.f);
@@ -970,3 +984,32 @@ char mapstatupdate(char *dsttxt){
 	return 1;
 }
 
+void mapcltmove(int i,float sx,float sy){
+	struct mapclti *clti,*ci;
+	double mx=0.,my=0.;
+	if(map.init || !mapon()) return;
+	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
+	if(!clti) return;
+	for(ci=clti;ci;ci=ci->nxtimg){
+		float csx,csy;
+		double cmx,cmy;
+		mapg2s(ci->img->gx,ci->img->gy,map.pos.iz,&csx,&csy);
+		csx-=sx;
+		csy-=sy;
+		maps2m(csx,csy,map.pos.iz,&cmx,&cmy);
+		mapm2g(cmx,cmy,map.pos.iz,&ci->img->gx,&ci->img->gy);
+		mx+=cmx;
+		my+=cmy;
+	}
+	clti->mx=mx/(double)clti->nimg;
+	clti->my=my/(double)clti->nimg;
+	sdlforceredraw();
+}
+
+char mapcltsave(int i){
+	struct mapclti *clti;
+	if(map.init || !mapon()) return 0;
+	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
+	for(;clti;clti=clti->nxtimg) mapimgsave(clti->img->dir);
+	return 1;
+}

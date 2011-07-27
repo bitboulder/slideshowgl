@@ -25,5 +25,7 @@ char mapsearch(struct dplinput *in);
 void mapsavepos();
 char maprestorepos();
 char mapstatupdate(char *dsttxt);
+void mapcltmove(int ci,float sx,float sy);
+char mapcltsave(int ci);
 
 #endif
