@@ -438,6 +438,7 @@ void mapimgclt(int izsel){
 	int iz;
 	size_t nimg=mapimgcltnimg();
 	struct mapcltd *cltd=malloc((nimg*(nimg-1)/2+1)*sizeof(struct mapcltd));
+	if(!nimg) return;
 	for(iz=izsel<0?0:izsel;izsel<0 ? iz<N_ZOOM : iz==izsel;iz++){
 		size_t ncltd=0;
 		struct mapclt clt=mapimgcltinit(iz,nimg);
