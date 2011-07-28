@@ -114,25 +114,23 @@ char mapld_get(){
 #endif
 }
 
-void mapld_put(const char *maptype,int iz,int ix,int iy){
+char mapld_put(const char *maptype,int iz,int ix,int iy){
 	int nwi=(mapld.wi+1)%N_TIS;
-	while(nwi==mapld.ri){
-		if(sdl_quit) return;
-		SDL_Delay(10);
-	}
+	if(nwi==mapld.ri) return 0;
 	mapld.tis[mapld.wi].maptype=maptype;
 	mapld.tis[mapld.wi].iz=iz;
 	mapld.tis[mapld.wi].ix=ix;
 	mapld.tis[mapld.wi].iy=iy;
 	mapld.wi=nwi;
+	return 1;
 }
 
-char mapld_check(const char *maptype,int iz,int ix,int iy,char *fn){
+char mapld_check(const char *maptype,int iz,int ix,int iy,char web,char *fn){
 	if(!mapld.init) return 0;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptype,iz,ix,iy);
-	if(isfile(fn)) return 1;
-	mapld_put(maptype,iz,ix,iy);
-	return 0;
+	if(isfile(fn)) return 2;
+	if(!web) return 1;
+	return mapld_put(maptype,iz,ix,iy);
 }
 
 void mapldinit(){

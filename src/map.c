@@ -590,7 +590,10 @@ char maploadtile(struct tile *ti){
 	char fn[FILELEN];
 	SDL_Surface *sf,*sfc;
 	SDL_PixelFormat fmt;
-	if(!mapld_check(maptype_str[map.maptype],ti->iz,ti->ix,ti->iy,fn)) return 0;
+	if(!ti || ti->tex || ti->loading>=2) return 0;
+	ti->loading=mapld_check(maptype_str[map.maptype],ti->iz,ti->ix,ti->iy,!ti->loading,fn);
+	if(ti->loading<2) return 0;
+	debug(DBG_STA,"map loading map %i/%i/%i",ti->iz,ti->ix,ti->iy);
 	if(!(sf=IMG_Load(fn))) return 0;
 	if(sf->w!=256 || sf->h!=256) return 0;
 	memset(&fmt,0,sizeof(SDL_PixelFormat));
@@ -609,8 +612,6 @@ char maploadtile(struct tile *ti){
 
 char mapldchecktile(int ix,int iy,int iz){
 	struct tile *ti=maptilefind(ix,iy,iz,1);
-	if(!ti || ti->loading || ti->tex) return 0;
-	debug(DBG_STA,"map loading map %i/%i/%i",iz,ix,iy);
 	if(!maploadtile(ti)) return 0;
 	return 1;
 }
