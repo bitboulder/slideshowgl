@@ -30,12 +30,13 @@
 
 /* Coordinate abreviations *
  *
- * g - double - gps
- * m - double - map global value
- * i - int    - map tile index
+ * g - double - gps                                (-90 <= gy <= 90 | -180 <= gx <= 180)
+ * p - double - map global value for zoom=0        (0 <= p < 1)
+ * m - double - map global value for specific zoom (0 <= p < 2^zoom)
+ * i - int    - map tile index                     (0 <= i <= 2^zoom-1)
  * i - int    - number of tiles on screen
- * o - float  - offset within map tile
- * s - float  - screen position (-0.5..0.5)
+ * o - float  - offset within map tile             (0 <= o < 1)
+ * s - float  - screen position                    (-0.5 <= s <= 0.5)
  */
 
 #define N_ZOOM	18
@@ -140,69 +141,80 @@ char mapeditmode(){
 	return 1;
 }
 
-#define mapp2i(pos,i)	mapg2i(pos.gx,pos.gy,pos.iz,&i##x,&i##y)
-
-void mapg2m(double gx,double gy,int iz,double *mx,double *my){
-	double size=(double)(1<<iz);
-	gy=gy/180.*M_PI;
-	gy=asinh(tan(gy))/M_PI/2.;
-	gy=0.5-gy;
-	gx=gx/360.+.5;
-	if(mx) *mx=gx*size;
-	if(my) *my=gy*size;
+#define mapg2p(gx,gy,px,py) { \
+	(py)=(gy)/180.*M_PI; \
+	(py)=asinh(tan(py))/M_PI/2.; \
+	(py)=0.5-(py); \
+	(px)=(gx)/360.+.5; \
 }
 
-void mapm2g(double mx,double my,int iz,double *gx,double *gy){
-	double size=(double)(1<<iz);
-	mx/=size;
-	my/=size;
-	my=0.5-my;
-	my=atan(sinh(my*2.*M_PI));
-	if(gy) *gy=my*180./M_PI;
-	if(gx) *gx=(mx-.5)*360.;
+#define mapp2g(px,py,gx,gy) { \
+	(gy)=0.5-(py); \
+	(gy)=atan(sinh((gy)*2.*M_PI)); \
+	(gy)=(gy)*180./M_PI; \
+	(gx)=((px)-.5)*360.; \
 }
 
-void mapg2i(double gx,double gy,int iz,int *ix,int *iy){
-	double mx,my;
-	mapg2m(gx,gy,iz,&mx,&my);
-	*ix=(int)mx;
-	*iy=(int)my;
+#define mapp2m(px,py,iz,mx,my) { \
+	double size=(double)(1<<(iz)); \
+	(mx)=(px)*size; \
+	(my)=(py)*size; \
 }
 
-void mapg2o(double gx,double gy,int iz,float *ox,float *oy){
-	double mx,my;
-	mapg2m(gx,gy,iz,&mx,&my);
-	mx-=floor(mx);
-	my-=floor(my);
-	*ox=(float)(.5-mx);
-	*oy=(float)(.5-my);
+#define mapm2p(mx,my,iz,px,py) { \
+	double size=(double)(1<<(iz)); \
+	(px)=(mx)/size; \
+	(py)=(my)/size; \
 }
 
-void maps2m(float sx,float sy,int iz,double *mx,double *my){
-	if(!map.scr_w || !map.scr_h) return;
-	mapg2m(map.pos.gx,map.pos.gy,iz,mx,my);
-	if(mx) mx[0]+=(double)sx/256.**map.scr_w;
-	if(my) my[0]+=(double)sy/256.**map.scr_h;
+#define mapm2i(mx,my,ix,iy) { \
+	(ix)=(int)(mx); \
+	(iy)=(int)(my); \
 }
 
-void maps2g(float sx,float sy,int iz,double *gx,double *gy){
-	double mx,my;
-	maps2m(sx,sy,iz,&mx,&my);
-	mapm2g(mx,my,iz,gx,gy);
+#define mapm2o(mx,my,ox,oy) { \
+	(ox)=(float)(.5-(mx)+floor(mx)); \
+	(oy)=(float)(.5-(my)+floor(my)); \
 }
 
-void mapm2s(double mx,double my,int iz,float *sx,float *sy){
-	double mxg,myg;
-	if(!map.scr_w || !map.scr_h) return;
-	mapg2m(map.pos.gx,map.pos.gy,iz,&mxg,&myg);
-	if(sx) *sx=(float)((mx-mxg)*256./ (double)*map.scr_w);
-	if(sy) *sy=(float)((my-myg)*256./ (double)*map.scr_h);
+#define mapm2s(mx,my,iz,sx,sy) {if(map.scr_w && map.scr_h){ \
+	double mxg,myg; \
+	mapg2m(map.pos.gx,map.pos.gy,iz,mxg,myg); \
+	(sx)=(float)(((mx)-mxg)*256./ (double)*map.scr_w); \
+	(sy)=(float)(((my)-myg)*256./ (double)*map.scr_h); \
+}}
+
+#define maps2m(sx,sy,iz,mx,my) {if(map.scr_w && map.scr_h){ \
+	mapg2m(map.pos.gx,map.pos.gy,iz,mx,my); \
+	(mx)+=(double)(sx)/256.**map.scr_w; \
+	(my)+=(double)(sy)/256.**map.scr_h; \
+}}
+
+#define mapg2m(gx,gy,iz,mx,my) { \
+	mapg2p(gx,gy,mx,my); \
+	mapp2m(mx,my,iz,mx,my); \
 }
 
-void mapg2s(double gx,double gy,int iz,float *sx,float *sy){
-	double mx,my;
-	mapg2m(gx,gy,iz,&mx,&my);
-	mapm2s(mx,my,iz,sx,sy);
+#define mapm2g(mx,my,iz,gx,gy) { \
+	mapm2p(mx,my,iz,gx,gy); \
+	mapp2g(gx,gy,gy,gy); \
+}
+
+#define mapg2i(gx,gy,iz,ix,iy) { \
+	double mx,my; \
+	mapg2m(gx,gy,iz,mx,my); \
+	mapm2i(mx,my,ix,iy); \
+}
+
+#define mapg2o(gx,gy,iz,ox,oy) { \
+	double mx,my; \
+	mapg2m(gx,gy,iz,mx,my); \
+	mapm2o(mx,my,ox,oy); \
+}
+
+#define maps2g(sx,sy,iz,gx,gy) { \
+	maps2m(sx,sy,iz,gx,gy); \
+	mapm2g(gx,gy,iz,gx,gy); \
 }
 
 struct tile *maptilefind(int ix,int iy,int iz,char create){
@@ -301,7 +313,7 @@ struct mapclt mapimgcltinit(int iz,size_t nimg){
 		clt.cltbuf[i].img=img;
 		clt.cltbuf[i].nxtclt=i+1<nimg ? clt.cltbuf+i+1 : NULL;
 		clt.cltbuf[i].nimg=1;
-		mapg2m(img->gx,img->gy,iz,&clt.cltbuf[i].mx,&clt.cltbuf[i].my);
+		mapg2m(img->gx,img->gy,iz,clt.cltbuf[i].mx,clt.cltbuf[i].my);
 	}
 	return clt;
 }
@@ -492,7 +504,7 @@ char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir){
 char mapgetcltpos(int i,float *sx,float *sy){
 	struct mapclti *clti=mapfindclt(i);
 	if(!clti) return 0;
-	mapm2s(clti->mx,clti->my,map.pos.iz,sx,sy);
+	mapm2s(clti->mx,clti->my,map.pos.iz,*sx,*sy);
 	return 1;
 }
 
@@ -631,7 +643,7 @@ char mapldcheck(){
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
-	mapp2i(map.pos,i);
+	mapg2i(map.pos.gx,map.pos.gy,map.pos.iz,ix,iy);
 	for(r=0;r<=ir;r++){
 		for(i=0;i<(r?r*8:1);i++){
 			if(!r) ixc=iyc=0;
@@ -725,8 +737,8 @@ void maprendermap(){
 	float ox,oy;
 	int ixc,iyc;
 	if(!mapscrtis(&iw,&ih)) return;
-	mapg2i(map.pos.gx,map.pos.gy,iz=map.pos.iz,&ix,&iy);
-	mapg2o(map.pos.gx,map.pos.gy,iz,&ox,&oy);
+	mapg2i(map.pos.gx,map.pos.gy,iz=map.pos.iz,ix,iy);
+	mapg2o(map.pos.gx,map.pos.gy,iz,ox,oy);
 	glPushMatrix();
 	glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
 	glTranslatef(ox,oy,0.f);
@@ -748,7 +760,7 @@ void maprenderclt(){
 	double mx,my;
 	GLuint name=IMGI_MAP+1;
 	if(!map.scr_w || !map.scr_h) return;
-	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
+	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,mx,my);
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti;clti=clti->nxtclt){
 		glLoadName(name++);
 		glPushMatrix();
@@ -795,7 +807,7 @@ void maprenderinfo(){
 	for(i=0,clti=mapimgs.clt[map.pos.iz].clts;clti && i!=map.info;clti=clti->nxtclt) i++;
 	if(!clti) return;
 	if(!glfontsel(FT_NOR)) return;
-	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,&mx,&my);
+	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,mx,my);
 	sx=(clti->mx-mx)*256.f/(double)*map.scr_w;
 	sy=(clti->my-my)*256.f/(double)*map.scr_h;
 	glPushMatrix();
@@ -873,8 +885,8 @@ char mapmove(enum dplev ev,float sx,float sy){
 		int iz=map.pos.iz+dir;
 		double gx0,gx1,gy0,gy1;
 		if(iz<0 || iz>=N_ZOOM) return 0;
-		maps2g(sx,sy,map.pos.iz,&gx0,&gy0);
-		maps2g(sx,sy,iz,&gx1,&gy1);
+		maps2g(sx,sy,map.pos.iz,gx0,gy0);
+		maps2g(sx,sy,iz,gx1,gy1);
 		map.pos.iz=iz;
 		map.pos.gx-=gx1-gx0;
 		map.pos.gy-=gy1-gy0;
@@ -887,8 +899,8 @@ char mapmove(enum dplev ev,float sx,float sy){
 char mapmovepos(float sx,float sy){
 	double gx0,gx1,gy0,gy1;
 	if(map.init || !mapon()) return 0;
-	maps2g(0.,0.,map.pos.iz,&gx0,&gy0);
-	maps2g(sx,sy,map.pos.iz,&gx1,&gy1);
+	maps2g(0.,0.,map.pos.iz,gx0,gy0);
+	maps2g(sx,sy,map.pos.iz,gx1,gy1);
 	map.pos.gx+=gx1-gx0;
 	map.pos.gy+=gy1-gy0;
 	return 1;
@@ -916,7 +928,7 @@ char mapmarkpos(float sx,float sy,const char *dir){
 	double gx,gy;
 	if(map.init || !mapon()) return 0;
 	if(isdir(dir)!=1) return 0;
-	maps2g(sx,sy,map.pos.iz,&gx,&gy);
+	maps2g(sx,sy,map.pos.iz,gx,gy);
 	mapimgadd(dir,-1,gx,gy,1);
 	mapimgsave(dir);
 	return 1;
@@ -961,14 +973,14 @@ char maprestorepos(){
 }
 
 char mapstatupdate(char *dsttxt){
-	double gsx0,gsx1,gsy0,gsy1;
+	double gsx0,gsx1,gsy0,gsy1,t;
 	char fmt[128];
 	char *txt;
 	if(map.init || !mapon()) return 0;
-	maps2g( .5f,.0f,map.pos.iz,&gsx0,NULL);
-	maps2g(-.5f,.0f,map.pos.iz,&gsx1,NULL);
-	maps2g(.0f, .5f,map.pos.iz,NULL,&gsy0);
-	maps2g(.0f,-.5f,map.pos.iz,NULL,&gsy1);
+	maps2g( .5f,.0f,map.pos.iz,gsx0,t);
+	maps2g(-.5f,.0f,map.pos.iz,gsx1,t);
+	maps2g(.0f, .5f,map.pos.iz,t,gsy0);
+	maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
 	gsx0=fabs(gsx1-gsx0);
 	gsy0=fabs(gsy1-gsy0);
 	gsx0*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
@@ -992,10 +1004,10 @@ void mapcltmove(int i,float sx,float sy){
 	if(map.init || !mapon()) return;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
 	if(!clti) return;
-	mapm2s(clti->mx,clti->my,map.pos.iz,&csx,&csy);
+	mapm2s(clti->mx,clti->my,map.pos.iz,csx,csy);
 	csx-=sx;
 	csy-=sy;
-	maps2m(csx,csy,map.pos.iz,&clti->mx,&clti->my);
+	maps2m(csx,csy,map.pos.iz,clti->mx,clti->my);
 	sdlforceredraw();
 }
 
@@ -1006,18 +1018,19 @@ char mapcltsave(int i){
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
 	for(ci=clti;ci;ci=ci->nxtimg){
 		double cmx,cmy;
-		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,&cmx,&cmy);
+		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,cmx,cmy);
 		mx+=cmx; my+=cmy;
 	}
 	mx/=(double)clti->nimg; my/=(double)clti->nimg;
 	mx-=clti->mx; my-=clti->my;
 	for(ci=clti;ci;ci=ci->nxtimg){
 		double cmx,cmy;
-		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,&cmx,&cmy);
+		mapg2m(ci->img->gx,ci->img->gy,map.pos.iz,cmx,cmy);
 		cmx-=mx; cmy-=my;
-		mapm2g(cmx,cmy,map.pos.iz,&ci->img->gx,&ci->img->gy);
+		mapm2g(cmx,cmy,map.pos.iz,ci->img->gx,ci->img->gy);
 		mapimgsave(ci->img->dir);
 	}
 	actadd(ACT_MAPCLT,NULL);
 	return 1;
 }
+
