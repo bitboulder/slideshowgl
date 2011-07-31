@@ -197,7 +197,7 @@ char mapeditmode(){
 
 #define mapm2g(mx,my,iz,gx,gy) { \
 	mapm2p(mx,my,iz,gx,gy); \
-	mapp2g(gx,gy,gy,gy); \
+	mapp2g(gx,gy,gx,gy); \
 }
 
 #define mapg2i(gx,gy,iz,ix,iy) { \
