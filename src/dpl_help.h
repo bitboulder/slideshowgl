@@ -114,6 +114,9 @@ __(" m")"\0"                   __("Show map")"\0"
 __(" s")"\0"                   __("Enter and toggle image catalog")"\0"
 #endif
 __(" G")"\0"                   __("Edit current image with gimp")"\0"
+#ifndef IF_PRGED
+__(" C")"\0"                   __("Open current image/directory for file-convert-utility")"\0"
+#endif
 
 #ifndef IF_PRGED
 __(" Image information")"\0"   "\0"

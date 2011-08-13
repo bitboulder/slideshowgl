@@ -599,18 +599,31 @@ char dplactil(float x,int clickimg){
 	return 1;
 }
 
-int dplgimprun(void *arg){
-	char cmd[FILELEN+8];
-	snprintf(cmd,FILELEN+8,"gimp %s",imgfilefn(((struct img *)arg)->file));
-	system(cmd);
+int dplcmdrun(void *arg){
+	system(arg);
+	free(arg);
 	return 0;
 }
 
 void dplgimp(){
 	struct img *img=imgget(AIL,AIMGI);
+	char *cmd;
+	if(!img) return;
+	if(imgfiledir(img->file)) return;
+	sdlfullscreen(0);
+	cmd=malloc(FILELEN*8);
+	snprintf(cmd,FILELEN+8,"gimp %s",imgfilefn(img->file));
+	SDL_CreateThread(dplcmdrun,cmd);
+}
+
+void dplconvert(){
+	struct img *img=imgget(AIL,AIMGI);
+	char *cmd;
 	if(!img) return;
 	sdlfullscreen(0);
-	SDL_CreateThread(dplgimprun,img);
+	cmd=malloc(FILELEN*8);
+	snprintf(cmd,FILELEN+8,"cnv_ui -img %s",imgfilefn(img->file));
+	SDL_CreateThread(dplcmdrun,cmd);
 }
 
 void dplswloop(){
@@ -1004,7 +1017,7 @@ void dplkey(unsigned short keyu){
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
-	case 'C': dplprgcolcopy(); break;
+	case 'C': if(!dplprgcolcopy()) dplconvert(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
