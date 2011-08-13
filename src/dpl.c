@@ -620,6 +620,7 @@ void dplconvert(){
 	struct img *img=imgget(AIL,AIMGI);
 	char *cmd;
 	if(!img) return;
+	if(isdir(imgfilefn(img->file))>1) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
 	snprintf(cmd,FILELEN+8,"cnv_ui -img %s",imgfilefn(img->file));
