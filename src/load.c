@@ -254,16 +254,21 @@ struct texloadbuf {
 	struct texload tl[TEXLOADNUM];
 	int wi,ri;
 	long long wn,rn;
+	SDL_mutex *pmx;
 } tlb = {
 	.wi=0,
 	.ri=0,
 	.wn=0,
 	.rn=0,
+	.pmx=NULL,
 };
 void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float bar){
-	int nwi=(tlb.wi+1)%TEXLOADNUM;
+	int nwi;
+	SDL_LockMutex(tlb.pmx);
+	if(sdl_quit) goto end;
+	nwi=(tlb.wi+1)%TEXLOADNUM;
 	while(nwi==tlb.ri){
-		if(sdl_quit) return;
+		if(sdl_quit) goto end;
 		SDL_Delay(10);
 	}
 	tlb.tl[tlb.wi].itx=itx;
@@ -281,6 +286,8 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float
 	}
 	tlb.wi=nwi;
 	tlb.wn++;
+end:
+	SDL_UnlockMutex(tlb.pmx);
 }
 
 /* thread: sdl */
@@ -577,6 +584,7 @@ void ldresetdo(){
 extern Uint32 paint_last;
 
 int ldthread(void *UNUSED(arg)){
+	tlb.pmx=SDL_CreateMutex();
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
@@ -586,6 +594,7 @@ int ldthread(void *UNUSED(arg)){
 	}
 	ldconceptfree();
 	sdl_quit|=THR_LD;
+	SDL_DestroyMutex(tlb.pmx); tlb.pmx=NULL;
 	return 0;
 }
 
