@@ -205,36 +205,40 @@ void setprogpath(char *pfn){
 	}
 }
 
-#ifdef __WIN32__
-void fileoutput(char doopen){
+void fileoutput(char doopen,const char *logfn){
 	if(doopen){
-		const char *paths[2];
-		int i;
-		paths[0]=progpath?progpath:"";
-		paths[1]=getenv("TEMP");
-		for(i=0;!fdout && i<2;i++) if(paths[i]){
-			char *fn;
-			size_t l=strlen(paths[i]);
-			fn=malloc(l+9);
-			snprintf(fn,l+9,"%s%slog.txt",paths[i],(l && paths[i][l-1]!='/' && paths[i][l-1]!='\\')?"\\":"");
-			fdout=fopen(fn,"w");
-			free(fn);
+		if(fdout) fclose(fdout);
+		if(logfn) fdout=fopen(logfn,"w");
+		else{
+			const char *paths[2];
+			int i;
+			paths[0]=progpath?progpath:"";
+			paths[1]=getenv("TEMP");
+			for(i=0;!fdout && i<2;i++) if(paths[i]){
+				char *fn;
+				size_t l=strlen(paths[i]);
+				fn=malloc(l+9);
+				snprintf(fn,l+9,"%s%slog.txt",paths[i],(l && paths[i][l-1]!='/' && paths[i][l-1]!='\\')?"\\":"");
+				fdout=fopen(fn,"w");
+				free(fn);
+			}
 		}
 	}else if(fdout){
 		fclose(fdout);
 		fdout=NULL;
 	}
 }
-#else
-void fileoutput(char UNUSED(doopen)){ }
-#endif
 
 void tlbcheck(); /* TODO: remove */
 int main(int argc,char **argv){
+	const char *logfn;
 	if(argc) setprogpath(argv[0]);
-	fileoutput(1);
+#ifdef __WIN32__
+	fileoutput(1,NULL);
+#endif
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
+	if((logfn=cfggetstr("main.log"))) fileoutput(1,logfn);
 	dbg=cfggetint("main.dbg");
 	tim=cfggetenum("main.timer");
 	fgetfiles(argc-optind,argv+optind);
@@ -250,6 +254,6 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
 	tlbcheck(); /* TODO: remove */
-	fileoutput(0);
+	fileoutput(0,NULL);
 	return 0;
 }

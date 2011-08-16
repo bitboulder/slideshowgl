@@ -35,6 +35,7 @@ struct cfg {
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0",      {NULL}, __("Print version") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
+	{ 0,   "main.log",            CT_STR, CM_SET,  "",       {NULL}, __("Write stdout and stderr to that file (standart for win32)") },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle fullscreen") },
 	{ 0,   "sdl.display",         CT_INT, CM_SET,  "1",      {NULL}, __("Set display id to use in multihead mode (overwritten by SDL_VIDEO_FULLSCREEN_DISPLAY)") },
 	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024",   {NULL}, __("Set window width") },
