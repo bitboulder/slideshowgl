@@ -252,7 +252,6 @@ void sdlicon(){
 }
 
 void sdlinit(){
-	const char *tmp;
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
@@ -268,12 +267,14 @@ void sdlinit(){
 		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
 		sdl.fullscreen=0;
 	}else sdl.cfg.playrecord=NULL;
-	if((tmp=getenv("SDL_VIDEO_FULLSCREEN_DISPLAY"))){
-		sdl.cfg.display=atoi(tmp);
-		sdl.cfg.envdisplay=1;
-	}else{
-		sdl.cfg.display=cfggetint("sdl.display");
+	{
+		char buf[8];
+		snprintf(buf,8,"%i",sdl.cfg.display=cfggetint("sdl.display"));
+#ifdef __WIN32__
 		sdl.cfg.envdisplay=0;
+#else
+		sdl.cfg.envdisplay=!setenv("SDL_VIDEO_FULLSCREEN_DISPLAY",buf,1);
+#endif
 	}
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
 	SDL_EnableUNICODE(1);

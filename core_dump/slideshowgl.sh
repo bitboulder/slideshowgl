@@ -7,8 +7,6 @@ CDIR="$DIR/core_dump"
 SL="$DIR/build/slideshowgl"
 SLOPT="-c mapld.cachedir=/mnt/iso/slideshowgl-cache"
 
-export SDL_VIDEO_FULLSCREEN_DISPLAY=1
-
 #cd $CDIR
 ulimit -c unlimited
 
