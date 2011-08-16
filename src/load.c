@@ -253,9 +253,12 @@ struct texload {
 struct texloadbuf {
 	struct texload tl[TEXLOADNUM];
 	int wi,ri;
+	long long wn,rn;
 } tlb = {
 	.wi=0,
 	.ri=0,
+	.wn=0,
+	.rn=0,
 };
 void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float bar){
 	int nwi=(tlb.wi+1)%TEXLOADNUM;
@@ -277,6 +280,7 @@ void ldtexload_put(struct itx *itx,struct sdlimg *sdlimg,struct itex *itex,float
 	break;
 	}
 	tlb.wi=nwi;
+	tlb.wn++;
 }
 
 /* thread: sdl */
@@ -347,7 +351,12 @@ char ldtexload(){
 		tl->itx->tex=0;
 	}
 	tlb.ri=(tlb.ri+1)%TEXLOADNUM;
+	tlb.rn++;
 	return 1;
+}
+
+void tlbcheck(){ /* TODO: remove */
+	error(ERR_CONT,"tlb wn: %lli rn: %lli wi: %i ri: %i",tlb.wn,tlb.rn,tlb.wi,tlb.ri);
 }
 
 /***************************** load + free img ********************************/

@@ -229,6 +229,7 @@ void fileoutput(char doopen){
 void fileoutput(char UNUSED(doopen)){ }
 #endif
 
+void tlbcheck(); /* TODO: remove */
 int main(int argc,char **argv){
 	if(argc) setprogpath(argv[0]);
 	fileoutput(1);
@@ -248,6 +249,7 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_ML1)?"":" mapld1",
 			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
+	tlbcheck(); /* TODO: remove */
 	fileoutput(0);
 	return 0;
 }
