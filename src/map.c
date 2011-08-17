@@ -177,18 +177,22 @@ char mapeditmode(){
 	(oy)=(float)(.5-(my)+floor(my)); \
 }
 
-#define mapm2s(mx,my,iz,sx,sy) {if(map.scr_w && map.scr_h){ \
-	double mxg,myg; \
-	mapg2m(map.pos.gx,map.pos.gy,iz,mxg,myg); \
-	(sx)=(float)(((mx)-mxg)*256./ (double)*map.scr_w); \
-	(sy)=(float)(((my)-myg)*256./ (double)*map.scr_h); \
-}}
+#define mapm2s(mx,my,iz,sx,sy) { \
+	if(map.scr_w && map.scr_h){ \
+		double mxg,myg; \
+		mapg2m(map.pos.gx,map.pos.gy,iz,mxg,myg); \
+		(sx)=(float)(((mx)-mxg)*256./ (double)*map.scr_w); \
+		(sy)=(float)(((my)-myg)*256./ (double)*map.scr_h); \
+	}else{ sx=sy=0.f; } \
+}
 
-#define maps2m(sx,sy,iz,mx,my) {if(map.scr_w && map.scr_h){ \
-	mapg2m(map.pos.gx,map.pos.gy,iz,mx,my); \
-	(mx)+=(double)(sx)/256.**map.scr_w; \
-	(my)+=(double)(sy)/256.**map.scr_h; \
-}}
+#define maps2m(sx,sy,iz,mx,my) { \
+	if(map.scr_w && map.scr_h){ \
+		mapg2m(map.pos.gx,map.pos.gy,iz,mx,my); \
+		(mx)+=(double)(sx)/256.**map.scr_w; \
+		(my)+=(double)(sy)/256.**map.scr_h; \
+	}else{ mx=my=0.; } \
+}
 
 #define mapg2m(gx,gy,iz,mx,my) { \
 	mapg2p(gx,gy,mx,my); \
