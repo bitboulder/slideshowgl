@@ -40,6 +40,7 @@ void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...) FORM
 
 int mprintf(const char *format,...) FORMAT(1,2);
 
+const char *getprogpath();
 char *finddatafile(const char *fn);
 const char *gettmp();
 

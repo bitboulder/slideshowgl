@@ -112,6 +112,8 @@ int mprintf(const char *format,...){
 
 char *progpath=NULL;
 
+const char *getprogpath(){ return progpath; }
+
 char *finddatafile(const char *fn){
 	int i;
 	static char ret[FILELEN];
@@ -244,7 +246,7 @@ void fileoutput(char doopen){
 }
 
 #ifdef __WIN32__
-#define watchcoredump(X,Y)	0
+#define watchcoredump(X,Y,Z)	0
 #else
 int watchcoredump(int *ret,int argc,char **argv){
 	const char *dir=cfggetstr("main.coredump");

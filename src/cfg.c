@@ -286,13 +286,17 @@ char *cfgfilerun(char *str,size_t buflen){
 
 const char *cfgfilefind(){
 	static char cfgfn[FILELEN];
-	char *dir;
+	const char *dir;
 	if((dir=getenv("HOME"))){
 		snprintf(cfgfn,FILELEN,"%s/.slideshowgl.cfg",dir);
 		if(isfile(cfgfn)) return cfgfn;
 	}
 	snprintf(cfgfn,FILELEN,"/etc/slideshowgl.cfg");
 	if(isfile(cfgfn)) return cfgfn;
+	if((dir=getprogpath())){
+		snprintf(cfgfn,FILELEN,"%s/slideshowgl.cfg",dir);
+		if(isfile(cfgfn)) return cfgfn;
+	}
 	return NULL;
 }
 
