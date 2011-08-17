@@ -72,29 +72,35 @@ void timer(enum timer ti,int id,char reset){
 }
 
 enum debug dbg = DBG_NONE;
+enum debug logdbg = DBG_NONE;
 #define E(X)	#X
 const char *dbgstr[] = { EDEBUG };
 #undef E
 
-FILE *fdout=NULL;
+FILE *fdlog=NULL;
 
 void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...){
 	va_list ap;
 	char err = lvl==ERR_QUIT || lvl==ERR_CONT;
-	FILE *fout = fdout ? fdout : (err ? stderr : stdout);
+	FILE *fout = err ? stderr : stdout;
 	char fcp[5];
 	char *pos;
-	if(!err && lvl>dbg) return;
+	int i;
+	if(!err && lvl>dbg && (!fdlog || lvl>logdbg)) return;
 	if((pos=strrchr(file,'/'))) file=pos+1;
 	snprintf(fcp,5,file);
 	if((pos=strchr(fcp,'.'))) *pos='\0';
-	fprintf(fout,"%-4s(%3i) ",fcp,line);
-	if(err) fprintf(fout,"ERROR   : ");
-	else    fprintf(fout,"dbg-%-4s: ",dbgstr[lvl]);
-	va_start(ap,txt);
-	vfprintf(fout,_(txt),ap);
-	va_end(ap);
-	fprintf(fout,"\n");
+	for(i=0;i<2;i++,fout=fdlog){
+		if(!i && !err && lvl>dbg) continue;
+		if(!fout) continue;
+		fprintf(fout,"%-4s(%3i) ",fcp,line);
+		if(err) fprintf(fout,"ERROR   : ");
+		else    fprintf(fout,"dbg-%-4s: ",dbgstr[lvl]);
+		va_start(ap,txt);
+		vfprintf(fout,_(txt),ap);
+		va_end(ap);
+		fprintf(fout,"\n");
+	}
 	if(lvl!=ERR_QUIT) return;
 	SDL_Quit();
 	exit(1);
@@ -104,7 +110,11 @@ int mprintf(const char *format,...){
 	va_list ap;
 	int ret;
 	va_start(ap,format);
-	ret=vfprintf(fdout?fdout:stdout,format,ap);
+	ret=vfprintf(stdout,format,ap);
+	va_end(ap);
+	if(!fdlog) return ret;
+	va_start(ap,format);
+	vfprintf(fdlog,format,ap);
 	va_end(ap);
 	return ret;
 }
@@ -221,25 +231,25 @@ void fileoutput(char doopen){
 			int i;
 			paths[0]=progpath?progpath:"";
 			paths[1]=getenv("TEMP");
-			for(i=0;!fdout && i<2;i++) if(paths[i]){
+			for(i=0;!fdlog && i<2;i++) if(paths[i]){
 				char *fn;
 				size_t l=strlen(paths[i]);
 				fn=malloc(l+9);
 				snprintf(fn,l+9,"%s%slog.txt",paths[i],(l && paths[i][l-1]!='/' && paths[i][l-1]!='\\')?"\\":"");
-				fdout=fopen(fn,"w");
+				fdlog=fopen(fn,"w");
 				free(fn);
 			}
 	} break;
 	case 2: {
 		const char *logfn=cfggetstr("main.log");
 		if(!logfn || !logfn[0]) return;
-		if(fdout) fclose(fdout);
-		fdout=fopen(logfn,"w");
+		if(fdlog) fclose(fdlog);
+		fdlog=fopen(logfn,"w");
 	} break;
 	case 0:
-		if(fdout){
-			fclose(fdout);
-			fdout=NULL;
+		if(fdlog){
+			fclose(fdlog);
+			fdlog=NULL;
 		}
 	break;
 	}
@@ -302,6 +312,8 @@ int main(int argc,char **argv){
 	fileoutput(2);
 	if(watchcoredump(&ret,argc,argv)) goto end;
 	dbg=cfggetint("main.dbg");
+	logdbg=cfggetint("main.logdbg");
+	if(dbg>logdbg) logdbg=dbg;
 	tim=cfggetenum("main.timer");
 	fgetfiles(argc-optind,argv+optind);
 	sdlinit();

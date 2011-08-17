@@ -38,6 +38,7 @@ struct cfg {
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0",      {NULL}, __("Print version") },
 	{ 'C', "cfg.load",            CT_STR, CM_DO,   "",       {NULL}, __("Load Cfg-Setup") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
+	{ 0,   "main.logdbg",         CT_INT, CM_SET,  "2",      {NULL}, __("Set log debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
 	{ 0,   "main.log",            CT_STR, CM_SET,  "",       {NULL}, __("Write stdout and stderr to that file (standart for win32)") },
 	{ 0,   "main.coredump",       CT_STR, CM_SET,  "",       {NULL}, __("Watch core dumps and copy to ARG/core_dump") },
