@@ -117,6 +117,29 @@ char *strsep(char **stringp, const char *delim){
 #endif
 
 
+enum truncstr truncstr_tab[256]={0xffffffff};
+
+void truncstr_tabinit(){
+	memset(truncstr_tab,0,256*sizeof(enum truncstr));
+	truncstr_tab[' ' ]=TS_SPACE;
+	truncstr_tab['\t']=TS_SPACE;
+	truncstr_tab['\n']=TS_NEWLINE;
+	truncstr_tab['\r']=TS_NEWLINE;
+}
+
+
+char *truncstr(char *str,size_t *len,enum truncstr pre,enum truncstr suf){
+	size_t l = len && *len ? *len : strlen(str);
+	if(truncstr_tab[0]==0xffffffff) truncstr_tabinit();
+	if(pre&TS_EQ) pre|=suf;
+	if(suf&TS_EQ) suf|=pre;
+	while(str[0] && (truncstr_tab[(unsigned char)str[0]]&pre)){ str++; l--; }
+	while(l>0 && (truncstr_tab[(unsigned char)str[l-1]]&suf)) l--;
+	str[l]='\0';
+	if(len) *len=l;
+	return str;
+}
+
 char isfile(const char *fn){
 	FILE *fd=fopen(fn,"r");
 	if(!fd) return 0;

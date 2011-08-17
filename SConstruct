@@ -181,10 +181,12 @@ Export('destdir')
 
 SConscript(build + '/src/SConscript')
 SConscript(build + '/data/SConscript')
+SConscript(build + '/doc/SConscript')
 SConscript(build + '/po/SConscript')
 
 Import('install_bin')
 Import('install_data')
+Import('install_doc')
 Import('install_po')
 
-env.Alias('install', [install_bin, install_data, install_po])
+env.Alias('install', [install_bin, install_data, install_po, install_doc])

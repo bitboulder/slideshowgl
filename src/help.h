@@ -37,6 +37,9 @@ int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 
+enum truncstr { TS_EQ=0x01, TS_SPACE=0x02, TS_NEWLINE=0x04 };
+char *truncstr(char *str,size_t *len,enum truncstr pre,enum truncstr suf);
+
 #ifndef popen
 FILE *popen(const char *command, const char *type);
 int pclose(FILE *stream);

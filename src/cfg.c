@@ -20,6 +20,8 @@ enum cfgmode { CM, CM_NUM };
 char cfgmodearg[CM_NUM]={CM};
 #undef E2
 
+void cfgfile(const char *load);
+
 #define E(X)	#X
 #define E2(X,N)	#X
 struct cfg {
@@ -27,13 +29,13 @@ struct cfg {
 	const char *name;
 	enum cfgtype type;
 	enum cfgmode mode;
-	const char *val;
+	char val[FILELEN];
 	const char *vals[16];
 	const char *help;
 } cfgs[]={
 	{ 'h', "cfg.usage",           CT_INT, CM_INC,  "0",      {NULL}, __("Print this usage") },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0",      {NULL}, __("Print version") },
-//	{ 'I', "cfg.include",         CT_STR, CM_SET,  "",       {NULL}, __("Include Cfg-Setup") },
+	{ 'C', "cfg.load",            CT_STR, CM_DO,   "",       {NULL}, __("Load Cfg-Setup") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
 	{ 0,   "main.log",            CT_STR, CM_SET,  "",       {NULL}, __("Write stdout and stderr to that file (standart for win32)") },
@@ -109,7 +111,7 @@ struct cfg {
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
 	{ 'M', "map.base",            CT_STR, CM_SET,  "",       {NULL}, __("Base directory for gps.txt files") },
 	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images") },
-	{ 0,   NULL,                  0,      0,       NULL,     {NULL}, NULL },
+	{ 0,   NULL,                  0,      0,       "",       {NULL}, NULL },
 };
 #undef E2
 #undef E
@@ -172,7 +174,6 @@ const char *cfggetstr(const char *name){
 
 void cfgset(struct cfg *cfg, char *val){
 	int ival;
-	char *tmp;
 	if(!val && cfgmodearg[cfg->mode]) error(ERR_QUIT,"cfgset no arg for '%s'",cfg->name);
 	switch(cfg->mode){
 	case CM_INC: case CM_FLIP:
@@ -180,14 +181,14 @@ void cfgset(struct cfg *cfg, char *val){
 			error(ERR_QUIT,"cfgset unsupported mode for '%s'",cfg->name);
 		ival=atoi(cfg->val);
 		if(cfg->mode==CM_FLIP) ival=!ival; else ival++;
-		cfg->val=tmp=malloc(10);
-		snprintf(tmp,10,"%i",ival);
+		snprintf(cfg->val,FILELEN,"%i",ival);
 	break;
 	case CM_SET:
-		cfg->val=val;
+		snprintf(cfg->val,FILELEN,"%s",val);
 	break;
 	case CM_DO:
 		if(!strcmp(cfg->name,"mark.catalog")) markcatadd(val);
+		if(!strcmp(cfg->name,"cfg.load")) cfgfile(val);
 	break;
 	default: break;
 	}
@@ -218,7 +219,9 @@ void usage(char *fn,char extended){
 			for(j=0;cfgs[i].vals[j];j++) mprintf("%s%s",j?",":" [",cfgs[i].vals[j]);
 			mprintf("]");
 		}
-		mprintf(" (%s: %s)\n",_("cur"),cfgs[i].mode==CM_FLIP?(atoi(cfgs[i].val)?"on":"off"):cfgs[i].val);
+		if(cfgs[i].mode!=CM_DO)
+			mprintf(" (%s: %s)",_("cur"),cfgs[i].mode==CM_FLIP?(atoi(cfgs[i].val)?"on":"off"):cfgs[i].val);
+		mprintf("\n");
 	}
 	exit(0);
 }
@@ -239,17 +242,81 @@ char *cfgcompileopt(){
 void cfgopt(int c,char *val){
 	size_t i;
 	if(c=='c'){
-		char *pos=strchr(val,'=');
-		if(pos) *(pos++)='\0';
+		char *arg=strchr(val,'=');
+		if(arg){
+			arg[0]='\0';
+			arg=truncstr(arg+1,NULL,TS_SPACE,TS_EQ);
+		}
+		val=truncstr(val,NULL,TS_SPACE,TS_EQ);
 		for(i=0;cfgs[i].name;i++) if(!strcmp(cfgs[i].name,val)){
 			char noarg = !cfgmodearg[cfgs[i].mode];
-			if(!noarg && !pos) error(ERR_QUIT,"option missing argument: -c %s",val);
-			cfgset(cfgs+i,pos);
+			if(!noarg && !arg) error(ERR_QUIT,"option missing argument: -c %s",val);
+			cfgset(cfgs+i,arg);
 			break;
 		}
 		if(!cfgs[i].name) error(ERR_QUIT,"unknown option: -c %s",val);
 	}else
 		for(i=0;cfgs[i].name;i++) if(cfgs[i].opt==c) cfgset(cfgs+i,val);
+}
+
+char *cfgfilerun(char *str,size_t buflen){
+	char *p1,*p2;
+	FILE *pd;
+	char cmd[FILELEN];
+	size_t len;
+	p1=str-1; do{ p1=strchr(p1+1,'`'); }while(p1 && p1!=str && p1[-1]=='\\'); if(!p1) return str;
+	p2=p1;    do{ p2=strchr(p2+1,'`'); }while(p2 && p2!=str && p2[-1]=='\\'); if(!p2) return str;
+	snprintf(cmd,MIN(FILELEN,(size_t)(p2-p1)),"%s",p1+1);
+	if(!(pd=popen(cmd,"r"))) return str;
+	len=(size_t)(p1-str);
+	snprintf(cmd,FILELEN,"%s",p2+1);
+	while(!feof(pd)){
+		char in[FILELEN],*txt;
+		if(!(txt=fgets(in,FILELEN,pd))) continue;
+		txt=truncstr(txt,NULL,TS_SPACE,TS_SPACE|TS_NEWLINE);
+		snprintf(str+len,buflen-len,"%s ",txt);
+		len+=strlen(str+len);
+	}
+	pclose(pd);
+	len--;
+	snprintf(str+len,buflen-len,"%s",cmd);
+	cfgfilerun(str+len,buflen-len);
+	return str;
+}
+
+const char *cfgfilefind(){
+	static char cfgfn[FILELEN];
+	char *dir;
+	if((dir=getenv("HOME"))){
+		snprintf(cfgfn,FILELEN,"%s/.slideshowgl.cfg",dir);
+		if(isfile(cfgfn)) return cfgfn;
+	}
+	snprintf(cfgfn,FILELEN,"/etc/slideshowgl.cfg");
+	if(isfile(cfgfn)) return cfgfn;
+	return NULL;
+}
+
+void cfgfile(const char *load){
+	const char *cfgfn=cfgfilefind();
+	FILE *fd;
+	size_t loadlen=strlen(load);
+	char loadsec=0;
+	if(!cfgfn) return;
+	fd=fopen(cfgfn,"r");
+	while(!feof(fd)){
+		char buf[1024];
+		char *txt, *pos;
+		size_t len=0;
+		if(!(txt=fgets(buf,1024,fd))) continue;
+		txt=truncstr(txt,&len,TS_SPACE,TS_SPACE|TS_NEWLINE);
+		pos=txt-1; do{ pos=strchr(pos+1,'#'); }while(pos && pos!=txt && pos[-1]=='\\');
+		if(pos) pos[0]='\0';
+		if(!txt[0]) continue;
+		if(txt[0]=='[' && txt[len-1]==']')
+			loadsec = loadlen+2==len && !strncmp(load,txt+1,loadlen);
+		else if(loadsec) cfgopt('c',cfgfilerun(txt,1024-(size_t)(txt-buf)));
+	}
+	fclose(fd);
 }
 
 void cfgparseargs(int argc,char **argv){
@@ -269,6 +336,7 @@ void cfgparseargs(int argc,char **argv){
 	textdomain(APPNAME);
 	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
+	cfgfile("global");
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0) cfgopt(c,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0],cfggetint("cfg.usage")>1);
 	if(cfggetint("cfg.version")) version();
