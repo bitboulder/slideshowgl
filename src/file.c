@@ -253,25 +253,29 @@ void floadfinalize(struct imglist *il,char subdir){
 	ilsort(-1,il,subdir?ILSCHG_INIT_SUBDIR:ILSCHG_INIT_MAINDIR);
 }
 
+struct imglist *ilbase=NULL;
+
+void fgetfile(const char *fn,char singlefile){
+	if(!ilbase) ilbase=ilnew("[BASE]","");
+	if(fileext(fn,0,".flst")) faddflst(ilbase,fn,"",NULL,1);
+	else if(singlefile && fileext(fn,0,".effprg")) faddflst(ilbase,fn,"",NULL,1);
+	else faddfile(ilbase,fn,NULL,1);
+}
+
 void fgetfiles(int argc,char **argv){
-	struct imglist *il;
 	int i;
 	char id;
+	char singlefile=!ilbase && argc==1;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
-	if(argc==1 && (id=isdir(argv[0])) && (il=floaddir(argv[0],""))){
+	if(singlefile && (id=isdir(argv[0])) && (ilbase=floaddir(argv[0],""))){
 		if(id==1) mapaddbasedir(argv[0],"");
 		goto end;
 	}
-	il=ilnew("[BASE]","");
-	for(i=0;i<argc;i++){
-		if(fileext(argv[i],0,".flst")) faddflst(il,argv[i],"",NULL,1);
-		else if(argc==1 && fileext(argv[i],0,".effprg")) faddflst(il,argv[i],"",NULL,1);
-		else faddfile(il,argv[i],NULL,1);
-	}
-	floadfinalize(il,0);
+	for(i=0;i<argc;i++) fgetfile(argv[i],singlefile);
+	floadfinalize(ilbase,0);
 end:
-	ilswitch(il,0);
+	ilswitch(ilbase,0);
 	mapaddbasedir(NULL,NULL);
 }
 

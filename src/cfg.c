@@ -9,6 +9,7 @@
 #include "help.h"
 #include "pano.h"
 #include "mark.h"
+#include "file.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
 
@@ -40,6 +41,7 @@ struct cfg {
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
 	{ 0,   "main.log",            CT_STR, CM_SET,  "",       {NULL}, __("Write stdout and stderr to that file (standart for win32)") },
 	{ 0,   "main.coredump",       CT_STR, CM_SET,  "",       {NULL}, __("Watch core dumps and copy to ARG/core_dump") },
+	{ 0,   "main.files",          CT_STR, CM_DO,   "",       {NULL}, __("Add space seperated files to initial file list") },
 	{ 'f', "sdl.fullscreen",      CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle fullscreen") },
 	{ 0,   "sdl.display",         CT_INT, CM_SET,  "1",      {NULL}, __("Set display id to use in multihead mode (overwritten by SDL_VIDEO_FULLSCREEN_DISPLAY)") },
 	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024",   {NULL}, __("Set window width") },
@@ -172,6 +174,16 @@ const char *cfggetstr(const char *name){
 	return NULL;
 }
 
+void cfgaddfiles(char *val){
+	char *pos;
+	while((pos=strchr(val,' '))){
+		pos[0]='\0';
+		if(val[0]) fgetfile(val,0);
+		val=pos+1;
+	}
+	if(val[0]) fgetfile(val,0);
+}
+
 void cfgset(struct cfg *cfg, char *val){
 	int ival;
 	if(!val && cfgmodearg[cfg->mode]) error(ERR_QUIT,"cfgset no arg for '%s'",cfg->name);
@@ -188,7 +200,9 @@ void cfgset(struct cfg *cfg, char *val){
 	break;
 	case CM_DO:
 		if(!strcmp(cfg->name,"mark.catalog")) markcatadd(val);
-		if(!strcmp(cfg->name,"cfg.load")) cfgfile(val);
+		else if(!strcmp(cfg->name,"cfg.load")) cfgfile(val);
+		else if(!strcmp(cfg->name,"main.files")) cfgaddfiles(val);
+		else error(ERR_QUIT,"cfgset do-option with no implemented action (%s)",cfg->name);
 	break;
 	default: break;
 	}

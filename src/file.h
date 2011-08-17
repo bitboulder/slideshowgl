@@ -21,6 +21,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext);
 char finddirmatch(char *in,char *post,char *res,const char *basedir);
 
 char fthumbchecktime(struct imgfile *ifl,long ft);
+void fgetfile(const char *fn,char singlefile);
 void fgetfiles(int argc,char **argv);
 
 int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase); /* TODO: remove (for mapgetctl) */
