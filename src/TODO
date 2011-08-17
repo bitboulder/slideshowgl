@@ -17,4 +17,4 @@
 
 
 - refresh sec-il after exif load
-- map: right drag => move cluster
+- refresh img list on dir change
