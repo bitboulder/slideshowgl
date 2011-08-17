@@ -5,6 +5,12 @@
 #include <unistd.h>
 #include <SDL.h>
 #include <time.h>
+#ifndef __WIN32__
+	#include <sys/types.h>
+	#include <sys/wait.h>
+	#include <sys/time.h>
+	#include <sys/resource.h>
+#endif
 #include "main.h"
 #include "gl.h"
 #include "sdl.h"
@@ -14,6 +20,7 @@
 #include "act.h"
 #include "file.h"
 #include "mapld.h"
+#include "help.h"
 
 #if 0
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -205,11 +212,9 @@ void setprogpath(char *pfn){
 	}
 }
 
-void fileoutput(char doopen,const char *logfn){
-	if(doopen){
-		if(fdout) fclose(fdout);
-		if(logfn) fdout=fopen(logfn,"w");
-		else{
+void fileoutput(char doopen){
+	switch(doopen){
+	case 1: {
 			const char *paths[2];
 			int i;
 			paths[0]=progpath?progpath:"";
@@ -222,23 +227,78 @@ void fileoutput(char doopen,const char *logfn){
 				fdout=fopen(fn,"w");
 				free(fn);
 			}
+	} break;
+	case 2: {
+		const char *logfn=cfggetstr("main.log");
+		if(!logfn || !logfn[0]) return;
+		if(fdout) fclose(fdout);
+		fdout=fopen(logfn,"w");
+	} break;
+	case 0:
+		if(fdout){
+			fclose(fdout);
+			fdout=NULL;
 		}
-	}else if(fdout){
-		fclose(fdout);
-		fdout=NULL;
+	break;
 	}
 }
 
+#ifdef __WIN32__
+#define watchcoredump(X,Y)	0
+#else
+int watchcoredump(int *ret,int argc,char **argv){
+	const char *dir=cfggetstr("main.coredump");
+	pid_t pid;
+	int status;
+	if(!dir || !dir[0]) return 0;
+	pid=fork();
+	if(!pid){
+		struct rlimit rl;
+		getrlimit(RLIMIT_CORE,&rl);
+		rl.rlim_cur=rl.rlim_max;
+		setrlimit(RLIMIT_CORE,&rl);
+	}
+	if(pid<=0) return 0;
+	waitpid(pid,&status,0);
+	*ret = WIFEXITED(status) ? WIFEXITED(status) : 1;
+	if(WIFSIGNALED(status) && WCOREDUMP(status)){
+		char cdir[FILELEN];
+		char cmd[FILELEN*2];
+		time_t t=time(NULL);
+		struct tm *tm=localtime(&t);
+		int i;
+		FILE *fd;
+		snprintf(cdir,FILELEN,"%s/core_dump",dir);
+		mkdirm(cdir);
+		snprintf(cdir,FILELEN,"%s/core_dump/%04i%02i%02i_%02i%02i%02i",dir,
+			tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,
+			tm->tm_hour,tm->tm_min,tm->tm_sec);
+		mkdirm(cdir);
+		snprintf(cmd,FILELEN*2,"mv core %s/",cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"cp %s/build/slideshowgl %s/",dir,cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"svn info %s >%s/svn-info",dir,cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"svn diff %s >%s/svn-diff",dir,cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"%s/cmd",cdir);
+		fd=fopen(cmd,"w");
+		for(i=0;i<argc;i++) fprintf(fd,"%s\n",argv[i]);
+		fclose(fd);
+
+	}
+	return 1;
+}
+#endif
+
 void tlbcheck(); /* TODO: remove */
 int main(int argc,char **argv){
-	const char *logfn;
+	int ret=0;
 	if(argc) setprogpath(argv[0]);
 #ifdef __WIN32__
-	fileoutput(1,NULL);
+	fileoutput(1);
 #endif
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
-	if((logfn=cfggetstr("main.log"))) fileoutput(1,logfn);
+	fileoutput(2);
+	if(watchcoredump(&ret,argc,argv)) goto end;
 	dbg=cfggetint("main.dbg");
 	tim=cfggetenum("main.timer");
 	fgetfiles(argc-optind,argv+optind);
@@ -254,6 +314,7 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
 	tlbcheck(); /* TODO: remove */
-	fileoutput(0,NULL);
-	return 0;
+end:
+	fileoutput(0);
+	return ret;
 }
