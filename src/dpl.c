@@ -379,8 +379,8 @@ char dplprgcolcopy(){
 void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
-	if(mapmove(ev,sx,sy)) return;
 	if(ev&DE_MOVE) dplmovepos(sx,sy);
+	if(mapmove(ev,sx,sy)) return;
 	if(ev&(DE_RIGHT|DE_LEFT)){
 		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
 			if(dpl.pos.zoom<=0) dplchgimgi(dir);
@@ -820,6 +820,12 @@ void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum 
 #define IF_WRM
 #include "dpl_help.h"
 #undef  IF_WRM
+#define IF_MAP
+#include "dpl_help.h"
+#undef  IF_MAP
+#define IF_MAPED
+#include "dpl_help.h"
+#undef  IF_MAPED
 #define IF_PRGED
 #include "dpl_help.h"
 #undef  IF_PRGED
@@ -831,6 +837,8 @@ void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum 
 const char *dplhelp(){
 	if(dpl.pos.actil&ACTIL_PRGED) return dlphelp_prged;
 	if(dpl.pos.actil&ACTIL_DIRED) return dlphelp_dired;
+	if(mapon() && dpl.writemode)  return dlphelp_maped;
+	if(mapon())                   return dlphelp_map;
 	if(dpl.writemode)             return dlphelp_wrm;
 	return dlphelp_def;
 }
@@ -1027,7 +1035,7 @@ void dplkey(unsigned short keyu){
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
 	case '-': if(!dplprged("imgdel", 1,dpl.actimgi,-1)) dplcol(-1); break;
-	case 'e': if(!mapeditmode()) dpledit(); break;
+	case 'e': if(!dplwritemode() || !mapeditmode()) dpledit(); break;
 	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
 	case 'i':
 		if(dpl.pos.actil&ACTIL_PRGED) dplprged("frmins",-1,-1,-1);

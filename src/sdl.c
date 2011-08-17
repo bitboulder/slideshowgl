@@ -395,7 +395,7 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 			else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
 			else                 dplevputi(DE_SEL,clickimg);
 		break;
-		case SDL_BUTTON_MIDDLE: dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
+		case SDL_BUTTON_MIDDLE: if(!mapon()) dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
 		case SDL_BUTTON_RIGHT:
 			if(mapon()) dplevputp(DE_MAPMK,sx,sy);
 			else if(zoom==0) dplevputs(DE_LEFT,DES_MOUSE);

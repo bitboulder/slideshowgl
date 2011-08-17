@@ -3,6 +3,10 @@
 const char *dlphelp_dired =
 #elif defined IF_PRGED
 const char *dlphelp_prged =
+#elif defined IF_MAPED
+const char *dlphelp_maped =
+#elif defined IF_MAP
+const char *dlphelp_map =
 #elif defined IF_WRM
 const char *dlphelp_wrm =
 #else
@@ -12,11 +16,21 @@ const char *dlphelp_def =
 __("Mouse interface")"\0"               "\0"
 
 #ifdef IF_PRGED
-__(" Left drag")"\0"            __("Move image")"\0"
-__(" Left click")"\0"           __("Forward")"\0"
-__(" Middle click")"\0"         __("Toggle mark")"\0"
-__(" Right click")"\0"          __("Backward")"\0"
-__(" Scroll")"\0"               __("Resize image")"\0"
+__(" Left drag")"\0"                 __("Move image")"\0"
+__(" Left click")"\0"                __("Forward")"\0"
+__(" Middle click")"\0"              __("Toggle mark")"\0"
+__(" Right click")"\0"               __("Backward")"\0"
+__(" Scroll")"\0"                    __("Resize image")"\0"
+#elif defined IF_MAP || defined IF_MAPED
+__(" Left drag")"\0"                 __("Move map")"\0"
+__(" Left click")"\0"                __("Center to position")"\0"
+__(" Double click on marker")"\0"    __("Open marker images")"\0"
+__(" Hold on marker")"\0"            __("Show folders in marker")"\0"
+__(" Scroll")"\0"                    __("Zoom in/out")"\0"
+#ifdef IF_MAPED
+__(" Right drag")"\0"                __("Move marker")"\0"
+__(" Right click")"\0"               __("Set new marker")"\0"
+#endif
 #else
 __(" Left drag")"\0"                 __("Move")"\0"
 __(" Left click")"\0"                __("Goto image / Forward")"\0"
@@ -60,6 +74,14 @@ __(" w")"\0"                   __("Switch window")"\0"
 #endif
 
 __(" Navigation")"\0"          "\0"
+#if defined IF_MAP || defined IF_MAPED
+__(" Right/Left")"\0"          __("Move map")"\0"
+__(" Up/Down")"\0"             __("Move map")"\0"
+__(" Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
+__(" Back")"\0"                __("Leave map")"\0"
+__(" /")"\0"                   __("Search for marker")"\0"
+__(" m")"\0"                   __("Switch map type")"\0"
+#else
 #ifdef IF_PRGED
 __(" Right/Left")"\0"          __("Forward/Backward")"\0"
 __(" Up/Down")"\0"             __("Fast forward/backward")"\0"
@@ -72,7 +94,10 @@ __(" Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")
 __(" Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 #endif
 __(" [0-9]+Enter")"\0"         __("Goto image with number")"\0"
+__(" /")"\0"                   __("Search for image or directory")"\0"
+#endif
 
+#if !defined IF_MAP && !defined IF_MAPED
 __(" Directory options")"\0"   "\0"
 #ifndef IF_PRGED
 __(" S")"\0"                   __("Toggle sorting of current image list")"\0"
@@ -84,14 +109,20 @@ __(" e")"\0"                   __("Leave program editor")"\0"
 __(" e")"\0"                   __("Leave directory editor")"\0"
 #else
 __(" e")"\0"                   __("Open directory or program editor")"\0"
+__(" m")"\0"                   __("Open map")"\0"
+#endif
 #endif
 
 __(" Image modification")"\0"  "\0"
-#ifdef IF_WRM
+#if defined IF_WRM || defined IF_MAPED
 __(" w")"\0"                   __("Disable writing mode")"\0"
 #elif !defined IF_PRGED && !defined IF_DIRED
 __(" w")"\0"                   __("Enable writing mode")"\0"
 #endif
+#ifdef IF_MAPED
+__(" e")"\0"                   __("Switch mode for new markers (add/replace)")"\0"
+#endif
+#if !defined IF_MAP && !defined IF_MAPED
 #if defined IF_WRM || defined IF_DIRED || defined IF_PRGED
 __(" r/R")"\0"                 __("Rotate image")"\0"
 #else
@@ -123,6 +154,7 @@ __(" Image information")"\0"   "\0"
 __(" i/I")"\0"                 __("Show selected/full image info")"\0"
 __(" k")"\0"                   __("Show image catalog")"\0"
 #endif
+#endif
 
 __(" Program interface")"\0"   "\0"
 __(" h")"\0"                   __("Show help")"\0"
@@ -131,7 +163,7 @@ __(" f")"\0"                   __("Toggle fullscreen")"\0"
 #ifndef IF_PRGED
 __(" [0-9]+d")"\0"             __("Displayduration [s/ms]")"\0"
 #endif
-#if !defined IF_PRGED && !defined IF_DIRED
+#if !defined IF_PRGED && !defined IF_DIRED && !defined IF_MAP && !defined IF_MAPED
 __(" p")"\0"                   __("Toggle panorama fisheye mode (isogonic,equidistant,equal-area)")"\0"
 #endif
 
