@@ -51,7 +51,7 @@ void actrotate(struct img *img){
 	else error(ERR_CONT,"img rotating failed (%s)",fn);
 }
 
-void actdelete(struct img *img,const char *dstdir){
+void actdelete(struct img *img,struct imglist *il,const char *dstdir){
 	static char fn[FILELEN];
 	static char cmd[FILELEN*2+16];
 	char *pos;
@@ -71,25 +71,26 @@ void actdelete(struct img *img,const char *dstdir){
 	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",ifn,fn);
 	if(ifnreset) ifn[0]='\0';
 	runcmd(cmd);
+	if(il) ilfiletime(il,FT_UPDATE);
 	debug(DBG_STA,"img deleted (%s)",fn);
 }
 
-void actdo(enum act act,struct img *img){
+void actdo(enum act act,struct img *img,struct imglist *il){
 	switch(act){
 	case ACT_SAVEMARKS: markssave(); break;
 	case ACT_ROTATE:    actrotate(img); break;
-	case ACT_DELETE:    actdelete(img,"del"); break;
-	case ACT_DELORI:    actdelete(img,"ori"); break;
+	case ACT_DELETE:    actdelete(img,il,"del"); break;
+	case ACT_DELORI:    actdelete(img,il,"ori"); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;
 	case ACT_MAPCLT:    mapimgclt(-1); break;
 	default: break;
 	}
 }
 
-void actrun(enum act act,struct img *img){
+void actrun(enum act act,struct img *img,struct imglist *il){
 	struct actdelay *dl=ac.cfg.delay+act;
 	debug(DBG_STA,"action %i run %s",act,dl->delay?"with delay":"immediatly");
-	if(!dl->delay) actdo(act,img);
+	if(!dl->delay) actdo(act,img,il);
 	else if(!dl->countdown) dl->countdown=SDL_GetTicks()+dl->delay;
 }
 
@@ -98,7 +99,7 @@ void actcheckdelay(char force){
 	struct actdelay *dl=ac.cfg.delay;
 	for(i=0;i<ACT_NUM;i++,dl++) if(dl->countdown && (force || SDL_GetTicks()>=dl->countdown)){
 		dl->countdown=0;
-		actdo(i,NULL);
+		actdo(i,NULL,NULL);
 	}
 }
 
@@ -106,22 +107,24 @@ void actcheckdelay(char force){
 struct qact {
 	enum act act;
 	struct img *img;
+	struct imglist *il;
 } qacts[QACT_NUM];
 int qact_wi=0;
 int qact_ri=0;
 
 /* thread: dpl, load, main */
-void actadd(enum act act,struct img *img){
+void actadd(enum act act,struct img *img,struct imglist *il){
 	int nwi=(qact_wi+1)%QACT_NUM;
 	while(nwi==qact_ri) SDL_Delay(100);
 	qacts[qact_wi].act=act;
 	qacts[qact_wi].img=img;
+	qacts[qact_wi].il=il;
 	qact_wi=nwi;
 }
 
 char actpop(){
 	if(qact_wi==qact_ri) return 0;
-	actrun(qacts[qact_ri].act,qacts[qact_ri].img);
+	actrun(qacts[qact_ri].act,qacts[qact_ri].img,qacts[qact_ri].il);
 	qact_ri=(qact_ri+1)%QACT_NUM;
 	return 1;
 }

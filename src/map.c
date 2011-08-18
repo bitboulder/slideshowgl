@@ -295,7 +295,7 @@ void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
 	img->gy=gy;
 	if(clt){
 		mapimgclt(map.pos.iz);
-		actadd(ACT_MAPCLT,NULL);
+		actadd(ACT_MAPCLT,NULL,NULL);
 	}
 }
 
@@ -710,7 +710,7 @@ void mapinit(){
 	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
 	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
 	map.init=0;
-	actadd(ACT_MAPCLT,NULL);
+	actadd(ACT_MAPCLT,NULL,NULL);
 }
 
 void maprendertile(int ix,int iy,int iz){
@@ -1034,7 +1034,7 @@ char mapcltsave(int i){
 		mapm2g(cmx,cmy,map.pos.iz,ci->img->gx,ci->img->gy);
 		mapimgsave(ci->img->dir);
 	}
-	actadd(ACT_MAPCLT,NULL);
+	actadd(ACT_MAPCLT,NULL,NULL);
 	return 1;
 }
 

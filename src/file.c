@@ -124,9 +124,10 @@ char finddirmatch(char *in,char *post,char *res,const char *basedir){
 
 /***************************** getfiles ***************************************/
 
-char fthumbchecktime(struct imgfile *ifl,long ft){
+char fthumbchecktime(struct imgfile *ifl){
+	long ft;
 	if(!ifl->tfn[0]) return 0;
-	if(ft<0) ft=filetime(ifl->fn);
+	ft=filetime(ifl->fn);
 	if(ft<=filetime(ifl->tfn)) return 1;
 	ifl->tfn[0]='\0';
 	debug(DBG_DBG,"thumbinit thumb too old for '%s'",ifl->fn);
@@ -138,12 +139,12 @@ void fthumbinit(struct imgfile *ifl){
 	if(!findfilesubdir(ifl->tfn,"thumb",NULL)){
 		ifl->tfn[0]='\0';
 		debug(DBG_DBG,"thumbinit no thumb found for '%s'",ifl->fn);
-	}else if(fthumbchecktime(ifl,-1))
+	}else if(fthumbchecktime(ifl))
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
 int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase){
-	struct img *img;
+	struct img *img=NULL;
 	size_t len;
 	char *prg;
 	char isd;
@@ -203,6 +204,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			imgposmark(img,MPC_YES);
 		}
 	}
+	if(img) mprintf("create img 0x%08lx (%s)\n",(long)img,img->file->fn);
 	return 1;
 }
 

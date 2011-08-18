@@ -28,6 +28,7 @@ enum imgtex { IMGTEX };
 struct imglist;
 
 struct img {
+	char free;
 	struct img *nxt;
 	struct imgld *ld;
 	struct imgpos *pos;
@@ -42,6 +43,9 @@ extern struct img *delimg;
 enum ilschg { ILSCHG_NONE, ILSCHG_INIT_MAINDIR, ILSCHG_INIT_SUBDIR, ILSCHG_INC };
 enum ilsecswitch { ILSS_PRGON,ILSS_PRGOFF,ILSS_DIRON,ILSS_DIROFF };
 
+enum eldft {FT_RESET, FT_UPDATE, FT_CHECK, FT_CHECKNOW};
+char ilfiletime(struct imglist *il,enum eldft act);
+
 struct imglist *ilnew(const char *fn,const char *dir);
 void ildestroy(struct imglist *il);
 char ilfind(const char *fn,struct imglist **ilret,char setparent);
@@ -49,6 +53,7 @@ void ilcleanup();
 int ilswitch(struct imglist *il,int cil);
 char ilsecswitch(enum ilsecswitch type);
 char ilreload(int il,const char *cmd);
+void ilftcheck();
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
 char ilsort(int il,struct imglist *curil,enum ilschg chg);

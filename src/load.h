@@ -20,8 +20,9 @@ void imgldfree(struct imgld *il);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
 
-enum ldft {FT_RESET, FT_UPDATE};
-void imgldfiletime(struct imgld *il,enum ldft act);
+struct ldft { unsigned int ftchk; long ft; };
+char ldfiletime(struct ldft *lf,enum eldft act,char *fn);
+char imgldfiletime(struct imgld *il,enum eldft act);
 
 char ldtexload();
 char ldffree(struct imgld *il,enum imgtex thold);

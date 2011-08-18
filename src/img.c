@@ -32,9 +32,9 @@ struct imglist {
 	int pos;
 	Uint32 last_used;
 	struct prg *prg;
-	long time;
 	enum ilsort sort;
 	char sort_chg;
+	struct ldft lf;
 } *ils=NULL;
 
 struct ilcfg {
@@ -107,7 +107,9 @@ struct img *imgget(int il,int i){
 
 struct img *ilremoveimg(struct imglist *il,int i,char final){
 	struct img *img=il->imgs[i];
-	if(i>0) il->imgs[i-1]->nxt=img->nxt;
+	if(i>0 && il->imgs[i-1]->nxt==img)
+		il->imgs[i-1]->nxt=img->nxt;
+	img->nxt=NULL;
 	il->nimg--;
 	for(;i<il->nimg;i++) il->imgs[i]=il->imgs[i+1];
 	if(!final) il->imgs[i]=img;
@@ -127,6 +129,7 @@ void iladdimg(struct imglist *il,struct img *img,const char *prg){
 
 struct img *imginit(){
 	struct img *img=malloc(sizeof(struct img));
+	img->free=0;
 	img->nxt=NULL;
 	img->ld=imgldinit(img);
 	img->pos=imgposinit();
@@ -138,6 +141,11 @@ struct img *imginit(){
 
 void imgfree(struct img *img){
 	if(!img) return;
+	if(img->free){
+		error(ERR_CONT,"critical: double free img 0x%08lx\n",(long)img);
+		return;
+	}
+	img->free=1;
 	imgldfree(img->ld);
 	imgposfree(img->pos);
 	imgexiffree(img->exif);
@@ -184,6 +192,10 @@ void ilsetparent(struct imglist *il){
 	il->parent=curils[0];
 }
 
+char ilfiletime(struct imglist *il,enum eldft act){
+	return il->fn[0]!='[' && ldfiletime(&il->lf,act,il->fn);
+}
+
 /* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
@@ -191,9 +203,9 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	snprintf(il->dir,FILELEN,dir);
 	ilsetparent(il);
 	il->pos=IMGI_START;
-	il->time=filetime(fn);
 	il->nxt=ils;
 	ils=il;
+	ilfiletime(il,FT_UPDATE);
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
 	return il;
 }
@@ -206,7 +218,9 @@ void ildestroy(struct imglist *il){
 	if(il->prg) prgdestroy(il->prg);
 	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
 	if(il2[0]) il2[0]=il->nxt;
+	mprintf("free imglist start 0x%08lx (%s)\n",(long)il,il->fn); /* TODO: remove */
 	for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
+	mprintf("free imglist end   0x%08lx (%s)\n",(long)il,il->fn); /* TODO: remove */
 	if(il->imgs) free(il->imgs);
 	debug(DBG_STA,"imglist destroyed for dir: %s",il->fn);
 	free(il);
@@ -223,7 +237,7 @@ void ilfree(struct imglist *il){
 char ilfind(const char *fn,struct imglist **ilret,char setparent){
 	struct imglist *il;
 	for(il=ils;il;il=il->nxt) if(il->last_used!=1 && !strncmp(il->fn,fn,FILELEN)){
-		char ret=filetime(fn)==il->time;
+		char ret=!ilfiletime(il,FT_CHECKNOW);
 		*ilret=il;
 		if(ret && setparent) ilsetparent(il);
 		return ret;
@@ -288,7 +302,7 @@ int ilswitch(struct imglist *il,int cil){
 	if(curils[cil]) curils[cil]->pos=dplgetimgi(cil);
 	curils[cil]=il;
 	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
-	actadd(ACT_ILCLEANUP,NULL);
+	actadd(ACT_ILCLEANUP,NULL,NULL);
 	return curils[cil]->pos;
 }
 
@@ -303,7 +317,7 @@ char ilsecswitch(enum ilsecswitch type){
 		if(!curils[1]) return 1;
 		if(type==ILSS_PRGOFF) curils[0]=curils[1];
 		curils[1]=NULL;
-		actadd(ACT_ILCLEANUP,NULL);
+		actadd(ACT_ILCLEANUP,NULL,NULL);
 		return 1;
 	case ILSS_PRGON:
 		if(!curils[0] || !ilprg(0)) return 0;
@@ -341,19 +355,33 @@ char ilreload(int il,const char *cmd){
 	}
 	curil=curils[il]=floaddir(curil->fn,curil->dir);
 	if(curil) curil->last_used=SDL_GetTicks();
-	actadd(ACT_ILCLEANUP,NULL);
+	actadd(ACT_ILCLEANUP,NULL,NULL);
 	return curil!=NULL;
+}
+
+/* thread: dpl */
+void ilftcheck(){
+	int il;
+	for(il=0;il<IL_NUM;il++) if(curils[il] && ilfiletime(curils[il],FT_CHECK)){
+		debug(DBG_STA,"reload imglist: %s",curils[il]->fn);
+		ilfiletime(curils[il],FT_RESET);
+		ilreload(il,NULL);
+		effrefresh(EFFREF_ALL);
+	}
 }
 
 void ilunused(struct imglist *il){
 	il->last_used=1;
-	actadd(ACT_ILCLEANUP,NULL);
+	actadd(ACT_ILCLEANUP,NULL,NULL);
 }
 
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len){
 	int i;
-	for(i=0;i<src->nimg;i++) if(!strncmp(imgfilefn(src->imgs[i]->file),fn,len)){
-		struct img *img=ilremoveimg(src,i,1);
+	for(i=0;i<src->nimg;i++){
+		const char *ifn=imgfilefn(src->imgs[i]->file);
+		struct img *img;
+		if(ifn[len]!='\0' || strncmp(ifn,fn,len)) continue;
+		img=ilremoveimg(src,i,1);
 		iladdimg(dst,img,fn[len]==';'?fn+len+1:NULL);
 		return 1;
 	}

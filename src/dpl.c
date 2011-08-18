@@ -457,7 +457,7 @@ char dplmark(int imgi){
 	mark[mkid]=!mark[mkid];
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	markchange(mkid);
-	actadd(ACT_SAVEMARKS,NULL);
+	actadd(ACT_SAVEMARKS,NULL,NULL);
 	return 1;
 }
 
@@ -468,7 +468,7 @@ void dplrotate(enum dplev ev){
 	if(imgfiledir(img->file)) return;
 	exifrotate(img->exif,r);
 	effinit(EFFREF_IMG|EFFREF_FIT,ev,-1);
-	if(dplwritemode()) actadd(ACT_ROTATE,img);
+	if(dplwritemode()) actadd(ACT_ROTATE,img,NULL);
 }
 
 enum edpldel { DD_DEL, DD_ORI };
@@ -490,7 +490,7 @@ void dpldel(enum edpldel act){
 		delimg=img;
 		dplclipimgi(NULL);
 	}else return;
-	actadd(act==DD_ORI ? ACT_DELORI : ACT_DELETE,img);
+	actadd(act==DD_ORI ? ACT_DELORI : ACT_DELETE,img,ilget(AIL));
 }
 
 char dplcol(int d){
@@ -1207,6 +1207,7 @@ int dplthread(void *UNUSED(arg)){
 	effinit(EFFREF_CLR,DE_INIT,-1);
 	while(!sdl_quit){
 
+		ilftcheck();
 		if(dpl.run) dplrun();
 		else dpl.cfg.playmode=0;
 		panorun();

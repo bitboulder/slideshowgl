@@ -98,8 +98,7 @@ struct imgld {
 	int w,h;
 	struct itex texs[TEX_NUM];
 	struct img *img;
-	long ft;
-	Uint32 ftchk;
+	struct ldft lf;
 };
 
 /* thread: img */
@@ -148,18 +147,36 @@ float imgldrat(struct imgld *il){
 	return (!il->h || !il->w) ? 0.f : (float)il->w/(float)il->h;
 }
 
-/* thread: ld, act */
-void imgldfiletime(struct imgld *il,enum ldft act){
+/* thread: ld, act, dpl */
+char ldfiletime(struct ldft *lf,enum eldft act,char *fn){
+	char ret=0;
 	switch(act){
 	case FT_UPDATE:
-		il->ft=filetime(imgfilefn(il->img->file));
-		il->ftchk=SDL_GetTicks();
+		lf->ft=filetime(fn);
+		lf->ftchk=SDL_GetTicks();
 	break;
 	case FT_RESET:
-		il->ft=0;
-		il->ftchk=0;
+		lf->ft=0;
+		lf->ftchk=0;
 	break;
+	case FT_CHECK:
+	case FT_CHECKNOW: {
+		Uint32 time=SDL_GetTicks();
+		if(act==FT_CHECKNOW || lf->ftchk+load.ftchk<time){
+			long ft=filetime(fn);
+			if(ft>lf->ft){
+				lf->ft=ft;
+				ret=1;
+			}
+			lf->ftchk=time;
+		}
 	}
+	}
+	return ret;
+}
+
+char imgldfiletime(struct imgld *il,enum eldft act){
+	return ldfiletime(&il->lf,act,imgfilefn(il->img->file));
 }
 
 /***************************** sdlimg *****************************************/
@@ -390,16 +407,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 	}
 	if(il->texs[it].loading != il->texs[it].loaded) goto end0;
 	if(il->texs[it].loaded){
-		Uint32 time=SDL_GetTicks();
-		if(il->ftchk+load.ftchk<time){
-			long ft=filetime(fn);
-			if(ft>il->ft){
-				il->ft=ft;
-				fthumbchecktime(il->img->file,ft);
-				ldffree(il,TEX_NONE);
-				imgexifclear(il->img->exif);
-			}
-			il->ftchk=time;
+		if(imgldfiletime(il,FT_CHECK)){
+			fthumbchecktime(il->img->file);
+			ldffree(il,TEX_NONE);
+			imgexifclear(il->img->exif);
 		}
 		goto end0;
 	}
