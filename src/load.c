@@ -379,10 +379,6 @@ char ldtexload(){
 	return 1;
 }
 
-void tlbcheck(){ /* TODO: remove */
-	error(ERR_CONT,"tlb wn: %lli rn: %lli wi: %i ri: %i",tlb.wn,tlb.rn,tlb.wi,tlb.ri);
-}
-
 /***************************** load + free img ********************************/
 
 char ldfload(struct imgld *il,enum imgtex it){

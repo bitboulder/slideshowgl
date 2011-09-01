@@ -300,7 +300,6 @@ int watchcoredump(int *ret,int argc,char **argv){
 }
 #endif
 
-void tlbcheck(); /* TODO: remove */
 int main(int argc,char **argv){
 	int ret=0;
 	if(argc) setprogpath(argv[0]);
@@ -327,7 +326,6 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_ML1)?"":" mapld1",
 			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
-	tlbcheck(); /* TODO: remove */
 end:
 	fileoutput(0);
 	return ret;
