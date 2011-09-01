@@ -204,7 +204,6 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			imgposmark(img,MPC_YES);
 		}
 	}
-	if(img) mprintf("create img 0x%08lx (%s)\n",(long)img,img->file->fn);
 	return 1;
 }
 

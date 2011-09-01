@@ -218,9 +218,7 @@ void ildestroy(struct imglist *il){
 	if(il->prg) prgdestroy(il->prg);
 	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
 	if(il2[0]) il2[0]=il->nxt;
-	mprintf("free imglist start 0x%08lx (%s)\n",(long)il,il->fn); /* TODO: remove */
 	for(i=0;i<il->nimgo;i++) imgfree(il->imgs[i]);
-	mprintf("free imglist end   0x%08lx (%s)\n",(long)il,il->fn); /* TODO: remove */
 	if(il->imgs) free(il->imgs);
 	debug(DBG_STA,"imglist destroyed for dir: %s",il->fn);
 	free(il);
