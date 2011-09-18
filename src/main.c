@@ -10,6 +10,8 @@
 	#include <sys/wait.h>
 	#include <sys/time.h>
 	#include <sys/resource.h>
+	#include <dirent.h>
+	#include <signal.h>
 #endif
 #include "main.h"
 #include "gl.h"
@@ -300,8 +302,41 @@ int watchcoredump(int *ret,int argc,char **argv){
 }
 #endif
 
+char terminate(){
+#ifndef __WIN32__
+	char exe_self[FILELEN];
+	pid_t pid_self=getpid();
+	DIR *dir;
+	struct dirent *de;
+	long pid_kill=0;
+	if(readlink("/proc/self/exe",exe_self,FILELEN)<=0) return 0;
+	if(!(dir=opendir("/proc"))) return 0;
+	while((de=readdir(dir))){
+		size_t l=0;
+		long pid;
+		char fexe[FILELEN];
+		char exe[FILELEN];
+		for(;l<NAME_MAX && de->d_name[l];l++) if(de->d_name[l]<'0' || de->d_name[l]>'9') break;
+		if(l>=NAME_MAX || de->d_name[l]) continue;
+		snprintf(fexe,MIN(FILELEN,l+1),de->d_name);
+		pid=strtol(fexe,NULL,10);
+		if(pid<=0 || pid==LONG_MAX) continue;
+		if(pid==pid_self) continue;
+		snprintf(fexe,FILELEN,"/proc/%li/exe",pid);
+		if(readlink(fexe,exe,FILELEN)<=0) continue;
+		if(strncmp(exe,exe_self,FILELEN)) continue;
+		if(!pid_kill || pid_kill<pid) pid_kill=pid; /* TODO: select by mem space */
+	}
+	closedir(dir);
+	if(!pid_kill) return 0;
+	kill((pid_t)pid_kill,SIGABRT);
+	return 1;
+#endif
+}
+
 int main(int argc,char **argv){
 	int ret=0;
+	if(terminate()) return ret;
 	if(argc) setprogpath(argv[0]);
 #ifdef __WIN32__
 	fileoutput(1);
