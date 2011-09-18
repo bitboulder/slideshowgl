@@ -123,7 +123,10 @@ struct map {
 	.editmode  = MEM_REPLACE,
 };
 
-char mapon(){ return !strncmp(ilfn(ilget(0)),"[MAP]",5); }
+char mapon(){
+	struct imglist *il=ilget(0);
+	return il ? !strncmp(ilfn(il),"[MAP]",5) : 0;
+}
 void mapsdlsize(int *w,int *h){ map.scr_w=w; map.scr_h=h; }
 void mapswtype(){
 	map.maptype=(map.maptype+1)%MT_NUM;
