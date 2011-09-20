@@ -514,7 +514,7 @@ int sdlthread(void *UNUSED(arg)){
 		timer(TI_SDL,1,1);
 		if(sdl.lastfrm && sdl.lastfrm>efflastchg()){
 			if(sdl.cfg.playrecord) sdlsaveframe();
-			else SDL_Delay(10);
+			else sdldelay(&paint_last,10);
 			timer(TI_SDL,2,1);
 			continue;
 		}
