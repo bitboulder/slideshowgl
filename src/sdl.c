@@ -184,7 +184,7 @@ void sdlresize(int w,int h){
 	}
 	if(done>=0){
 		if(w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh){
-			error(ERR_CONT,"disable anti-aliasing for window size");
+			debug(DBG_STA,"disable anti-aliasing for window size");
 			sdl.cfg.fsaa=0;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
