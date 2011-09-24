@@ -36,8 +36,9 @@ sources = """
 	map.c
 	mapld.c
 """
-if env['HAVE_EXIV2'] == 1:
-	sources = sources + "exiv2.cpp"
+if not env.GetOption('clean'):
+	if env['HAVE_EXIV2'] == 1:
+		sources = sources + "exiv2.cpp"
 
 env.AlwaysBuild(env.Command('config.h', 'config.h.in', config_h_build))
 
