@@ -9,7 +9,7 @@ void mapsdlsize(int *w,int *h);
 void mapswtype();
 void mapinfo(int i);
 const char *mapgetbasedirs();
-char mapeditmode();
+void mapeditmode();
 char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir);
 char mapgetcltpos(int i,float *sx,float *sy);
 struct imglist *mapsetpos(int imgi);

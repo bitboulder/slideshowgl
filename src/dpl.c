@@ -1035,7 +1035,10 @@ void dplkey(unsigned short keyu){
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
 	case '-': if(!dplprged("imgdel", 1,dpl.actimgi,-1)) dplcol(-1); break;
-	case 'e': if(!dplwritemode() || !mapeditmode()) dpledit(); break;
+	case 'e':
+		if(!mapon()) dpledit();
+		else if(dplwritemode()) mapeditmode();
+	break;
 	case 'E': if(!dplprged("reload",-1,-1,-1) && ilreload(AIL,NULL)) effinit(EFFREF_ALL,0,-1); break;
 	case 'i':
 		if(dpl.pos.actil&ACTIL_PRGED) dplprged("frmins",-1,-1,-1);

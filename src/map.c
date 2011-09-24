@@ -138,10 +138,9 @@ void mapinfo(int i){
 	sdlforceredraw();
 }
 const char *mapgetbasedirs(){ return map.basedirs; }
-char mapeditmode(){
-	if(map.init || !mapon()) return 0;
+void mapeditmode(){
+	if(map.init || !mapon()) return;
 	map.editmode=(map.editmode+1)%N_MEM;
-	return 1;
 }
 
 #define mapg2p(gx,gy,px,py) { \
