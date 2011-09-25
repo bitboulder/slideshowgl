@@ -171,7 +171,7 @@ struct mainthread {
 	{ &ldthread,   5, 0, NULL },
 	{ &actthread,  2, 0, NULL },
 	{ &mapldthread,1, 0, (void*)0 },
-	{ &mapldthread,1, 0, (void*)1 },
+//	{ &mapldthread,1, 0, (void*)1 },
 	{ NULL,        0, 0, NULL },
 };
 
