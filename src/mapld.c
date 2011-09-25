@@ -140,13 +140,15 @@ void mapldinit(){
 	if(cd && cd[0]) snprintf(mapld.cachedir,FILELEN,cd);
 	else snprintf(mapld.cachedir,FILELEN,"%s/slideshowgl-cache",gettmp());
 	mkdirm(mapld.cachedir);
+#if HAVE_CURL
+	if(curl_global_init(CURL_GLOBAL_NOTHING)) return;
+#endif
 	mapld.init=1;
 }
 
 int mapldthread(void *arg){
 	long id=(long)arg;
-	if(!id) mapldinit();
-	else while(!mapld.init) SDL_Delay(500);
+	if(!mapld.init) return 0;
 	while(!sdl_quit){
 		if(!mapld_get()) SDL_Delay(250);
 	}

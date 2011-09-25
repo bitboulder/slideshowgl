@@ -351,6 +351,7 @@ int main(int argc,char **argv){
 	tim=cfggetenum("main.timer");
 	fgetfiles(argc-optind,argv+optind);
 	sdlinit();
+	mapldinit();
 	start_threads();
 	if(!end_threads())
 		error(ERR_CONT,"sdl timeout waiting for threads:%s%s%s%s%s%s",
