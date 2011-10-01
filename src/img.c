@@ -424,7 +424,7 @@ int imgsort_datecmp(const void *a,const void *b){
 	if(!bd)   return -1;
 	if(ad<bd) return -1;
 	if(ad>bd) return  1;
-	return 0;
+	return imgsort_filecmp(a,b);
 }
 
 /* thread: dpl */
