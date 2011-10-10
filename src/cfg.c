@@ -105,7 +105,6 @@ struct cfg {
 	{ 0,   "eff.txt_delay",       CT_INT, CM_SET,  "300",    {NULL}, __("Rise and fall time for text windows (ms)") },
 	{ 'm', "mark.fn",             CT_STR, CM_SET,  "",       {NULL}, __("Set mark file (Default: $TEMP/slideshowgl-mark)") },
 	{ 'k', "mark.catalog",        CT_STR, CM_DO,   "",       {NULL}, __("Add catalog (directory also possible)") },
-	{ 0,   "mark.flst2gthumb",    CT_STR, CM_SET,  "/mnt/img/self/scriptz/flst2gthumb.pl", {NULL}, __("Skript for flst conversion") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
 	{ 0,   "act.mapclt_delay",    CT_INT, CM_SET,  "1000",   {NULL}, __("Delay after that the map clusters are refreshed") },

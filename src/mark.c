@@ -34,7 +34,6 @@ struct mkcat {
 struct mark {
 	struct {
 		char fn[FILELEN];
-		const char *flst2gthumb;
 	} cfg;
 	char init;
 	struct mk *mks[MKCHAINS];
@@ -187,11 +186,7 @@ void marksload(){
 
 void markinit(){
 	const char *fn;
-	FILE *fd;
 	if(mark.init) return;
-	mark.cfg.flst2gthumb=cfggetstr("mark.flst2gthumb");
-	if((fd=fopen(mark.cfg.flst2gthumb,"r"))) fclose(fd);
-	else mark.cfg.flst2gthumb=NULL;
 	fn=cfggetstr("mark.fn");
 	if(fn && fn[0]) snprintf(mark.cfg.fn,FILELEN,fn);
 	else snprintf(mark.cfg.fn,FILELEN,"%s/slideshowgl-mark.flst",gettmp());
@@ -223,11 +218,6 @@ void markssave(){
 		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt)
 			if(mk->mark[c]) fprintf(fd,"%s\n",mk->fn);
 		fclose(fd);
-		if(mark.cfg.flst2gthumb){
-			char buf[FILELEN*2];
-			snprintf(buf,FILELEN*2,"%s \"%s\"",mark.cfg.flst2gthumb,fn);
-			system(buf);
-		}
 		debug(DBG_STA,"marks saved (%s)",fn);
 	}
 }
