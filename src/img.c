@@ -401,7 +401,9 @@ void imgrandom(struct imglist *il){
 	il->imgs=calloc(sizeof(struct img *),il->simg);
 	for(i=0;i<il->nimg;i++){
 		j=rand()%il->nimg;
-		while(il->imgs[j]) j=(j+1)%il->nimg;
+		while(il->imgs[j]) 
+			if((il->nimg-i)*100<il->nimg) j=(j+1)%il->nimg;
+			else j=rand()%il->nimg;
 		il->imgs[j]=oimgs[i];
 	}
 	free(oimgs);
