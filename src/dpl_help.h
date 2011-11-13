@@ -87,7 +87,7 @@ __(" Right/Left")"\0"          __("Forward/Backward")"\0"
 __(" Up/Down")"\0"             __("Fast forward/backward")"\0"
 __(" [0-9]+Enter")"\0"         __("Goto frame with number")"\0"
 #else
-__(" Space")"\0"               __("Stop/Play / Enter directory")"\0"
+__(" Space")"\0"               __("Stop/Play / Play Movie / Enter directory")"\0"
 __(" Back")"\0"                __("Leave directory / Toggle panorama mode (spherical,plain,fisheye)")"\0"
 __(" Right/Left")"\0"          __("Forward/Backward (Zoom: shift right/left)")"\0"
 __(" Up/Down")"\0"             __("Fast forward/backward (Zoom: shift up/down)")"\0"
