@@ -103,8 +103,8 @@ void switchdpms(char UNUSED(val)){ }
 #endif
 
 /* thread: dpl */
-void sdlfullscreen(char dst){
-	if(dst==sdl.fullscreen) return;
+char sdlfullscreen(char dst){
+	if(dst==sdl.fullscreen) return 0;
 	if(sdl.fullscreen){
 		sdl.scr_w=sdl.scrnof_w;
 		sdl.scr_h=sdl.scrnof_h;
@@ -115,6 +115,7 @@ void sdlfullscreen(char dst){
 		sdl.fullscreen=1;
 	}
 	sdl.doresize=1;
+	return 1;
 }
 
 struct subdpl {

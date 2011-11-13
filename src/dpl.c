@@ -54,6 +54,7 @@ struct dpl {
 		int imgi;
 		Uint32 time;
 	} mousehold;
+	char fullscreen;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -67,6 +68,7 @@ struct dpl {
 	.fid = 0,
 	.resortil = NULL,
 	.mousehold.time = 0,
+	.fullscreen = 0,
 };
 
 #define AIL			(dpl.pos.actil&ACTIL)
@@ -600,8 +602,11 @@ char dplactil(float x,int clickimg){
 }
 
 int dplcmdrun(void *arg){
-	system(arg);
+	char *cmd=arg;
+	char fs=cmd[0];
+	system(cmd+1);
 	free(arg);
+	if(fs) dpl.fullscreen=1;
 	return 0;
 }
 
@@ -612,8 +617,21 @@ void dplgimp(){
 	if(imgfiledir(img->file)) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
-	snprintf(cmd,FILELEN+8,"gimp %s",imgfilefn(img->file));
+	snprintf(cmd,FILELEN+8,"%cgimp %s",0,imgfilefn(img->file));
 	SDL_CreateThread(dplcmdrun,cmd);
+}
+
+char dplmov(){
+	struct img *img=imgget(AIL,AIMGI);
+	char *cmd;
+	char fs;
+	if(!img) return 0;
+	if(!imgfilemov(img->file)) return 0;
+	fs=sdlfullscreen(0);
+	cmd=malloc(FILELEN*2);
+	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\"",fs,fs?"-fs ":"",imgfilemov(img->file));
+	SDL_CreateThread(dplcmdrun,cmd);
+	return 1;
 }
 
 void dplconvert(){
@@ -623,7 +641,7 @@ void dplconvert(){
 	if(isdir(imgfilefn(img->file))>1) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
-	snprintf(cmd,FILELEN+8,"cnv_ui -img %s",imgfilefn(img->file));
+	snprintf(cmd,FILELEN+8,"%ccnv_ui -img %s",0,imgfilefn(img->file));
 	SDL_CreateThread(dplcmdrun,cmd);
 }
 
@@ -1113,6 +1131,7 @@ char dplev(struct ev *ev){
 	case DE_MARK:    if((evdone=dplwritemode())) dplmark(clickimg); break;
 	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
 	case DE_PLAY:
+		if(dplmov()) break;
 		if(!(dpl.pos.actil&ACTIL_PRGED) && !panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);
 			dpl.run=dplgetticks();
@@ -1210,6 +1229,7 @@ int dplthread(void *UNUSED(arg)){
 	effinit(EFFREF_CLR,DE_INIT,-1);
 	while(!sdl_quit){
 
+		if(dpl.fullscreen){ sdlfullscreen(1); dpl.fullscreen=0; }
 		ilftcheck();
 		if(dpl.run) dplrun();
 		else dpl.cfg.playmode=0;

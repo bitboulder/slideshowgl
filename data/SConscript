@@ -8,6 +8,9 @@ data = """
 	defimg.png
 	dirimg.png
 	icon.png
+	mov.png
+	mapdir.png
+	mapdirs.png
 	FreeSans.ttf
 	vs.c
 	vs_fish.c

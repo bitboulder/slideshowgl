@@ -30,6 +30,7 @@ struct imgfile {
 	char fn[FILELEN];
 	char tfn[FILELEN];
 	char dir[FILELEN];
+	char mov[FILELEN];
 	struct txtimg txt;
 	char delfn[FILELEN];
 };
@@ -41,6 +42,7 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
 char *imgfiledelfn(struct imgfile *ifl){ return ifl->delfn; }
 const char *imgfiledir(struct imgfile *ifl){ return ifl->dir[0] ? ifl->dir : NULL; }
+const char *imgfilemov(struct imgfile *ifl){ return ifl->mov[0] ? ifl->mov : NULL; }
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
 /* thread: load */
@@ -143,6 +145,20 @@ void fthumbinit(struct imgfile *ifl){
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
+void fmovinit(struct imgfile *ifl){
+	const char *const movext[]={ "mov", "avi", NULL };
+	const char *const *ext;
+	size_t len=strlen(ifl->fn);
+	while(len>0 && ifl->fn[len-1]!='.') len--;
+	if(!len){ ifl->mov[0]='\0'; return; }
+	snprintf(ifl->mov,FILELEN,ifl->fn);
+	for(ext=movext;ext[0];ext++){
+		snprintf(ifl->mov+len,FILELEN-len,ext[0]);
+		if(isfile(ifl->mov)) break;
+	}
+	if(!ext[0]){ ifl->mov[0]='\0'; return; }
+}
+
 int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase){
 	struct img *img=NULL;
 	size_t len;
@@ -200,6 +216,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			img=imgadd(il,prg);
 			memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 			fthumbinit(img->file);
+			fmovinit(img->file);
 			imgpanoload(img->pano,fn);
 			imgposmark(img,MPC_YES);
 		}
@@ -337,6 +354,7 @@ char fimgswitchmod(struct img *img){
 	snprintf(ifl->delfn,FILELEN,ifl->fn);
 	snprintf(ifl->fn,FILELEN,fn);
 	fthumbinit(ifl);
+	fmovinit(ifl);
 	imgpanoload(img->pano,fn);
 	imgposmark(img,MPC_RESET);
 	imgldfiletime(img->ld,FT_RESET);

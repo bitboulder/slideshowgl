@@ -38,6 +38,7 @@ struct gl {
 	GLuint dls;
 	GLuint prg;
 	GLuint prgfish;
+	GLuint movtex;
 	struct glfont font[NFT];
 	struct glfont *fontcur;
 	float bar;
@@ -240,6 +241,8 @@ void glinit(char done){
 	ldcheckvartex();
 	gl.prg=glprgload("vs.c","fs.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
+
+	gl.movtex=ldfile2tex(finddatafile("mov.png"));
 }
 
 void glfree(){
@@ -409,6 +412,31 @@ void glfontrender(const char *txt,enum glpos pos){
 	ftglRenderFont(gl.fontcur->f,txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
+}
+
+void glrendermov(float rat,float a){
+	float bw=.05f,bh=.05f;
+	const float bmax=.15f;
+	if(!gl.movtex) return;
+	glmodeslave(GLM_2D);
+	if(gl.prg) glColor4f(.5f,.5f,.5f,a);
+	else glColor4f(1.f,1.f,1.f,a);
+	if(rat>=1.f){
+		if((bh=bw*rat)>bmax) bw=(bh=bmax)/rat;
+	}else{
+		if((bw=bh/rat)>bmax) bh=(bw=bmax)*rat;
+	}
+	glBindTexture(GL_TEXTURE_2D,gl.movtex);
+	glBegin(GL_QUADS);
+	glTexCoord2f( 0.f,0.f); glVertex2f(-0.5f,-0.5f);
+	glTexCoord2f(20.f,0.f); glVertex2f( 0.5f,-0.5f);
+	glTexCoord2f(20.f,1.f); glVertex2f( 0.5f,-0.5f+bh);
+	glTexCoord2f( 0.f,1.f); glVertex2f(-0.5f,-0.5f+bh);
+	glTexCoord2f( 0.f,0.f); glVertex2f(-0.5f, 0.5f);
+	glTexCoord2f(20.f,0.f); glVertex2f( 0.5f, 0.5f);
+	glTexCoord2f(20.f,1.f); glVertex2f( 0.5f, 0.5f-bh);
+	glTexCoord2f( 0.f,1.f); glVertex2f(-0.5f, 0.5f-bh);
+	glEnd();
 }
 
 void glrenderact(float rat,char prgcol){
@@ -582,6 +610,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	}
 	// draw img
 	if(dl) glCallList(dl);
+	if(imgfilemov(img->file)) glrendermov(irat,ecur->a);
 	if(txt) glrendertxtimg(txt,ecur->a,act);
 	else if(act) glrenderact(irat,0);
 	glrenderimgtext(imgfiledir(img->file),irat,ecur->a);

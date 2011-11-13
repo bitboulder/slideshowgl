@@ -379,6 +379,20 @@ char ldtexload(){
 	return 1;
 }
 
+GLuint ldfile2tex(const char *fn){
+	struct sdlimg *sdlimg;
+	GLuint tex;
+	if(!fn) return 0;
+	if(!(sdlimg=sdlimg_gen(IMG_Load(fn)))) return 0;
+	glGenTextures(1,&tex);
+	glBindTexture(GL_TEXTURE_2D,tex);
+	glTexImage2D(GL_TEXTURE_2D,0,(GLint)sdlimg->fmt,sdlimg->sf->w,sdlimg->sf->h,0,sdlimg->fmt,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+	sdlimg_unref(sdlimg);
+	return tex;
+}
+
 /***************************** load + free img ********************************/
 
 char ldfload(struct imgld *il,enum imgtex it){

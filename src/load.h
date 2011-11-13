@@ -25,6 +25,7 @@ char ldfiletime(struct ldft *lf,enum eldft act,char *fn);
 char imgldfiletime(struct imgld *il,enum eldft act);
 
 char ldtexload();
+GLuint ldfile2tex(const char *fn);
 char ldffree(struct imgld *il,enum imgtex thold);
 
 int ldthread(void *arg);
