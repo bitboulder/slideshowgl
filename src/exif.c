@@ -245,6 +245,7 @@ char imgexifload(struct imgexif *exif,const char *fn){
 	exifdata *exdat;
 	char ret=0x1;
 	if(exif->load) return 0;
+	if(isdir(fn)) return 1; /* TODO: !isfile with real file-check */
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	debug(DBG_DBG,"exif loading img %s",fn);
