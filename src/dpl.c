@@ -1017,7 +1017,7 @@ void dplkey(unsigned short keyu){
 		if(inputnum<0) return;
 	}
 	switch(key){
-	case ' ': dplevput(DE_STOP|DE_DIR|DE_PLAY);       break;
+	case ' ': dplevput(DE_STOP|DE_DIR|DE_MOV|DE_PLAY);       break;
 	case  27: if(effsw(ESW_CAT,0)) break;
 			  if(effsw(ESW_INFO,0)) break;
 			  if(effsw(ESW_HELP,0)) break;
@@ -1092,6 +1092,7 @@ char dplevdelay(struct ev *ev){
 		case DE_LEFT:    if(ev->src==DES_KEY && !dplwritemode()) grp=DEG_LEFT;  break;
 		case DE_ZOOMIN:  grp=DEG_ZOOMIN;  if(dpl.pos.zoom!=-1) nxttime=0; break;
 		case DE_ZOOMOUT: grp=DEG_ZOOMOUT; if(dpl.pos.zoom!=(panoactive()?2:1)) nxttime=0; break;
+		case DE_MOV:
 		case DE_PLAY:
 		case DE_STOP:    if(ev->src==DES_KEY) grp=DEG_PLAY; break;
 		case DE_DIR:     grp=DEG_PLAY; nxttime=500; break;
@@ -1129,9 +1130,9 @@ char dplev(struct ev *ev){
 	case DE_SEL:     dplsel(clickimg); break;
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
 	case DE_MARK:    if((evdone=dplwritemode())) dplmark(clickimg); break;
+	case DE_MOV:     evdone=dplmov(); break;
 	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
 	case DE_PLAY:
-		if(dplmov()) break;
 		if(!(dpl.pos.actil&ACTIL_PRGED) && !panoev(PE_PLAY) && dpl.pos.zoom<=0){
 			dplmove(DE_RIGHT,0.f,0.f,-1);
 			dpl.run=dplgetticks();
