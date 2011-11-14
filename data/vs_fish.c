@@ -17,17 +17,17 @@ void main(){
 	float fm  = gl_ProjectionMatrix[2][2];
 
 	// fisheye
-	float r = 0;
-	if(fm==-1) r = f*tan(w);     // gnomonisch
-	if(fm== 0) r = 2*f*tan(w/2); // winkeltreu
-	if(fm== 1) r = f*w;          // äquidistant
-	if(fm== 2) r = 2*f*sin(w/2); // flächentreu
-	if(fm== 3) r = f*sin(w);     // orthographisch
+	float r = 0.0;
+	if(fm==-1.0) r = f*tan(w);         // gnomonisch
+	if(fm== 0.0) r = 2.0*f*tan(w/2.0); // winkeltreu
+	if(fm== 1.0) r = f*w;              // äquidistant
+	if(fm== 2.0) r = 2.0*f*sin(w/2.0); // flächentreu
+	if(fm== 3.0) r = f*sin(w);         // orthographisch
 
 	// final position = scale v.xy with r and rat
 	float s = r/length(v.xy);
 	gl_Position.x = v.x * s / rat;
 	gl_Position.y = v.y * s;
 	gl_Position.z = w/pi;
-	gl_Position.w = 1;
+	gl_Position.w = 1.0;
 }
