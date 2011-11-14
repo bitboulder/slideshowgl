@@ -22,6 +22,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext);
 char finddirmatch(char *in,char *post,char *res,const char *basedir);
 
 char fthumbchecktime(struct imgfile *ifl);
+void frename(const char *fn,const char *dstdir);
 void fgetfile(const char *fn,char singlefile);
 void fgetfiles(int argc,char **argv);
 

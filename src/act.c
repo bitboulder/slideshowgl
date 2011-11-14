@@ -10,6 +10,7 @@
 #include "eff.h"
 #include "mark.h"
 #include "map.h"
+#include "help.h"
 
 struct actdelay {
 	Uint32 delay;
@@ -52,8 +53,7 @@ void actrotate(struct img *img){
 }
 
 void actdelete(struct img *img,struct imglist *il,const char *dstdir){
-	static char fn[FILELEN];
-	static char cmd[FILELEN*2+16];
+	static char dir[FILELEN];
 	char *pos;
 	char *ifn=imgfiledelfn(img->file);
 	char ifnreset=1;
@@ -61,18 +61,13 @@ void actdelete(struct img *img,struct imglist *il,const char *dstdir){
 		ifn=imgfilefn(img->file);
 		ifnreset=0;
 	}
-	snprintf(fn,FILELEN-4,ifn);
-	if((pos=strrchr(fn,'/'))) pos++; else pos=fn;
-	memmove(pos+4,pos,strlen(pos)+1);
-	strcpy(pos,dstdir);
-	snprintf(cmd,FILELEN*2+16,"mkdir -p \"%s\"",fn);
-	runcmd(cmd);
-	pos[3]='/';
-	snprintf(cmd,FILELEN*2+16,"mv \"%s\" \"%s\"",ifn,fn);
+	snprintf(dir,FILELEN,ifn);
+	if((pos=strrchr(dir,'/'))) pos++; else pos=dir;
+	snprintf(pos,FILELEN-(size_t)(pos-dir),dstdir);
+	frename(ifn,dir);
 	if(ifnreset) ifn[0]='\0';
-	runcmd(cmd);
 	if(il) ilfiletime(il,FT_UPDATE);
-	debug(DBG_STA,"img deleted (%s)",fn);
+	debug(DBG_STA,"img deleted to %s (%s)",dstdir,ifn);
 }
 
 void actdo(enum act act,struct img *img,struct imglist *il){

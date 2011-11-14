@@ -24,6 +24,11 @@
 #include "eff.h"
 #include "map.h"
 
+#define MOVEXT		"mov", "avi"
+#define SLAVEEXT	MOVEXT, "thm"
+const char *const slaveext[]={ SLAVEEXT, NULL };
+const char *const movext[]  ={ MOVEXT,   NULL };
+
 /***************************** imgfile ******************************************/
 
 struct imgfile {
@@ -124,6 +129,26 @@ char finddirmatch(char *in,char *post,char *res,const char *basedir){
 #endif
 }
 
+void frename(const char *fn,const char *dstdir){
+	const char *base=strrchr(fn,'/');
+	const char *ext=strrchr(fn,'.');
+	char dfn[FILELEN];
+	char sfn[FILELEN];
+	int i;
+	if(isdir(dstdir)!=1 && !mkdirm(dstdir)) return;
+	if(!base) base=fn;
+	snprintf(dfn,FILELEN,"%s/%s",dstdir,base);
+	rename(fn,dfn);
+	if(!ext) return;
+	snprintf(sfn,FILELEN,fn);
+	for(i=0;slaveext[i];i++){
+		snprintf(sfn+(ext-fn),FILELEN-(size_t)(ext-fn),".%s",slaveext[i]);
+		if(!isfile(sfn)) continue;
+		snprintf(dfn,FILELEN,"%s/%s",dstdir,sfn+(base-fn));
+		rename(sfn,dfn);
+	}
+}
+
 /***************************** getfiles ***************************************/
 
 char fthumbchecktime(struct imgfile *ifl){
@@ -146,7 +171,6 @@ void fthumbinit(struct imgfile *ifl){
 }
 
 void fmovinit(struct imgfile *ifl){
-	const char *const movext[]={ "mov", "avi", NULL };
 	const char *const *ext;
 	size_t len=strlen(ifl->fn);
 	while(len>0 && ifl->fn[len-1]!='.') len--;

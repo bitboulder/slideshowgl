@@ -735,15 +735,8 @@ void dpldired(char *input,int id){
 		imgend=dpl.diredmode==DEM_TO ? imgget(1,dpl.pos.imgi[1]) : NULL;
 		for(;img;img=img->nxt){
 			const char *fn=imgfilefn(img->file);
-			const char *base=strrchr(fn,'/');
-			char imgbuf[FILELEN];
-			if(!base) base=fn;
-			snprintf(imgbuf,FILELEN,"%s/%s",dstdir,base);
-			rename(fn,imgbuf);
-			if(dsttdir[0] && imgfiletfn(img->file,&fn)){
-				snprintf(imgbuf,FILELEN,"%s/%s",dsttdir,base);
-				rename(fn,imgbuf);
-			}
+			frename(fn,dstdir);
+			if(dsttdir[0] && imgfiletfn(img->file,&fn)) frename(fn,dsttdir);
 			if(img==imgend) break;
 		}
 		if(dpl.diredmode==DEM_ALL){
