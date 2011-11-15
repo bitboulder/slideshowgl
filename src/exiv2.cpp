@@ -38,7 +38,7 @@ struct exiv2data *exiv2init(const char *fn){
 }
 
 void exiv2free(struct exiv2data *edata){
-	edata->img->~Image();
+	/*TODO: if(edata->img!=NULL)*/ edata->img->~Image();
 	free(edata);
 }
 

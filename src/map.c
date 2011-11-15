@@ -14,7 +14,7 @@
 		#define NAME_MAX 255
 	#endif
 #endif
-#include "map.h"
+#include "map_int.h"
 #include "img.h"
 #include "help.h"
 #include "main.h"
@@ -48,11 +48,6 @@ enum maptype { MAPTYPE, MT_NUM };
 #define E(X)	#X
 const char *maptype_str[]={ MAPTYPE };
 #undef E
-
-struct mappos {
-	double gx,gy;
-	int iz;
-};
 
 struct tile {
 	int ix,iy,iz;
@@ -143,6 +138,23 @@ void mapeditmode(){
 	map.editmode=(map.editmode+1)%N_MEM;
 }
 
+enum mapiz {MIZ_HIGH,MIZ_LOW};
+struct ecur *mapecur(int *iz,enum mapiz miz){
+	struct img *img;
+	struct ecur *ecur;
+	if((img=imgget(0,0)) && !strncmp(imgfilefn(img->file),"[MAP]",6)){
+		ecur=imgposcur(img->pos);
+		if(iz) switch(miz){
+		case MIZ_HIGH: *iz=(int)ceil(ecur->s); break;
+		case MIZ_LOW:  *iz=(int)ecur->s; break;
+		}
+	}else{
+		ecur=NULL;
+		if(iz) *iz=map.pos.iz;
+	}
+	return ecur;
+}
+
 #define mapg2p(gx,gy,px,py) { \
 	(py)=(gy)/180.*M_PI; \
 	(py)=asinh(tan(py))/M_PI/2.; \
@@ -157,8 +169,9 @@ void mapeditmode(){
 	(gx)=((px)-.5)*360.; \
 }
 
+//	double size=(double)(1<<(iz)); 
 #define mapp2m(px,py,iz,mx,my) { \
-	double size=(double)(1<<(iz)); \
+	double size=(double)pow(2.,(double)iz); \
 	(mx)=(px)*size; \
 	(my)=(py)*size; \
 }
@@ -560,8 +573,11 @@ struct imglist *mapsetpos(int imgi){
 		map.pos.gy=gy;
 		map.pos.iz=15;
 	}
-	if(ilfind("[MAP]",&il,1)) return il;
-	return ilnew("[MAP]",_("[Map]"));
+	if(!ilfind("[MAP]",&il,1)){
+		il=ilnew("[MAP]",_("[Map]"));
+		faddfile(il,"[MAP]",NULL,0);
+	}
+	return il;
 }
 
 void texloadput(struct tile *ti,SDL_Surface *sf){
@@ -642,25 +658,30 @@ char mapscrtis(int *iw,int *ih){
 }
 
 char mapldcheck(){
-	int ix,iy,ixc,iyc;
+	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
-	if(map.init || !mapon()) return 0;
+	struct ecur *ecur=mapecur(&iz,MIZ_HIGH);
+	if(map.init || !mapon() || !ecur) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
+	if(mapldchecktile(0,0,0)) return 1;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
-	mapg2i(map.pos.gx,map.pos.gy,map.pos.iz,ix,iy);
-	for(r=0;r<=ir;r++){
-		for(i=0;i<(r?r*8:1);i++){
-			if(!r) ixc=iyc=0;
-			else if(i<r*4-2){
-				ixc=(i%2?-1:1)*r;
-				iyc=((i/2)%2?-1:1)*((i+2)/4);
-			}else{
-				ixc=((i/2)%2?-1:1)*((i-r*4+4)/4);
-				iyc=(i%2?-1:1)*r;
+	izmin=MAX(iz-6,0);
+	for(;iz>=izmin;iz=(iz-1)&~1,ir--){
+		mapg2i(ecur->x,ecur->y,iz,ix,iy);
+		for(r=0;r<=ir;r++){
+			for(i=0;i<(r?r*8:1);i++){
+				if(!r) ixc=iyc=0;
+				else if(i<r*4-2){
+					ixc=(i%2?-1:1)*r;
+					iyc=((i/2)%2?-1:1)*((i+2)/4);
+				}else{
+					ixc=((i/2)%2?-1:1)*((i-r*4+4)/4);
+					iyc=(i%2?-1:1)*r;
+				}
+				if(mapldchecktile(ix+ixc,iy+iyc,iz)) return 1;
 			}
-			if(mapldchecktile(ix+ixc,iy+iyc,map.pos.iz)) return 1;
 		}
 	}
 	return 0;
@@ -742,11 +763,13 @@ void maprendermap(){
 	int iw,ih;
 	float ox,oy;
 	int ixc,iyc;
-	if(!mapscrtis(&iw,&ih)) return;
-	mapg2i(map.pos.gx,map.pos.gy,iz=map.pos.iz,ix,iy);
-	mapg2o(map.pos.gx,map.pos.gy,iz,ox,oy);
+	struct ecur *ecur=mapecur(&iz,MIZ_LOW);
+	float s=powf(2.f,ecur->s-(float)iz);
+	if(!ecur || !mapscrtis(&iw,&ih)) return;
+	mapg2i(ecur->x,ecur->y,iz,ix,iy);
+	mapg2o(ecur->x,ecur->y,iz,ox,oy);
 	glPushMatrix();
-	glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
+	glScalef(s*256.f/(float)*map.scr_w,s*256.f/(float)*map.scr_h,1.f);
 	glTranslatef(ox,oy,0.f);
 	glTranslatef((float)(-(iw-1)/2),(float)(-(ih-1)/2),0.f);
 	ix-=(iw-1)/2;
@@ -765,14 +788,17 @@ void maprenderclt(){
 	struct mapclti *clti;
 	double mx,my;
 	GLuint name=IMGI_MAP+1;
-	if(!map.scr_w || !map.scr_h) return;
-	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,mx,my);
-	for(clti=mapimgs.clt[map.pos.iz].clts;clti;clti=clti->nxtclt){
+	int iz;
+	struct ecur *ecur=mapecur(&iz,MIZ_LOW);
+	float s=powf(2.f,ecur->s-(float)iz);
+	if(!ecur || !map.scr_w || !map.scr_h) return;
+	mapg2m(ecur->x,ecur->y,iz,mx,my);
+	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
 		glLoadName(name++);
 		glPushMatrix();
-		glScalef(256.f/(float)*map.scr_w,256.f/(float)*map.scr_h,1.f);
+		glScalef(s*256.f/(float)*map.scr_w,s*256.f/(float)*map.scr_h,1.f);
 		glTranslated(clti->mx-mx,clti->my-my,0.);
-		glScalef(15.f/256.f,10.f/256.f,1.f);
+		glScalef(15.f/256.f/s,10.f/256.f/s,1.f);
 		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
 		glBegin(GL_QUADS);
 		glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
@@ -965,6 +991,12 @@ char mapsearch(struct dplinput *in){
 		}
 	}
 	return 1;
+}
+
+/* thread: eff */
+struct mappos *mapgetpos(){
+	if(map.init || !mapon()) return NULL;
+	return &map.pos;
 }
 
 void mapsavepos(){

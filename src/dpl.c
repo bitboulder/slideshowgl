@@ -382,7 +382,7 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	static const int zoommin=sizeof(zoomtab)/sizeof(struct zoomtab);
 	int dir=DE_DIR(ev);
 	if(ev&DE_MOVE) dplmovepos(sx,sy);
-	if(mapmove(ev,sx,sy)) return;
+	if(mapmove(ev,sx,sy)) goto end;
 	if(ev&(DE_RIGHT|DE_LEFT)){
 		if(!panoev(dir<0?PE_SPEEDLEFT:PE_SPEEDRIGHT)){
 			if(dpl.pos.zoom<=0) dplchgimgi(dir);
@@ -428,6 +428,7 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 	dplclipimgi(NULL);
 	if((AIMGI==IMGI_START || AIMGI==IMGI_END) && dpl.pos.zoom>0) dpl.pos.zoom=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",AIMGI,dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
+end:
 	effinit(EFFREF_ALL|EFFREF_FIT,ev,-1);
 	dplsecdir();
 }

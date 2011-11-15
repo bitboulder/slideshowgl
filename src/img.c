@@ -98,11 +98,15 @@ int imgidiff(int il,int ia,int ib,int *ira,int *irb){
 }
 
 /* thread: all */
+struct img *ilimgget(struct imglist *il,int i){
+	if(!il) return NULL;
+	if(i<0 || i>=il->nimg) return NULL;
+	return il->imgs[i];
+}
+
+/* thread: all */
 struct img *imgget(int il,int i){
-	struct imglist *curil=ilget(il);
-	if(!curil) return NULL;
-	if(i<0 || i>=curil->nimg) return NULL;
-	return curil->imgs[i];
+	return ilimgget(ilget(il),i);
 }
 
 struct img *ilremoveimg(struct imglist *il,int i,char final){
@@ -360,6 +364,7 @@ char ilreload(int il,const char *cmd){
 /* thread: dpl */
 void ilftcheck(){
 	int il;
+	return; /* TODO: enable auto imglist reload */ 
 	for(il=0;il<IL_NUM;il++) if(curils[il] && ilfiletime(curils[il],FT_CHECK)){
 		debug(DBG_STA,"reload imglist: %s",curils[il]->fn);
 		ilfiletime(curils[il],FT_RESET);

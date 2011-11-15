@@ -244,6 +244,9 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			imgpanoload(img->pano,fn);
 			imgposmark(img,MPC_YES);
 		}
+	}else if(!strncmp(fn,"[MAP]",6)){
+		img=imgadd(il,NULL);
+		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 	}
 	return 1;
 }

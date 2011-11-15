@@ -408,6 +408,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	enum effrefresh effref=EFFREF_FIT;
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
+	if(!strncmp(fn,"[MAP]",6)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0){
 		ld=imgexifload(il->img->exif,fn);

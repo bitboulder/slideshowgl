@@ -12,6 +12,7 @@
 #include "help.h"
 #include "file.h"
 #include "sdl.h"
+#include "map_int.h"
 
 extern struct zoomtab {
 	int move;
@@ -131,6 +132,7 @@ char *imgposmark(struct img *img,enum mpcreate create){
 /***************************** eff init ***************************************/
 
 char effact(struct dplpos *dp,int i){
+	if(dp->dat) return 1;
 	if(AIMGI==IMGI_START || AIMGI==IMGI_END) return 0;
 	if(i==AIMGI) return 1;
 	if(AIL_LEFT) return abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=2;
@@ -173,7 +175,11 @@ void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
 	effresetpos(dp,img,ip);
 	ip->act=effact(dp,i) ? 1.f : 0.f;
 	ip->a=1.f;
-	if(AIL_LEFT){
+	if(mapon() && dp->dat){
+		ip->s=(float)((struct mappos *)dp->dat)->iz;
+		ip->x=(float)((struct mappos *)dp->dat)->gx;
+		ip->y=(float)((struct mappos *)dp->dat)->gy;
+	}else if(AIL_LEFT){
 		ip->s=(AIMGI==i ? 1.f : .75f) * eff.cfg.prged_w;
 		ip->x=-.4f;
 		ip->y=(float)diff*eff.cfg.prged_w;
@@ -209,6 +215,13 @@ void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
 
 void effsetcur(struct dplpos *dp,enum dplev ev,struct ecur *ip,int i){
 	int diff=imgidiff(AIL,AIMGI,i,NULL,NULL);
+	if(mapon() && dp->dat){
+		ip->x=(float)((struct mappos *)dp->dat)->gx;
+		ip->y=(float)((struct mappos *)dp->dat)->gy;
+		ip->a=1.f;
+		ip->s=3.f;
+		return;
+	}
 	if(!diff || !(ev&DE_ZOOMOUT) || dp->zoom!=-1) return;
 	ip->x = (float)(diff<0 ? 1-(1-diff)%3 : (diff+1)%3-1);
 	ip->y = (float)((diff<0?diff-1:diff+1)/3);
@@ -284,9 +297,9 @@ void efffaston(struct dplpos *dp,union uipos *ip,int i){
 	ip->dst.act=1.f;
 }
 
-void effinittime(union uipos *ip,enum dplev ev){
+void effinittime(union uipos *ip,enum dplev ev,float fac){
 	int i;
-	Uint32 time=eff.cfg.efftime;
+	Uint32 time=(Uint32)((float)eff.cfg.efftime*fac);
 	if(ev&DE_INIT) time=0;
 	for(i=0;i<NIPOS;i++) ip->a[i].tcur=time;
 	if(ev&DE_JUMPX) ip->tcur.x=0;
@@ -335,8 +348,11 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	union uipos  ipn[1];
 	char back=0;
 	char neff=0;
+	float timefac=1.f;
 	if(!(img=imgget(AIL,i))) return;
 	ipo=&img->pos->p;
+	if(!strncmp(imgfilefn(img->file),"[MAP]",6)) dp->dat=mapgetpos();
+	else dp->dat=NULL;
 	img->pos->opt.tex=imgseltex(dp,i);
 	if(dp->zoom==0 && effprg(dp,ev,img,iev)) return;
 	effinitpos(dp,img,&ipn->cur,i);
@@ -344,7 +360,8 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	if(!ipn->cur.act && img->pos->eff==2) return;
 	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
 	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
-	effinittime(ipn,iev?DE_INIT:ev);
+	if(mapon() && dp->dat && ipn->cur.s!=ipo->cur.s) timefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
+	effinittime(ipn,iev?DE_INIT:ev,timefac);
 	if(dp->zoom<0 && !(dp->zoom==-1 && (ev&DE_ZOOMOUT))){
 		float xdiff=fabsf(ipo->cur.x-ipn->cur.x)/eff.maxfit.w/ipn->cur.s;
 		float ydiff=fabsf(ipo->cur.y-ipn->cur.y)/eff.maxfit.h/ipn->cur.s;
@@ -421,7 +438,7 @@ void effdel(struct imgpos *imgp){
 	ipn->cur.s=0.f;
 	ipn->cur.r+=180.f;
 	ipn->cur.act=0.f;
-	effinittime(ipn,0);
+	effinittime(ipn,0,1.f);
 	effinitval(imgp,ipn,-1);
 	imgp->opt.layer=1;
 }
