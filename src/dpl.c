@@ -760,7 +760,7 @@ void dplmap(){
 	if(mapon()) mapswtype(); else{
 		struct imglist *il=mapsetpos(dpl.pos.imgi[0]);
 		ilswitch(il,0);
-		effinit(EFFREF_ALL,0,-1);
+		effinit(EFFREF_ALL,DE_ZOOM,-1);
 		sdlforceredraw();
 	}
 }

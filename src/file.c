@@ -24,7 +24,7 @@
 #include "eff.h"
 #include "map.h"
 
-#define MOVEXT		"mov", "avi"
+#define MOVEXT		"mov", "avi", "mpg"
 #define SLAVEEXT	MOVEXT, "thm"
 const char *const slaveext[]={ SLAVEEXT, NULL };
 const char *const movext[]  ={ MOVEXT,   NULL };

@@ -297,14 +297,13 @@ void efffaston(struct dplpos *dp,union uipos *ip,int i){
 	ip->dst.act=1.f;
 }
 
-void effinittime(union uipos *ip,enum dplev ev,float stimefac){
+void effinittime(union uipos *ip,enum dplev ev,float timefac){
 	int i;
-	Uint32 time=eff.cfg.efftime;
+	Uint32 time=(Uint32)((float)eff.cfg.efftime*timefac);
 	if(ev&DE_INIT) time=0;
 	for(i=0;i<NIPOS;i++) ip->a[i].tcur=time;
 	if(ev&DE_JUMPX) ip->tcur.x=0;
 	if(ev&DE_JUMPY) ip->tcur.y=0;
-	ip->tcur.s=(Uint32)((float)ip->tcur.s*stimefac);
 }
 
 enum { EI_OFF=0x1, EI_CONSTSPEED=0x2 };
@@ -349,7 +348,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	union uipos  ipn[1];
 	char back=0;
 	char neff=0;
-	float stimefac=1.f;
+	float timefac=1.f;
 	if(!(img=imgget(AIL,i))) return;
 	ipo=&img->pos->p;
 	if(!strncmp(imgfilefn(img->file),"[MAP]",6)) dp->dat=mapgetpos();
@@ -361,8 +360,8 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	if(!ipn->cur.act && img->pos->eff==2) return;
 	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
 	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
-	if(mapon() && dp->dat && ipn->cur.s!=ipo->cur.s) stimefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
-	effinittime(ipn,iev?DE_INIT:ev,stimefac);
+	if(mapon() && dp->dat && ipn->cur.s!=ipo->cur.s && (ev&DE_ZOOM)) timefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
+	effinittime(ipn,iev?DE_INIT:ev,timefac);
 	if(dp->zoom<0 && !(dp->zoom==-1 && (ev&DE_ZOOMOUT))){
 		float xdiff=fabsf(ipo->cur.x-ipn->cur.x)/eff.maxfit.w/ipn->cur.s;
 		float ydiff=fabsf(ipo->cur.y-ipn->cur.y)/eff.maxfit.h/ipn->cur.s;
