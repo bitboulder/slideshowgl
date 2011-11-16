@@ -138,15 +138,14 @@ void mapeditmode(){
 	map.editmode=(map.editmode+1)%N_MEM;
 }
 
-enum mapiz {MIZ_HIGH,MIZ_LOW};
-struct ecur *mapecur(int *iz,enum mapiz miz){
+struct ecur *mapecur(int *iz,float *iscale){
 	struct img *img;
 	struct ecur *ecur;
 	if((img=imgget(0,0)) && !strncmp(imgfilefn(img->file),"[MAP]",6)){
 		ecur=imgposcur(img->pos);
-		if(iz) switch(miz){
-		case MIZ_HIGH: *iz=(int)ceil(ecur->s); break;
-		case MIZ_LOW:  *iz=(int)ecur->s; break;
+		if(iz){
+			*iz = map.pos.iz>ecur->s ? (int)ceil(ecur->s) : (int)ecur->s;
+			if(iscale) *iscale = powf(2.f,(float)*iz/ecur->s);
 		}
 	}else{
 		ecur=NULL;
@@ -660,10 +659,11 @@ char mapscrtis(int *iw,int *ih){
 char mapldcheck(){
 	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
-	struct ecur *ecur=mapecur(&iz,MIZ_HIGH);
+	struct ecur *ecur=mapecur(&iz,NULL);
 	if(map.init || !mapon() || !ecur) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(mapldchecktile(0,0,0)) return 1;
+	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
@@ -763,9 +763,12 @@ void maprendermap(){
 	int iw,ih;
 	float ox,oy;
 	int ixc,iyc;
-	struct ecur *ecur=mapecur(&iz,MIZ_LOW);
+	float iscale;
+	struct ecur *ecur=mapecur(&iz,&iscale);
 	float s=powf(2.f,ecur->s-(float)iz);
 	if(!ecur || !mapscrtis(&iw,&ih)) return;
+	iw=(int)((float)iw*iscale);
+	ih=(int)((float)ih*iscale);
 	mapg2i(ecur->x,ecur->y,iz,ix,iy);
 	mapg2o(ecur->x,ecur->y,iz,ox,oy);
 	glPushMatrix();
@@ -789,7 +792,7 @@ void maprenderclt(){
 	double mx,my;
 	GLuint name=IMGI_MAP+1;
 	int iz;
-	struct ecur *ecur=mapecur(&iz,MIZ_LOW);
+	struct ecur *ecur=mapecur(&iz,NULL);
 	float s=powf(2.f,ecur->s-(float)iz);
 	if(!ecur || !map.scr_w || !map.scr_h) return;
 	mapg2m(ecur->x,ecur->y,iz,mx,my);
