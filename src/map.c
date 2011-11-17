@@ -170,7 +170,7 @@ struct ecur *mapecur(int *iz,float *iscale){
 
 //	double size=(double)(1<<(iz)); 
 #define mapp2m(px,py,iz,mx,my) { \
-	double size=(double)pow(2.,(double)iz); \
+	double size=(double)(1<<(iz)); \
 	(mx)=(px)*size; \
 	(my)=(py)*size; \
 }

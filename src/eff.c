@@ -24,9 +24,11 @@ extern struct zoomtab {
 
 enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
 
+enum evaltyp {E_LIN,E_MAPS};
 struct eval {
 	float cur,dst;
 	Uint32 tcur,tdst;
+	int typ;
 };
 
 struct eff {
@@ -81,14 +83,17 @@ const char *ipos_str[]={IPOS};
 enum eipos { IPOS NIPOS };
 #undef E
 
-#define E(X)	char FILL1_##X[sizeof(float)]; float X; char FILL2_##X[2*sizeof(Uint32)];
+#define E(X)	char FILL1_##X[sizeof(float)]; float X; char FILL2_##X[2*sizeof(Uint32)+sizeof(int)];
 struct edst { IPOS };
 #undef E
-#define E(X)	char FILL1_##X[2*sizeof(float)]; Uint32 X; char FILL2_##X[sizeof(Uint32)];
+#define E(X)	char FILL1_##X[2*sizeof(float)]; Uint32 X; char FILL2_##X[sizeof(Uint32)+sizeof(int)];
 struct etcur { IPOS };
 #undef E
-#define E(X)	char FILL1_##X[2*sizeof(float)+sizeof(Uint32)]; float X;
+#define E(X)	char FILL1_##X[2*sizeof(float)+sizeof(Uint32)]; float X; char FILL2_##X[sizeof(int)];
 struct etdst { IPOS };
+#undef E
+#define E(X)	char FILL1_##X[2*sizeof(float)+2*sizeof(Uint32)]; int X;
+struct etyp { IPOS };
 #undef E
 
 #define E(X)	struct eval X;
@@ -97,6 +102,7 @@ union uipos {
 	struct edst dst;
 	struct etcur tcur;
 	struct etdst tdst;
+	struct etyp typ;
 	struct eval a[NIPOS];
 	struct { IPOS } e;
 };
@@ -320,6 +326,7 @@ char effiniteval(struct eval *e,float dst,Uint32 tdst,unsigned int flags,Uint32 
 			e->tcur=time;
 		}
 	}
+	e->typ=E_LIN;
 	return e->tdst!=0;
 }
 
@@ -375,6 +382,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 		if(img->pos->eff) img->pos->eff=2;
 		else effinitpos(dp,img,&ipo->cur,i);
 	}
+	if(mapon() && dp->dat && (ev&DE_ZOOM)!=DE_ZOOM) img->pos->p.typ.s=E_MAPS;
 }
 
 char effmaxfitupdate(struct dplpos *dp){
@@ -525,9 +533,15 @@ float effcalclin(float a,float b,float ef){
 char effdoeval(struct eval *e,Uint32 time){
 	if(e->dst!=e->cur && time<e->tdst){
 		if(time>e->tcur){
-			e->cur+=(e->dst-e->cur)
-				/(float)(e->tdst-e->tcur)
-				*(float)(time-e->tcur);
+			float tfac=(float)(time-e->tcur)/(float)(e->tdst-e->tcur);
+			switch(e->typ){
+			case E_LIN:
+				e->cur+=(e->dst-e->cur)*tfac;
+			break;
+			case E_MAPS:
+				e->cur-=logf(1-(1-powf(2.f,e->cur-e->dst))*tfac)/logf(2.f);
+			break;
+			}
 			e->tcur=time;
 		}
 		return 1;

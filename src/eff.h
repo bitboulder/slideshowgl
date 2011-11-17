@@ -5,7 +5,7 @@
 #include <SDL.h>
 
 #define IPOS	E(a) E(s) E(x) E(y) E(r) E(m) E(act) E(back)
-#define E(X)	float X; char FILL_##X[sizeof(float)+2*sizeof(Uint32)];
+#define E(X)	float X; char FILL_##X[sizeof(float)+2*sizeof(Uint32)+sizeof(int)];
 struct ecur { IPOS };
 #undef E
 
