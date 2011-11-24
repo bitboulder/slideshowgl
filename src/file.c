@@ -24,8 +24,10 @@
 #include "eff.h"
 #include "map.h"
 
+#define IMGEXT		"jpg", "jpeg", "png", "tif", "tiff"
 #define MOVEXT		"mov", "avi", "mpg"
 #define SLAVEEXT	MOVEXT, "thm"
+const char *const imgext[]  ={ IMGEXT,   NULL };
 const char *const slaveext[]={ SLAVEEXT, NULL };
 const char *const movext[]  ={ MOVEXT,   NULL };
 
@@ -232,9 +234,8 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 		for(;i<4;i++) img->file->txt.col[i]=1.f;
 	}else if(isfile(fn)){
 		char ok=0;
-		if(fileext(fn,len,".png")) ok=1;
-		if(fileext(fn,len,".jpg")) ok=1;
-		if(fileext(fn,len,".jpeg")) ok=1;
+		const char *const *ext;
+		for(ext=imgext;!ok && ext[0];ext++) if(fileext(fn,len,ext[0])) ok=1;
 		if(!ok) return 0;
 		if(!src || !ilmoveimg(il,src,fn,len)){
 			img=imgadd(il,prg);
@@ -257,7 +258,7 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 	int count=0;
 	size_t lpfx=strlen(pfx);
 	char prg;
-	if((prg=fileext(flst,0,".effprg"))){
+	if((prg=fileext(flst,0,"effprg"))){
 		char cmd[FILELEN*3];
 		snprintf(cmd,FILELEN*3,"perl \"%s\" \"%s\"",finddatafile("effprg.pl"),flst);
 		if(!(fd=popen(cmd,"r"))){ error(ERR_CONT,"ld read effprg failed \"%s\"",cmd); return 0; }
@@ -302,8 +303,8 @@ struct imglist *ilbase=NULL;
 
 void fgetfile(const char *fn,char singlefile){
 	if(!ilbase) ilbase=ilnew("[BASE]","");
-	if(fileext(fn,0,".flst")) faddflst(ilbase,fn,"",NULL,1);
-	else if(singlefile && fileext(fn,0,".effprg")) faddflst(ilbase,fn,"",NULL,1);
+	if(fileext(fn,0,"flst")) faddflst(ilbase,fn,"",NULL,1);
+	else if(singlefile && fileext(fn,0,"effprg")) faddflst(ilbase,fn,"",NULL,1);
 	else faddfile(ilbase,fn,NULL,1);
 }
 

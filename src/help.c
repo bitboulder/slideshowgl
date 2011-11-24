@@ -156,8 +156,8 @@ char isdir(const char *fn){
 	struct stat st;
 	if(stat(fn,&st)) return 0;
 	if(S_ISDIR(st.st_mode)) return 1;
-	if(fileext(fn,0,".flst")) return 2;
-	if(fileext(fn,0,".effprg")) return 2;
+	if(fileext(fn,0,"flst")) return 2;
+	if(fileext(fn,0,"effprg")) return 2;
 	return 0;
 }
 
@@ -176,8 +176,8 @@ long filetime(const char *fn){
 #else
 
 char isdir(const char *fn){
-	if(fileext(fn,".flst")) return 2;
-	if(fileext(fn,".effprg")) return 2;
+	if(fileext(fn,"flst")) return 2;
+	if(fileext(fn,"effprg")) return 2;
 	return 0;
 }
 
@@ -206,7 +206,7 @@ char mkdirm(const char *dir){
 char fileext(const char *fn,size_t len,const char *ext){
 	size_t lext=strlen(ext);
 	if(!len) len=strlen(fn);
-	return len>lext && !strncasecmp(fn+len-lext,ext,lext);
+	return len>lext+1 && fn[len-lext-1]=='.' && !strncasecmp(fn+len-lext,ext,lext);
 }
 
 #if HAVE_ICONV
