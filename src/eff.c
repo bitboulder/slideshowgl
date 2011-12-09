@@ -382,7 +382,8 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 		if(img->pos->eff) img->pos->eff=2;
 		else effinitpos(dp,img,&ipo->cur,i);
 	}
-	if(mapon() && dp->dat && (ev&DE_ZOOM)!=DE_ZOOM) img->pos->p.typ.s=E_MAPS;
+	if(mapon() && dp->dat && (ev&DE_ZOOM)!=DE_ZOOM && fabs(img->pos->p.dst.s-img->pos->p.cur.s)<3.5)
+		img->pos->p.typ.s=E_MAPS;
 }
 
 char effmaxfitupdate(struct dplpos *dp){
