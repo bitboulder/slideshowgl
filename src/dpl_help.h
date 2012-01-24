@@ -109,7 +109,11 @@ __(" e")"\0"                   __("Leave program editor")"\0"
 __(" e")"\0"                   __("Leave directory editor")"\0"
 #else
 __(" e")"\0"                   __("Open directory or program editor")"\0"
+#ifdef IF_WRM
+__(" m")"\0"                   __("Open map (only if no image is active)")"\0"
+#else
 __(" m")"\0"                   __("Open map")"\0"
+#endif
 #endif
 #endif
 
@@ -138,6 +142,7 @@ __(" o")"\0"                   __("Move image to ori/ and remove from dpl-list")
 #endif
 #ifdef IF_WRM
 __(" m")"\0"                   __("Toggle mark")"\0"
+__(" M")"\0"                   __("Copy marks from last marked image")"\0"
 #elif !defined IF_DIRED && !defined IF_PRGED
 __(" m")"\0"                   __("Show map")"\0"
 #endif

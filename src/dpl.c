@@ -55,6 +55,7 @@ struct dpl {
 		Uint32 time;
 	} mousehold;
 	char fullscreen;
+	char *lastmark;
 } dpl = {
 	.pos.imgi = { IMGI_START },
 	.pos.zoom = 0,
@@ -69,6 +70,7 @@ struct dpl {
 	.resortil = NULL,
 	.mousehold.time = 0,
 	.fullscreen = 0,
+	.lastmark = NULL,
 };
 
 #define AIL			(dpl.pos.actil&ACTIL)
@@ -441,7 +443,7 @@ void dplsel(int imgi){
 	dplsecdir();
 }
 
-char dplmark(int imgi){
+char dplmark(int imgi,char copy){
 	struct img *img;
 	char *mark;
 	size_t mkid=0;
@@ -456,8 +458,11 @@ char dplmark(int imgi){
 	dplclipimgi(&imgi);
 	if(!(img=imgget(AIL,imgi))) return 0;
 	if(imgfiledir(img->file)) return 0;
+	if(copy && !dpl.lastmark) return 0;
 	mark=imgposmark(img,MPC_ALLWAYS);
-	mark[mkid]=!mark[mkid];
+	if(!copy) mark[mkid]=!mark[mkid];
+	else memcpy(mark,dpl.lastmark,sizeof(char)*markncat());
+	dpl.lastmark=mark;
 	effinit(EFFREF_IMG,DE_MARK,imgi);
 	markchange(mkid);
 	actadd(ACT_SAVEMARKS,NULL,NULL);
@@ -1033,10 +1038,15 @@ void dplkey(unsigned short keyu){
 	case 'm':
 		if(!dplprged("frmmov",1,-1,inputnum)){
 			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_FROM;
-			else if(!dplmark(AIMGI)) dplmap();
+			else if(mapon() || !dplmark(AIMGI,0)) dplmap();
 		}
 	break;
-	case 'M': if(!dplprged("frmmov",1,-1,-2) && dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO; break;
+	case 'M':
+		if(!dplprged("frmmov",1,-1,-2)){
+			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO;
+			else if(!mapon()) dplmark(AIMGI,1);
+		}
+	break;
 	case 'j': if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_ALL; break;
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
@@ -1126,7 +1136,7 @@ char dplev(struct ev *ev){
 	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy,clickimg); break;
 	case DE_SEL:     dplsel(clickimg); break;
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
-	case DE_MARK:    if((evdone=dplwritemode())) dplmark(clickimg); break;
+	case DE_MARK:    if((evdone=dplwritemode())) dplmark(clickimg,0); break;
 	case DE_MOV:     evdone=dplmov(); break;
 	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
 	case DE_PLAY:
