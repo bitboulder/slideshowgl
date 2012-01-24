@@ -516,7 +516,10 @@ char dpldir(int imgi,char noleave){
 	struct imglist *il=NULL;
 	if(AIL!=0) return 0;
 	if(imgi>=IMGI_CAT && imgi<IMGI_END && !(fn=markcatfn(imgi-IMGI_CAT,&dir))) return 1;
-	if(imgi>=IMGI_MAP && imgi<IMGI_CAT && !mapgetclt(imgi-IMGI_MAP,&il,&fn,&dir)) return 1;
+	if(imgi>=IMGI_MAP && imgi<IMGI_CAT){
+		if(!mapgetclt(imgi-IMGI_MAP,&il,&fn,&dir)) return 1;
+		dpl.pos.zoom=-2; /* TODO: ?? */
+	}
 	if(imgi==IMGI_START) return 0;
 	if(!il && !fn && !(img=imgget(AIL,imgi))){
 		if(noleave) return 0;
