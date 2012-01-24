@@ -765,8 +765,9 @@ void maprendermap(){
 	int ixc,iyc;
 	float iscale;
 	struct ecur *ecur=mapecur(&iz,&iscale);
-	float s=powf(2.f,ecur->s-(float)iz);
+	float s;
 	if(!ecur || !mapscrtis(&iw,&ih)) return;
+	s=powf(2.f,ecur->s-(float)iz);
 	iw=(int)((float)iw*iscale);
 	ih=(int)((float)ih*iscale);
 	mapg2i(ecur->x,ecur->y,iz,ix,iy);
@@ -793,8 +794,9 @@ void maprenderclt(){
 	GLuint name=IMGI_MAP+1;
 	int iz;
 	struct ecur *ecur=mapecur(&iz,NULL);
-	float s=powf(2.f,ecur->s-(float)iz);
+	float s;
 	if(!ecur || !map.scr_w || !map.scr_h) return;
+	s=powf(2.f,ecur->s-(float)iz);
 	mapg2m(ecur->x,ecur->y,iz,mx,my);
 	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
 		glLoadName(name++);
