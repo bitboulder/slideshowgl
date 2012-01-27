@@ -48,23 +48,15 @@ char mapld_filecheck(const char *fn){
 }
 
 void mapld_load(struct mapldti ti){
-	char url[FILELEN*2]={'\0'},*txt=url;
+	char url[FILELEN*2];
 	char fn[FILELEN];
 	FILE *fd;
 	CURL *curl;
 	CURLcode res;
 	int i;
 	struct curl_slist *lst=NULL;
-	for(i=0;i<3;i++){
-		switch(i){
-		case 0: snprintf(txt,(size_t)(txt+FILELEN*2-url),"%s/%s",mapld.cachedir,ti.maptype); break;
-		case 1: snprintf(txt,(size_t)(txt+FILELEN*2-url),"/%i",ti.iz); break;
-		case 2: snprintf(txt,(size_t)(txt+FILELEN*2-url),"/%i",ti.ix); break;
-		}
-		txt+=strlen(txt);
-		mkdirm(url);
-	}
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
+	mkdirm(fn,1);
 	if(!strcmp(ti.maptype,"om")) snprintf(url,FILELEN*2,"http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
 	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",ti.maptype); return; }
 	debug(DBG_STA,"mapld_load: \"%s\" => \"%s\"",url,fn);
@@ -126,9 +118,12 @@ char mapld_put(const char *maptype,int iz,int ix,int iy){
 }
 
 char mapld_check(const char *maptype,int iz,int ix,int iy,char web,char *fn){
+	enum filetype ft;
 	if(!mapld.init) return 0;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptype,iz,ix,iy);
-	if(isfile(fn)) return 2;
+	ft=filetype(fn);
+	if(ft&FT_FILE) return 2;
+	if(ft!=FT_NX) return 1;
 	if(!web) return 1;
 	return mapld_put(maptype,iz,ix,iy);
 }
@@ -139,7 +134,7 @@ void mapldinit(){
 	cd=cfggetstr("mapld.cachedir");
 	if(cd && cd[0]) snprintf(mapld.cachedir,FILELEN,cd);
 	else snprintf(mapld.cachedir,FILELEN,"%s/slideshowgl-cache",gettmp());
-	mkdirm(mapld.cachedir);
+	mkdirm(mapld.cachedir,0);
 #if HAVE_CURL
 	if(curl_global_init(CURL_GLOBAL_NOTHING)) return;
 #endif

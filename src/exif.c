@@ -17,7 +17,7 @@
 #include "dpl.h"
 #include "eff.h"
 #include "act.h"
-#include "exifch.h"
+#include "exich.h"
 
 #if HAVE_EXIV2
 
@@ -239,7 +239,7 @@ char imgexifload(struct imgexif *exif,const char *fn){
 	exifdata *exdat;
 	char ret=0x1;
 	if(exif->load) return 0;
-	if(isdir(fn)) return 1; /* TODO: !isfile with real file-check */
+	if(!(filetype(fn)&FT_FILE)) return 1;
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	debug(DBG_DBG,"exif loading img %s",fn);
@@ -261,7 +261,7 @@ char imgexifload(struct imgexif *exif,const char *fn){
 		dplsetresortil(exif->sortil);
 		exif->sortil=NULL;
 	}
-	exifcacheadd(exif,fn);
+	exichadd(exif,fn);
 	return ret;
 #else
 	return 0;

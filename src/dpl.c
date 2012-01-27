@@ -647,7 +647,7 @@ void dplconvert(){
 	struct img *img=imgget(AIL,AIMGI);
 	char *cmd;
 	if(!img) return;
-	if(isdir(imgfilefn(img->file))>1) return;
+	if(filetype(imgfilefn(img->file))&(FT_DIREX|FT_FILE)) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
 	snprintf(cmd,FILELEN+8,"%ccnv_ui -img %s",0,imgfilefn(img->file));
@@ -726,7 +726,7 @@ void dpldired(char *input,int id){
 	for(i=strlen(srcdir);i--;) if((srcdir[i]=='/' || srcdir[i]=='\\') && !strncmp(srcdir,dstdir,i+1)){
 		memcpy(srctdir,srcdir,i);
 		snprintf(srctdir+i,FILELEN-i,"/thumb/%s",srcdir+i+1);
-		if(isdir(srctdir)==1){
+		if(filetype(srctdir)&FT_DIR){
 			memcpy(dsttdir,srcdir,i);
 			snprintf(dsttdir+i,FILELEN-i,"/thumb/%s",dstdir+i+1);
 			break;
@@ -738,8 +738,8 @@ void dpldired(char *input,int id){
 			if(dsttdir[0]) rename(srctdir,dsttdir);
 		}
 	}else{
-		if(id<0 && !mkdirm(dstdir)) return;
-		if(dsttdir[0] && !isdir(dsttdir)) mkdirm(dsttdir);
+		if(id<0 && !mkdirm(dstdir,0)) return;
+		if(dsttdir[0] && !mkdirm(dsttdir,0)) return;
 		img=imgget(1,dpl.diredmode==DEM_FROM ? dpl.pos.imgi[1] : 0);
 		imgend=dpl.diredmode==DEM_TO ? imgget(1,dpl.pos.imgi[1]) : NULL;
 		for(;img;img=img->nxt){

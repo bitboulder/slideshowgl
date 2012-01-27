@@ -552,12 +552,12 @@ struct imglist *mapsetpos(int imgi){
 	double gx=0.,gy=0.;
 	struct imglist *il;
 	if(map.init) return NULL;
-	if((fn=ilfn(ilget(0))) && isdir(fn)==1){
+	if((fn=ilfn(ilget(0))) && (filetype(fn)&FT_DIR)){
 		set=mapgetgps(fn,&gx,&gy,1);
 	}
 	if(!set && (img=imgget(0,imgi)) && (fn=imgfilefn(img->file))){
 		char *pos;
-		if(isdir(fn)==1){
+		if(filetype(fn)&FT_DIR){
 			set=mapgetgps(fn,&gx,&gy,1);
 		}else if((pos=strrchr(fn,'/'))){
 			size_t len=(size_t)(pos-fn);
@@ -700,7 +700,7 @@ void mapfindgps(char *dir){
 			mapgetgps(dir,NULL,NULL,0);
 		}else{
 			snprintf(dir+ldir,MAX(NAME_MAX+1,FILELEN-ldir),"/%s",de->d_name);
-			if(isdir(dir)==1) mapfindgps(dir);
+			if(filetype(dir)&FT_DIR) mapfindgps(dir);
 		}
 	}
 	closedir(dd);
@@ -964,7 +964,7 @@ void mapimgsave(const char *dir){
 char mapmarkpos(float sx,float sy,const char *dir){
 	double gx,gy;
 	if(map.init || !mapon()) return 0;
-	if(isdir(dir)!=1) return 0;
+	if(!(filetype(dir)&FT_DIR)) return 0;
 	maps2g(sx,sy,map.pos.iz,gx,gy);
 	mapimgadd(dir,-1,gx,gy,1);
 	mapimgsave(dir);

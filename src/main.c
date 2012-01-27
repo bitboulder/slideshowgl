@@ -282,12 +282,10 @@ int watchcoredump(int *ret,int argc,char **argv){
 		struct tm *tm=localtime(&t);
 		int i;
 		FILE *fd;
-		snprintf(cdir,FILELEN,"%s/core_dump",dir);
-		mkdirm(cdir);
 		snprintf(cdir,FILELEN,"%s/core_dump/%04i%02i%02i_%02i%02i%02i",dir,
 			tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,
 			tm->tm_hour,tm->tm_min,tm->tm_sec);
-		mkdirm(cdir);
+		mkdirm(cdir,0);
 		snprintf(cmd,FILELEN*2,"mv core %s/",cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"cp %s/build/slideshowgl %s/",dir,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"svn info %s >%s/svn-info",dir,cdir); system(cmd);

@@ -305,13 +305,13 @@ const char *cfgfilefind(){
 	const char *dir;
 	if((dir=getenv("HOME"))){
 		snprintf(cfgfn,FILELEN,"%s/.slideshowgl.cfg",dir);
-		if(isfile(cfgfn)) return cfgfn;
+		if(filetype(cfgfn)&FT_FILE) return cfgfn;
 	}
 	snprintf(cfgfn,FILELEN,"/etc/slideshowgl.cfg");
-	if(isfile(cfgfn)) return cfgfn;
+	if(filetype(cfgfn)&FT_FILE) return cfgfn;
 	if((dir=getprogpath())){
 		snprintf(cfgfn,FILELEN,"%s/slideshowgl.cfg",dir);
-		if(isfile(cfgfn)) return cfgfn;
+		if(filetype(cfgfn)&FT_FILE) return cfgfn;
 	}
 	return NULL;
 }

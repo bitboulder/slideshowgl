@@ -21,7 +21,7 @@
 #include "pano.h"
 #include "prg.h"
 #include "map.h"
-#include "exifch.h"
+#include "exich.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };
@@ -611,7 +611,7 @@ int ldthread(void *UNUSED(arg)){
 	ldconceptcompile();
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
-	exifcacheload();
+	exichload();
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();

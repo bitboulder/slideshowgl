@@ -116,7 +116,7 @@ char finddirmatch(char *in,char *post,char *res,const char *basedir){
 		size_t l=0;
 		while(l<NAME_MAX && de->d_name[l]) l++;
 		snprintf(buf,MAX(FILELEN,blen+1+l),"%s/%s",basedir,de->d_name);
-		if(isdir(buf)!=1) continue;
+		if(!(filetype(buf)&FT_DIR)) continue;
 		if(len<=l && !strncmp(de->d_name,in,len) && (l==len || strncmp(post,de->d_name+len,l-len)<0)){
 			snprintf(post,MAX(FILELEN,l-len),de->d_name+len);
 			snprintf(res,FILELEN,"%s/%s%s",basedir,in,post);
@@ -137,7 +137,7 @@ void frename(const char *fn,const char *dstdir){
 	char dfn[FILELEN];
 	char sfn[FILELEN];
 	int i;
-	if(isdir(dstdir)!=1 && !mkdirm(dstdir)) return;
+	if(!mkdirm(dstdir,0)) return;
 	if(!base) base=fn;
 	snprintf(dfn,FILELEN,"%s/%s",dstdir,base);
 	rename(fn,dfn);
@@ -145,7 +145,7 @@ void frename(const char *fn,const char *dstdir){
 	snprintf(sfn,FILELEN,fn);
 	for(i=0;slaveext[i];i++){
 		snprintf(sfn+(ext-fn),FILELEN-(size_t)(ext-fn),".%s",slaveext[i]);
-		if(!isfile(sfn)) continue;
+		if(!(filetype(sfn)&FT_FILE)) continue;
 		snprintf(dfn,FILELEN,"%s/%s",dstdir,sfn+(base-fn));
 		rename(sfn,dfn);
 	}
@@ -180,7 +180,7 @@ void fmovinit(struct imgfile *ifl){
 	snprintf(ifl->mov,FILELEN,ifl->fn);
 	for(ext=movext;ext[0];ext++){
 		snprintf(ifl->mov+len,FILELEN-len,ext[0]);
-		if(isfile(ifl->mov)) break;
+		if(filetype(ifl->mov)&FT_FILE) break;
 	}
 	if(!ext[0]){ ifl->mov[0]='\0'; return; }
 }
@@ -189,7 +189,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 	struct img *img=NULL;
 	size_t len;
 	char *prg;
-	char isd;
+	enum filetype ft;
 	if(!strncmp(fn,"file://",7)) fn+=7;
 	len=strlen(fn);
 	if((prg=strchr(fn,';'))){
@@ -198,7 +198,8 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 		if(len==3 && !strncmp(fn,"frm",3)) ilprgfrm(il,prg);
 	}
 	if(len>=FILELEN) return 0;
-	if((isd=isdir(fn))){
+	ft=filetype(fn);
+	if(ft&FT_DIREX){
 		int i=(int)len-2, l;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
@@ -212,7 +213,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 		img->file->dir[l]='\0';
 		utf8check(img->file->dir);
 		debug(DBG_DBG,"directory found '%s': '%s'",img->file->dir,img->file->fn);
-		if(mapbase && isd==1) mapaddbasedir(img->file->fn,img->file->dir);
+		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->dir);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
 		size_t ltxt;
@@ -232,7 +233,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			pos=end;
 		}
 		for(;i<4;i++) img->file->txt.col[i]=1.f;
-	}else if(isfile(fn)){
+	}else if(ft&FT_FILE){
 		char ok=0;
 		const char *const *ext;
 		for(ext=imgext;!ok && ext[0];ext++) if(fileext(fn,len,ext[0])) ok=1;
@@ -310,12 +311,12 @@ void fgetfile(const char *fn,char singlefile){
 
 void fgetfiles(int argc,char **argv){
 	int i;
-	char id;
+	enum filetype ft;
 	char singlefile=!ilbase && argc==1;
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
-	if(singlefile && (id=isdir(argv[0])) && (ilbase=floaddir(argv[0],""))){
-		if(id==1) mapaddbasedir(argv[0],"");
+	if(singlefile && ((ft=filetype(argv[0]))&FT_DIREX) && (ilbase=floaddir(argv[0],""))){
+		if(ft&FT_DIR) mapaddbasedir(argv[0],"");
 		goto end;
 	}
 	for(i=0;i<argc;i++) fgetfile(argv[i],singlefile);
@@ -378,7 +379,7 @@ char fimgswitchmod(struct img *img){
 	l=(size_t)(pos-ifl->fn);
 	memcpy(fn,ifl->fn,l);
 	snprintf(fn+l,FILELEN-l,"_mod%s",pos);
-	if(!isfile(fn)) return 0;
+	if(!(filetype(fn)&FT_FILE)) return 0;
 	snprintf(ifl->delfn,FILELEN,ifl->fn);
 	snprintf(ifl->fn,FILELEN,fn);
 	fthumbinit(ifl);

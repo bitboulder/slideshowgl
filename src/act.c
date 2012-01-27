@@ -11,7 +11,7 @@
 #include "mark.h"
 #include "map.h"
 #include "help.h"
-#include "exifch.h"
+#include "exich.h"
 
 struct actdelay {
 	Uint32 delay;
@@ -79,7 +79,7 @@ void actdo(enum act act,struct img *img,struct imglist *il){
 	case ACT_DELORI:    actdelete(img,il,"ori"); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;
 	case ACT_MAPCLT:    mapimgclt(-1); break;
-	case ACT_EXIFCACHE: exifcachesave(); break;
+	case ACT_EXIFCACHE: exichsave(); break;
 	default: break;
 	}
 }

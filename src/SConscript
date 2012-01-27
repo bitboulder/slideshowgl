@@ -35,7 +35,7 @@ sources = """
 	prg.c
 	map.c
 	mapld.c
-	exifch.c
+	exich.c
 """
 if not env.GetOption('clean'):
 	if env['HAVE_EXIV2'] == 1:

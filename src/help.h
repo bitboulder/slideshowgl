@@ -45,11 +45,12 @@ FILE *popen(const char *command, const char *type);
 int pclose(FILE *stream);
 #endif
 
-char isdir(const char *fn);
-char isfile(const char *fn);
+#undef FT_FILE
+enum filetype { FT_NX=0x00, FT_DIR=0x01, FT_FILE=0x02, FT_DIREX=0x04 };
+enum filetype filetype(const char *fn);
 long filesize(const char *fn);
 long filetime(const char *fn);
-char mkdirm(const char *dir);
+char mkdirm(const char *dir,char file);
 
 char fileext(const char *fn,size_t len,const char *ext);
 

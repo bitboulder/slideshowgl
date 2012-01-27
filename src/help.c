@@ -140,26 +140,10 @@ char *truncstr(char *str,size_t *len,enum truncstr pre,enum truncstr suf){
 	return str;
 }
 
-char isfile(const char *fn){
-	FILE *fd=fopen(fn,"r");
-	if(!fd) return 0;
-	fclose(fd);
-	return 1;
-}
-
 #if HAVE_STAT
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-char isdir(const char *fn){
-	struct stat st;
-	if(stat(fn,&st)) return 0;
-	if(S_ISDIR(st.st_mode)) return 1;
-	if(fileext(fn,0,"flst")) return 2;
-	if(fileext(fn,0,"effprg")) return 2;
-	return 0;
-}
 
 long filesize(const char *fn){
 	struct stat st;
@@ -175,12 +159,6 @@ long filetime(const char *fn){
 
 #else
 
-char isdir(const char *fn){
-	if(fileext(fn,"flst")) return 2;
-	if(fileext(fn,"effprg")) return 2;
-	return 0;
-}
-
 long filesize(const char *fn){
 	return 1;
 }
@@ -191,16 +169,50 @@ long filetime(const char *fn){
 
 #endif
 
+enum filetype filetype(const char *fn){
+	enum filetype ft=FT_NX;	
+	FILE *fd;
+#if HAVE_STAT
+	struct stat st;
+	if(stat(fn,&st)) return FT_NX;
+	if(S_ISDIR(st.st_mode)) ft|=FT_DIR|FT_DIREX;
+	else
+#endif
+	if((fd=fopen(fn,"r"))){
+		fclose(fd);
+		ft|=FT_FILE;
+		if(fileext(fn,0,"flst")) ft|=FT_DIREX;
+		if(fileext(fn,0,"effprg")) ft|=FT_DIREX;
+	}
+	return ft;
+}
+
 #ifndef __WIN32__
 	#include <sys/stat.h>
 	#include <sys/types.h>
 #endif
-char mkdirm(const char *dir){
+char mkdirm(const char *dir,char file){
+	char buf[FILELEN];
+	int l=snprintf(buf,FILELEN,"%s",dir),i;
+	for(i=l;i>0;i--) if(buf[i]=='/' || buf[i]=='\\' || (buf[i]=='\0' && !file)){
+		enum filetype ft;
+		buf[i]='\0';
+		ft=filetype(buf);
+		if(ft&FT_DIR) break;
+		if(ft!=FT_NX){ error(ERR_CONT,"mkdirm: \"%s\" is not a directory",buf); return 0; }
+	}
+	buf[i]=dir[i];
+	for(i++;i<=l;i++) if(!buf[i]){
+		if(!dir[i] && file) break;
 #ifdef __WIN32__
-	return mkdir(dir)==0;
+		if(mkdir(buf)!=0)
 #else
-	return mkdir(dir,00777)==0;
+		if(mkdir(buf,00777)!=0)
 #endif
+		{ error(ERR_CONT,"mkdirm: mkdir \"%s\" failed",buf); return 0; }
+		buf[i]=dir[i];
+	}
+	return 1;
 }
 
 char fileext(const char *fn,size_t len,const char *ext){

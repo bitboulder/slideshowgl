@@ -13,7 +13,7 @@
 #include "dpl.h"
 #include "prg.h"
 #include "help.h"
-#include "exifch.h"
+#include "exich.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -327,11 +327,11 @@ char ilsecswitch(enum ilsecswitch type){
 		len=strlen(curils[0]->fn);
 		if(len<8 || strncmp(curils[0]->fn+len-7,".effprg",7)) return 0;
 		snprintf(buf,len-=6,curils[0]->fn);
-		if(!isdir(buf)){
+		if(!(filetype(buf)&FT_DIR)){
 			while(len && buf[len-1]!='/' && buf[len-1]!='\\') len--;
 			if(len) buf[len-1]='\0';
 			else strcpy(buf,".");
-			if(!isdir(buf)) return 0;
+			if(!(filetype(buf)&FT_DIR)) return 0;
 		}
 		if(!(il=floaddir(buf,""))) return 0;
 		il->parent=NULL;
@@ -440,7 +440,7 @@ char imgsort(struct imglist *il,char date){
 	int i;
 	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++){
 		char *fn=imgfilefn(il->imgs[i]->file);
-		if(!exifcachecheck(il->imgs[i]->exif,fn)){
+		if(!exichcheck(il->imgs[i]->exif,fn)){
 			if(il->nimg<ilcfg.maxloadexif) imgexifload(il->imgs[i]->exif,fn);
 			else imgexifsetsortil(il->imgs[i]->exif,il);
 		}

@@ -85,7 +85,7 @@ void markcatadd(char *fn){
 	size_t len;
 	size_t i;
 	if(mark.init) return;
-	if(isdir(fn)==1){
+	if(filetype(fn)&FT_DIR){
 		markcatadddir(fn);
 		return;
 	}
