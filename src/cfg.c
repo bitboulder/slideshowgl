@@ -69,7 +69,8 @@ struct cfg {
 	{ 'e', "il.datesort",         CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle sort by exif date") },
 	{ 'E', "il.datesortdir",      CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle sort by exif date of subdirectories") },
 	{ 0,   "il.maxhistory",       CT_INT, CM_SET,  "200",    {NULL}, __("Maximal size of imglist history (for loop protection)") },
-	{ 0,   "il.maxloadexif",      CT_INT, CM_SET,  "100",    {NULL}, __("Maximal imglist size for instant exif load") },
+	{ 0,   "il.maxloadexif",      CT_INT, CM_SET,  "50",     {NULL}, __("Maximal imglist size for instant exif load") },
+	{ 0,   "exif.cachefile",      CT_STR, CM_SET,  "",       {NULL}, __("Cache file for exif dates (default: TMP/slideshowgl-cache/exif.gz)") },
 	{ 0,   "ld.maxtexsize",       CT_INT, CM_SET,  "512",    {NULL}, __("Maximal texture size") },
 	{ 0,   "ld.maxpanotexsize",   CT_INT, CM_SET,  "1024",   {NULL}, __("Maximal texture size for panoramas") },
 	{ 0,   "ld.maxpanopixels",    CT_INT, CM_SET,  "60000000",     {NULL}, __("Maximal pixels for panoramas (bigger ones are scaled down)") },
@@ -108,11 +109,12 @@ struct cfg {
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
 	{ 0,   "act.mapclt_delay",    CT_INT, CM_SET,  "1000",   {NULL}, __("Delay after that the map clusters are refreshed") },
+	{ 0,   "act.exifcache_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the exif cache is written") },
 	{ 'n', "act.do",              CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle actions") },
 	{ 0,   "prged.w",             CT_FLT, CM_SET,  ".2",     {NULL}, __("Width of index il in prg edit mode") },
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
 	{ 'M', "map.base",            CT_STR, CM_SET,  "",       {NULL}, __("Base directory for gps.txt files") },
-	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images") },
+	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images (default: TMP/slideshowgl-cache)") },
 	{ 0,   NULL,                  0,      0,       "",       {NULL}, NULL },
 };
 #undef E2

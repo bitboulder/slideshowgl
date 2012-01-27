@@ -13,6 +13,7 @@
 #include "dpl.h"
 #include "prg.h"
 #include "help.h"
+#include "exifch.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -46,7 +47,7 @@ struct ilcfg {
 } ilcfg = {
 	.init=0,
 	.maxhistory=200,
-	.maxloadexif=100,
+	.maxloadexif=50,
 };
 struct imglist *curils[IL_NUM] = {NULL, NULL};
 
@@ -437,9 +438,13 @@ int imgsort_datecmp(const void *a,const void *b){
 /* thread: dpl */
 char imgsort(struct imglist *il,char date){
 	int i;
-	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++)
-		if(il->nimg<ilcfg.maxloadexif) imgexifload(il->imgs[i]->exif,imgfilefn(il->imgs[i]->file));
-		else imgexifsetsortil(il->imgs[i]->exif,il);
+	if(il->sort==ILS_DATE) for(i=0;i<il->nimg;i++){
+		char *fn=imgfilefn(il->imgs[i]->file);
+		if(!exifcachecheck(il->imgs[i]->exif,fn)){
+			if(il->nimg<ilcfg.maxloadexif) imgexifload(il->imgs[i]->exif,fn);
+			else imgexifsetsortil(il->imgs[i]->exif,il);
+		}
+	}
 	qsort(il->imgs,(size_t)il->nimg,sizeof(struct img *),date?imgsort_datecmp:imgsort_filecmp);
 	return ilsetnxt(il);
 }

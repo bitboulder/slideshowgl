@@ -11,6 +11,7 @@
 #include "mark.h"
 #include "map.h"
 #include "help.h"
+#include "exifch.h"
 
 struct actdelay {
 	Uint32 delay;
@@ -78,6 +79,7 @@ void actdo(enum act act,struct img *img,struct imglist *il){
 	case ACT_DELORI:    actdelete(img,il,"ori"); break;
 	case ACT_ILCLEANUP: ilcleanup(); break;
 	case ACT_MAPCLT:    mapimgclt(-1); break;
+	case ACT_EXIFCACHE: exifcachesave(); break;
 	default: break;
 	}
 }
@@ -132,6 +134,7 @@ void actinit(){
 	ac.cfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
 	ac.cfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
 	ac.cfg.delay[ACT_MAPCLT].delay    = cfggetuint("act.mapclt_delay");
+	ac.cfg.delay[ACT_EXIFCACHE].delay = cfggetuint("act.exifcache_delay");
 }
 
 int actthread(void *UNUSED(arg)){

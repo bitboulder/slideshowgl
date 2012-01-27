@@ -26,6 +26,7 @@
 #define HAVE_OPENDIR	%(HAVE_OPENDIR)i
 
 #define HAVE_CURL		%(HAVE_CURL)i
+#define HAVE_ZLIB		%(HAVE_ZLIB)i
 
 /*#define HAVE_PTHREAD*/
 

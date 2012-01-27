@@ -10,12 +10,14 @@
 #if HAVE_MKTIME
 	#include <time.h>
 #endif
-#include "exif.h"
+#include "exif_int.h"
 #include "main.h"
 #include "cfg.h"
 #include "help.h"
 #include "dpl.h"
 #include "eff.h"
+#include "act.h"
+#include "exifch.h"
 
 #if HAVE_EXIV2
 
@@ -68,14 +70,6 @@ typedef ExifData exifdata;
 #endif
 
 
-
-struct imgexif {
-	char load;
-	enum rot rot;
-	int64_t date;
-	char *info;
-	struct imglist *sortil;
-};
 
 /* thread: all */
 enum rot imgexifrot(struct imgexif *exif){ return exif->rot; }
@@ -238,7 +232,7 @@ char *imgexifgetinfo(exifdata *exdat){
 }
 #endif
 
-/* thread: load */
+/* thread: load,dpl */
 char imgexifload(struct imgexif *exif,const char *fn){
 #if HAVE_EXIV2 || HAVE_EXIF
 	enum rot r;
@@ -267,6 +261,7 @@ char imgexifload(struct imgexif *exif,const char *fn){
 		dplsetresortil(exif->sortil);
 		exif->sortil=NULL;
 	}
+	exifcacheadd(exif,fn);
 	return ret;
 #else
 	return 0;

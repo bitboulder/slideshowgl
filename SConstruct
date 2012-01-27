@@ -83,6 +83,7 @@ if not env.GetOption('clean'):
 	env['HAVE_MKTIME'] = 0
 	env['HAVE_OPENDIR'] = 0
 	env['HAVE_CURL'] = 0
+	env['HAVE_ZLIB'] = 0
 
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
@@ -147,6 +148,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 		conf.CheckPKG('xinerama >= 1.0',0,'XINERAMA')
 		conf.CheckPKG('libcurl >= 0.2',0,'CURL')
+		conf.CheckPKG('zlib >= 1.2',0,'ZLIB')
 		conf.CheckFuncMy('iconv',0,'ICONV')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')

@@ -1,11 +1,9 @@
 # Fixes
-- eaksn4: switch back from fullscreen if started in fullscreen
-
 - cleanup texloadbuf in ldresetdo
 - load: delete texs for img size reduce
 
-- fix: stop-icon disapears if zoomin and -out on flstln/panorama
-- fix: load errors
+- map-zoom
+
 
 # Want to have
 - dpl.actimgi through eff + remove sdlforceredraw
@@ -17,3 +15,7 @@
 
 
 - refresh sec-il after exif load
+
+
+- switch mark-list (inside flst-directory)
+
