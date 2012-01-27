@@ -2,16 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_ZLIB
-	#include <zlib.h>
-#else
-	#define gzFile			FILE*
-	#define gzopen			fopen
-	#define	gzclose			fclose
-	#define gzeof			feof
-	#define gzprintf		fprintf
-	#define gzgets(f,b,l)	fgets(b,l,f)
-#endif
+#include "zlib.h"
 #include "exifch.h"
 #include "exif_int.h"
 #include "main.h"
