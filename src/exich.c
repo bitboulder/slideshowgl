@@ -83,8 +83,10 @@ void exichload(){
 		struct exichi cr,*cm;
 		char buf[FILELEN*2];
 		unsigned int hkey;
+		long t;
 		if(!(gzgets(fd,buf,FILELEN*2-1))) continue;
-		if(sscanf(buf,"%li %li %s\n",&cr.ft,&cr.date,cr.fn)!=3) continue;
+		if(sscanf(buf,"%li %li %s\n",&cr.ft,&t,cr.fn)!=3) continue;
+		cr.date=t;
 		cm=malloc(sizeof(struct exichi));
 		memcpy(cm,&cr,sizeof(struct exichi));
 		hkey=exichhkey(cr.fn);

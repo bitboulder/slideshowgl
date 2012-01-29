@@ -1,5 +1,5 @@
 
-BINS = bin/libcurl.dll bin/libidn-11.dll bin/libeay32.dll
+BINS = bin/libcurl.dll bin/libidn-11.dll bin/libeay32.dll bin/libssl32.dll
 LIBS = lib/libcurldll.a
 INCS = include/curl/curl.h \
 	   include/curl/curlver.h \

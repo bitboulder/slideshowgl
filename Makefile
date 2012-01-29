@@ -27,6 +27,7 @@ win-debug:
 
 clean:
 	$(SCONS) -c
+	$(SCONS) -c os=win
 
 install:
 	$(SCONS) install mode=release destdir="$(DESTDIR)"

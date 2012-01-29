@@ -123,7 +123,12 @@ struct subdpl {
 	int x,y,w,h;
 };
 
-char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl){
+#if HAVE_X11 && HAVE_XINERAMA
+char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl)
+#else
+char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdpl))
+#endif
+{
 #if HAVE_X11 && HAVE_XINERAMA
 {
 	Display *display=XOpenDisplay(NULL);

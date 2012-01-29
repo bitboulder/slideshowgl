@@ -80,6 +80,7 @@ const char *dbgstr[] = { EDEBUG };
 #undef E
 
 FILE *fdlog=NULL;
+int errcnt=0;
 
 void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...){
 	va_list ap;
@@ -89,6 +90,7 @@ void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...){
 	char *pos;
 	int i;
 	if(!err && lvl>dbg && (!fdlog || lvl>logdbg)) return;
+	if(err) errcnt++;
 	if((pos=strrchr(file,'/'))) file=pos+1;
 	snprintf(fcp,5,file);
 	if((pos=strchr(fcp,'.'))) *pos='\0';
@@ -227,6 +229,8 @@ void setprogpath(char *pfn){
 }
 
 void fileoutput(char doopen){
+	static const char *logfn=NULL;
+	const char *logfn2=NULL;
 	switch(doopen){
 	case 1: {
 			const char *paths[2];
@@ -240,19 +244,19 @@ void fileoutput(char doopen){
 				snprintf(fn,l+9,"%s%slog.txt",paths[i],(l && paths[i][l-1]!='/' && paths[i][l-1]!='\\')?"\\":"");
 				fdlog=fopen(fn,"w");
 				free(fn);
+				logfn=fn;
 			}
 	} break;
-	case 2: {
-		const char *logfn=cfggetstr("main.log");
-		if(!logfn || !logfn[0]) return;
-		if(fdlog) fclose(fdlog);
-		fdlog=fopen(logfn,"w");
-	} break;
+	case 2:
+		logfn2=cfggetstr("main.log");
+		if(!logfn2 || !logfn2[0]) break;
 	case 0:
 		if(fdlog){
 			fclose(fdlog);
 			fdlog=NULL;
+			if(!errcnt && logfn && logfn[0] && cfggetbool("main.dellog")) unlink(logfn);
 		}
+		if(logfn2) fdlog=fopen(logfn=logfn2,"w");
 	break;
 	}
 }
@@ -294,7 +298,7 @@ int watchcoredump(int *ret,int argc,char **argv){
 		fd=fopen(cmd,"w");
 		for(i=0;i<argc;i++) fprintf(fd,"%s\n",argv[i]);
 		fclose(fd);
-
+		errcnt++;
 	}
 	return 1;
 }
@@ -329,6 +333,8 @@ char terminate(){
 	if(!pid_kill) return 0;
 	kill((pid_t)pid_kill,SIGABRT);
 	return 1;
+#else
+	return 0;
 #endif
 }
 

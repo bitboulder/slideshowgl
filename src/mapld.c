@@ -53,7 +53,6 @@ void mapld_load(struct mapldti ti){
 	FILE *fd;
 	CURL *curl;
 	CURLcode res;
-	int i;
 	struct curl_slist *lst=NULL;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
 	mkdirm(fn,1);
