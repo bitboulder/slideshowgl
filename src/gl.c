@@ -562,6 +562,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	float srat=sdlrat();
 	struct txtimg *txt;
 	float s;
+	const char *mov;
 	if(!ecur->act) return;
 	if(iopt->layer!=layer) return;
 	if(!irat) return;
@@ -610,7 +611,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	}
 	// draw img
 	if(dl) glCallList(dl);
-	if(imgfilemov(img->file)) glrendermov(irat,ecur->a);
+	if((mov=imgfilemov(img->file)) && mov[0]=='m') glrendermov(irat,ecur->a);
 	if(txt) glrendertxtimg(txt,ecur->a,act);
 	else if(act) glrenderact(irat,0);
 	glrenderimgtext(imgfiledir(img->file),irat,ecur->a);
