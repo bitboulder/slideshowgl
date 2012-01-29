@@ -38,7 +38,8 @@ const char *const wavext[]  ={ WAVEXT,   NULL };
 struct imgfile {
 	char fn[FILELEN];
 	char tfn[FILELEN];
-	char dir[FILELEN];
+	char dir;
+	char imgtxt[FILELEN];
 	char mov[FILELEN];
 	struct txtimg txt;
 	char delfn[FILELEN];
@@ -50,8 +51,9 @@ void imgfilefree(struct imgfile *ifl){ free(ifl); }
 /* thread: dpl, load */
 char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
 char *imgfiledelfn(struct imgfile *ifl){ return ifl->delfn; }
-const char *imgfiledir(struct imgfile *ifl){ return ifl->dir[0] ? ifl->dir : NULL; }
+const char *imgfiledir(struct imgfile *ifl){ return ifl->dir ? ifl->imgtxt : NULL; }
 const char *imgfilemov(struct imgfile *ifl){ return ifl->mov[0] ? ifl->mov : NULL; }
+const char *imgfileimgtxt(struct imgfile *ifl){ return ifl->imgtxt[0] ? ifl->imgtxt : NULL; }
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
 /* thread: load */
@@ -174,6 +176,19 @@ void fthumbinit(struct imgfile *ifl){
 		debug(DBG_DBG,"thumbinit thumb used: '%s'",ifl->tfn);
 }
 
+void fimgtxtinit(struct imgfile *ifl,const char *fn){
+	int i=(int)strlen(fn)-2, l;
+	while(i>=0 && fn[i]!='/' && fn[i]!='\\') i--;
+	for(l=0,i++;l<FILELEN-1 && fn[i];l++,i++){
+		char c=fn[i];
+		if((c=='.' || c=='/' || c=='\\') && l>=2) break;
+		if(c=='_') c=' ';
+		ifl->imgtxt[l]=c;
+	}
+	ifl->imgtxt[l]='\0';
+	utf8check(ifl->imgtxt);
+}
+
 void fmovinit(struct imgfile *ifl){
 	const char *const *ext;
 	size_t len=strlen(ifl->fn);
@@ -187,7 +202,10 @@ void fmovinit(struct imgfile *ifl){
 			snprintf(ifl->mov+len+1,FILELEN-len-1,ext[0]);
 			if(filetype(ifl->mov+1)&FT_FILE) break;
 		}
-		if(ext[0]) return;
+		if(ext[0]){
+			if(i) fimgtxtinit(ifl,ifl->mov+1);
+			return;
+		}
 	}
 	ifl->mov[0]='\0';
 }
@@ -207,20 +225,12 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 	if(len>=FILELEN) return 0;
 	ft=filetype(fn);
 	if(ft&FT_DIREX){
-		int i=(int)len-2, l;
 		img=imgadd(il,prg);
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
-		while(i>=0 && img->file->fn[i]!='/' && img->file->fn[i]!='\\') i--;
-		for(l=0,i++;l<FILELEN-1 && fn[i];l++,i++){
-			char c=img->file->fn[i];
-			if((c=='.' || c=='/' || c=='\\') && l>=2) break;
-			if(c=='_') c=' ';
-			img->file->dir[l]=c;
-		}
-		img->file->dir[l]='\0';
-		utf8check(img->file->dir);
-		debug(DBG_DBG,"directory found '%s': '%s'",img->file->dir,img->file->fn);
-		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->dir);
+		fimgtxtinit(img->file,img->file->fn);
+		img->file->dir=1;
+		debug(DBG_DBG,"directory found '%s': '%s'",img->file->imgtxt,img->file->fn);
+		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->imgtxt);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
 		size_t ltxt;
@@ -381,7 +391,7 @@ char fimgswitchmod(struct img *img){
 	char  fn[FILELEN];
 	char *pos;
 	size_t l;
-	if(ifl->dir[0] || ifl->txt.txt[0]) return 0;
+	if(ifl->dir || ifl->txt.txt[0]) return 0;
 	if(!(pos=strrchr(ifl->fn,'.'))) return 0;
 	l=(size_t)(pos-ifl->fn);
 	memcpy(fn,ifl->fn,l);

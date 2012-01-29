@@ -614,7 +614,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	if((mov=imgfilemov(img->file)) && mov[0]=='m') glrendermov(irat,ecur->a);
 	if(txt) glrendertxtimg(txt,ecur->a,act);
 	else if(act) glrenderact(irat,0);
-	glrenderimgtext(imgfiledir(img->file),irat,ecur->a);
+	glrenderimgtext(imgfileimgtxt(img->file),irat,ecur->a);
 	if(ecur->m) glrendermark(ecur->m,imgexifrotf(img->exif),irat);
 	glPopMatrix();
 }
