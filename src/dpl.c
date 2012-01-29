@@ -633,12 +633,13 @@ void dplgimp(){
 char dplmov(){
 	struct img *img=imgget(AIL,AIMGI);
 	char *cmd;
-	char fs;
+	char fs=0;
+	const char *mov;
 	if(!img) return 0;
-	if(!imgfilemov(img->file)) return 0;
-	fs=sdlfullscreen(0);
+	if(!(mov=imgfilemov(img->file))) return 0;
+	if(mov[0]=='m') fs=sdlfullscreen(0);
 	cmd=malloc(FILELEN*2);
-	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\"",fs,fs?"-fs ":"",imgfilemov(img->file));
+	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\"",fs,fs?"-fs ":"",mov+1);
 	SDL_CreateThread(dplcmdrun,cmd);
 	return 1;
 }

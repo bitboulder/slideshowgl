@@ -26,10 +26,12 @@
 
 #define IMGEXT		"jpg", "jpeg", "png", "tif", "tiff"
 #define MOVEXT		"mov", "avi", "mpg"
+#define WAVEXT		"wav", "mp3", "ogg"
 #define SLAVEEXT	MOVEXT, "thm"
 const char *const imgext[]  ={ IMGEXT,   NULL };
 const char *const slaveext[]={ SLAVEEXT, NULL };
 const char *const movext[]  ={ MOVEXT,   NULL };
+const char *const wavext[]  ={ WAVEXT,   NULL };
 
 /***************************** imgfile ******************************************/
 
@@ -175,14 +177,19 @@ void fthumbinit(struct imgfile *ifl){
 void fmovinit(struct imgfile *ifl){
 	const char *const *ext;
 	size_t len=strlen(ifl->fn);
+	int i;
 	while(len>0 && ifl->fn[len-1]!='.') len--;
 	if(!len){ ifl->mov[0]='\0'; return; }
-	snprintf(ifl->mov,FILELEN,ifl->fn);
-	for(ext=movext;ext[0];ext++){
-		snprintf(ifl->mov+len,FILELEN-len,ext[0]);
-		if(filetype(ifl->mov)&FT_FILE) break;
+	snprintf(ifl->mov+1,FILELEN-1,ifl->fn);
+	for(i=0;i<2;i++){
+		ifl->mov[0]=i?'w':'m';
+		for(ext=i?wavext:movext;ext[0];ext++){
+			snprintf(ifl->mov+len+1,FILELEN-len-1,ext[0]);
+			if(filetype(ifl->mov+1)&FT_FILE) break;
+		}
+		if(ext[0]) return;
 	}
-	if(!ext[0]){ ifl->mov[0]='\0'; return; }
+	ifl->mov[0]='\0';
 }
 
 int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase){
