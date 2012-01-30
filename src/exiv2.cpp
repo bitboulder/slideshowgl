@@ -12,6 +12,7 @@
 #include "exiv2.h"
 
 struct exiv2data {
+	char imgused;
 	Exiv2::Image::AutoPtr img;
 };
 
@@ -19,6 +20,7 @@ struct exiv2data *exiv2init(const char *fn){
 	struct exiv2data *edata=(struct exiv2data *)calloc(1,sizeof(struct exiv2data));
 	try {
 	    edata->img = Exiv2::ImageFactory::open(fn);
+		edata->imgused = 1;
 		if(!edata->img.get()){
 			exiv2free(edata);
 			return NULL;
@@ -38,7 +40,7 @@ struct exiv2data *exiv2init(const char *fn){
 }
 
 void exiv2free(struct exiv2data *edata){
-	/*TODO: if(edata->img!=NULL)*/ edata->img->~Image();
+	if(edata->imgused) edata->img->~Image();
 	free(edata);
 }
 

@@ -238,8 +238,9 @@ char imgexifload(struct imgexif *exif,const char *fn){
 	enum rot r;
 	exifdata *exdat;
 	char ret=0x1;
+	enum filetype ft=filetype(fn);
 	if(exif->load) return 0;
-	if(!(filetype(fn)&FT_FILE)) return 1;
+	if(!(ft&FT_FILE) || (ft&FT_DIREX)) return 1;
 	if(exif->info) free(exif->info);
 	exif->load=1;
 	debug(DBG_DBG,"exif loading img %s",fn);
