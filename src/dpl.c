@@ -447,7 +447,7 @@ char dplmark(int imgi,char copy){
 	struct img *img;
 	char *mark;
 	size_t mkid=0;
-	if(!dplwritemode()) return 0;
+	if(!dplwritemode() || mapon()) return 0;
 	if(imgi==IMGI_START || imgi==IMGI_END) return 0;
 	if(imgi>=IMGI_CAT){
 		mkid=(size_t)imgi-IMGI_CAT+1;
@@ -1043,10 +1043,7 @@ void dplkey(unsigned short keyu){
 		}
 	break;
 	case 'M':
-		if(!dplprged("frmmov",1,-1,-2)){
-			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO;
-			else if(!mapon()) dplmark(AIMGI,1);
-		}
+		if(!dplprged("frmmov",1,-1,-2) && dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO;
 	break;
 	case 'j': if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_ALL; break;
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
@@ -1056,7 +1053,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
-	case 'S': ilsort(0,NULL,ILSCHG_INC); break;
+	case 'S': if(!dplmark(AIMGI,1)) ilsort(0,NULL,ILSCHG_INC); break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,!AIL && dpl.actimgi>=0 ? dpl.actimgi : dpl.pos.imgi[0],-1)) dplcol(1); break;
