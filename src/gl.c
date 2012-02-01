@@ -776,6 +776,7 @@ void glrendercat(){
 	char *mark=NULL;
 	char *cats,*cat;
 	float f,w,h,b;
+	float nc,hrat=gl.cfg.hrat_cat;
 	GLuint name=IMGI_CAT+1;
 	if(!(f=effswf(ESW_CAT))) return;
 	if(!(cats=markcats())) return;
@@ -784,9 +785,9 @@ void glrendercat(){
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-w/2.f,0.5f,0.f);
-	h=glfontscale(gl.cfg.hrat_cat,1.f);
-	glScalef(.8f,.8f,1.f); /* reduce font-size */
-	for(w=0.f,cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(cat))>w) w=b;
+	for(w=0.f,nc=0.f,cat=cats;cat[0];cat+=FILELEN,nc++) if((b=glfontwidth(cat))>w) w=b;
+	if(hrat*nc>.95f) hrat=.95f/nc;
+	h=glfontscale(hrat,1.f);
 	b=h*gl.cfg.txt_border*2.f;
 	glScalef(f,1.f,1.f);
 	glColor4fv(gl.cfg.col_txtbg);
