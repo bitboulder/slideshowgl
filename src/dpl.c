@@ -61,6 +61,7 @@ struct dpl {
 	.pos.zoom = 0,
 	.pos.x = 0.,
 	.pos.y = 0.,
+	.pos.buble = -1,
 	.writemode = 0,
 	.run = 0,
 	.colmode = COL_NONE,
@@ -610,12 +611,14 @@ char dplactil(float x,int clickimg){
 	return 1;
 }
 
+enum cmdact {CA_NONE=0x00, CA_FS=0x01, CA_BUBLE=0x02};
 int dplcmdrun(void *arg){
 	char *cmd=arg;
-	char fs=cmd[0];
+	enum cmdact ca=cmd[0];
 	system(cmd+1);
 	free(arg);
-	if(fs) dpl.fullscreen=1;
+	if(ca&CA_FS) dpl.fullscreen=1;
+	if(ca&CA_BUBLE) dpl.pos.buble=-1;
 	return 0;
 }
 
@@ -626,20 +629,22 @@ void dplgimp(){
 	if(imgfiledir(img->file)) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
-	snprintf(cmd,FILELEN+8,"%cgimp %s",0,imgfilefn(img->file));
+	snprintf(cmd,FILELEN+8,"%cgimp %s",CA_NONE,imgfilefn(img->file));
 	SDL_CreateThread(dplcmdrun,cmd);
 }
 
 char dplmov(){
-	struct img *img=imgget(AIL,AIMGI);
+	int imgi=AIMGI;
+	struct img *img=imgget(AIL,imgi);
 	char *cmd;
-	char fs=0;
+	enum cmdact ca=CA_NONE;
 	const char *mov;
 	if(!img) return 0;
 	if(!(mov=imgfilemov(img->file))) return 0;
-	if(mov[0]=='m') fs=sdlfullscreen(0);
+	if(mov[0]=='m' && sdlfullscreen(0)) ca|=CA_FS;
+	if(mov[0]=='w'){ dpl.pos.buble=imgi; ca|=CA_BUBLE; effinit(EFFREF_IMG,0,imgi); }
 	cmd=malloc(FILELEN*2);
-	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\"",fs,fs?"-fs ":"",mov+1);
+	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\" >/dev/null",ca,(ca&CA_FS)?"-fs ":"",mov+1);
 	SDL_CreateThread(dplcmdrun,cmd);
 	return 1;
 }
@@ -651,7 +656,7 @@ void dplconvert(){
 	if(filetype(imgfilefn(img->file))&(FT_DIREX|FT_FILE)) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
-	snprintf(cmd,FILELEN+8,"%ccnv_ui -img %s",0,imgfilefn(img->file));
+	snprintf(cmd,FILELEN+8,"%ccnv_ui -img %s",CA_NONE,imgfilefn(img->file));
 	SDL_CreateThread(dplcmdrun,cmd);
 }
 

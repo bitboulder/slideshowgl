@@ -89,7 +89,7 @@ struct edst { IPOS };
 #define E(X)	char FILL1_##X[2*sizeof(float)]; Uint32 X; char FILL2_##X[sizeof(Uint32)+sizeof(int)];
 struct etcur { IPOS };
 #undef E
-#define E(X)	char FILL1_##X[2*sizeof(float)+sizeof(Uint32)]; float X; char FILL2_##X[sizeof(int)];
+#define E(X)	char FILL1_##X[2*sizeof(float)+sizeof(Uint32)]; Uint32 X; char FILL2_##X[sizeof(int)];
 struct etdst { IPOS };
 #undef E
 #define E(X)	char FILL1_##X[2*sizeof(float)+2*sizeof(Uint32)]; int X;
@@ -367,6 +367,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	if(!ipn->cur.act && img->pos->eff==2) return;
 	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
 	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
+	if( ipn->cur.act && dp->buble==i){ ipn->cur.a=ipo->cur.a==1.f?.5f:1.f; neff=1; iev=0; timefac=.5f; }
 	if(mapon() && dp->dat && ipn->cur.s!=ipo->cur.s && (ev&DE_ZOOM)) timefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
 	effinittime(ipn,iev?DE_INIT:ev,timefac);
 	if(dp->zoom<0 && !(dp->zoom==-1 && (ev&DE_ZOOMOUT))){

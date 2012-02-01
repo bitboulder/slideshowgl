@@ -15,6 +15,7 @@ struct dplpos {
 	float x,y;
 	int actil;
 	void *dat;
+	int buble;
 };
 
 char dplwritemode();
