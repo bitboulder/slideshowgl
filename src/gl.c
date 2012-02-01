@@ -785,6 +785,7 @@ void glrendercat(){
 	glPushMatrix();
 	glTranslatef(-w/2.f,0.5f,0.f);
 	h=glfontscale(gl.cfg.hrat_cat,1.f);
+	glScalef(.8f,.8f,1.f); /* reduce font-size */
 	for(w=0.f,cat=cats;cat[0];cat+=FILELEN) if((b=glfontwidth(cat))>w) w=b;
 	b=h*gl.cfg.txt_border*2.f;
 	glScalef(f,1.f,1.f);
