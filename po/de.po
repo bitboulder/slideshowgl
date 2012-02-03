@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-01 19:38+0100\n"
+"POT-Creation-Date: 2012-02-03 12:49+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -83,7 +83,7 @@ msgstr "Warte auf core dumps und kopiere sie nach ARG/core_dump"
 msgid "Add space seperated files to initial file list"
 msgstr "Durch Leerzeichen getrennte Dateien zu Anfangsliste hinzufügen"
 
-#: src/cfg.c:47 src/dpl_help.h:171
+#: src/cfg.c:47 src/dpl_help.h:170
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -336,206 +336,215 @@ msgstr "Zeit in der Textfenster erscheinen/verschwinden (ms)"
 
 #: src/cfg.c:108
 msgid "Set mark file (Default: $TEMP/slideshowgl-mark)"
-msgstr "Markirungsdatei festlegen (Standart: $TEMP/slideshowgl-mark)"
+msgstr "Markierungsdatei festlegen (Standart: $TEMP/slideshowgl-mark)"
 
 #: src/cfg.c:109
+msgid "Directory for mark files (for switching the file with 'M')"
+msgstr "Verzeichnis für Markierungsdateien (zum Umschalten mit 'M')"
+
+#: src/cfg.c:110
 msgid "Add catalog (directory also possible)"
 msgstr "Katalog hinzufügen (Verzeichnis möglich)"
 
-#: src/cfg.c:110
+#: src/cfg.c:111
 msgid "Delay after that the mark file is written"
 msgstr "Wartedauer zum Schreiben der Markierungsdatei"
 
-#: src/cfg.c:111
+#: src/cfg.c:112
 msgid "Delay after that the img lists are cleaned"
 msgstr "Wartedauer zum Aufräumen der Verzeichnislisten"
 
-#: src/cfg.c:112
+#: src/cfg.c:113
 msgid "Delay after that the map clusters are refreshed"
 msgstr "Wartedauer bis die Cluster der Karte aktualisiert werden"
 
-#: src/cfg.c:113
+#: src/cfg.c:114
 msgid "Delay after that the exif cache is written"
 msgstr "Wartedauer zum Schreiben der Exif-Cache Datei"
 
-#: src/cfg.c:114
+#: src/cfg.c:115
 msgid "Toggle actions"
 msgstr "Aktionen (de-)aktivieren"
 
-#: src/cfg.c:115
+#: src/cfg.c:116
 msgid "Width of index il in prg edit mode"
 msgstr "Breite des Bildindex im Programm-Editier-Modus"
 
-#: src/cfg.c:116
+#: src/cfg.c:117
 msgid "Frame dimension rate for prg"
 msgstr "Seitenverhältnis im Programm-Modus"
 
-#: src/cfg.c:117
+#: src/cfg.c:118
 msgid "Base directory for gps.txt files"
 msgstr "Basisverzeichnis für gps.txt Dateien"
 
-#: src/cfg.c:118
+#: src/cfg.c:119
 msgid "Cache directory for map images (default: TMP/slideshowgl-cache)"
 msgstr "Cacheverzeichnis für Kartendateien (Standart: TMP/slideshowgl-cache)"
 
-#: src/cfg.c:128
+#: src/cfg.c:129
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:136
+#: src/cfg.c:137
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:150
+#: src/cfg.c:151
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:151
+#: src/cfg.c:152
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:159
+#: src/cfg.c:160
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:168
+#: src/cfg.c:169
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:169
+#: src/cfg.c:170
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:176
+#: src/cfg.c:177
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:192
+#: src/cfg.c:193
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:196
+#: src/cfg.c:197
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:208
+#: src/cfg.c:209
 #, c-format
 msgid "cfgset do-option with no implemented action (%s)"
 msgstr ""
 
-#: src/cfg.c:215
+#: src/cfg.c:216
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:222
+#: src/cfg.c:223
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:223
+#: src/cfg.c:224
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:240
+#: src/cfg.c:241
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:251
+#: src/cfg.c:252
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:270
+#: src/cfg.c:271
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:274
+#: src/cfg.c:275
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:93
+#: src/dpl.c:94
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:94
+#: src/dpl.c:95
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:95
+#: src/dpl.c:96
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:96
+#: src/dpl.c:97
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:98
+#: src/dpl.c:99
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:163
+#: src/dpl.c:100
+#, c-format
+msgid "[Mark-File]"
+msgstr "[Markierungsdatei]"
+
+#: src/dpl.c:165
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:217
+#: src/dpl.c:219
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:432
+#: src/dpl.c:434
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:561
+#: src/dpl.c:563
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:562
+#: src/dpl.c:564
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:578
+#: src/dpl.c:580
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:579
+#: src/dpl.c:581
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:580
+#: src/dpl.c:582
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:584 src/map.c:1039
+#: src/dpl.c:586 src/map.c:1039
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:585
+#: src/dpl.c:587
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1007
+#: src/dpl.c:1022
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -550,7 +559,7 @@ msgstr ""
 msgid "effpos img %3i (%6i) %4s: %5.2f"
 msgstr ""
 
-#: src/eff.c:414
+#: src/eff.c:415
 #, c-format
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
@@ -637,37 +646,37 @@ msgstr "(unbekannt)"
 msgid "exif loading img %s"
 msgstr ""
 
-#: src/file.c:166
+#: src/file.c:167
 #, c-format
 msgid "thumbinit thumb too old for '%s'"
 msgstr ""
 
-#: src/file.c:174
+#: src/file.c:175
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:176
+#: src/file.c:177
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:232
+#: src/file.c:233
 #, c-format
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:282
+#: src/file.c:283
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:284
+#: src/file.c:285
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:360
+#: src/file.c:361
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
@@ -709,7 +718,7 @@ msgstr "Bildinformationen"
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:1003
+#: src/gl.c:1005
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -949,12 +958,12 @@ msgstr ""
 msgid "mapld_load: file loading failed (res: %i)"
 msgstr ""
 
-#: src/mark.c:183
+#: src/mark.c:190
 #, c-format
 msgid "marks loaded (%s)"
 msgstr ""
 
-#: src/mark.c:221
+#: src/mark.c:236
 #, c-format
 msgid "marks saved (%s)"
 msgstr ""
@@ -1077,7 +1086,7 @@ msgstr "Weiter"
 msgid " Middle click"
 msgstr " Mittelclick"
 
-#: src/dpl_help.h:21 src/dpl_help.h:148
+#: src/dpl_help.h:21 src/dpl_help.h:146
 msgid "Toggle mark"
 msgstr "Bildmarkierung umschalten"
 
@@ -1204,7 +1213,7 @@ msgstr " Programm-Editor"
 msgid " Pageup/Pagedown"
 msgstr " Bild hoch/runter"
 
-#: src/dpl_help.h:59 src/dpl_help.h:141
+#: src/dpl_help.h:59 src/dpl_help.h:139
 msgid " +/-"
 msgstr ""
 
@@ -1256,7 +1265,7 @@ msgstr " [0-9]+m"
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl_help.h:66 src/dpl_help.h:173
+#: src/dpl_help.h:66 src/dpl_help.h:172
 msgid " [0-9]+d"
 msgstr " [0-9]+d"
 
@@ -1280,7 +1289,7 @@ msgstr ""
 msgid "Change color of text"
 msgstr "Farbe eines Textes ändern"
 
-#: src/dpl_help.h:69 src/dpl_help.h:158
+#: src/dpl_help.h:69 src/dpl_help.h:157
 msgid " C"
 msgstr ""
 
@@ -1296,7 +1305,7 @@ msgstr ""
 msgid "Refresh current frame"
 msgstr "Aktuelle Seite neu zeichen"
 
-#: src/dpl_help.h:73 src/dpl_help.h:126 src/dpl_help.h:128
+#: src/dpl_help.h:73 src/dpl_help.h:124 src/dpl_help.h:126
 msgid " w"
 msgstr ""
 
@@ -1332,8 +1341,8 @@ msgstr ""
 msgid "Search for marker"
 msgstr "Nach Verzeichnis suchen"
 
-#: src/dpl_help.h:83 src/dpl_help.h:117 src/dpl_help.h:119 src/dpl_help.h:148
-#: src/dpl_help.h:150
+#: src/dpl_help.h:83 src/dpl_help.h:115 src/dpl_help.h:117 src/dpl_help.h:146
+#: src/dpl_help.h:149
 msgid " m"
 msgstr ""
 
@@ -1389,187 +1398,198 @@ msgstr "Nach Bild oder Verzeichnis suchen"
 msgid " Directory options"
 msgstr " Verzeichnis Optionen"
 
-#: src/dpl_help.h:104 src/dpl_help.h:106 src/dpl_help.h:154
+#: src/dpl_help.h:103 src/dpl_help.h:105 src/dpl_help.h:153
 msgid " S"
 msgstr ""
 
-#: src/dpl_help.h:104
+#: src/dpl_help.h:103
+msgid "Toggle sorting of current image list (only if no image is active)"
+msgstr ""
+"Sortierung der aktuellen Bildliste umschalten (nur wenn ein Bild aktiv ist)"
+
+#: src/dpl_help.h:105
 msgid "Toggle sorting of current image list"
 msgstr "Sortierung der aktuellen Bildliste umschalten"
 
-#: src/dpl_help.h:106
-msgid "Toggle sorting of current image list (only if no image is active)"
-msgstr "Sortierung der aktuellen Bildliste umschalten (nur wenn ein Bild aktiv ist)"
-
-#: src/dpl_help.h:109
+#: src/dpl_help.h:107
 msgid " l"
 msgstr ""
 
-#: src/dpl_help.h:109
+#: src/dpl_help.h:107
 msgid "Toggle loop of image lists"
 msgstr "Bilder in Schleife darstellen"
 
-#: src/dpl_help.h:111 src/dpl_help.h:113 src/dpl_help.h:115 src/dpl_help.h:131
+#: src/dpl_help.h:109 src/dpl_help.h:111 src/dpl_help.h:113 src/dpl_help.h:129
 msgid " e"
 msgstr ""
 
-#: src/dpl_help.h:111
+#: src/dpl_help.h:109
 msgid "Leave program editor"
 msgstr "Programm-Editor verlassen"
 
-#: src/dpl_help.h:113
+#: src/dpl_help.h:111
 msgid "Leave directory editor"
 msgstr "Verzeichnis-Editor verlassen"
 
-#: src/dpl_help.h:115
+#: src/dpl_help.h:113
 msgid "Open directory or program editor"
 msgstr "Verzeichnis- oder Programm-Editor öffnen"
 
-#: src/dpl_help.h:117
+#: src/dpl_help.h:115
 msgid "Open map (only if no image is active)"
 msgstr "Karte öffnen (nur wenn kein Bild aktiv ist)"
 
-#: src/dpl_help.h:119
+#: src/dpl_help.h:117
 msgid "Open map"
 msgstr "Karte öffnen"
 
-#: src/dpl_help.h:124
+#: src/dpl_help.h:122
 msgid " Image modification"
 msgstr " Bildmodifikation"
 
-#: src/dpl_help.h:126
+#: src/dpl_help.h:124
 msgid "Disable writing mode"
 msgstr "Schreibmodus aktivieren"
 
-#: src/dpl_help.h:128
+#: src/dpl_help.h:126
 msgid "Enable writing mode"
 msgstr "Schreibmodus deaktivieren"
 
-#: src/dpl_help.h:131
+#: src/dpl_help.h:129
 msgid "Switch mode for new markers (add/replace)"
 msgstr "Modus für neue Marker ändern (hinzufügen/ersetzen)"
 
-#: src/dpl_help.h:135 src/dpl_help.h:137
+#: src/dpl_help.h:133 src/dpl_help.h:135
 msgid " r/R"
 msgstr ""
 
-#: src/dpl_help.h:135
+#: src/dpl_help.h:133
 msgid "Rotate image"
 msgstr "Bild drehen"
 
-#: src/dpl_help.h:137
+#: src/dpl_help.h:135
 msgid "Rotate image (only in writing mode permanent)"
 msgstr "Bild drehen (zum Speichern Schreibmodus aktivieren)"
 
-#: src/dpl_help.h:140
+#: src/dpl_help.h:138
 msgid " g/b/c"
 msgstr ""
 
-#: src/dpl_help.h:140
+#: src/dpl_help.h:138
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
 "+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl_help.h:141
+#: src/dpl_help.h:139
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl_help.h:144
+#: src/dpl_help.h:142
 msgid " Del"
 msgstr ""
 
-#: src/dpl_help.h:144
+#: src/dpl_help.h:142
 msgid "Move image to del/ and remove from dpl-list"
 msgstr "Bild nach 'del' verschieben und nicht mehr anzeigen"
 
-#: src/dpl_help.h:145
+#: src/dpl_help.h:143
 msgid " o"
 msgstr ""
 
-#: src/dpl_help.h:145
+#: src/dpl_help.h:143
 msgid "Move image to ori/ and remove from dpl-list"
 msgstr "Bild nach 'ori' verschieben und nicht mehr anzeigen"
 
-#: src/dpl_help.h:150
+#: src/dpl_help.h:147
+msgid " M"
+msgstr ""
+
+#: src/dpl_help.h:147
+msgid "Switch mark file"
+msgstr "Markierungsdatei umschalten"
+
+#: src/dpl_help.h:149
 msgid "Show map"
 msgstr "Karte anzeigen"
 
-#: src/dpl_help.h:153
+#: src/dpl_help.h:152
 msgid " s"
 msgstr ""
 
-#: src/dpl_help.h:153
+#: src/dpl_help.h:152
 msgid "Enter and toggle image catalog"
 msgstr "Bildkatalog eingeben und ändern"
 
-#: src/dpl_help.h:154
+#: src/dpl_help.h:153
 msgid "Copy marks from last marked image (only if an image is active)"
-msgstr "Markierung der letzten geänderten Bildes kopieren (nur wenn kein Bild aktiv ist)"
+msgstr ""
+"Markierung der letzten geänderten Bildes kopieren (nur wenn kein Bild aktiv "
+"ist)"
 
-#: src/dpl_help.h:156
+#: src/dpl_help.h:155
 msgid " G"
 msgstr ""
 
-#: src/dpl_help.h:156
+#: src/dpl_help.h:155
 msgid "Edit current image with gimp"
 msgstr "Aktuelles Bild mit gimp bearbeiten"
 
-#: src/dpl_help.h:158
+#: src/dpl_help.h:157
 msgid "Open current image/directory for file-convert-utility"
 msgstr "Aktuelles Bild/Verzeichnis mit Datei-Konvertierung öffnen"
 
-#: src/dpl_help.h:162
+#: src/dpl_help.h:161
 msgid " Image information"
 msgstr " Bildinformationen"
 
-#: src/dpl_help.h:163
+#: src/dpl_help.h:162
 msgid " i/I"
 msgstr ""
 
-#: src/dpl_help.h:163
+#: src/dpl_help.h:162
 msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
-#: src/dpl_help.h:164
+#: src/dpl_help.h:163
 msgid " k"
 msgstr ""
 
-#: src/dpl_help.h:164
+#: src/dpl_help.h:163
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl_help.h:168
+#: src/dpl_help.h:167
 msgid " Program interface"
 msgstr " Programmbedienung"
 
-#: src/dpl_help.h:169
+#: src/dpl_help.h:168
 msgid " h"
 msgstr ""
 
-#: src/dpl_help.h:169
+#: src/dpl_help.h:168
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl_help.h:170
+#: src/dpl_help.h:169
 msgid " q/Esc"
 msgstr ""
 
-#: src/dpl_help.h:170
+#: src/dpl_help.h:169
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl_help.h:171
+#: src/dpl_help.h:170
 msgid " f"
 msgstr ""
 
-#: src/dpl_help.h:173
+#: src/dpl_help.h:172
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl_help.h:176
+#: src/dpl_help.h:175
 msgid " p"
 msgstr ""
 
-#: src/dpl_help.h:176
+#: src/dpl_help.h:175
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"

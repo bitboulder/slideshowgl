@@ -24,7 +24,7 @@ extern struct zoomtab {
 
 enum statmode { STAT_OFF, STAT_RISE, STAT_ON, STAT_FALL, STAT_NUM };
 
-enum evaltyp {E_LIN,E_MAPS};
+enum evaltyp {E_LIN,E_MAPS,E_MAPXY};
 struct eval {
 	float cur,dst;
 	Uint32 tcur,tdst;
@@ -383,8 +383,11 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 		if(img->pos->eff) img->pos->eff=2;
 		else effinitpos(dp,img,&ipo->cur,i);
 	}
-	if(mapon() && dp->dat && (ev&DE_ZOOM)!=DE_ZOOM && fabs(img->pos->p.dst.s-img->pos->p.cur.s)<3.5)
+	if(mapon() && dp->dat){
 		img->pos->p.typ.s=E_MAPS;
+		img->pos->p.typ.x=E_MAPXY;
+		img->pos->p.typ.y=E_MAPXY;
+	}
 }
 
 char effmaxfitupdate(struct dplpos *dp){
@@ -428,7 +431,7 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		for(i=0,img=imgget(AIL,0);img;img=img->nxt,i++) effinitimg(dp,ev,i,0);
 	else{
 		if(effref&EFFREF_IMG)
-			effinitimg(dp,ev,imgi<0?AIMGI:imgi,0);
+			effinitimg(dp,ev,imgi<0?(mapon()?0:AIMGI):imgi,0);
 		if(effref&EFFREF_ROT) for(i=0,img=imgget(AIL,0);img;img=img->nxt,i++)
 			if((img=imgget(AIL,i)) && img->pos->p.cur.r != imgexifrotf(img->exif)){
 				if(img->pos->p.cur.act) effinitimg(dp,ev,i,0);
@@ -533,6 +536,7 @@ float effcalclin(float a,float b,float ef){
 }
 
 char effdoeval(struct eval *e,Uint32 time){
+	static const float tfacmod=.5f;
 	if(e->dst!=e->cur && time<e->tdst){
 		if(time>e->tcur){
 			float tfac=(float)(time-e->tcur)/(float)(e->tdst-e->tcur);
@@ -540,8 +544,11 @@ char effdoeval(struct eval *e,Uint32 time){
 			case E_LIN:
 				e->cur+=(e->dst-e->cur)*tfac;
 			break;
+			case E_MAPXY:
+				e->cur+=(e->dst-e->cur)*powf(tfac,tfacmod);
+			break;
 			case E_MAPS:
-				e->cur-=logf(1-(1-powf(2.f,e->cur-e->dst))*tfac)/logf(2.f);
+				e->cur-=logf(1-(1-powf(2.f,e->cur-e->dst))*powf(tfac,tfacmod))/logf(2.f);
 			break;
 			}
 			e->tcur=time;
