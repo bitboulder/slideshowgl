@@ -2,9 +2,6 @@
 - cleanup texloadbuf in ldresetdo
 - load: delete texs for img size reduce
 
-- map-zoom
-
-
 # Want to have
 - dpl.actimgi through eff + remove sdlforceredraw
 - dpl.pos.actil through eff + remove sdlforceredraw
