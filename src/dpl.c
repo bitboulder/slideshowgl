@@ -25,7 +25,7 @@ enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 enum dplevgrp { DEG_RIGHT, DEG_LEFT, DEG_ZOOMIN, DEG_ZOOMOUT, DEG_PLAY, DEG_NUM, DEG_NONE };
 
-enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_DIRED, ITM_MAPMK};
+enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_DIRED, ITM_MAPMK, ITM_MARKFN};
 
 const char *colmodestr[]={"G","B","C"};
 
@@ -97,6 +97,7 @@ struct dplinput *dplgetinput(){
 		case ITM_SEARCH: snprintf(in.pre,FILELEN,_("[Search]")); break;
 		case ITM_DIRED:
 		case ITM_MAPMK:  snprintf(in.pre,FILELEN,_("[Directory]")); break;
+		case ITM_MARKFN: snprintf(in.pre,FILELEN,_("[Mark-File]")); break;
 		}
 		return &in;
 	}
@@ -885,7 +886,7 @@ void dplmouseholdchk(){
 	dpl.mousehold.time=0;
 }
 
-void dplfilesearch(struct dplinput *in,int il){
+void dplimgsearch(struct dplinput *in,int il){
 	struct img *img=imgget(il,0);
 	int i=0;
 	size_t ilen=strlen(in->in);
@@ -913,10 +914,16 @@ void dplfilesearch(struct dplinput *in,int il){
 	else dpl.input.id=-1;
 }
 
-void dplmapsearch(struct dplinput *in){
-	const char *bdir=mapgetbasedirs();
+void dplfilesearch(struct dplinput *in){
+	const char *bdir;
 	int id;
 	size_t len=strlen(in->in);
+	char onlydir;
+	switch(dpl.input.mode){
+	case ITM_MAPMK:  bdir=mapgetbasedirs(); onlydir=1; break;
+	case ITM_MARKFN: bdir=markgetfndir();   onlydir=0; break;
+	default: return;
+	}
 	in->id=-1;
 	in->pre[0]='\0';
 	in->post[0]='\0';
@@ -925,13 +932,13 @@ void dplmapsearch(struct dplinput *in){
 		const char *bname=bdir+FILELEN;
 		size_t l=strlen(bname);
 		if(!l){
-			finddirmatch(in->in,in->post,in->res,bdir);
+			finddirmatch(in->in,in->post,in->res,bdir,onlydir);
 			if(in->post[0]) break;
 		}else if(len<=l && !strncmp(bname,in->in,len) && (l==len || strncmp(in->post,bname+len,l-len)<0)){
 			snprintf(in->post,MAX(FILELEN,l-len),bname+len);
 			snprintf(in->res,FILELEN,bdir);
 		}else if(len>l && !strncmp(bname,in->in,l) && (in->in[l]=='/' || in->in[l]=='\\')){
-			finddirmatch(in->in+l+1,in->post,in->res,bdir);
+			finddirmatch(in->in+l+1,in->post,in->res,bdir,onlydir);
 			if(in->post[0]) break;
 		}
 	}
@@ -963,9 +970,10 @@ void dplinputtxtadd(uint32_t c){
 	dpl.input.in[len]='\0';
 	switch(dpl.input.mode){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
-	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplfilesearch(&dpl.input,AIL); break;
-	case ITM_DIRED:  dplfilesearch(&dpl.input,0);   break;
-	case ITM_MAPMK:  dplmapsearch(&dpl.input); break;
+	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplimgsearch(&dpl.input,AIL); break;
+	case ITM_DIRED:  dplimgsearch(&dpl.input,0);   break;
+	case ITM_MAPMK:
+	case ITM_MARKFN: dplfilesearch(&dpl.input); break;
 	}
 	sdlforceredraw();
 }
@@ -977,6 +985,7 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	if(mode==ITM_MAPMK  && (!dpl.writemode || !mapon())) return 0;
 	if(mode==ITM_SEARCH) mapsavepos();
 	if(mode==ITM_SEARCH || mode==ITM_MAPMK) mapinfo(-1);
+	if(mode==ITM_MARKFN && ((dpl.pos.actil&ACTIL_ED) || !dpl.writemode)) return 0;
 	dpl.input.pre[0]='\0';
 	dpl.input.in[0]='\0';
 	dpl.input.post[0]='\0';
@@ -1000,6 +1009,7 @@ void dplinputtxtfinal(char ok){
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
 	break;
+	case ITM_MARKFN: if(ok && len && markswitchfn(dpl.input.res)) effrefresh(EFFREF_ALL); break;
 	}
 	dpl.input.mode=ITM_OFF;
 	sdlforceredraw();
@@ -1048,7 +1058,10 @@ void dplkey(unsigned short keyu){
 		}
 	break;
 	case 'M':
-		if(!dplprged("frmmov",1,-1,-2) && dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO;
+		if(!dplprged("frmmov",1,-1,-2)){
+			if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_TO;
+			else dplinputtxtinit(ITM_MARKFN);
+		}
 	break;
 	case 'j': if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_ALL; break;
 	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;

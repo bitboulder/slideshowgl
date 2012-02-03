@@ -108,7 +108,7 @@ char findfilesubdir(char *dst,const char *subdir,const char *ext){
 	return 0;
 }
 
-char finddirmatch(char *in,char *post,char *res,const char *basedir){
+char finddirmatch(char *in,char *post,char *res,const char *basedir,char onlydir){
 #if HAVE_OPENDIR
 	DIR *dd;
 	struct dirent *de;
@@ -118,15 +118,16 @@ char finddirmatch(char *in,char *post,char *res,const char *basedir){
 	while((de=readdir(dd))){
 		char buf[FILELEN];
 		size_t l=0;
+		enum filetype ft;
 		while(l<NAME_MAX && de->d_name[l]) l++;
 		snprintf(buf,MAX(FILELEN,blen+1+l),"%s/%s",basedir,de->d_name);
-		if(!(filetype(buf)&FT_DIR)) continue;
+		if(!((ft=filetype(buf))&FT_DIR) && onlydir) continue;
 		if(len<=l && !strncmp(de->d_name,in,len) && (l==len || strncmp(post,de->d_name+len,l-len)<0)){
 			snprintf(post,MAX(FILELEN,l-len),de->d_name+len);
 			snprintf(res,FILELEN,"%s/%s%s",basedir,in,post);
 		}
-		if(len>l && !strncmp(de->d_name,in,l) && (in[l]=='/' || in[l]=='\\')){
-			finddirmatch(in+l+1,post,res,buf);
+		if((ft&FT_DIR) && len>l && !strncmp(de->d_name,in,l) && (in[l]=='/' || in[l]=='\\')){
+			finddirmatch(in+l+1,post,res,buf,onlydir);
 			break;
 		}
 	}

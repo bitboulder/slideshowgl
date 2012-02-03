@@ -16,6 +16,7 @@
 #include "file.h"
 #include "eff.h"
 #include "help.h"
+#include "act.h"
 
 struct mk {
 	struct mk *nxt;
@@ -41,11 +42,15 @@ struct mark {
 	char *catna;
 	size_t ncat;
 	char *mkchange;
+	char *fndir;
+	char nosave;
 } mark = {
 	.init = 0,
 	.catfn = NULL,
 	.catna = NULL,
 	.ncat = 0,
+	.fndir = NULL,
+	.nosave = 0,
 };
 
 size_t markncat(){ return mark.ncat; }
@@ -166,22 +171,31 @@ struct mk *mkfind(const char *fn,enum mkcreate create){
 	return mk;
 }
 
-void marksload(){
+void marksloadcat(size_t c,char reset){
 	FILE *fd;
 	char line[FILELEN];
-	size_t c;
-	marksfree();
-	for(c=0;c<=mark.ncat;c++){
-		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.cfg.fn;
-		if(!(fd=fopen(fn,"r"))) continue;
-		while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
-			int len=(int)strlen(line);
-			while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
-			mkfind(line,MKC_YES)->mark[c]=1;
-		}
-		fclose(fd);
-		debug(DBG_STA,"marks loaded (%s)",fn);
+	char *fn=c?mark.catfn+(c-1)*FILELEN:mark.cfg.fn;
+	if(reset){
+		int i;
+		struct mk *mk;
+		for(i=0;i<MKCHAINS;i++) for(mk=mark.mks[i];mk;mk=mk->nxt) mk->mark[c]=0;
 	}
+	if(!(fd=fopen(fn,"r"))) return;
+	while(!feof(fd) && fgets(line,FILELEN,fd) && line[0]){
+		int len=(int)strlen(line);
+		while(len && (line[len-1]=='\n' || line[len-1]=='\r')) line[--len]='\0';
+		mkfind(line,MKC_YES)->mark[c]=1;
+	}
+	fclose(fd);
+	debug(DBG_STA,"marks loaded (%s)",fn);
+}
+
+void marksload(){
+	size_t c;
+	mark.nosave=1;
+	marksfree();
+	for(c=0;c<=mark.ncat;c++) marksloadcat(c,0);
+	mark.nosave=0;
 }
 
 void markinit(){
@@ -211,6 +225,7 @@ void markssave(){
 	size_t c;
 	struct mk *mk;
 	markinit();
+	if(mark.nosave){ actadd(ACT_SAVEMARKS,NULL,NULL); return; }
 	for(c=0;c<=mark.ncat;c++) if(mark.mkchange[c]){
 		char *fn=c?mark.catfn+(c-1)*FILELEN:mark.cfg.fn;
 		mark.mkchange[c]=0;
@@ -220,5 +235,24 @@ void markssave(){
 		fclose(fd);
 		debug(DBG_STA,"marks saved (%s)",fn);
 	}
+	return;
+}
+
+const char *markgetfndir(){
+	if(!mark.fndir){
+		mark.fndir=malloc(FILELEN*2+1);
+		snprintf(mark.fndir,FILELEN,"%s",cfggetstr("mark.fndir"));
+		mark.fndir[FILELEN]=mark.fndir[FILELEN*2]='\0';
+	}
+	return mark.fndir;
+}
+
+char markswitchfn(const char *fn){
+	if(!(filetype(fn)&(FT_FILE|FT_DIREX))) return 0;
+	mark.nosave=1;
+	snprintf(mark.cfg.fn,FILELEN,"%s",fn);
+	marksloadcat(0,1);
+	mark.nosave=0;
+	return 1;
 }
 

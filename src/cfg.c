@@ -106,6 +106,7 @@ struct cfg {
 	{ 0,   "eff.wnd_delay",       CT_INT, CM_SET,  "1000",   {NULL}, __("Rise and fall time for windows (ms)") },
 	{ 0,   "eff.txt_delay",       CT_INT, CM_SET,  "300",    {NULL}, __("Rise and fall time for text windows (ms)") },
 	{ 'm', "mark.fn",             CT_STR, CM_SET,  "",       {NULL}, __("Set mark file (Default: $TEMP/slideshowgl-mark)") },
+	{ 0,   "mark.fndir",          CT_STR, CM_SET,  "/",      {NULL}, __("Directory for mark files (for switching the file with 'M')") },
 	{ 'k', "mark.catalog",        CT_STR, CM_DO,   "",       {NULL}, __("Add catalog (directory also possible)") },
 	{ 0,   "act.savemarks_delay", CT_INT, CM_SET,  "5000",   {NULL}, __("Delay after that the mark file is written") },
 	{ 0,   "act.ilcleanup_delay", CT_INT, CM_SET,  "3000",   {NULL}, __("Delay after that the img lists are cleaned") },
