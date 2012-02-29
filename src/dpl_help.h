@@ -150,7 +150,7 @@ __(" m")"\0"                   __("Show map")"\0"
 #endif
 #if defined IF_WRM || defined IF_DIRED
 __(" s")"\0"                   __("Enter and toggle image catalog")"\0"
-__(" S")"\0"                   __("Copy marks from last marked image (only if an image is active)")"\0"
+__(" S")"\0"                   __("Copy catalogs from last marked image (only if an image is active)")"\0"
 #endif
 __(" G")"\0"                   __("Edit current image with gimp")"\0"
 #ifndef IF_PRGED

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-03 12:49+0100\n"
+"POT-Creation-Date: 2012-02-29 16:39+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -1521,9 +1521,9 @@ msgid "Enter and toggle image catalog"
 msgstr "Bildkatalog eingeben und ändern"
 
 #: src/dpl_help.h:153
-msgid "Copy marks from last marked image (only if an image is active)"
+msgid "Copy catalogs from last marked image (only if an image is active)"
 msgstr ""
-"Markierung der letzten geänderten Bildes kopieren (nur wenn kein Bild aktiv "
+"Kataloge des letzten geänderten Bildes kopieren (nur wenn kein Bild aktiv "
 "ist)"
 
 #: src/dpl_help.h:155
