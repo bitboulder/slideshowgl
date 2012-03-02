@@ -1004,7 +1004,7 @@ void dplinputtxtfinal(char ok){
 	case ITM_CATSEL: if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT); break;
 	case ITM_TXTIMG: if(ok && len) dplprged("txtadd",-1,-1,-1); break;
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
-	case ITM_SEARCH: if(!ok && !maprestorepos()) dplsel(dpl.input.id);
+	case ITM_SEARCH: if(!ok && !maprestorepos()) dplsel(dpl.input.id); break;
 	case ITM_DIRED:  if(ok) dpldired(dpl.input.in,dpl.input.id); break;
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
