@@ -26,8 +26,10 @@ struct actcfg {
 struct ac {
 	struct actcfg cfg;
 	SDL_mutex *mutex;
+	char init;
 } ac = {
 	.mutex = NULL,
+	.init = 0,
 };
 
 
@@ -112,6 +114,7 @@ int qact_ri=0;
 /* thread: dpl, load, main */
 void actadd(enum act act,struct img *img,struct imglist *il){
 	int nwi=(qact_wi+1)%QACT_NUM;
+	if(!ac.init) return;
 	while(nwi==qact_ri) SDL_Delay(100);
 	qacts[qact_wi].act=act;
 	qacts[qact_wi].img=img;
@@ -135,6 +138,7 @@ void actinit(){
 	ac.cfg.delay[ACT_ILCLEANUP].delay = cfggetuint("act.ilcleanup_delay");
 	ac.cfg.delay[ACT_MAPCLT].delay    = cfggetuint("act.mapclt_delay");
 	ac.cfg.delay[ACT_EXIFCACHE].delay = cfggetuint("act.exifcache_delay");
+	ac.init=1;
 }
 
 int actthread(void *UNUSED(arg)){
