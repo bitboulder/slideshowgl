@@ -25,10 +25,10 @@ struct actcfg {
 
 struct ac {
 	struct actcfg cfg;
-	SDL_mutex *mutex;
+	SDL_mutex *mx_do;
+	SDL_mutex *mx_dl;
 	char init;
 } ac = {
-	.mutex = NULL,
 	.init = 0,
 };
 
@@ -74,6 +74,8 @@ void actdelete(struct img *img,struct imglist *il,const char *dstdir){
 }
 
 void actdo(enum act act,struct img *img,struct imglist *il){
+	debug(DBG_STA,"action %i run immediatly",act);
+	SDL_mutexP(ac.mx_do);
 	switch(act){
 	case ACT_SAVEMARKS: markssave(); break;
 	case ACT_ROTATE:    actrotate(img); break;
@@ -84,22 +86,36 @@ void actdo(enum act act,struct img *img,struct imglist *il){
 	case ACT_EXIFCACHE: exichsave(); break;
 	default: break;
 	}
+	SDL_mutexV(ac.mx_do);
+}
+
+void actdelay(enum act act){
+	struct actdelay *dl=ac.cfg.delay+act;
+	SDL_mutexP(ac.mx_dl);
+	if(!dl->countdown){
+		debug(DBG_STA,"action %i run with delay",act);
+		dl->countdown=SDL_GetTicks()+dl->delay;
+	}
+	SDL_mutexV(ac.mx_dl);
 }
 
 void actrun(enum act act,struct img *img,struct imglist *il){
-	struct actdelay *dl=ac.cfg.delay+act;
-	debug(DBG_STA,"action %i run %s",act,dl->delay?"with delay":"immediatly");
-	if(!dl->delay) actdo(act,img,il);
-	else if(!dl->countdown) dl->countdown=SDL_GetTicks()+dl->delay;
+	Uint32 delay=ac.cfg.delay[act].delay;
+	if(delay) actdelay(act);
+	else actdo(act,img,il);
 }
 
 void actcheckdelay(char force){
 	int i;
 	struct actdelay *dl=ac.cfg.delay;
+	SDL_mutexP(ac.mx_dl);
 	for(i=0;i<ACT_NUM;i++,dl++) if(dl->countdown && (force || SDL_GetTicks()>=dl->countdown)){
 		dl->countdown=0;
+		SDL_mutexV(ac.mx_dl);
 		actdo(i,NULL,NULL);
+		SDL_mutexP(ac.mx_dl);
 	}
+	SDL_mutexV(ac.mx_dl);
 }
 
 #define QACT_NUM	16
@@ -115,11 +131,13 @@ int qact_ri=0;
 void actadd(enum act act,struct img *img,struct imglist *il){
 	int nwi=(qact_wi+1)%QACT_NUM;
 	if(!ac.init) return;
-	while(nwi==qact_ri) SDL_Delay(100);
-	qacts[qact_wi].act=act;
-	qacts[qact_wi].img=img;
-	qacts[qact_wi].il=il;
-	qact_wi=nwi;
+	if(ac.cfg.delay[act].delay) actdelay(act); else{
+		while(nwi==qact_ri) SDL_Delay(100);
+		qacts[qact_wi].act=act;
+		qacts[qact_wi].img=img;
+		qacts[qact_wi].il=il;
+		qact_wi=nwi;
+	}
 }
 
 char actpop(){
@@ -130,8 +148,8 @@ char actpop(){
 }
 
 void actinit(){
-	ac.mutex=SDL_CreateMutex();
-	SDL_mutexP(ac.mutex);
+	ac.mx_do=SDL_CreateMutex();
+	ac.mx_dl=SDL_CreateMutex();
 	ac.cfg.runcmd = cfggetbool("act.do");
 	memset(ac.cfg.delay,0,sizeof(struct actdelay)*ACT_NUM);
 	ac.cfg.delay[ACT_SAVEMARKS].delay = cfggetuint("act.savemarks_delay");
@@ -146,11 +164,7 @@ int actthread(void *UNUSED(arg)){
 	mapinit();
 	while(!sdl_quit){
 		actcheckdelay(0);
-		if(!actpop()){
-			SDL_mutexV(ac.mutex);
-			SDL_Delay(500);
-			SDL_mutexP(ac.mutex);
-		}
+		if(!actpop()) SDL_Delay(500);
 	}
 	SDL_Delay(20);
 	actcheckdelay(1);
@@ -160,8 +174,6 @@ int actthread(void *UNUSED(arg)){
 
 /* thread: any */
 void actforce(){
-	if(!ac.mutex) return;
-	SDL_mutexP(ac.mutex);
+	if(!ac.init) return;
 	actcheckdelay(1);
-	SDL_mutexV(ac.mutex);
 }
