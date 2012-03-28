@@ -116,7 +116,8 @@ unsigned int dplgetfid(){ return dpl.fid++; }
 void dplsetresortil(struct imglist *il){ dpl.resortil=il; }
 
 char dplwritemode(){
-	return dpl.writemode || (dpl.pos.actil&ACTIL_ED);
+	if(dpl.writemode) return dpl.writemode;
+	return (dpl.pos.actil&ACTIL_ED)!=0;
 }
 
 Uint32 dplgetticks(){
@@ -1047,7 +1048,13 @@ void dplkey(unsigned short keyu){
 	case 'f': sdlfullscreen(-1); break;
 	case 'w':
 		if(dpl.pos.actil&ACTIL_ED) dpl.pos.actil=(dpl.pos.actil&~ACTIL)|(!AIL); else{
-			dpl.writemode=!dpl.writemode;
+			dpl.writemode = dpl.writemode==1 ? 0 : 1;
+			effrefresh(EFFREF_ALL);
+		}
+	break;
+	case 'W':
+		if(!(dpl.pos.actil&ACTIL_ED)){
+			dpl.writemode = dpl.writemode==2 ? 0 : 2;
 			effrefresh(EFFREF_ALL);
 		}
 	break;

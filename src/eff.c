@@ -213,9 +213,9 @@ void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
 		}
 	}else{
 		ip->s=1.f;
-		ip->x = dplwritemode() ? (float)diff : 0.f;
+		ip->x = dplwritemode()==1 ? (float)diff : 0.f;
 		ip->y=0.f;
-		ip->a = dplwritemode() ? 1.f : 0.f;
+		ip->a = dplwritemode()==1 ? 1.f : 0.f;
 	}
 }
 
@@ -363,7 +363,7 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	img->pos->opt.tex=imgseltex(dp,i);
 	if(dp->zoom==0 && effprg(dp,ev,img,iev)) return;
 	effinitpos(dp,img,&ipn->cur,i);
-	if(!ipn->cur.act && dp->zoom==0 && (ev&DE_VER) && dplwritemode()) efffaston(dp,ipo,i);
+	if(!ipn->cur.act && dp->zoom==0 && (ev&DE_VER) && dplwritemode()==1) efffaston(dp,ipo,i);
 	if(!ipn->cur.act && img->pos->eff==2) return;
 	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
 	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
