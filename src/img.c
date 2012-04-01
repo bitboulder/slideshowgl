@@ -14,6 +14,7 @@
 #include "prg.h"
 #include "help.h"
 #include "exich.h"
+#include "hist.h"
 
 struct img *defimg;
 struct img *dirimg;
@@ -141,6 +142,7 @@ struct img *imginit(){
 	img->exif=imgexifinit();
 	img->file=imgfileinit();
 	img->pano=imgpanoinit();
+	img->hist=imghistinit();
 	return img;
 }
 

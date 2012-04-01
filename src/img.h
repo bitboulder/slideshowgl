@@ -35,6 +35,7 @@ struct img {
 	struct imgexif *exif;
 	struct imgfile *file;
 	struct imgpano *pano;
+	struct imghist *hist;
 };
 extern struct img *defimg;
 extern struct img *dirimg;

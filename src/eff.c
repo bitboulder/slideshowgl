@@ -651,6 +651,7 @@ void effcfginit(){
 	eff.cfg.sw_delay[ESW_INFO]=cfggetuint("eff.txt_delay");
 	eff.cfg.sw_delay[ESW_INFOSEL]=cfggetuint("eff.txt_delay");
 	eff.cfg.sw_delay[ESW_HELP]=cfggetuint("eff.txt_delay");
+	eff.cfg.sw_delay[ESW_HIST]=cfggetuint("eff.txt_delay");
 	eff.cfg.prged_w=cfggetfloat("prged.w");
 }
 

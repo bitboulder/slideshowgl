@@ -21,6 +21,7 @@
 #include "help.h"
 #include "mark.h"
 #include "map.h"
+#include "hist.h"
 
 enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
 
@@ -984,6 +985,44 @@ void glrenderprgcol(){
 	glPopMatrix();
 }
 
+void glrenderhist(){
+	float histf=effswf(ESW_HIST);
+	float *hist=dplgethist();
+	float w;
+	int h,i;
+	if(!histf || !hist) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,.5f,0.f);
+	glScalef(.1f,.8f,1.f);
+	glScalef(histf,1.f,1.f);
+	glTranslatef(-.5f,-.5f,0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(1.f,1.f,GP_CENTER);
+//	glScalef(  .8f/.1f/w  ,1.f/45.f,1.f);
+	glScalef(1.f/1.5f,1.f/45.f,1.f);
+	glTranslatef(.5f,21.5f,0.f);
+	for(h=0;h<HT_NUM;h++){
+		glColor4fv(gl.cfg.col_txtbg);
+		glrect(1.f,10.f,GP_TOP|GP_RIGHT);
+		glPushMatrix();
+		glScalef(1.f,10.f/(float)HDIM,1.f);
+		switch(h){
+		case 0: glColor4f(1.f,1.f,1.f,1.f); break;
+		case 1: glColor4f(.9f,0.f,0.f,1.f); break;
+		case 2: glColor4f(0.f,.7f,0.f,1.f); break;
+		case 3: glColor4f(0.f,0.f,1.f,1.f); break;
+		}
+		for(i=0;i<HDIM;i++){
+			glrect(hist[(h+1)*HDIM-i-1],1.f,GP_TOP|GP_RIGHT);
+			glTranslatef(0.f,-1.f,0.f);
+		}
+		glPopMatrix();
+		glTranslatef(0.f,-11.f,0.f);
+	}
+	glPopMatrix();
+}
+
 void glpaint(){
 	GLenum glerr;
 
@@ -998,6 +1037,7 @@ void glpaint(){
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
+	glrenderhist();
 	glrenderinfosel();
 	glrenderinput();
 	glrenderhelp();

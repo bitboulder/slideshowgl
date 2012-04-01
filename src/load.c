@@ -22,6 +22,7 @@
 #include "prg.h"
 #include "map.h"
 #include "exich.h"
+#include "hist.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };
@@ -446,6 +447,10 @@ char ldfload(struct imgld *il,enum imgtex it){
 	effrefresh(effref);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
+	imghistgen(il->img->hist,il->w*il->h,
+		sdlimg->fmt==GL_BGRA || sdlimg->fmt==GL_BGR,
+		sdlimg->sf->format->BytesPerPixel,
+		sdlimg->sf->pixels);
 
 	for(i=0;i<=it;i++){
 		int scale=1;

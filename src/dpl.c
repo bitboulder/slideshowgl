@@ -17,6 +17,7 @@
 #include "mark.h"
 #include "help.h"
 #include "map.h"
+#include "hist.h"
 
 #define INPUTTXTBACK	0x80
 #define INPUTTXTTAB 	0x81
@@ -130,6 +131,12 @@ char *dplgetinfo(unsigned int *sel){
 	if(!(img=imgget(AIL,AIMGI))) return NULL;
 	if(sel) *sel=dpl.infosel;
 	return imgexifinfo(img->exif);
+}
+
+float *dplgethist(){
+	struct img *img;
+	if(!(img=imgget(AIL,AIMGI))) return NULL;
+	return imghistget(img->hist);
 }
 
 /***************************** imgfit *****************************************/
@@ -1093,6 +1100,7 @@ void dplkey(unsigned short keyu){
 		else if(dplgetinfo(NULL)) effsw(ESW_INFOSEL,-1);
 	break;
 	case 'I': if(dplgetinfo(NULL)) effsw(ESW_INFO,-1); break;
+	case 'H': if(dplgethist()) effsw(ESW_HIST,-1); break;
 	case 'x': dplprged("frmdel",-1,-1,-1); break;
 	case 't': if(dpl.pos.actil&ACTIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'l': if(dpl.pos.actil&ACTIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;

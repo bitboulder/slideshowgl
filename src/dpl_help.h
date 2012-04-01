@@ -160,6 +160,7 @@ __(" C")"\0"                   __("Open current image/directory for file-convert
 #ifndef IF_PRGED
 __(" Image information")"\0"   "\0"
 __(" i/I")"\0"                 __("Show selected/full image info")"\0"
+__(" H")"\0"                   __("Show histograms")"\0"
 __(" k")"\0"                   __("Show image catalog")"\0"
 #endif
 #endif
