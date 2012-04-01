@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-29 16:39+0100\n"
+"POT-Creation-Date: 2012-04-01 20:40+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -17,29 +17,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/act.c:35
+#: src/act.c:37
 #, c-format
 msgid "running cmd: %s"
 msgstr ""
 
-#: src/act.c:52
+#: src/act.c:54
 #, c-format
 msgid "img rotated (%s)"
 msgstr ""
 
-#: src/act.c:53
+#: src/act.c:55
 #, c-format
 msgid "img rotating failed (%s)"
 msgstr ""
 
-#: src/act.c:71
+#: src/act.c:73
 #, c-format
 msgid "img deleted to %s (%s)"
 msgstr ""
 
-#: src/act.c:89
+#: src/act.c:77
 #, c-format
-msgid "action %i run %s"
+msgid "action %i run immediatly"
+msgstr ""
+
+#: src/act.c:96
+#, c-format
+msgid "action %i run with delay"
 msgstr ""
 
 #: src/cfg.c:37
@@ -83,7 +88,7 @@ msgstr "Warte auf core dumps und kopiere sie nach ARG/core_dump"
 msgid "Add space seperated files to initial file list"
 msgstr "Durch Leerzeichen getrennte Dateien zu Anfangsliste hinzufügen"
 
-#: src/cfg.c:47 src/dpl_help.h:170
+#: src/cfg.c:47 src/dpl_help.h:171
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -382,169 +387,173 @@ msgstr "Basisverzeichnis für gps.txt Dateien"
 msgid "Cache directory for map images (default: TMP/slideshowgl-cache)"
 msgstr "Cacheverzeichnis für Kartendateien (Standart: TMP/slideshowgl-cache)"
 
-#: src/cfg.c:129
+#: src/cfg.c:120
+msgid "Maximal fraction displayed in histogram"
+msgstr "Größter Anteil im Histogramm"
+
+#: src/cfg.c:130
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:137
+#: src/cfg.c:138
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:151
+#: src/cfg.c:152
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:152
+#: src/cfg.c:153
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:160
+#: src/cfg.c:161
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:169
+#: src/cfg.c:170
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:170
+#: src/cfg.c:171
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:177
+#: src/cfg.c:178
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:193
+#: src/cfg.c:194
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:197
+#: src/cfg.c:198
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:209
+#: src/cfg.c:210
 #, c-format
 msgid "cfgset do-option with no implemented action (%s)"
 msgstr ""
 
-#: src/cfg.c:216
+#: src/cfg.c:217
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:223
+#: src/cfg.c:224
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:224
+#: src/cfg.c:225
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:241
+#: src/cfg.c:242
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:252
+#: src/cfg.c:253
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:271
+#: src/cfg.c:272
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:275
+#: src/cfg.c:276
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:94
+#: src/dpl.c:95
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:95
+#: src/dpl.c:96
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:96
+#: src/dpl.c:97
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:97
+#: src/dpl.c:98
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:99
+#: src/dpl.c:100
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:100
+#: src/dpl.c:101
 #, c-format
 msgid "[Mark-File]"
 msgstr "[Markierungsdatei]"
 
-#: src/dpl.c:165
+#: src/dpl.c:173
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:219
+#: src/dpl.c:227
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:434
+#: src/dpl.c:442
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:563
+#: src/dpl.c:571
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:564
+#: src/dpl.c:572
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:580
+#: src/dpl.c:588
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:581
+#: src/dpl.c:589
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:582
+#: src/dpl.c:590
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:586 src/map.c:1039
+#: src/dpl.c:594 src/map.c:1039
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:587
+#: src/dpl.c:595
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1022
+#: src/dpl.c:1030
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -564,7 +573,7 @@ msgstr ""
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:28 src/exif.c:52 src/img.c:489
+#: src/exif.c:28 src/exif.c:52 src/img.c:491
 msgid "Date"
 msgstr "Datum"
 
@@ -681,44 +690,44 @@ msgstr ""
 msgid "opendir failed (%s)"
 msgstr ""
 
-#: src/gl.c:109
+#: src/gl.c:110
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:110
+#: src/gl.c:111
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:120 src/gl.c:122
+#: src/gl.c:121 src/gl.c:123
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:128
+#: src/gl.c:129
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:135
+#: src/gl.c:136
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:153
+#: src/gl.c:154
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:711
+#: src/gl.c:712
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:772
+#: src/gl.c:773
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:1005
+#: src/gl.c:1045
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -733,65 +742,65 @@ msgstr ""
 msgid "mkdirm: mkdir \"%s\" failed"
 msgstr ""
 
-#: src/img.c:150
+#: src/img.c:152
 #, c-format
 msgid "critical: double free img 0x%08lx\n"
 msgstr ""
 
-#: src/img.c:194
+#: src/img.c:196
 #, c-format
 msgid "ilsetparent: maxhistory (%i) reached (is there a loop in history?)"
 msgstr ""
 
-#: src/img.c:214
+#: src/img.c:216
 #, c-format
 msgid "imglist created for dir: %s"
 msgstr ""
 
-#: src/img.c:228
+#: src/img.c:230
 #, c-format
 msgid "imglist destroyed for dir: %s"
 msgstr ""
 
-#: src/img.c:234
+#: src/img.c:236
 #, c-format
 msgid "imglist free for dir: %s"
 msgstr ""
 
-#: src/img.c:276
+#: src/img.c:278
 #, c-format
 msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
 msgstr ""
 
-#: src/img.c:279
+#: src/img.c:281
 #, c-format
 msgid "ilcleanup state %2i: %7i %s"
 msgstr ""
 
-#: src/img.c:304
+#: src/img.c:306
 #, c-format
 msgid "imglist %i switch to dir: %s"
 msgstr ""
 
-#: src/img.c:356
+#: src/img.c:358
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/img.c:370
+#: src/img.c:372
 #, c-format
 msgid "reload imglist: %s"
 msgstr ""
 
-#: src/img.c:488
+#: src/img.c:490
 msgid "Rnd"
 msgstr "Zufall"
 
-#: src/img.c:490
+#: src/img.c:492
 msgid "File"
 msgstr "Dateiname"
 
-#: src/img.c:491
+#: src/img.c:493
 msgid "None"
 msgstr "Nichts"
 
@@ -838,55 +847,55 @@ msgstr ""
 msgid "jpeg compression failure: file open failed"
 msgstr ""
 
-#: src/load.c:193
+#: src/load.c:194
 #, c-format
 msgid "sdlimg_unref: unref of %s image"
 msgstr ""
 
-#: src/load.c:203
+#: src/load.c:204
 msgid "sdlimg_ref: ref of NULL image"
 msgstr ""
 
-#: src/load.c:333
+#: src/load.c:334
 msgid "ldtexload: load of free'd image"
 msgstr ""
 
-#: src/load.c:375
+#: src/load.c:376
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:432
+#: src/load.c:433
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:436
+#: src/load.c:437
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:437
+#: src/load.c:438
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:479
+#: src/load.c:484
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:510
+#: src/load.c:515
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:536
+#: src/load.c:541
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:603
+#: src/load.c:608
 msgid "ldreset done"
 msgstr ""
 
@@ -1265,7 +1274,7 @@ msgstr " [0-9]+m"
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl_help.h:66 src/dpl_help.h:172
+#: src/dpl_help.h:66 src/dpl_help.h:173
 msgid " [0-9]+d"
 msgstr " [0-9]+d"
 
@@ -1551,45 +1560,53 @@ msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
 #: src/dpl_help.h:163
-msgid " k"
+msgid " H"
 msgstr ""
 
 #: src/dpl_help.h:163
+msgid "Show histograms"
+msgstr "Histogramme anzeigen"
+
+#: src/dpl_help.h:164
+msgid " k"
+msgstr ""
+
+#: src/dpl_help.h:164
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl_help.h:167
+#: src/dpl_help.h:168
 msgid " Program interface"
 msgstr " Programmbedienung"
 
-#: src/dpl_help.h:168
+#: src/dpl_help.h:169
 msgid " h"
 msgstr ""
 
-#: src/dpl_help.h:168
+#: src/dpl_help.h:169
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl_help.h:169
+#: src/dpl_help.h:170
 msgid " q/Esc"
 msgstr ""
 
-#: src/dpl_help.h:169
+#: src/dpl_help.h:170
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl_help.h:170
+#: src/dpl_help.h:171
 msgid " f"
 msgstr ""
 
-#: src/dpl_help.h:172
+#: src/dpl_help.h:173
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl_help.h:175
+#: src/dpl_help.h:176
 msgid " p"
 msgstr ""
 
-#: src/dpl_help.h:175
+#: src/dpl_help.h:176
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
