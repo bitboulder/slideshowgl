@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-01 21:04+0200\n"
+"POT-Creation-Date: 2012-04-02 13:24+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -573,100 +573,112 @@ msgstr ""
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:28 src/exif.c:56 src/img.c:491
+#: src/exif.c:28 src/exif.c:65 src/img.c:491
 msgid "Date"
 msgstr "Datum"
 
-#: src/exif.c:29 src/exif.c:57
+#: src/exif.c:30 src/exif.c:67
 msgid "Model"
 msgstr "Kamera"
 
-#: src/exif.c:30 src/exif.c:58
-msgid "Lens"
-msgstr "Objektiv"
-
-#: src/exif.c:31 src/exif.c:59
+#: src/exif.c:31 src/exif.c:68
 msgid "Resolution"
 msgstr "Auflösung"
 
-#: src/exif.c:32 src/exif.c:60
+#: src/exif.c:33 src/exif.c:70
+msgid "Lens"
+msgstr "Objektiv"
+
+#: src/exif.c:34 src/exif.c:71
 msgid "Focal length"
 msgstr "Brennweite"
 
-#: src/exif.c:33 src/exif.c:61
+#: src/exif.c:36 src/exif.c:73
 msgid "ISO speed rating"
 msgstr "Empfindlichkeit (ISO)"
 
-#: src/exif.c:34 src/exif.c:62
+#: src/exif.c:37 src/exif.c:74
 msgid "Exposure time"
 msgstr "Belichtungszeit"
 
-#: src/exif.c:35 src/exif.c:63
+#: src/exif.c:38 src/exif.c:75
 msgid "Fnumber"
 msgstr "Blende"
 
-#: src/exif.c:36 src/exif.c:64
+#: src/exif.c:39 src/exif.c:76
 msgid "Exposure bias value"
 msgstr "Belichtunskorrektur"
 
-#: src/exif.c:37
+#: src/exif.c:40
 msgid "Metering mode"
 msgstr "Messmethode"
 
-#: src/exif.c:38 src/exif.c:65
+#: src/exif.c:41
+msgid "Measured EV"
+msgstr "Gemessener EV"
+
+#: src/exif.c:43 src/exif.c:78
 msgid "Flash"
 msgstr "Blitz"
 
-#: src/exif.c:39
+#: src/exif.c:44
 msgid "Flash bias value"
 msgstr "Blitzbelichtunskorrektur"
 
-#: src/exif.c:40 src/exif.c:66
+#: src/exif.c:46 src/exif.c:80
 msgid "Exposure program"
 msgstr "Belichtungsprogramm"
 
-#: src/exif.c:41 src/exif.c:67
+#: src/exif.c:47 src/exif.c:81
 msgid "Exposure mode"
 msgstr "Belichtungsmodus"
 
-#: src/exif.c:42 src/exif.c:68
+#: src/exif.c:48 src/exif.c:82
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:43
+#: src/exif.c:49
+msgid "Picture style"
+msgstr "Bildstil"
+
+#: src/exif.c:50
+msgid "Tone priority"
+msgstr "Tonwertpriorität"
+
+#: src/exif.c:52
 msgid "Focus mode"
 msgstr "Fokusmodus"
 
-#: src/exif.c:44
+#: src/exif.c:53
 msgid "Drive mode"
 msgstr "Betriebsart"
 
-#: src/exif.c:131
+#: src/exif.c:145
 #, c-format
 msgid "wrong orientation format (%i)"
 msgstr ""
 
-#: src/exif.c:133
+#: src/exif.c:147
 #, c-format
 msgid "orientation tag with too less components (%lu)"
 msgstr ""
 
-#: src/exif.c:172
+#: src/exif.c:186
 #, c-format
 msgid "date string parse error (in \"%s\" at \"%s\")"
 msgstr ""
 
-#: src/exif.c:183
+#: src/exif.c:197
 #, c-format
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:228 src/sdl.c:291
+#: src/exif.c:242 src/sdl.c:291
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/exif.c:250
+#: src/exif.c:264
 #, c-format
 msgid "exif loading img %s"
 msgstr ""

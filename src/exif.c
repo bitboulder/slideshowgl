@@ -25,23 +25,32 @@ struct exifinfo {
 	const char *name;
 	const char *tag[8];
 } exifinfo[] = {
-	{__("Date"), {"Exif.Photo.DateTimeOriginal","Exif.Image.DateTime","Exif.Photo.DateTimeDigitized",NULL}},
-	{__("Model"), {"Exif.Image.Model",NULL}},
-	{__("Lens"), {"Exif.CanonCs.LensType",/*"Exif.Sony1.LensID",*/NULL}},
-	{__("Resolution"), {"join:x","Exif.Photo.PixelXDimension","Exif.Photo.PixelYDimension",NULL}},
-	{__("Focal length"), {"Exif.Photo.FocalLength",NULL}},
-	{__("ISO speed rating"), {"Exif.Photo.ISOSpeedRatings",NULL}},
-	{__("Exposure time"), {"Exif.Photo.ExposureTime",NULL}},
-	{__("Fnumber"), {"Exif.Photo.FNumber",NULL}},
+	{__("Date"),                {"Exif.Photo.DateTimeOriginal","Exif.Image.DateTime","Exif.Photo.DateTimeDigitized",NULL}},
+
+	{__("Model"),               {"Exif.Image.Model",NULL}},
+	{__("Resolution"),          {"join:x","Exif.Photo.PixelXDimension","Exif.Photo.PixelYDimension",NULL}},
+
+	{__("Lens"),                {"Easy.LensName",NULL}},
+	{__("Focal length"),        {"Easy.FocalLength",NULL}},
+
+	{__("ISO speed rating"),    {"Easy.IsoSpeed",NULL}},
+	{__("Exposure time"),       {"Easy.ExposureTime",NULL}},
+	{__("Fnumber"),             {"Easy.FNumber",NULL}},
 	{__("Exposure bias value"), {"Exif.Photo.ExposureBiasValue",NULL}},
-	{__("Metering mode"), {"Exif.Photo.MeteringMode",NULL}},
-	{__("Flash"), {"Exif.Photo.Flash",NULL}},
-	{__("Flash bias value"), {"Exif.CanonSi.FlashBias",NULL}},
-	{__("Exposure program"), {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL}},
-	{__("Exposure mode"), {"Exif.Photo.ExposureMode",NULL}},
-	{__("White blanace"), {"Exif.CanonSi.WhiteBalance","Exif.Photo.WhiteBalance",NULL}},
-	{__("Focus mode"), {"Exif.CanonCs.FocusMode",NULL}},
-	{__("Drive mode"), {"Exif.CanonCs.DriveMode",NULL}},
+	{__("Metering mode"),       {"Easy.MeteringMode",NULL}},
+	{__("Measured EV"),         {"Exif.CanonSi.MeasuredEV2",NULL}},
+
+	{__("Flash"),               {"Exif.Photo.Flash",NULL}},
+	{__("Flash bias value"),    {"Exif.CanonSi.FlashBias",NULL}},
+
+	{__("Exposure program"),    {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL}},
+	{__("Exposure mode"),       {"Exif.Photo.ExposureMode",NULL}},
+	{__("White blanace"),       {"Exif.CanonSi.WhiteBalance","Exif.Photo.WhiteBalance",NULL}},
+	{__("Picture style"),       {"Exif.CanonPr.PictureStyle",NULL}},
+	{__("Tone priority"),       {"get:25","onoff:","Exif.Canon.CustomFunctions",NULL}},
+
+	{__("Focus mode"),          {"Exif.CanonCs.FocusMode",NULL}},
+	{__("Drive mode"),          {"Exif.CanonCs.DriveMode",NULL}},
 	{NULL, {NULL}},
 };
 
@@ -54,15 +63,20 @@ struct exifinfo {
 	ExifTag tag[4];
 } exifinfo[]={
 	{__("Date"), {EXIF_TAG_DATE_TIME_ORIGINAL,0}},
+
 	{__("Model"), {EXIF_TAG_MODEL,0}},
-	{__("Lens"), {0}},
 	{__("Resolution"), {EXIF_TAG_PIXEL_X_DIMENSION,EXIF_TAG_PIXEL_Y_DIMENSION,0}},
+
+	{__("Lens"), {0}},
 	{__("Focal length"), {EXIF_TAG_FOCAL_LENGTH,0}},
+
 	{__("ISO speed rating"), {EXIF_TAG_ISO_SPEED_RATINGS,0}},
 	{__("Exposure time"), {EXIF_TAG_EXPOSURE_TIME,0}},
 	{__("Fnumber"), {EXIF_TAG_FNUMBER,0}},
 	{__("Exposure bias value"), {EXIF_TAG_EXPOSURE_BIAS_VALUE,0}},
+
 	{__("Flash"), {EXIF_TAG_FLASH,0}},
+
 	{__("Exposure program"), {EXIF_TAG_EXPOSURE_PROGRAM,0}},
 	{__("Exposure mode"), {EXIF_TAG_EXPOSURE_MODE,0}},
 	{__("White blanace"), {EXIF_TAG_WHITE_BALANCE,0}},
