@@ -646,7 +646,7 @@ void gltextout(const char *text,float x,float y){
 #endif
 }
 
-void glrendertext(const char *title,const char *text,float f,unsigned int sel){
+void glrendertext(const char *title,const char *text,float f){
 #if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
@@ -659,8 +659,6 @@ void glrendertext(const char *title,const char *text,float f,unsigned int sel){
 	float lineh;
 	float winw;
 	float tw,tx;
-	unsigned int s;
-	GLuint name=IMGI_INFO+1;
 	if(!glfontsel(FT_NOR)) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
 		float len=glfontwidth(_(t));
@@ -685,20 +683,17 @@ void glrendertext(const char *title,const char *text,float f,unsigned int sel){
 	glcolora(gl.cfg.col_txtti,f);
 	gltextout(title,tx,y);
 	y-=lineh*2;
-	for(t=text,i=0,s=sel;t[0];i+=2,y-=lineh,s>>=1) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
-		if(!j && sel!=0xffffffff && (s&1)) glcolora(gl.cfg.col_txtmk,f);
-		else if(!j && !t[strlen(t)+1]) glcolora(gl.cfg.col_txtti,f);
+	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
+		if(!j && !t[strlen(t)+1]) glcolora(gl.cfg.col_txtti,f);
 		else glcolora(gl.cfg.col_txtfg,f);
 		if(!gl.sel.act) gltextout(_(t),x[j],y);
 		else if(!j){
-			glLoadName(name++);
 			glPushMatrix();
 			glTranslatef(x[j],y-lineh*0.2f,0.f);
 			glrect(.8f*w,lineh*0.9f,GP_BOTTOM|GP_LEFT);
 			glPopMatrix();
 		}
 	}
-	glLoadName(0);
 	glPopMatrix();
 #endif
 }
@@ -706,63 +701,36 @@ void glrendertext(const char *title,const char *text,float f,unsigned int sel){
 void glrenderinfo(){
 	char *info;
 	float f;
-	unsigned int sel;
 	if(!(f=effswf(ESW_INFO))) return;
-	if(!(info=dplgetinfo(&sel))) return;
-	glrendertext(_("Image info"),info,f,sel);
+	if(!(info=dplgetinfo())) return;
+	glrendertext(_("Image info"),info+ISLEN,f);
 }
 
 void glrenderinfosel(){
-	char *info,*i,*pos,i0[256]={0};
-	unsigned int sel,s;
-	float f,ffull,w=0.f,w2=0.f,h,b,n;
+	char *info;
+	float f,ffull,w,h,b,n=6.f;
+	int i;
 	if(!(f=effswf(ESW_INFOSEL))) return;
 	if((ffull=effswf(ESW_INFO))){
 		if(ffull>=1.f) return;
 		else if((f*=1.f-ffull)<=0.f) return;
 	}
-	if(!(info=dplgetinfo(&sel))) return;
-	info+=strlen(info)+1;
+	if(!(info=dplgetinfo())) return;
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(w/2.f,-0.5f,0.f);
 	h=glfontscale(gl.cfg.hrat_cat,1.f);
-	for(n=0,s=sel,i=info;s;s>>=1){
-		if(s&1){
-			if(i[0] && (b=glfontwidth(i))>w){
-				w=b;
-				if(n) w2=b;
-			}
-			n++;
-		}
-		if(i[0]) i+=strlen(i)+1;
-		if(i[0]) i+=strlen(i)+1;
-	}
-	if((sel&1) && w2<w/2.f && (pos=strchr(info,' '))){
-		snprintf(i0,MIN(256,(size_t)(pos-info)+1),info);
-		info=pos;
-		n++;
-		w=w2;
-		if((b=glfontwidth(i0))>w) w=b;
-		if((b=glfontwidth(info))>w) w=b;
-	}
 	b=h*gl.cfg.txt_border*2.f;
+	w*=80.f;
 	glTranslatef(0.f,-(h*n+b)*(1.f-f),0.f);
 	glColor4fv(gl.cfg.col_txtbg);
 	glrect(w+b*2.f,h*n+b,GP_RIGHT|GP_BOTTOM);
 	glColor4fv(gl.cfg.col_txtfg);
-	glTranslatef(-b,(h+b)/2.f+h*(n-1),0.f);
-	if(i0[0]){
-		glfontrender(i0,GP_RIGHT|GP_VCENTER);
-		glTranslatef(0.f,-h,0.f);
-	}
-	for(n=0,s=sel,i=info;s && i[0];s>>=1){
-		if(s&1){
-			if(i[0]) glfontrender(i,GP_RIGHT|GP_VCENTER);
-			glTranslatef(0.f,-h,0.f);
-		}
-		if(i[0]) i+=strlen(i)+1;
-		if(i[0]) i+=strlen(i)+1;
+	glTranslatef(-b-w,(h+b)/2.f+h*(n-1),0.f);
+	for(i=0;i<10;i++,info+=16){
+		if(info[0]) glfontrender(info,GP_LEFT|GP_VCENTER);
+		if(i<2 || i%2) glTranslatef(0.f,-h,0.f);
+		if(i>1) glTranslatef((i%2?-1.f:1.f)*w/2.5f,0.f,0.f);
 	}
 	glPopMatrix();
 }
@@ -770,7 +738,7 @@ void glrenderinfosel(){
 void glrenderhelp(){
 	const char *help=dplhelp();
 	float f;
-	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f,0xffffffff);
+	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f);
 }
 
 void glrendercat(){
@@ -1033,12 +1001,12 @@ void glpaint(){
 	if(!panorender(gl.sel.act) && !maprender(gl.sel.act)) glrenderimgs();
 	glrendercat();
 	glrenderprgcol();
-	glrenderinfo();
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
 	glrenderhist();
 	glrenderinfosel();
+	glrenderinfo();
 	glrenderinput();
 	glrenderhelp();
 	

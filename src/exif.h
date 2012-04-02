@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "img.h"
 
+#define ISLEN	256
+
 enum rot {ROT_0, ROT_90, ROT_180, ROT_270};
 
 struct imgexif *imgexifinit();

@@ -49,7 +49,6 @@ struct dpl {
 	int actimgi;
 	unsigned int fid;
 	struct imglist *resortil;
-	unsigned int infosel;
 	enum diredmode {DEM_FROM,DEM_TO,DEM_ALL} diredmode;
 	struct dplmousehold {
 		int imgi;
@@ -126,10 +125,9 @@ Uint32 dplgetticks(){
 	return SDL_GetTicks();
 }
 
-char *dplgetinfo(unsigned int *sel){
+char *dplgetinfo(){
 	struct img *img;
 	if(!(img=imgget(AIL,AIMGI))) return NULL;
-	if(sel) *sel=dpl.infosel;
 	return imgexifinfo(img->exif);
 }
 
@@ -1185,12 +1183,6 @@ char dplev(struct ev *ev){
 		if(!dplwritemode() || !mapcltsave(clickimg-IMGI_MAP)) dplprged("imgpos",1,dpl.actimgi,-1);
 	break;
 	case DE_COL: effprgcolset(clickimg); break;
-	case DE_INFO:
-		if(clickimg>=0 && clickimg<32){
-			if(dpl.infosel&(1U<<clickimg)) dpl.infosel&=~(1U<<clickimg);
-			else dpl.infosel|=1U<<clickimg;
-		}
-	break;
 	case DE_MAPMK:
 		dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
 	break;
@@ -1250,7 +1242,6 @@ void dplcfginit(){
 	t=cfggetstr("sdpl.playrecord");
 	dpl.cfg.playrecord=t && t[0];
 	dpl.cfg.playrecord_rate=cfggetuint("dpl.playrecord_rate");
-	dpl.infosel=cfggetuint("dpl.infosel");
 	z=cfggetint("dpl.initzoom");
 	for(;z>0;z--) dplevput(DE_ZOOMOUT);
 	for(;z<0;z++) dplevput(DE_ZOOMIN);

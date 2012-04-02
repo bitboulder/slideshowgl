@@ -29,39 +29,40 @@
 #endif
 
 struct exifinfo {
+	enum exinfo { EX_XX, EX_DT, EX_FL, EX_ET, EX_FN, EX_IO, EX_EV, EX_FA, EX_FV, EX_EP, EX_PS, EX_TP } info;
 	const char *name;
 	const char *tag2[8];
 	ExifTag tag1[4];
 } exifinfo[] = {
-	{__("Date"),                {"Exif.Photo.DateTimeOriginal","Exif.Image.DateTime","Exif.Photo.DateTimeDigitized",NULL},
+	{EX_DT, __("Date"),                {"Exif.Photo.DateTimeOriginal","Exif.Image.DateTime","Exif.Photo.DateTimeDigitized",NULL},
 								{E(EXIF_TAG_DATE_TIME_ORIGINAL),0}},
 
-	{__("Model"),               {"Exif.Image.Model",NULL},            {E(EXIF_TAG_MODEL),0}},
-	{__("Resolution"),          {"join:x","Exif.Photo.PixelXDimension","Exif.Photo.PixelYDimension",NULL},
+	{EX_XX, __("Model"),               {"Exif.Image.Model",NULL},            {E(EXIF_TAG_MODEL),0}},
+	{EX_XX, __("Resolution"),          {"join:x","Exif.Photo.PixelXDimension","Exif.Photo.PixelYDimension",NULL},
 								{E(EXIF_TAG_PIXEL_X_DIMENSION),E(EXIF_TAG_PIXEL_Y_DIMENSION),0}},
 
-	{__("Lens"),                {"Easy.LensName",NULL},               {0}},
-	{__("Focal length"),        {"Easy.FocalLength",NULL},            {E(EXIF_TAG_FOCAL_LENGTH),0}},
+	{EX_XX, __("Lens"),                {"Easy.LensName",NULL},               {0}},
+	{EX_FL, __("Focal length"),        {"Easy.FocalLength",NULL},            {E(EXIF_TAG_FOCAL_LENGTH),0}},
 
-	{__("Exposure time"),       {"Easy.ExposureTime",NULL},           {E(EXIF_TAG_EXPOSURE_TIME),0}},
-	{__("Fnumber"),             {"Easy.FNumber",NULL},                {E(EXIF_TAG_FNUMBER),0}},
-	{__("ISO speed rating"),    {"Easy.IsoSpeed",NULL},               {E(EXIF_TAG_ISO_SPEED_RATINGS),0}},
-	{__("Exposure bias value"), {"Exif.Photo.ExposureBiasValue",NULL},{E(EXIF_TAG_EXPOSURE_BIAS_VALUE),0}},
-	{__("Metering mode"),       {"Easy.MeteringMode",NULL},           {0}},
-	{__("Measured EV"),         {"Exif.CanonSi.MeasuredEV2",NULL},    {0}},
+	{EX_ET, __("Exposure time"),       {"Easy.ExposureTime",NULL},           {E(EXIF_TAG_EXPOSURE_TIME),0}},
+	{EX_FN, __("Fnumber"),             {"Easy.FNumber",NULL},                {E(EXIF_TAG_FNUMBER),0}},
+	{EX_IO, __("ISO speed rating"),    {"Easy.IsoSpeed",NULL},               {E(EXIF_TAG_ISO_SPEED_RATINGS),0}},
+	{EX_EV, __("Exposure bias value"), {"Exif.Photo.ExposureBiasValue",NULL},{E(EXIF_TAG_EXPOSURE_BIAS_VALUE),0}},
+	{EX_XX, __("Metering mode"),       {"Easy.MeteringMode",NULL},           {0}},
+	{EX_XX, __("Measured EV"),         {"Exif.CanonSi.MeasuredEV2",NULL},    {0}},
 
-	{__("Flash"),               {"Exif.Photo.Flash",NULL},            {E(EXIF_TAG_FLASH),0}},
-	{__("Flash bias value"),    {"Exif.CanonSi.FlashBias",NULL},      {0}},
+	{EX_FA, __("Flash"),               {"Exif.Photo.Flash",NULL},            {E(EXIF_TAG_FLASH),0}},
+	{EX_FV, __("Flash bias value"),    {"Exif.CanonSi.FlashBias",NULL},      {0}},
 
-	{__("Exposure program"),    {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL},{E(EXIF_TAG_EXPOSURE_PROGRAM),0}},
-	{__("Exposure mode"),       {"Exif.Photo.ExposureMode",NULL},     {E(EXIF_TAG_EXPOSURE_MODE),0}},
-	{__("White blanace"),       {"Exif.CanonSi.WhiteBalance","Exif.Photo.WhiteBalance",NULL},{E(EXIF_TAG_WHITE_BALANCE),0}},
-	{__("Picture style"),       {"Exif.CanonPr.PictureStyle",NULL},   {0}},
-	{__("Tone priority"),       {"get:25","onoff:","Exif.Canon.CustomFunctions",NULL},{0}},
+	{EX_EP, __("Exposure program"),    {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL},{E(EXIF_TAG_EXPOSURE_PROGRAM),0}},
+	{EX_XX, __("Exposure mode"),       {"Exif.Photo.ExposureMode",NULL},     {E(EXIF_TAG_EXPOSURE_MODE),0}},
+	{EX_XX, __("White blanace"),       {"Exif.CanonSi.WhiteBalance","Exif.Photo.WhiteBalance",NULL},{E(EXIF_TAG_WHITE_BALANCE),0}},
+	{EX_PS, __("Picture style"),       {"Exif.CanonPr.PictureStyle",NULL},   {0}},
+	{EX_TP, __("Tone priority"),       {"get:25","onoff:","Exif.Canon.CustomFunctions",NULL},{0}},
 
-	{__("Focus mode"),          {"Exif.CanonCs.FocusMode",NULL},      {0}},
-	{__("Drive mode"),          {"Exif.CanonCs.DriveMode",NULL},      {0}},
-	{NULL, {NULL}},
+	{EX_XX, __("Focus mode"),          {"Exif.CanonCs.FocusMode",NULL},      {0}},
+	{EX_XX, __("Drive mode"),          {"Exif.CanonCs.DriveMode",NULL},      {0}},
+	{EX_XX, NULL, {NULL}},
 };
 
 #undef E
@@ -185,13 +186,57 @@ int64_t imgexifgetdate(exifdata *exdat){
 #endif
 }
 
+double frac2f(char *txt){
+	double n=atof(txt);
+	char *dp=strchr(txt,'/');
+	double d=dp?atof(dp+1):1.f;
+	return n/d;
+}
+
+/* thread: load */
+void imgexifselupd(char *sel,enum exinfo info,char *txt){
+#define selp(p)				(sel+16*(p))
+#define SEL(p,txt)			SELl(p,100,txt)
+#define SELf(p,fmt,txt)		SELlf(p,100,fmt,txt)
+#define SELl(p,l,txt)		SELlf(p,l,"%s",txt)
+#define SELlf(p,l,fmt,txt)	snprintf(selp(p),MIN(16,l+1),fmt,txt)
+#define SELlp(p,l,txt,prf)	{ SELl(p,l,txt); SELap(p,prf); }
+#define SELap(p,prf)		SELfap(p,"%s",prf)
+#define SELfap(p,fmt,prf)	{ size_t w=strlen(selp(p)); snprintf(selp(p)+w,16-w,fmt,prf); }
+	size_t l;
+	switch(info){
+	case EX_XX: break;
+	case EX_DT:
+		if((l=strcspn(txt," "))){
+			SELl(0,l,txt);
+			SEL(1,txt+l+1);
+		}else SEL(0,txt);
+	break;
+	case EX_FL: if((l=strspn(txt,"0123456789"))) SELlp(3,l,txt,"mm"); break;
+	case EX_ET: if((l=strspn(txt,"0123456789/"))) SELl(5,l,txt); break;
+	case EX_FN: SELf(4,"%.1f",atof(txt+(txt[0]=='F'))); break;
+	case EX_IO: SEL(7,txt); break;
+	case EX_EV: SELf(6,"%+.1f",frac2f(txt)); break;
+	case EX_FA: if(!strstr(txt,"nicht")) SEL(9,"B"); break;
+	case EX_FV: if(selp(9)[0]=='B') SELfap(9,"%+.1f",frac2f(txt)); break;
+	case EX_EP:
+		if((l=strcspn(txt,"("))){
+			txt+=l+1;
+			if((l=strcspn(txt,")"))) SELl(2,l,txt);
+		}
+	break;
+	case EX_PS: SELl(8,1,txt); break;
+	case EX_TP: if(!strncmp(txt,"on",2)) SELap(7,"+"); break;
+	}
+}
+
 /* thread: load */
 #define IILEN	256
 #define IIINC	1024
 char *imgexifgetinfo(exifdata *exdat){
-	char *imginfo=NULL;
-	unsigned int iilen=0;
-	unsigned int iipos=0;
+	char *imginfo=calloc(ISLEN,1);
+	unsigned int iilen=ISLEN;
+	unsigned int iipos=ISLEN;
 	int l;
 #if ! HAVE_EXIV2 && HAVE_EXIF
 	int i;
@@ -205,6 +250,7 @@ char *imgexifgetinfo(exifdata *exdat){
 #if HAVE_EXIV2
 		if(exiv2getstr(exdat,exifinfo[l].tag2,imginfo+iipos,(int)(end-iipos))){
 			utf8check(imginfo+iipos);
+			imgexifselupd(imginfo,exifinfo[l].info,imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 #elif HAVE_EXIF
@@ -214,6 +260,7 @@ char *imgexifgetinfo(exifdata *exdat){
 			if(i && iipos<end) imginfo[iipos++]=' '; 
 			exif_entry_get_value(exet,imginfo+iipos,end-iipos);
 			utf8check(imginfo+iipos);
+			imgexifselupd(imginfo,exifinfo[l].info,imginfo+iipos);
 			iipos+=(unsigned int)strlen(imginfo+iipos);
 		}
 #endif

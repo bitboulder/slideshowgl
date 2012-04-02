@@ -27,8 +27,7 @@ enum dplev {
 	DE_JUMPEND = 0x00080000,
 	DE_INIT    = 0x00100000,
 	DE_COL     = 0x00200000,
-	DE_INFO    = 0x00400000,
-	DE_MAPMK   = 0x00800000,
+	DE_MAPMK   = 0x00400000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
@@ -61,7 +60,7 @@ int dplgetactil(char *prged);
 int dplgetactimgi(int il);
 unsigned int dplgetfid();
 void dplsetresortil(struct imglist *il);
-char *dplgetinfo(unsigned int *sel);
+char *dplgetinfo();
 float *dplgethist();
 
 void printixy(float sx,float sy);
