@@ -134,6 +134,7 @@ char *dplgetinfo(){
 float *dplgethist(){
 	struct img *img;
 	if(!(img=imgget(AIL,AIMGI))) return NULL;
+	if(imgfiledir(img->file)) return NULL;
 	return imghistget(img->hist);
 }
 
