@@ -253,6 +253,7 @@ char markswitchfn(const char *fn){
 	snprintf(mark.cfg.fn,FILELEN,"%s",fn);
 	marksloadcat(0,1);
 	mark.nosave=0;
+	ilmarkupdate(NULL);
 	return 1;
 }
 

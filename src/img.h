@@ -58,6 +58,7 @@ void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
 char ilsort(int il,struct imglist *curil,enum ilschg chg);
 const char *ilsortget(int il);
+void ilmarkupdate(struct imglist *il);
 
 struct imglist *ilget(int il);
 int imggetn(int il);

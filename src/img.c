@@ -494,6 +494,12 @@ const char *ilsortget(int il){
 	}
 }
 
+void ilmarkupdate(struct imglist *il){
+	struct img *img;
+	if(!il && !(il=ilget(0))) return;
+	for(img=il->imgs[0];img;img=img->nxt) imgposmark(img,MPC_YES);
+}
+
 void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg){
 	struct imglist *il;
 	struct img *img;

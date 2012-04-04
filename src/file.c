@@ -356,7 +356,10 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	struct imglist *src=NULL;
 	int count=0;
 	if(!dir) dir="";
-	if(ilfind(fn,&src,1)) return src;
+	if(ilfind(fn,&src,1)){
+		ilmarkupdate(src);
+		return src;
+	}
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);
 		goto end;
