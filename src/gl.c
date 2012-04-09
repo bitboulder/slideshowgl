@@ -554,7 +554,7 @@ float glcalcback(float ef){
 	else                   return 1.f-(1.f-ef)/CB_TIME*(1.f-CB_SIZE);
 }
 
-void glrenderimg(struct img *img,char layer,int il,char act){
+void glrenderimg(struct img *img,char layer,struct imglist *il,char act){
 	struct ecur *ecur=imgposcur(img->pos);
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
@@ -572,7 +572,7 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	icol=imgposcol(img->pos);
 	glmodeslave(!ilprg(il) && ecur->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
-	if(il==1){
+	if(il==ilget(CIL(1))){
 		srat*=1.f-gl.cfg.prged_w;
 		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
@@ -620,19 +620,16 @@ void glrenderimg(struct img *img,char layer,int il,char act){
 	glPopMatrix();
 }
 
+int glrenderimgs1(struct img *img,int imgi,struct imglist *il,void *arg){
+	glLoadName((GLuint)imgi+1);
+	glrenderimg(img,*(char*)arg,il,dplgetactil(NULL)>=0 && imgi==ilcimgi(il));
+	return 0;
+}
 void glrenderimgs(){
-	struct img *img;
 	char layer;
-	int il;
 	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1,0,0);
-	for(layer=2;layer>=0;layer--) for(il=0;il<IL_NUM;il++){
-		GLuint imgi=1;
-		for(img=imgget(il,0);img;img=img->nxt){
-			glLoadName(imgi++);
-			glrenderimg(img,layer,il,(int)imgi-2==dplgetactimgi(il));
-		}
-	}
+	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0);
 	glLoadName(0);
 }
 
@@ -750,7 +747,7 @@ void glrendercat(){
 	if(!(f=effswf(ESW_CAT))) return;
 	if(!(cats=markcats())) return;
 	if(!glfontsel(FT_NOR)) return;
-	mark=imgposmark(imgget(0,dplgetimgi(0)),MPC_NO);
+	mark=imgposmark(ilcimg(NULL),MPC_NO);
 	w=glmode(GLM_TXT);
 	glPushMatrix();
 	glTranslatef(-w/2.f,0.5f,0.f);
@@ -812,7 +809,7 @@ void glrenderinput(){
 
 void glrenderstat(){
 	struct istat *stat=effstat();
-	const char *dir=ildir();
+	const char *dir=ildir(NULL);
 	float winw;
 	float h,w,b;
 	if(!stat->h || !glfontsel(FT_NOR)) return;

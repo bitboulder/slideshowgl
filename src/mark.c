@@ -247,13 +247,19 @@ const char *markgetfndir(){
 	return mark.fndir;
 }
 
+int markupdateimg(struct img *img,int UNUSED(imgi),struct imglist *UNUSED(il),void *UNUSED(arg)){
+	imgposmark(img,MPC_YES);
+	return 1;
+}
+void markupdate(){ ilsforallimgs(markupdateimg,NULL,0,0); }
+
 char markswitchfn(const char *fn){
 	if(!(filetype(fn)&(FT_FILE|FT_DIREX))) return 0;
 	mark.nosave=1;
 	snprintf(mark.cfg.fn,FILELEN,"%s",fn);
 	marksloadcat(0,1);
 	mark.nosave=0;
-	ilmarkupdate(NULL);
+	markupdate();
 	return 1;
 }
 

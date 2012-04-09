@@ -12,7 +12,7 @@ const char *mapgetbasedirs();
 void mapeditmode();
 char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir);
 char mapgetcltpos(int i,float *sx,float *sy);
-struct imglist *mapsetpos(int imgi);
+struct imglist *mapsetpos(struct img *img);
 void mapimgclt(int izsel);
 void mapaddbasedir(const char *dir,const char *name);
 void mapinit();

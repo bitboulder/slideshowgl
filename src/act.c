@@ -81,7 +81,7 @@ void actdo(enum act act,struct img *img,struct imglist *il){
 	case ACT_ROTATE:    actrotate(img); break;
 	case ACT_DELETE:    actdelete(img,il,"del"); break;
 	case ACT_DELORI:    actdelete(img,il,"ori"); break;
-	case ACT_ILCLEANUP: ilcleanup(); break;
+	case ACT_ILCLEANUP: ilscleanup(); break;
 	case ACT_MAPCLT:    mapimgclt(-1); break;
 	case ACT_EXIFCACHE: exichsave(); break;
 	default: break;

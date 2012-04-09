@@ -24,6 +24,7 @@
 #include "help.h"
 #include "ldjpg.h"
 #include "map.h"
+#include "il.h"
 
 char sdl_quit = 0;
 
@@ -297,7 +298,7 @@ void sdlinit(){
 
 void sdlquit(){
 	ldtexload();
-	imgfinalize();
+	ilsfinalize();
 	glfree();
 	SDL_Quit();
 }

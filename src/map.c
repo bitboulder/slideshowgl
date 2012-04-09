@@ -119,7 +119,7 @@ struct map {
 };
 
 char mapon(){
-	struct imglist *il=ilget(0);
+	struct imglist *il=ilget(CIL(0));
 	return il ? !strncmp(ilfn(il),"[MAP]",5) : 0;
 }
 void mapsdlsize(int *w,int *h){ map.scr_w=w; map.scr_h=h; }
@@ -141,7 +141,7 @@ void mapeditmode(){
 struct ecur *mapecur(int *iz,float *iscale){
 	struct img *img;
 	struct ecur *ecur;
-	if((img=imgget(0,0)) && !strncmp(imgfilefn(img->file),"[MAP]",6)){
+	if((img=ilimg(CIL(0),0)) && !strncmp(imgfilefn(img->file),"[MAP]",6)){
 		ecur=imgposcur(img->pos);
 		if(iz){
 			*iz = map.pos.iz>ecur->s ? (int)ceil(ecur->s) : (int)ecur->s;
@@ -545,17 +545,16 @@ char mapgetgps(const char *dir,double *gx,double *gy,char clt){
 	return dirid!=0;
 }
 
-struct imglist *mapsetpos(int imgi){
-	struct img *img;
+struct imglist *mapsetpos(struct img *img){
 	const char *fn;
 	char set=0;
 	double gx=0.,gy=0.;
 	struct imglist *il;
 	if(map.init) return NULL;
-	if((fn=ilfn(ilget(0))) && (filetype(fn)&FT_DIR)){
+	if((fn=ilfn(CIL(0))) && (filetype(fn)&FT_DIR)){
 		set=mapgetgps(fn,&gx,&gy,1);
 	}
-	if(!set && (img=imgget(0,imgi)) && (fn=imgfilefn(img->file))){
+	if(!set && img && (fn=imgfilefn(img->file))){
 		char *pos;
 		if(filetype(fn)&FT_DIR){
 			set=mapgetgps(fn,&gx,&gy,1);

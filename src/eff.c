@@ -57,10 +57,7 @@ struct eff {
 	Uint32 lastchg;
 } eff;
 
-#define AIL			(dp->actil&ACTIL)
-#define AIMGI		(dp->imgi[AIL])
-#define AIL_LEFT	((dp->actil&ACTIL_ED) && AIL==0)
-//#define AIL_RIGHT	((dp->actil&ACTIL_ED) && AIL==1)
+#define AIL_LEFT	(ep->dp->ailtyp!=AIL_NONE && ilget(ep->il)==ilget(CIL(0)))
 
 /* thread: all */
 void effrefresh(enum effrefresh val){ eff.refresh|=val; }
@@ -137,20 +134,29 @@ char *imgposmark(struct img *img,enum mpcreate create){
 
 /***************************** eff init ***************************************/
 
-char effact(struct dplpos *dp,int i){
-	if(dp->dat) return 1;
-	if(AIMGI==IMGI_START || AIMGI==IMGI_END) return 0;
-	if(i==AIMGI) return 1;
-	if(AIL_LEFT) return abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=2;
-	if(dp->zoom>=0) return 0;
-	if(abs(imgidiff(AIL,AIMGI,i,NULL,NULL))<=zoomtab[-dp->zoom].inc) return 1;
+struct effpar {
+	struct dplpos *dp;
+	struct imglist *il;
+	int imgi;
+	int cimgi;
+	int diff;
+	void *dat;
+};
+
+char effact(struct effpar *ep){
+	if(ep->dat) return 1;
+	if(ep->cimgi==IMGI_START || ep->cimgi==IMGI_END) return 0;
+	if(ep->imgi==ep->cimgi) return 1;
+	if(AIL_LEFT) return abs(ep->diff)<=2;
+	if(ep->dp->zoom>=0) return 0;
+	if(abs(ep->diff)<=zoomtab[-ep->dp->zoom].inc) return 1;
 	return 0;
 }
 
-enum imgtex imgseltex(struct dplpos *dp,int i){
-	if(dp->zoom>0)  return TEX_FULL;
-	if(AIMGI==i) return zoomtab[-dp->zoom].texcur;
-	else return zoomtab[-dp->zoom].texoth;
+enum imgtex imgseltex(struct effpar *ep){
+	if(ep->dp->zoom>0)  return TEX_FULL;
+	if(ep->cimgi==ep->imgi) return zoomtab[-ep->dp->zoom].texcur;
+	else return zoomtab[-ep->dp->zoom].texoth;
 }
 
 void effposout(int imgi,struct imgpos *ip,Uint32 time){
@@ -164,89 +170,86 @@ void effposout(int imgi,struct imgpos *ip,Uint32 time){
 	}
 }
 
-void effsetnonpos(struct dplpos *dp,struct img *img,struct ecur *ip1,struct edst *ip2){
+void effsetnonpos(struct img *img,struct ecur *ip1,struct edst *ip2){
 	float r=imgexifrotf(img->exif);
-	float m=(img->pos->mark && img->pos->mark[0] && dp && dplwritemode())?1.f:0.f;
+	float m=(img->pos->mark && img->pos->mark[0] && dplwritemode())?1.f:0.f;
 	if(ip1){ ip1->r+=r; ip1->m=m; }
 	if(ip2){ ip2->r+=r; ip2->m=m; }
 }
 
-void effresetpos(struct dplpos *dp,struct img *img,struct ecur *ip){
+void effresetpos(struct img *img,struct ecur *ip){
 	memset(ip,0,sizeof(struct edst));
-	effsetnonpos(dp,img,ip,NULL);
+	effsetnonpos(img,ip,NULL);
 }
 
-void effinitpos(struct dplpos *dp,struct img *img,struct ecur *ip,int i){
-	int diff=imgidiff(AIL,AIMGI,i,NULL,NULL);
-	effresetpos(dp,img,ip);
-	ip->act=effact(dp,i) ? 1.f : 0.f;
+void effinitpos(struct effpar *ep,struct img *img,struct ecur *ip){
+	effresetpos(img,ip);
+	ip->act=effact(ep) ? 1.f : 0.f;
 	ip->a=1.f;
-	if(mapon() && dp->dat){
-		ip->s=(float)((struct mappos *)dp->dat)->iz;
-		ip->x=(float)((struct mappos *)dp->dat)->gx;
-		ip->y=(float)((struct mappos *)dp->dat)->gy;
+	if(mapon() && ep->dat){
+		ip->s=(float)((struct mappos *)ep->dat)->iz;
+		ip->x=(float)((struct mappos *)ep->dat)->gx;
+		ip->y=(float)((struct mappos *)ep->dat)->gy;
 	}else if(AIL_LEFT){
-		ip->s=(AIMGI==i ? 1.f : .75f) * eff.cfg.prged_w;
+		ip->s=(ep->cimgi==ep->imgi ? 1.f : .75f) * eff.cfg.prged_w;
 		ip->x=-.4f;
-		ip->y=(float)diff*eff.cfg.prged_w;
-	}else if(dp->zoom<0){
-		ip->s=zoomtab[-dp->zoom].size;
-		ip->x=(float)diff*ip->s;
+		ip->y=(float)ep->diff*eff.cfg.prged_w;
+	}else if(ep->dp->zoom<0){
+		ip->s=zoomtab[-ep->dp->zoom].size;
+		ip->x=(float)ep->diff*ip->s;
 		ip->y=0.;
 		while(ip->x<-.5f){ ip->x+=1.f; ip->y-=ip->s; }
 		while(ip->x> .5f){ ip->x-=1.f; ip->y+=ip->s; }
-		if(i!=AIMGI) ip->s*=eff.cfg.shrink;
+		if(ep->imgi!=ep->cimgi) ip->s*=eff.cfg.shrink;
 		ip->x*=eff.maxfit.w;
 		ip->y*=eff.maxfit.h;
-	}else if(panoactive() && !diff){
-		ip->s=powf(2.f,(float)dp->zoom);
-		ip->x=-dp->x;
-		ip->y=-dp->y;
-	}else if(!diff){
+	}else if(panoactive() && !ep->diff){
+		ip->s=powf(2.f,(float)ep->dp->zoom);
+		ip->x=-ep->dp->x;
+		ip->y=-ep->dp->y;
+	}else if(!ep->diff){
 		float fitw,fith;
-		ip->s=powf(2.f,(float)dp->zoom);
-		ip->x=-dp->x*ip->s;
-		ip->y=-dp->y*ip->s;
+		ip->s=powf(2.f,(float)ep->dp->zoom);
+		ip->x=-ep->dp->x*ip->s;
+		ip->y=-ep->dp->y*ip->s;
 		if(imgfit(img,&fitw,&fith)){
 			ip->x*=fitw;
 			ip->y*=fith;
 		}
 	}else{
 		ip->s=1.f;
-		ip->x = dplwritemode()==1 ? (float)diff : 0.f;
+		ip->x = dplwritemode()==1 ? (float)ep->diff : 0.f;
 		ip->y=0.f;
 		ip->a = dplwritemode()==1 ? 1.f : 0.f;
 	}
 }
 
-void effsetcur(struct dplpos *dp,enum dplev ev,struct ecur *ip,int i){
-	int diff=imgidiff(AIL,AIMGI,i,NULL,NULL);
-	if(mapon() && dp->dat){
-		ip->x=(float)((struct mappos *)dp->dat)->gx;
-		ip->y=(float)((struct mappos *)dp->dat)->gy;
+void effsetcur(struct effpar *ep,enum dplev ev,struct ecur *ip){
+	if(mapon() && ep->dat){
+		ip->x=(float)((struct mappos *)ep->dat)->gx;
+		ip->y=(float)((struct mappos *)ep->dat)->gy;
 		ip->a=1.f;
 		ip->s=3.f;
 		return;
 	}
-	if(!diff || !(ev&DE_ZOOMOUT) || dp->zoom!=-1) return;
-	ip->x = (float)(diff<0 ? 1-(1-diff)%3 : (diff+1)%3-1);
-	ip->y = (float)((diff<0?diff-1:diff+1)/3);
+	if(!ep->diff || !(ev&DE_ZOOMOUT) || ep->dp->zoom!=-1) return;
+	ip->x = (float)(ep->diff<0 ? 1-(1-ep->diff)%3 : (ep->diff+1)%3-1);
+	ip->y = (float)((ep->diff<0?ep->diff-1:ep->diff+1)/3);
 	ip->a = 0.f;
 	ip->s = 1.f;
 }
 
-char effsetdst(struct dplpos *dp,enum dplev ev,struct ecur *ip,int i){
-	int diff=imgidiff(AIL,AIMGI,i,NULL,NULL);
-	if(!diff || !(ev&DE_ZOOMIN) || dp->zoom!=0) return 0;
-	ip->x = (float)(diff<0 ? 1-(1-diff)%3 : (diff+1)%3-1);
-	ip->y = (float)((diff<0?diff-1:diff+1)/3);
+char effsetdst(struct effpar *ep,enum dplev ev,struct ecur *ip){
+	if(!ep->diff || !(ev&DE_ZOOMIN) || ep->dp->zoom!=0) return 0;
+	ip->x = (float)(ep->diff<0 ? 1-(1-ep->diff)%3 : (ep->diff+1)%3-1);
+	ip->y = (float)((ep->diff<0?ep->diff-1:ep->diff+1)/3);
 	ip->a = 0.f;
 	ip->s = 1.f;
 	return 1;
 }
 
-char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
-	struct prg *prg=ilprg(AIL);
+char effprg(struct effpar *ep,enum dplev ev,struct img *img,int iev){
+	struct prg *prg=ilprg(ep->il);
 	char rev;
 	int ievget=iev;
 	int num;
@@ -254,10 +257,10 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 	struct iopt *opt=&img->pos->opt;
 	struct pev *pev=NULL;
 	if(!prg) return 0;
-	rev = AIMGI<dp->imgiold;
+	rev = ep->cimgi<ep->dp->imgiold;
 	if(!rev)       ievget=-1-ievget;
 	if(ev&DE_JUMP) ievget=-1-ievget;
-	num = prgget(prg,img,imginarrorlimits(AIL,AIMGI)+rev,ievget,&pev);
+	num = prgget(prg,img,ilrelimgi(ep->il,ep->cimgi)+rev,ievget,&pev);
 	if(!num || !pev){
 		img->pos->eff=0;
 		ip->cur.act=0;
@@ -271,7 +274,7 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 			ip->a[i].cur=pev->way[(int) rev][i];
 			ip->a[i].dst=pev->way[(int)!rev][i];
 		}
-		effsetnonpos(dp,img,&ip->cur,&ip->dst);
+		effsetnonpos(img,&ip->cur,&ip->dst);
 		ip->cur.act=1;
 		ip->dst.act=(rev?pev->on:pev->off)?0.f:1.f;
 		if(ev&(DE_JUMP|DE_INIT)){
@@ -293,12 +296,12 @@ char effprg(struct dplpos *dp,enum dplev ev,struct img *img,int iev){
 	return 1;
 }
 
-void efffaston(struct dplpos *dp,union uipos *ip,int i){
-	int i1,i2;
-	int diff=imgidiff(AIL,dp->imgiold,AIMGI,&i1,&i2);
-	if(!diff) return;
-	if(diff<0 && (i<=i2 || i>=i1)) return;
-	if(diff>0 && (i<=i1 || i>=i2)) return;
+void efffaston(struct effpar *ep,union uipos *ip){
+	int i1=ilrelimgi(ep->il,ep->dp->imgiold);
+	int i2=ilrelimgi(ep->il,ep->cimgi);
+	if(!ep->diff) return;
+	if(ep->diff<0 && (ep->imgi<=i2 || ep->imgi>=i1)) return;
+	if(ep->diff>0 && (ep->imgi<=i1 || ep->imgi>=i2)) return;
 	ip->cur.act=1.f;
 	ip->dst.act=1.f;
 }
@@ -349,28 +352,26 @@ void effinitval(struct imgpos *imgp,union uipos *ipn,int imgi){
 	if(ipo->cur.act) effposout(imgi,imgp,time);
 }
 
-void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
-	struct img *img;
+void effinitimg(struct effpar *ep,struct img *img,enum dplev ev,int iev){
 	union uipos *ipo;
 	union uipos  ipn[1];
 	char back=0;
 	char neff=0;
 	float timefac=1.f;
-	if(!(img=imgget(AIL,i))) return;
+	ep->diff=ildiffimgi(ep->il,ep->cimgi,ep->imgi);
 	ipo=&img->pos->p;
-	if(!strncmp(imgfilefn(img->file),"[MAP]",6)) dp->dat=mapgetpos();
-	else dp->dat=NULL;
-	img->pos->opt.tex=imgseltex(dp,i);
-	if(dp->zoom==0 && effprg(dp,ev,img,iev)) return;
-	effinitpos(dp,img,&ipn->cur,i);
-	if(!ipn->cur.act && dp->zoom==0 && (ev&DE_VER) && dplwritemode()==1) efffaston(dp,ipo,i);
+	if(!strncmp(imgfilefn(img->file),"[MAP]",6)) ep->dat=mapgetpos();
+	img->pos->opt.tex=imgseltex(ep);
+	if(ep->dp->zoom==0 && effprg(ep,ev,img,iev)) return;
+	effinitpos(ep,img,&ipn->cur);
+	if(!ipn->cur.act && ep->dp->zoom==0 && (ev&DE_VER) && dplwritemode()==1) efffaston(ep,ipo);
 	if(!ipn->cur.act && img->pos->eff==2) return;
-	if( ipn->cur.act && !ipo->cur.act)      effsetcur(dp,ev,&ipo->cur,i);
-	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(dp,ev,&ipn->cur,i);
-	if( ipn->cur.act && dp->buble==i){ ipn->cur.a=ipo->cur.a==1.f?.5f:1.f; neff=1; iev=0; timefac=.5f; }
-	if(mapon() && dp->dat && ipn->cur.s!=ipo->cur.s && (ev&DE_ZOOM)) timefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
+	if( ipn->cur.act && !ipo->cur.act)      effsetcur(ep,ev,&ipo->cur);
+	if(!ipn->cur.act &&  ipo->cur.act) neff=effsetdst(ep,ev,&ipn->cur);
+	if( ipn->cur.act && ep->dp->buble==img){ ipn->cur.a=ipo->cur.a==1.f?.5f:1.f; neff=1; iev=0; timefac=.5f; }
+	if(mapon() && ep->dat && ipn->cur.s!=ipo->cur.s && (ev&DE_ZOOM)) timefac=.5f*fabsf(ipn->cur.s-ipo->cur.s);
 	effinittime(ipn,iev?DE_INIT:ev,timefac);
-	if(dp->zoom<0 && !(dp->zoom==-1 && (ev&DE_ZOOMOUT))){
+	if(ep->dp->zoom<0 && !(ep->dp->zoom==-1 && (ev&DE_ZOOMOUT))){
 		float xdiff=fabsf(ipo->cur.x-ipn->cur.x)/eff.maxfit.w/ipn->cur.s;
 		float ydiff=fabsf(ipo->cur.y-ipn->cur.y)/eff.maxfit.h/ipn->cur.s;
 		back = (xdiff>0.01f && ydiff>1.5f) || xdiff>1.5f || ydiff>3.5f;
@@ -378,23 +379,22 @@ void effinitimg(struct dplpos *dp,enum dplev ev,int i,int iev){
 	ipn->cur.back=ipo->cur.back<.5f?0.f:1.f;
 	if(back) ipn->cur.back=1.f-ipn->cur.back;
 	img->pos->opt.layer=back;
-	effinitval(img->pos,ipn,i);
+	effinitval(img->pos,ipn,ep->imgi);
 	if(neff){
 		if(img->pos->eff) img->pos->eff=2;
-		else effinitpos(dp,img,&ipo->cur,i);
+		else effinitpos(ep,img,&ipo->cur);
 	}
-	if(mapon() && dp->dat){
+	if(mapon() && ep->dat){
 		img->pos->p.typ.s=E_MAPS;
 		img->pos->p.typ.x=E_MAPXY;
 		img->pos->p.typ.y=E_MAPXY;
 	}
 }
 
-char effmaxfitupdate(struct dplpos *dp){
-	int i;
+char effmaxfitupdate(struct effpar *ep){
 	float maxfitw=0.f,maxfith=0.f;
 	struct img *img;
-	for(img=imgget(AIL,0),i=0;img;img=img->nxt,i++) if(effact(dp,i)){
+	for(img=ilimg(ep->il,0),ep->imgi=0;img;img=img->nxt,ep->imgi++) if(effact(ep)){
 		float fitw,fith;
 		if(!imgfit(img,&fitw,&fith)) continue;
 		if(fitw>maxfitw) maxfitw=fitw;
@@ -408,9 +408,8 @@ char effmaxfitupdate(struct dplpos *dp){
 	return 1;
 }
 
-void effinit(enum effrefresh effref,enum dplev ev,int imgi){
-	int i;
-	struct dplpos *dp=dplgetpos();
+void effinit(enum effrefresh effref,enum dplev ev,struct imglist *il,int imgi){
+	struct effpar ep[1]={ { .dp=dplgetpos(), .il=il, .cimgi=ilcimgi(il), .dat=NULL } };
 	struct img *img;
 	debug(DBG_DBG,"eff refresh%s%s%s%s%s",
 		effref&EFFREF_IMG?" (img)":"",
@@ -419,22 +418,25 @@ void effinit(enum effrefresh effref,enum dplev ev,int imgi){
 		effref&EFFREF_FIT?" (fit)":"",
 		effref&EFFREF_ROT?" (rot)":"");
 	if(effref&EFFREF_CLR)
-		for(img=imgget(AIL,0),i=0;img;img=img->nxt,i++){
+		for(img=ilimg(il,0),ep->imgi=0;img;img=img->nxt,ep->imgi++){
 			img->pos->eff=0;
-			effinitpos(dp,img,&img->pos->p.cur,i);
+			ep->diff=ildiffimgi(ep->il,ep->cimgi,ep->imgi);
+			effinitpos(ep,img,&img->pos->p.cur);
 			img->pos->p.cur.a=0.f;
 		}
 	if(effref&(EFFREF_FIT|EFFREF_CLR))
-		if(dp->zoom<0 && effmaxfitupdate(dp))
+		if(ep->dp->zoom<0 && effmaxfitupdate(ep))
 			effref|=EFFREF_ALL;
 	if(effref&(EFFREF_ALL|EFFREF_CLR))
-		for(i=0,img=imgget(AIL,0);img;img=img->nxt,i++) effinitimg(dp,ev,i,0);
+		for(ep->imgi=0,img=ilimg(il,0);img;img=img->nxt,ep->imgi++) effinitimg(ep,img,ev,0);
 	else{
-		if(effref&EFFREF_IMG)
-			effinitimg(dp,ev,imgi<0?(mapon()?0:AIMGI):imgi,0);
-		if(effref&EFFREF_ROT) for(i=0,img=imgget(AIL,0);img;img=img->nxt,i++)
-			if((img=imgget(AIL,i)) && img->pos->p.cur.r != imgexifrotf(img->exif)){
-				if(img->pos->p.cur.act) effinitimg(dp,ev,i,0);
+		if(effref&EFFREF_IMG){
+			ep->imgi=imgi<0?(mapon()?0:ep->cimgi):imgi;
+			if((img=ilimg(il,ep->imgi))) effinitimg(ep,img,ev,0);
+		}
+		if(effref&EFFREF_ROT) for(ep->imgi=0,img=ilimg(il,0);img;img=img->nxt,ep->imgi++)
+			if(img->pos->p.cur.r != imgexifrotf(img->exif)){
+				if(img->pos->p.cur.act) effinitimg(ep,img,ev,0);
 				else img->pos->p.cur.r=imgexifrotf(img->exif);
 			}
 	}
@@ -504,7 +506,7 @@ int effprgcolinit(float *col,int actimgi){
 	if(actimgi==-2){
 		struct img *img;
 		struct txtimg *txt;
-		if(eff.eprgcol.col && (img=imgget(1,eff.eprgcol.actimgi)) && (txt=imgfiletxt(img->file)))
+		if(eff.eprgcol.col && (img=ilimg(CIL(1),eff.eprgcol.actimgi)) && (txt=imgfiletxt(img->file)))
 			eff.eprgcol.col=txt->col;
 		return -1;
 	}
@@ -575,8 +577,10 @@ char effdoimg(struct img *img,int imgi){
 		if(effdoeval(ip->a+i,time)) chg=1;
 		if(ip->a[i].tdst) effon=1;
 	}
-	if(!effon && --img->pos->eff)
-		effinitimg(dplgetpos(),0,imgi,img->pos->eff);
+	if(!effon && --img->pos->eff){
+		struct effpar ep[1]={ { .dp=dplgetpos(), .il=NULL/*TODO*/, .imgi=imgi, .cimgi=ilcimgi(ep->il), .dat=NULL } };
+		effinitimg(ep,img,0,img->pos->eff);
+	}
 	return chg;
 }
 
@@ -586,7 +590,7 @@ char effdostat(){
 	float ef=effdostatef();
 	float h;
 	if(eff.stat.mode!=STAT_OFF && ef>=1.f){
-		if(eff.stat.mode!=STAT_ON || dplgetimgi(-1)!=IMGI_END){
+		if(eff.stat.mode!=STAT_ON || ilcimgi(NULL)!=IMGI_END){
 			eff.stat.mode=(eff.stat.mode+1)%STAT_NUM;
 			eff.stat.in=eff.stat.out;
 			eff.stat.out=eff.stat.in+eff.cfg.stat_delay[eff.stat.mode];
@@ -604,23 +608,27 @@ char effdostat(){
 	return 1;
 }
 
+struct effdoarg { char ineff; char chg; };
+
+int effdo1(struct img *img,int imgi,struct imglist *UNUSED(il),void *arg){
+	struct effdoarg *ea=(struct effdoarg*)arg;
+	if(!img->pos->eff) return 0;
+	if(effdoimg(img,imgi)) ea->chg=1;
+	ea->ineff=1;
+	return 0;
+}
+
 void effdo(){
-	struct img *img;
-	char ineff=0;
-	int il,i;
+	int i;
 	Uint32 now;
-	char chg=0;
+	struct effdoarg ea[1]={ { .ineff=0, .chg=0 } };
 	if(eff.refresh!=EFFREF_NO){
-		effinit(eff.refresh,0,-1);
+		effinit(eff.refresh,0,NULL,-1);
 		eff.refresh=EFFREF_NO;
 	}
-	for(il=0;il<IL_NUM;il++)
-		for(img=imgget(il,0),i=0;img;img=img->nxt,i++) if(img->pos->eff){
-			if(effdoimg(img,i)) chg=1;
-			ineff=1;
-		}
+	ilsforallimgs(effdo1,ea,1,0);
 	if(delimg){
-		if(delimg->pos->eff) if(effdoimg(delimg,-1)) chg=1;
+		if(delimg->pos->eff) if(effdoimg(delimg,-1)) ea->chg=1;
 		if(!delimg->pos->eff){
 			struct img *tmp=delimg;
 			delimg=NULL;
@@ -628,11 +636,11 @@ void effdo(){
 		}
 	}
 	now=dplgetticks();
-	if(effdostat()) chg=1;
-	for(i=0;i<ESW_N;i++) if(effdoeval(eff.esw+i,now)) chg=1;
-	if(effdoeval(&eff.eprgcol.v,now)) chg=1;
-	eff.ineff=ineff;
-	if(chg) eff.lastchg=SDL_GetTicks();
+	if(effdostat()) ea->chg=1;
+	for(i=0;i<ESW_N;i++) if(effdoeval(eff.esw+i,now)) ea->chg=1;
+	if(effdoeval(&eff.eprgcol.v,now)) ea->chg=1;
+	eff.ineff=ea->ineff;
+	if(ea->chg) eff.lastchg=SDL_GetTicks();
 }
 
 void effcfginit(){

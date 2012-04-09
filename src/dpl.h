@@ -51,7 +51,6 @@ struct dplinput {
 	char res[FILELEN];
 };
 
-int dplgetimgi(int il);
 int dplgetzoom();
 struct dplinput *dplgetinput();
 char dplloop();

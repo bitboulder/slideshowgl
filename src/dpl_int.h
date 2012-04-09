@@ -3,19 +3,15 @@
 
 #include "dpl.h"
 
-#define ACTIL			0x0000ffff
-#define ACTIL_ED		(~ACTIL)
-#define ACTIL_PRGED		0x00010000
-#define ACTIL_DIRED		0x00020000
+enum ailtyp {AIL_NONE=0x0, AIL_PRGED=0x1, AIL_DIRED=0x2};
+#define AIL_ED (AIL_PRGED|AIL_DIRED)
 
 struct dplpos {
-	int imgi[IL_NUM];
 	int imgiold;
 	int zoom;
 	float x,y;
-	int actil;
-	void *dat;
-	int buble;
+	enum ailtyp ailtyp;
+	struct img *buble;
 };
 
 char dplwritemode();

@@ -37,6 +37,8 @@ sources = """
 	mapld.c
 	exich.c
 	hist.c
+	il.c
+	avl.c
 """
 if not env.GetOption('clean'):
 	if env['HAVE_EXIV2'] == 1:
