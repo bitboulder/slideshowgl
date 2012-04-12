@@ -84,9 +84,9 @@ struct exeasy *edchkeasy(const char *key){
 	return NULL;
 }
 
-const char *edgeteasy(struct exeasy *exy,Exiv2::ExifData &ed){
+std::string edgeteasy(struct exeasy *exy,Exiv2::ExifData &ed){
 	Exiv2::ExifData::const_iterator pos=exy->fnc(ed);
-	return pos==ed.end()?"":pos->print(&ed).c_str();
+	return pos==ed.end()?"":pos->print(&ed);
 }
 
 char edchk(Exiv2::ExifData &ed,const char *key){
@@ -94,18 +94,18 @@ char edchk(Exiv2::ExifData &ed,const char *key){
 	return ed[key].typeId()!=Exiv2::invalidTypeId;
 }
 
-void edgetsubstr(const char **rstr,int get){
+void edgetsubstr(char *rstr,int get){
 	char *fstr=(char*)malloc(1024), *tstr=fstr;
 	char *tok=NULL;
-	snprintf(tstr,1024,"%s",*rstr);
+	snprintf(tstr,1024,"%s",rstr);
 	while(get>=0 && (tok=strsep(&tstr," \t"))) get--;
-	if(tok) *rstr=tok;
+	if(tok) snprintf(rstr,1024,"%s",tok);
 	free(fstr);
 }
 
-void edonoffstr(const char **rstr){
-	if(!strncmp(*rstr,"1",2)) *rstr="on";
-	if(!strncmp(*rstr,"0",2)) *rstr="off";
+void edonoffstr(char *rstr){
+	if(!strncmp(rstr,"1",2)) strcpy(rstr,"on");
+	if(!strncmp(rstr,"0",2)) strcpy(rstr,"off");
 }
 
 char exiv2getstr(struct exiv2data *edata,const char **key,char *str,int len){
@@ -119,10 +119,12 @@ char exiv2getstr(struct exiv2data *edata,const char **key,char *str,int len){
 	if(!strncmp(key[0],"get:",4))   get=atoi((key++)[0]+4);
 	if(!strncmp(key[0],"onoff:",6)) onoff=1, key++;
 	for(;key[0];key++) if((easy=edchkeasy(key[0])) || edchk(ed,key[0])){
-		const char *rstr = easy ? edgeteasy(easy,ed) : ed[key[0]].print().c_str();
-		if(!rstr || !rstr[0]) continue;
-		if(get>=0) edgetsubstr(&rstr,get);
-		if(onoff)  edonoffstr(&rstr);
+		std::string rstr2 = easy ? edgeteasy(easy,ed) : ed[key[0]].print();
+		char rstr[1024];
+		snprintf(rstr,1024,"%s",rstr2.c_str());
+		if(!rstr[0]) continue;
+		if(get>=0) edgetsubstr(rstr,get);
+		if(onoff)  edonoffstr(rstr);
 		num+=snprintf(str+num,len-num,"%s%s",num && delm ? delm : "",rstr);
 		if(!delm && num) return 1;
 	}

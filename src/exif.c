@@ -217,10 +217,12 @@ void imgexifselupd(char *sel,enum exinfo info,char *txt){
 	case EX_FA: if(!strstr(txt,"nicht")) SEL(9,"B"); else SEL(9,""); break;
 	case EX_FV: if(selp(9)[0]=='B') SELfap(9,"%+.1f",frac2f(txt)); break;
 	case EX_EP:
-		if((l=strcspn(txt,"("))){
+		l=strcspn(txt,"(");
+		if(txt[l]){
 			txt+=l+1;
-			if((l=strcspn(txt,")"))) SELl(2,l,txt);
-		}else SEL(2,"");
+			l=strcspn(txt,")");
+			SELl(2,l,txt);
+		}else SELl(2,5,txt);
 	break;
 	case EX_PS: SELl(8,1,txt); break;
 	case EX_TP: if(!strncmp(txt,"on",2)) SELap(7,"+"); break;
