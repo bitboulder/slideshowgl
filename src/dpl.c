@@ -47,7 +47,6 @@ struct dpl {
 	Uint32 evdelay[DEG_NUM];
 	int actimgi;
 	unsigned int fid;
-	struct imglist *resortil;
 	enum diredmode {DEM_FROM,DEM_TO,DEM_ALL} diredmode;
 	struct dplmousehold {
 		int imgi;
@@ -65,7 +64,6 @@ struct dpl {
 	.colmode = COL_NONE,
 	.input.mode = ITM_OFF,
 	.fid = 0,
-	.resortil = NULL,
 	.mousehold.time = 0,
 	.fullscreen = 0,
 	.lastmark = NULL,
@@ -105,9 +103,6 @@ int dplgetactil(char *prged){
 
 /* thread: sdl */
 unsigned int dplgetfid(){ return dpl.fid++; }
-
-/* thread: load */
-void dplsetresortil(struct imglist *il){ dpl.resortil=il; }
 
 char dplwritemode(){
 	if(dpl.writemode) return dpl.writemode;
@@ -1035,7 +1030,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
-	case 'S': if(!dplmark(ilcimgi(NULL),1)) ilorder(NULL,ILSCHG_INC); break;
+	case 'S': if(!dplmark(ilcimgi(NULL),1)) ilsortchg(NULL,1); break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,AIL_LEFT && dpl.actimgi>=0 ? dpl.actimgi : ilcimgi(CIL(0)),-1)) dplcol(1); break;
@@ -1158,11 +1153,6 @@ void dplcheckev(){
 	while(dev.wi!=dev.ri){
 		statchg|=dplev(dev.evs+dev.ri);
 		dev.ri=(dev.ri+1)%DPLEVS_NUM;
-	}
-	if(dpl.resortil){
-		ilorder(dpl.resortil,ILSCHG_NONE);
-		dpl.resortil=NULL;
-		statchg|=1;
 	}
 	if(statchg&1) dplstatupdate();
 	if(statchg&2 && !dpl.cfg.playrecord) effstaton(statchg);

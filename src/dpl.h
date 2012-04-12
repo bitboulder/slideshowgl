@@ -58,7 +58,6 @@ const char *dplhelp();
 int dplgetactil(char *prged);
 int dplgetactimgi(int il);
 unsigned int dplgetfid();
-void dplsetresortil(struct imglist *il);
 char *dplgetinfo();
 float *dplgethist();
 

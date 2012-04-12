@@ -139,16 +139,16 @@ char prgdelay(int frm,float *on,float *stay){
 	return 1;
 }
 
-char prgforoneldfrm(struct imglist *il,int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it){
+char prgforoneldfrm(struct imglist *il,int frm,char (*func)(struct imgld *il,struct imglist *ilt,enum imgtex it),struct imglist *ilt,enum imgtex it){
 	struct prg *prg=ilprg(il);
 	if(!prg || dplgetzoom()!=0){
 		struct img *img=ilimg(il,frm);
-		return img && func(img->ld,it);
+		return img && func(img->ld,ilt,it);
 	}else{
 		struct prgev *ev;
 		if(frm<0 || frm>=prg->nfrm) return 0;
 		for(ev=prg->frms[frm].ev;ev;ev=ev->nxt)
-			if(!ev->e.off && func(ev->img->ld,it)) return 1;
+			if(!ev->e.off && func(ev->img->ld,ilt,it)) return 1;
 		return 0;
 	}
 }

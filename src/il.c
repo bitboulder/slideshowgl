@@ -74,6 +74,7 @@ struct imglist *ilget(struct imglist *il){
 	long cil=(long)il;
 	if(!il) return curil.ils[curil.actil];
 	if(cil<0 && cil>=-CIL_NUM) return curil.ils[-cil-1];
+	if(il==CIL_NONE) return NULL;
 	return il;
 }
 
@@ -159,6 +160,7 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	ilsetparent(il);
 	il->cimgi=IMGI_START;
 	il->nxt=ils;
+	il->sort=dir[0]!='\0'?ilcfg.sort_subdir:ilcfg.sort_maindir;
 	ils=il;
 	ilfiletime(il,FT_UPDATE);
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
@@ -277,6 +279,66 @@ int ildiffimgi(struct imglist *il,int ia,int ib){
 	return diff;
 }
 
+/******* il sort ***************************************************/
+
+void ilsortdo(struct img **imgs,struct img **last,avlcmp cmp){
+	struct avls *avls=avlinit(cmp,imgs,last);
+	struct img *img;
+	for(img=*imgs;img;){
+		struct img *nxt=img->nxt;
+		avlins(avls,img);
+		img=nxt;
+	}
+//	avlprint(avls,"AVL");
+	avlfree(avls);
+}
+
+void ilsort(struct imglist *il,avlcmp cmp){
+	ilsortdo(&il->imgs,&il->last,cmp);
+}
+
+char ilorderdo(struct imglist *il){
+	switch(il->sort){
+	case ILS_DATE: ilsort(il,avldatecmp); break;
+	case ILS_FILE: ilsort(il,avlfilecmp); break;
+	case ILS_RND:  ilsort(il,avlrndcmp);  break;
+	default: return 0;
+	}
+	effrefresh(EFFREF_ALL);
+	return 1;
+}
+
+char ilfiletime(struct imglist *il,enum eldft act){
+	return il->fn[0]!='[' && ldfiletime(&il->lf,act,il->fn);
+}
+
+void ilsortdel(struct imglist *il,struct img *img){
+	/* TODO */
+	ilorderdo(il);
+}
+
+void ilsortins(struct imglist *il,struct img *img){
+	char *fn=imgfilefn(img->file);
+	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && il->nimg<ilcfg.maxloadexif) imgexifload(img->exif,fn);
+	/* TODO */
+	ilorderdo(il);
+}
+
+char ilsortupd(struct imglist *il,struct img *img){
+	if(!(il=ilget(il))) return 0;
+	/* TODO: if(avlcheck(il,img)) return 0 */
+	ilsortdel(il,img);
+	ilsortins(il,img);
+	/* TODO: no effrefresh */
+	return 1;
+}
+
+void ilsortchg(struct imglist *il,int chg){
+	if(!(il=ilget(il))) return;
+	il->sort=((int)il->sort+ILS_NUM+chg)%ILS_NUM;
+	ilorderdo(il);
+}
+
 /******* il work ***************************************************/
 
 char iladdimg(struct imglist *il,struct img *img,const char *prg){
@@ -289,6 +351,7 @@ char iladdimg(struct imglist *il,struct img *img,const char *prg){
 	il->last=img;
 	il->nimg++;
 	if(prg) prgadd(&il->prg,prg,img);
+	ilsortins(il,img);
 	return 1;
 }
 
@@ -331,6 +394,7 @@ struct img *ilremoveimg(struct imglist *il,struct img *img,char final){
 	if(img->nxt) img->nxt->prv=img->prv; else il->last=img->prv;
 	il->nimg--;
 	ilupdcimgi(il);
+	ilsortdel(il,img);
 	if(!final) iladdimg(ildel,img,NULL);
 	return img;
 }
@@ -346,62 +410,6 @@ char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len
 		return 1;
 	}
 	return 0;
-}
-
-void ilsortdo(struct img **imgs,struct img **last,avlcmp cmp){
-	struct avls *avls=avlinit(cmp);
-	struct img *img;
-	for(img=*imgs;img;img=img->nxt) avlins(avls,img);
-//	avlprint(avls,"AVL");
-	avlout(avls,imgs,last);
-	avlfree(avls);
-}
-
-void ilsort(struct imglist *il,avlcmp cmp){
-	struct img *img;
-	if(il->sort==ILS_DATE) for(img=il->imgs;img;img=img->nxt){
-		char *fn=imgfilefn(img->file);
-		if(!exichcheck(img->exif,fn)){
-			if(il->nimg<ilcfg.maxloadexif) imgexifload(img->exif,fn);
-			else imgexifsetsortil(img->exif,il);
-		}
-	}
-	ilsortdo(&il->imgs,&il->last,cmp);
-}
-
-char ilorderdo(struct imglist *il){
-	switch(il->sort){
-	case ILS_DATE: ilsort(il,avldatecmp); break;
-	case ILS_FILE: ilsort(il,avlfilecmp); break;
-	case ILS_RND:  ilsort(il,avlrndcmp);  break;
-	default: return 0;
-	}
-	effrefresh(EFFREF_ALL);
-	return 1;
-}
-
-/* thread: dpl */
-char ilorder(struct imglist *il,enum ilsortchg chg){
-	int i;
-	if(!(il=ilget(il))) return 0;
-	if(chg==ILSCHG_NONE && il->sort!=ILS_DATE) return 1;
-	if(chg==ILSCHG_INC){
-		for(i=0;i<ILS_NUM-1;i++){
-			if(++il->sort==ILS_NUM) il->sort=ILS_NONE+1;
-			if(ilorderdo(il)) break;
-		}
-		if(i==ILS_NUM) return 0;
-		il->sort_chg=1;
-		return 1;
-	}
-	ilcfginit();
-	if(chg==ILSCHG_INIT_MAINDIR) il->sort=ilcfg.sort_maindir;
-	if(chg==ILSCHG_INIT_SUBDIR)  il->sort=ilcfg.sort_subdir;
-	return ilorderdo(il);
-}
-
-char ilfiletime(struct imglist *il,enum eldft act){
-	return il->fn[0]!='[' && ldfiletime(&il->lf,act,il->fn);
 }
 
 void ilprgfrm(struct imglist *il,const char *prgfrm){

@@ -3,6 +3,7 @@
 
 #define CIL_NUM	2
 #define CIL(cil)	((struct imglist*)(long)-(cil+1))
+#define CIL_NONE	CIL(CIL_NUM)
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
@@ -47,8 +48,8 @@ void ilupdcimgi(struct imglist *il);
 char ilreload(struct imglist *il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
-enum ilsortchg { ILSCHG_NONE, ILSCHG_INIT_MAINDIR, ILSCHG_INIT_SUBDIR, ILSCHG_INC };
-char ilorder(struct imglist *il,enum ilsortchg chg);
+void ilsortchg(struct imglist *il,int chg);
+char ilsortupd(struct imglist *il,struct img *img);
 enum eldft {FT_RESET, FT_UPDATE, FT_CHECK, FT_CHECKNOW};
 char ilfiletime(struct imglist *il,enum eldft act);
 void ilprgfrm(struct imglist *il,const char *prgfrm);

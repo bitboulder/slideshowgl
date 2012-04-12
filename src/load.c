@@ -397,7 +397,7 @@ GLuint ldfile2tex(const char *fn){
 
 /***************************** load + free img ********************************/
 
-char ldfload(struct imgld *il,enum imgtex it){
+char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
@@ -413,8 +413,11 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(!strncmp(fn,"[MAP]",6)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0){
+		effref=0;
 		ld=imgexifload(il->img->exif,fn);
-		if(ld&0x2) effrefresh(EFFREF_ROT);
+		if(ld&0x2)  effref|=EFFREF_ROT;
+		if(ld&0x4 && ilsortupd(ilt,il->img)) effref|=EFFREF_ALL;
+		effrefresh(effref);
 		ld&=0x1;
 		goto end0;
 	}
@@ -428,7 +431,9 @@ char ldfload(struct imgld *il,enum imgtex it){
 		goto end0;
 	}
 	imgldfiletime(il,FT_UPDATE);
-	if(imgexifload(il->img->exif,fn)&0x2) effref|=EFFREF_ROT;
+	ld=imgexifload(il->img->exif,fn);
+	if(ld&0x2) effref|=EFFREF_ROT;
+	if(ld&0x4 && ilsortupd(ilt,il->img)) effref|=EFFREF_ALL;
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
@@ -557,8 +562,8 @@ int ldcheckfree(struct img *img,int imgi,struct imglist *il,void *arg){
 	return ldffree(img->ld,hold);
 }
 
-int ldcheckexifload(struct img *img,int UNUSED(imgi),struct imglist *UNUSED(il),void *UNUSED(arg)){
-	return ldfload(img->ld,TEX_NONE);
+int ldcheckexifload(struct img *img,int UNUSED(imgi),struct imglist *il,void *UNUSED(arg)){
+	return ldfload(img->ld,il,TEX_NONE);
 }
 
 char ldcheck(){
@@ -577,7 +582,7 @@ char ldcheck(){
 			enum imgtex tex;
 			imgri=ilclipimgi(CIL(il),cimgi+ldcp->load[i].imgi,0);
 			tex=ldcp->load[i].tex;
-			if(prgforoneldfrm(CIL(il),imgri,ldfload,tex)){ ret=1; break; }
+			if(prgforoneldfrm(CIL(il),imgri,ldfload,CIL(il),tex)){ ret=1; break; }
 		}
 	}
 
@@ -604,8 +609,8 @@ void ldresetdo(){
 	ldresetdoimg(dirimg,-1,NULL,NULL);
 	ldresetdoimg(delimg,-1,NULL,NULL);
 	ilsforallimgs(ldresetdoimg,NULL,0,0);
-	ldfload(defimg->ld,TEX_BIG);
-	ldfload(dirimg->ld,TEX_BIG);
+	ldfload(defimg->ld,CIL_NONE,TEX_BIG);
+	ldfload(dirimg->ld,CIL_NONE,TEX_BIG);
 	debug(DBG_STA,"ldreset done");
 	load.reset=0;
 }
@@ -615,8 +620,8 @@ extern Uint32 paint_last;
 int ldthread(void *UNUSED(arg)){
 	tlb.pmx=SDL_CreateMutex();
 	ldconceptcompile();
-	ldfload(defimg->ld,TEX_BIG);
-	ldfload(dirimg->ld,TEX_BIG);
+	ldfload(defimg->ld,CIL_NONE,TEX_BIG);
+	ldfload(dirimg->ld,CIL_NONE,TEX_BIG);
 	exichload();
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);

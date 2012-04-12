@@ -33,7 +33,6 @@ extern struct img *dirimg;
 extern struct img *delimg;
 
 struct img *imginit();
-struct img *imgadd(struct imglist *il,const char *prg);
 void imgfree(struct img *img);
 
 #endif

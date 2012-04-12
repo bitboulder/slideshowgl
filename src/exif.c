@@ -85,9 +85,6 @@ float imgexifrotf(struct imgexif *exif){
 	return 0.f;
 }
 
-/* thread: dpl */
-void imgexifsetsortil(struct imgexif *exif,struct imglist *sortil){ if(!exif->load) exif->sortil=sortil; }
-
 /* thread: img */
 struct imgexif *imgexifinit(){
 	return calloc(1,sizeof(struct imgexif));
@@ -280,6 +277,7 @@ char *imgexifgetinfo(exifdata *exdat){
 char imgexifload(struct imgexif *exif,const char *fn){
 #if HAVE_EXIV2 || HAVE_EXIF
 	enum rot r;
+	int64_t d;
 	exifdata *exdat;
 	char ret=0x1;
 	enum filetype ft=filetype(fn);
@@ -295,17 +293,14 @@ char imgexifload(struct imgexif *exif,const char *fn){
 #endif
 	r=imgexifgetrot(exdat);
 	if(r!=exif->rot){ ret|=0x2; exif->rot=r; }
-	exif->date=imgexifgetdate(exdat);
+	d=imgexifgetdate(exdat);
+	if(d!=exif->date){ ret|=0x4; exif->date=d; }
 	exif->info=imgexifgetinfo(exdat);
 #if HAVE_EXIV2
 	exiv2free(exdat);
 #elif HAVE_EXIF
 	exif_data_free(exdat);
 #endif
-	if(exif->sortil){
-		dplsetresortil(exif->sortil);
-		exif->sortil=NULL;
-	}
 	exichadd(exif,fn);
 	return ret;
 #else

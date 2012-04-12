@@ -50,9 +50,3 @@ void imgfree(struct img *img){
 	free(img);
 }
 
-struct img *imgadd(struct imglist *il,const char *prg){
-	struct img *img=imginit();
-	if(!iladdimg(il,img,prg)) return NULL;
-	return img;
-}
-

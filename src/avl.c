@@ -16,6 +16,7 @@ struct avl {
 struct avls {
 	avlcmp cmp;
 	struct avl *avl;
+	struct img **first,**last;
 };
 
 int avlrndcmp(const struct avl *a,const struct avl *b){
@@ -113,19 +114,6 @@ void avlrot(struct avl *avl){
 	avlrot(avl->pa);
 }
 
-void avlins(struct avls *avls,struct img *img){
-	struct avl **p=avls->avl->ch+0, *pa=avls->avl;
-	struct avl *avl=calloc(1,sizeof(struct avl));
-	avl->rnd=rand();
-	avl->img=img;
-	while(*p){ pa=*p; p=p[0]->ch+(avls->cmp(avl,p[0])>0?1:0); }
-	*p=avl;
-	avl->pa=pa;
-	avl->h=1;
-//	printf("%s\n",imgfilefn(avl->img->file)); avlprint(avls,"INS");
-	avlrot(avl);
-}
-
 void avlout1(struct avl *avl,struct img **first,struct img **last,struct img *img,char pos){
 	if(!avl) return;
 	if(!img){
@@ -146,12 +134,45 @@ void avlout1(struct avl *avl,struct img **first,struct img **last,struct img *im
 	avlout1(avl->ch[1],first,last,avl->img,1);
 }
 
-void avlout(struct avls *avls,struct img **first,struct img **last){ avlout1(avls->avl->ch[0],first,last,NULL,0); }
+void avlout(struct avls *avls){ avlout1(avls->avl->ch[0],avls->first,avls->last,NULL,0); }
 
-struct avls *avlinit(avlcmp cmp){
+void avlins(struct avls *avls,struct img *img){
+	struct avl **p=avls->avl->ch+0, *pa=avls->avl;
+	struct avl *avl=calloc(1,sizeof(struct avl));
+	int pos=-1;
+	avl->rnd=rand();
+	avl->img=img;
+	while(*p){ pa=*p; p=p[0]->ch+(pos=(avls->cmp(avl,p[0])>0?1:0)); }
+	*p=avl;
+	avl->pa=pa;
+	avl->h=1;
+	if(pos<0){
+		img->nxt=img->prv=NULL;
+		*avls->first=*avls->last=img;
+	}else if(!pos){
+		img->nxt=pa->img;
+		img->prv=pa->img->prv;
+		pa->img->prv=img;
+		if(!img->prv) *avls->first=img;
+		else img->prv->nxt=img;
+	}else{
+		img->prv=pa->img;
+		img->nxt=pa->img->nxt;
+		pa->img->nxt=img;
+		if(!img->nxt) *avls->last=img;
+		else img->nxt->prv=img;
+	}
+//	printf("%s\n",imgfilefn(avl->img->file)); avlprint(avls,"INS");
+	avlrot(avl);
+//	avlout(avls);
+}
+
+struct avls *avlinit(avlcmp cmp,struct img **first,struct img **last){
 	struct avls *avls=calloc(1,sizeof(struct avls));
 	avls->avl=calloc(1,sizeof(struct avl));
 	avls->cmp=cmp;
+	avls->first=first;
+	avls->last=last;
 	return avls;
 }
 

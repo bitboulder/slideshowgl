@@ -226,7 +226,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 	if(len>=FILELEN) return 0;
 	ft=filetype(fn);
 	if(ft&FT_DIREX){
-		img=imgadd(il,prg);
+		img=imginit();
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 		fimgtxtinit(img->file,img->file->fn);
 		img->file->dir=1;
@@ -237,7 +237,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 		size_t ltxt;
 		int i;
 		float val;
-		img=imgadd(il,prg);
+		img=imginit();
 		pos=strchr(fn+=4,'_');
 		ltxt = MIN(pos ? (size_t)pos-(size_t)fn : len, FILELEN-1);
 		memcpy(img->file->txt.txt,fn,ltxt);
@@ -257,7 +257,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 		for(ext=imgext;!ok && ext[0];ext++) if(fileext(fn,len,ext[0])) ok=1;
 		if(!ok) return 0;
 		if(!src || !ilmoveimg(il,src,fn,len)){
-			img=imgadd(il,prg);
+			img=imginit();
 			memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 			fthumbinit(img->file);
 			fmovinit(img->file);
@@ -265,9 +265,11 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 			imgposmark(img,MPC_YES);
 		}
 	}else if(!strncmp(fn,"[MAP]",6)){
-		img=imgadd(il,NULL);
+		prg=NULL;
+		img=imginit();
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 	}
+	if(img) iladdimg(il,img,prg);
 	return 1;
 }
 
@@ -313,11 +315,6 @@ void finitimg(struct img **img,const char *basefn){
 	snprintf((*img)->file->fn,FILELEN,fn);
 }
 
-/* thread: dpl */
-void floadfinalize(struct imglist *il,char subdir){
-	ilorder(il,subdir?ILSCHG_INIT_SUBDIR:ILSCHG_INIT_MAINDIR);
-}
-
 struct imglist *ilbase=NULL;
 
 void fgetfile(const char *fn,char singlefile){
@@ -338,7 +335,6 @@ void fgetfiles(int argc,char **argv){
 		goto end;
 	}
 	for(i=0;i<argc;i++) fgetfile(argv[i],singlefile);
-	floadfinalize(ilbase,0);
 end:
 	cilset(ilbase,0);
 	mapaddbasedir(NULL,NULL);
@@ -379,7 +375,6 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	}
 	if(dd) closedir(dd);
 	if(!count){ ildestroy(il); il=NULL; }
-	else floadfinalize(il,dir[0]!='\0');
 end:
 	if(src) ilunused(src);
 	return il;
