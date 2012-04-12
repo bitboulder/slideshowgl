@@ -1030,7 +1030,7 @@ void dplkey(unsigned short keyu){
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); break;
 	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
-	case 'S': if(!dplmark(ilcimgi(NULL),1)) ilsortchg(NULL,1); break;
+	case 'S': if(!dplmark(ilcimgi(NULL),1)){ ilsortchg(NULL,1); effinit(EFFREF_ALL,0,NULL,-1); } break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,AIL_LEFT && dpl.actimgi>=0 ? dpl.actimgi : ilcimgi(CIL(0)),-1)) dplcol(1); break;

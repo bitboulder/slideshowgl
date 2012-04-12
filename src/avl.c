@@ -19,20 +19,32 @@ struct avls {
 	struct img **first,**last;
 };
 
+#define AVLDIRCMP(a,b)	{ \
+	const char *ar=imgfiledir(a->img->file); \
+	const char *br=imgfiledir(b->img->file); \
+	if(ar && !br) return  1; \
+	if(!ar && br) return -1; \
+}
+
 int avlrndcmp(const struct avl *a,const struct avl *b){
+	AVLDIRCMP(a,b);
 	if(a->rnd>b->rnd) return 1;
 	if(a->rnd<b->rnd) return -1;
 	return a->img<b->img?-1:1;
 }
 
 int avlfilecmp(const struct avl *a,const struct avl *b){
-	int str=strcmp(imgfilefn(a->img->file),imgfilefn(b->img->file));
+	int str;
+	AVLDIRCMP(a,b);
+	str=strcmp(imgfilefn(a->img->file),imgfilefn(b->img->file));
 	return str ? str : avlrndcmp(a,b);
 }
 
 int avldatecmp(const struct avl *a,const struct avl *b){
-	int64_t ad=imgexifdate(a->img->exif);
-	int64_t bd=imgexifdate(b->img->exif);
+	int64_t ad,bd;
+	AVLDIRCMP(a,b);
+	ad=imgexifdate(a->img->exif);
+	bd=imgexifdate(b->img->exif);
 	if(!ad && !bd) return avlfilecmp(a,b);
 	if(!ad)   return  1;
 	if(!bd)   return -1;
@@ -56,10 +68,10 @@ char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp){
 			int h1=avl->ch[1]?avl->ch[1]->h:0;
 			int h=MAX(h0,h1)+1;
 			if(avl->h!=h) printf(" ERROR: h %i",h);
-			if(err|=(char)(avl->ch[0] && avl->ch[0]->pa!=avl)) printf(" ERROR: ch0->pa");
-			if(err|=(char)(avl->ch[1] && avl->ch[1]->pa!=avl)) printf(" ERROR: ch1->pa");
-			if(err|=(char)(avl->ch[0] && cmp(avl,avl->ch[0])<=0)) printf(" ERROR: ch0->cmp");
-			if(err|=(char)(avl->ch[1] && cmp(avl,avl->ch[1])>0)) printf(" ERROR: ch1->cmp");
+			if((char)(avl->ch[0] && avl->ch[0]->pa!=avl)){ err=1; printf(" ERROR: ch0->pa"); }
+			if((char)(avl->ch[1] && avl->ch[1]->pa!=avl)){ err=1; printf(" ERROR: ch1->pa"); }
+			if((char)(avl->ch[0] && cmp(avl,avl->ch[0])<=0)){ err=1; printf(" ERROR: ch0->cmp"); }
+			if((char)(avl->ch[1] && cmp(avl,avl->ch[1])>0)){ err=1; printf(" ERROR: ch1->cmp"); }
 			if(abs(h0-h1)>1) printf(" ERROR: unbal");
 			printf("\n");
 			err|=avlprint1(avl->ch[0],"ch0",d+1,cmp);
@@ -77,38 +89,37 @@ char avlprint(struct avls *avls,const char *pre){
 
 void avlh(struct avl *avl){ avl->h=MAX(avl->ch[0]?avl->ch[0]->h:0,avl->ch[1]?avl->ch[1]->h:0)+1; }
 
+struct avl *avlrot1(struct avl *avl,int dir){
+	struct avl *rot=avl->ch[dir];
+	if((rot->ch[dir]?rot->ch[dir]->h:0) < rot->h-1){ /* doppel */
+		struct avl *sub=rot->ch[!dir];
+		avl->pa->ch[avl->pa->ch[0]==avl?0:1]=sub; sub->pa=avl->pa;          // sub => pa->ch
+		if((rot->ch[!dir]=sub->ch[dir]))          rot->ch[!dir]->pa=rot;    // sub->ch[dir] => rot->ch[!dir]
+		sub->ch[dir]=rot;                         rot->pa=sub;              // rot => sub->ch[dir]
+		if((avl->ch[dir]=sub->ch[!dir]))          avl->ch[dir]->pa=avl;     // sub->ch[!dir] => avl->ch[dir]
+		sub->ch[!dir]=avl;                        avl->pa=sub;              // avl => sub->ch[!dir]
+		avlh(avl); avlh(rot); avlh(sub);
+		return sub;
+	}else{ /* einfach */
+		avl->pa->ch[avl->pa->ch[0]==avl?0:1]=rot; rot->pa=avl->pa;          // rot => pa->ch
+		if((avl->ch[dir]=rot->ch[!dir]))          avl->ch[dir]->pa=avl;     // rot->ch[!dir] => avl->ch[dir]
+		rot->ch[!dir]=avl;                        avl->pa=rot;              // avl => rot->ch[!dir]
+		avlh(avl); avlh(rot);
+		return rot;
+	}
+}
+
 void avlrot(struct avl *avl){
-	int id,h2;
-	if(!avl->pa || !avl->pa->img) return;
-	if(avl->pa->h>=avl->h+1) return;
-	id=avl->pa->ch[0]==avl ? 0 : 1;
-	h2=avl->pa->ch[!id]?avl->pa->ch[!id]->h:0;
-	if(avl->h-h2>1){ /* TODO: avl->h-h2<-1 */
-		if((avl->ch[id]?avl->ch[id]->h:0)<avl->h-1){
-			avl->pa->pa->ch[avl->pa->pa->ch[0]==avl->pa?0:1]=avl->ch[!id];
-			avl->ch[!id]->pa=avl->pa->pa;
-			avl->pa->ch[id]=avl->ch[!id]->ch[!id];
-			if(avl->ch[!id]->ch[!id]) avl->ch[!id]->ch[!id]->pa=avl->pa;
-			avl->ch[!id]->ch[!id]=avl->pa;
-			avl->pa->pa=avl->ch[!id];
-			avl->pa=avl->ch[!id];
-			avl->ch[!id]=avl->pa->ch[id];
-			avl->pa->ch[id]=avl;
-			if(avl->ch[!id]) avl->ch[!id]->pa=avl;
-		}else{
-			avl->pa->ch[id]=avl->ch[!id];
-			if(avl->ch[!id]) avl->ch[!id]->pa=avl->pa;
-			avl->ch[!id]=avl->pa;
-			avl->pa=avl->ch[!id]->pa;
-			avl->pa->ch[avl->pa->ch[0]==avl->ch[!id]?0:1]=avl;
-			avl->ch[!id]->pa=avl;
-		}
-		avlh(avl->pa->ch[!id]);
-		avlh(avl);
-		avlh(avl->pa);
-	}else avl->pa->h=avl->h+1;
-//	printf("%s\n",imgfilefn(avl->img->file)); avlprint(NULL,"ROT");
-	avlrot(avl->pa);
+	int ho,h0,h1;
+	if(!avl || !avl->img) return;
+	ho=avl->h;
+	h0=avl->ch[0]?avl->ch[0]->h:0;
+	h1=avl->ch[1]?avl->ch[1]->h:0;
+	avl->h=MAX(h0,h1)+1;
+	if(h0<h1-1) avl=avlrot1(avl,1);
+	if(h1<h0-1) avl=avlrot1(avl,0);
+//	printf("%s\n",imgfilefn(avl->img->file)); if(avlprint(NULL,"ROT")) exit(1);
+	if(ho!=avl->h) avlrot(avl->pa);
 }
 
 void avlout1(struct avl *avl,struct img **first,struct img **last,struct img *img,char pos){
@@ -161,8 +172,8 @@ void avlins(struct avls *avls,struct img *img){
 			if(!img->nxt) *avls->last=img;
 			else img->nxt->prv=img;
 		}
-//		printf("%s\n",imgfilefn(avl->img->file)); avlprint(avls,"INS");
-		avlrot(avl);
+//		printf("%s\n",imgfilefn(img->file)); if(avlprint(avls,"INS")) exit(1);
+		avlrot(avl->pa);
 	}else{
 		img->nxt=NULL;
 		img->prv=avls->last[0];
@@ -183,7 +194,7 @@ void avldel(struct avls *avls,struct img *img){
 		else pos=p->pa->ch[0]==p?0:1;
 		p->pa->ch[pos]=p->ch[1];
 		if(p->ch[1]) p->ch[1]->pa=p->pa;
-		avlrot(p->ch[1]?p->ch[1]:p->pa);
+		avlrot(p->pa);
 	}
 }
 

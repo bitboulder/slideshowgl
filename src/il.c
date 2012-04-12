@@ -140,9 +140,9 @@ char cilsecswitch(enum cilsecswitch type){
 
 /******* il sort ***************************************************/
 
-void ilsortinit(struct imglist *il,char subdir){
+void ilsortinit(struct imglist *il){
 	avlcmp cmp;
-	if(subdir>=0) il->sort=subdir?ilcfg.sort_subdir:ilcfg.sort_maindir;
+	struct img *img=il->imgs, *nxt;
 	switch(il->sort){
 	case ILS_DATE: cmp=avldatecmp; break;
 	case ILS_FILE: cmp=avlfilecmp; break;
@@ -150,9 +150,13 @@ void ilsortinit(struct imglist *il,char subdir){
 	default:       cmp=NULL;       break;
 	}
 	il->avls=avlinit(cmp,&il->imgs,&il->last);
+	while(img){ nxt=img->nxt; avlins(il->avls,img); img=nxt; }
 }
 
-void ilsortfree(struct imglist *il){ avlfree(il->avls); }
+void ilsortfree(struct imglist *il){
+	if(il->avls) avlfree(il->avls); 
+	il->avls=NULL;
+}
 
 void ilsortins(struct imglist *il,struct img *img){
 	char *fn=imgfilefn(img->file);
@@ -171,11 +175,13 @@ char ilsortupd(struct imglist *il,struct img *img){
 	return avlchk(il->avls,img);
 }
 
-void ilsortchg(struct imglist *il,int chg){
+void ilsortchg(struct imglist *il,char chg){
 	if(!(il=ilget(il))) return;
-	il->sort=((int)il->sort+ILS_NUM+chg)%ILS_NUM;
+	if(!chg) il->sort=il->dir[0]?ilcfg.sort_subdir:ilcfg.sort_maindir;
+	else if(++il->sort==ILS_NUM) il->sort=ILS_NONE+1;
 	ilsortfree(il);
-	ilsortinit(il,-1);
+	ilsortinit(il);
+	if(chg) il->sort_chg=1;
 }
 
 /******* il init ***************************************************/
@@ -203,7 +209,7 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	il->nxt=ils;
 	ils=il;
 	ilfiletime(il,FT_UPDATE);
-	ilsortinit(il,dir[0]!='\0');
+	ilsortchg(il,0);
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
 	return il;
 }
