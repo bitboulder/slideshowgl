@@ -132,13 +132,6 @@ void markcatsel(struct dplinput *in){
 	in->id=-1;
 }
 
-const char *mkcmp(const char *fn){
-	size_t c=0,i,len=strlen(fn);
-	for(i=len;i>0 && c<3;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') c++;
-	if(i) i++;
-	return fn+i;
-}
-
 int mkhash(const char *cmp){
 	int hash=0;
 	for(;cmp[0];cmp++) hash+=cmp[0];
@@ -156,7 +149,7 @@ void marksfree(){
 }
 
 struct mk *mkfind(const char *fn,enum mkcreate create){
-	const char *cmp=mkcmp(fn);
+	const char *cmp=fncmp(fn);
 	int hash=mkhash(cmp);
 	struct mk *mk=NULL;
 	for(mk=mark.mks[hash];mk && strncmp(cmp,mk->cmp,FILELEN);) mk=mk->nxt;

@@ -26,16 +26,17 @@ struct exich {
 
 
 
-unsigned int exichhkey(const char *fn){
+unsigned int exichhkey(const char *cmp){
 	unsigned hkey=0;
 	int i;
-	for(i=0;fn[i];i++) hkey+=(unsigned int)fn[i];
+	for(i=0;cmp[i];i++) hkey+=(unsigned int)cmp[i];
 	return hkey%ECCHAINS;
 }
 
 struct exichi *exichfind(const char *fn){
-	struct exichi *cache=exich.ci[exichhkey(fn)];
-	for(;cache;cache=cache->nxt) if(!strncmp(fn,cache->fn,FILELEN)) return cache;
+	const char *cmp=fncmp(fn);
+	struct exichi *cache=exich.ci[exichhkey(cmp)];
+	for(;cache;cache=cache->nxt) if(!strncmp(cmp,cache->fn,FILELEN)) return cache;
 	return NULL;
 }
 
@@ -52,9 +53,10 @@ char exichcheck(struct imgexif *exif,const char *fn){
 void exichadd(struct imgexif *exif,const char *fn){
 	struct exichi *ci=exichfind(fn);
 	if(!ci){
-		unsigned int hkey=exichhkey(fn);
+		const char *cmp=fncmp(fn);
+		unsigned int hkey=exichhkey(cmp);
 		ci=malloc(sizeof(struct exichi));
-		snprintf(ci->fn,FILELEN,"%s",fn);
+		snprintf(ci->fn,FILELEN,"%s",cmp);
 		ci->ft=filetime(fn);
 		ci->nxt=exich.ci[hkey];
 		exich.ci[hkey]=ci;

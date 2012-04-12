@@ -23,6 +23,8 @@
 #include "file.h"
 #include "mapld.h"
 #include "help.h"
+#include "exich.h"
+#include "act.h"
 
 #if 0
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -353,6 +355,8 @@ int main(int argc,char **argv){
 	logdbg=cfggetint("main.logdbg");
 	if(dbg>logdbg) logdbg=dbg;
 	tim=cfggetenum("main.timer");
+	actinit();
+	exichload();
 	fgetfiles(argc-optind,argv+optind);
 	sdlinit();
 	mapldinit();

@@ -303,3 +303,10 @@ void col_rgb2hsl(float *dst,float *src){
 	dst[3]=src[3];
 }
 
+const char *fncmp(const char *fn){
+	size_t c=0,i,len=strlen(fn);
+	for(i=len;i>0 && c<3;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') c++;
+	if(i) i++;
+	return fn+i;
+}
+

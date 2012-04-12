@@ -21,7 +21,6 @@
 #include "pano.h"
 #include "prg.h"
 #include "map.h"
-#include "exich.h"
 #include "hist.h"
 
 #define E2(X,N)	#X
@@ -622,7 +621,6 @@ int ldthread(void *UNUSED(arg)){
 	ldconceptcompile();
 	ldfload(defimg->ld,CIL_NONE,TEX_BIG);
 	ldfload(dirimg->ld,CIL_NONE,TEX_BIG);
-	exichload();
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();

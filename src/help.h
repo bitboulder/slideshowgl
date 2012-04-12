@@ -60,4 +60,6 @@ void utf8check(char *str);
 void col_hsl2rgb(float *dst,float *src);
 void col_rgb2hsl(float *dst,float *src);
 
+const char *fncmp(const char *fn);
+
 #endif
