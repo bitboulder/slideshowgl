@@ -83,7 +83,7 @@ void avlrot(struct avl *avl){
 	if(avl->pa->h>=avl->h+1) return;
 	id=avl->pa->ch[0]==avl ? 0 : 1;
 	h2=avl->pa->ch[!id]?avl->pa->ch[!id]->h:0;
-	if(avl->h-h2>1){
+	if(avl->h-h2>1){ /* TODO: avl->h-h2<-1 */
 		if((avl->ch[id]?avl->ch[id]->h:0)<avl->h-1){
 			avl->pa->pa->ch[avl->pa->pa->ch[0]==avl->pa?0:1]=avl->ch[!id];
 			avl->ch[!id]->pa=avl->pa->pa;
@@ -95,9 +95,6 @@ void avlrot(struct avl *avl){
 			avl->ch[!id]=avl->pa->ch[id];
 			avl->pa->ch[id]=avl;
 			if(avl->ch[!id]) avl->ch[!id]->pa=avl;
-			avlh(avl);
-			avlh(avl->pa->ch[!id]);
-			avlh(avl->pa);
 		}else{
 			avl->pa->ch[id]=avl->ch[!id];
 			if(avl->ch[!id]) avl->ch[!id]->pa=avl->pa;
@@ -105,11 +102,11 @@ void avlrot(struct avl *avl){
 			avl->pa=avl->ch[!id]->pa;
 			avl->pa->ch[avl->pa->ch[0]==avl->ch[!id]?0:1]=avl;
 			avl->ch[!id]->pa=avl;
-			avlh(avl->ch[!id]);
-			avlh(avl);
 		}
-	}
-	avl->pa->h=avl->h+1;
+		avlh(avl->pa->ch[!id]);
+		avlh(avl);
+		avlh(avl->pa);
+	}else avl->pa->h=avl->h+1;
 //	printf("%s\n",imgfilefn(avl->img->file)); avlprint(NULL,"ROT");
 	avlrot(avl->pa);
 }
@@ -137,34 +134,66 @@ void avlout1(struct avl *avl,struct img **first,struct img **last,struct img *im
 void avlout(struct avls *avls){ avlout1(avls->avl->ch[0],avls->first,avls->last,NULL,0); }
 
 void avlins(struct avls *avls,struct img *img){
-	struct avl **p=avls->avl->ch+0, *pa=avls->avl;
-	struct avl *avl=calloc(1,sizeof(struct avl));
-	int pos=-1;
-	avl->rnd=rand();
-	avl->img=img;
-	while(*p){ pa=*p; p=p[0]->ch+(pos=(avls->cmp(avl,p[0])>0?1:0)); }
-	*p=avl;
-	avl->pa=pa;
-	avl->h=1;
-	if(pos<0){
-		img->nxt=img->prv=NULL;
-		*avls->first=*avls->last=img;
-	}else if(!pos){
-		img->nxt=pa->img;
-		img->prv=pa->img->prv;
-		pa->img->prv=img;
-		if(!img->prv) *avls->first=img;
-		else img->prv->nxt=img;
+	if(avls->cmp){
+		struct avl **p=avls->avl->ch+0, *pa=avls->avl;
+		struct avl *avl=calloc(1,sizeof(struct avl));
+		int pos=-1;
+		avl->rnd=rand();
+		avl->img=img;
+		img->avl=avl;
+		while(*p){ pa=*p; p=p[0]->ch+(pos=(avls->cmp(avl,p[0])>0?1:0)); }
+		*p=avl;
+		avl->pa=pa;
+		avl->h=1;
+		if(pos<0){
+			img->nxt=img->prv=NULL;
+			*avls->first=*avls->last=img;
+		}else if(!pos){
+			img->nxt=pa->img;
+			img->prv=pa->img->prv;
+			pa->img->prv=img;
+			if(!img->prv) *avls->first=img;
+			else img->prv->nxt=img;
+		}else{
+			img->prv=pa->img;
+			img->nxt=pa->img->nxt;
+			pa->img->nxt=img;
+			if(!img->nxt) *avls->last=img;
+			else img->nxt->prv=img;
+		}
+//		printf("%s\n",imgfilefn(avl->img->file)); avlprint(avls,"INS");
+		avlrot(avl);
 	}else{
-		img->prv=pa->img;
-		img->nxt=pa->img->nxt;
-		pa->img->nxt=img;
-		if(!img->nxt) *avls->last=img;
-		else img->nxt->prv=img;
+		img->nxt=NULL;
+		img->prv=avls->last[0];
+		if(avls->last[0]) avls->last[0]->nxt=img;
+		else avls->first[0]=img;
+		avls->last[0]=img;
+		img->avl=NULL;
 	}
-//	printf("%s\n",imgfilefn(avl->img->file)); avlprint(avls,"INS");
-	avlrot(avl);
-//	avlout(avls);
+}
+
+void avldel(struct avls *avls,struct img *img){
+	if(img->prv) img->prv->nxt=img->nxt; else avls->first[0]=img->nxt;
+	if(img->nxt) img->nxt->prv=img->prv; else avls->last[0]=img->prv;
+	if(avls->cmp){
+		struct avl *p=img->avl;
+		int pos=0;
+		if(p->ch[0]) while(p->ch[0]) p=p->ch[0];
+		else pos=p->pa->ch[0]==p?0:1;
+		p->pa->ch[pos]=p->ch[1];
+		if(p->ch[1]) p->ch[1]->pa=p->pa;
+		avlrot(p->ch[1]?p->ch[1]:p->pa);
+	}
+}
+
+char avlchk(struct avls *avls,struct img *img){
+	if(!avls->cmp) return 0;
+	if((!img->prv || avls->cmp(img->prv->avl,img->avl)<=0) &&
+	   (!img->nxt || avls->cmp(img->avl,img->nxt->avl)<=0)) return 0;
+	avldel(avls,img);
+	avlins(avls,img);
+	return 1;
 }
 
 struct avls *avlinit(avlcmp cmp,struct img **first,struct img **last){
@@ -178,6 +207,7 @@ struct avls *avlinit(avlcmp cmp,struct img **first,struct img **last){
 
 void avlfree1(struct avl *avl){
 	if(!avl) return;
+	if(avl->img) avl->img->avl=NULL;
 	avlfree1(avl->ch[0]);
 	avlfree1(avl->ch[1]);
 	free(avl);

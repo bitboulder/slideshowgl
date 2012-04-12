@@ -27,6 +27,7 @@ struct img {
 	struct imgfile *file;
 	struct imgpano *pano;
 	struct imghist *hist;
+	struct avl *avl;
 };
 extern struct img *defimg;
 extern struct img *dirimg;

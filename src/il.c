@@ -44,6 +44,7 @@ struct imglist {
 	enum ilsort sort;
 	char sort_chg;
 	struct ldft lf;
+	struct avls *avls;
 } *ils=NULL, *ildel=NULL;
 
 struct curil {
@@ -137,6 +138,46 @@ char cilsecswitch(enum cilsecswitch type){
 	return 0;
 }
 
+/******* il sort ***************************************************/
+
+void ilsortinit(struct imglist *il,char subdir){
+	avlcmp cmp;
+	if(subdir>=0) il->sort=subdir?ilcfg.sort_subdir:ilcfg.sort_maindir;
+	switch(il->sort){
+	case ILS_DATE: cmp=avldatecmp; break;
+	case ILS_FILE: cmp=avlfilecmp; break;
+	case ILS_RND:  cmp=avlrndcmp;  break;
+	default:       cmp=NULL;       break;
+	}
+	il->avls=avlinit(cmp,&il->imgs,&il->last);
+}
+
+void ilsortfree(struct imglist *il){ avlfree(il->avls); }
+
+void ilsortins(struct imglist *il,struct img *img){
+	char *fn=imgfilefn(img->file);
+	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && il->nimg<ilcfg.maxloadexif) imgexifload(img->exif,fn);
+	avlins(il->avls,img);
+	il->nimg++;
+}
+
+void ilsortdel(struct imglist *il,struct img *img){
+	avldel(il->avls,img);
+	il->nimg--;
+}
+
+char ilsortupd(struct imglist *il,struct img *img){
+	if(!(il=ilget(il))) return 0;
+	return avlchk(il->avls,img);
+}
+
+void ilsortchg(struct imglist *il,int chg){
+	if(!(il=ilget(il))) return;
+	il->sort=((int)il->sort+ILS_NUM+chg)%ILS_NUM;
+	ilsortfree(il);
+	ilsortinit(il,-1);
+}
+
 /******* il init ***************************************************/
 
 void ilsetparent(struct imglist *il){
@@ -160,9 +201,9 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	ilsetparent(il);
 	il->cimgi=IMGI_START;
 	il->nxt=ils;
-	il->sort=dir[0]!='\0'?ilcfg.sort_subdir:ilcfg.sort_maindir;
 	ils=il;
 	ilfiletime(il,FT_UPDATE);
+	ilsortinit(il,dir[0]!='\0');
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
 	return il;
 }
@@ -175,6 +216,7 @@ void ildestroy(struct imglist *il){
 	if(il->prg) prgdestroy(il->prg);
 	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
 	if(il2[0]) il2[0]=il->nxt;
+	ilsortfree(il);
 	for(img=il->imgs;img;){ struct img *nxt=img->nxt; imgfree(img); img=nxt; }
 	debug(DBG_STA,"imglist destroyed for dir: %s",il->fn);
 	free(il);
@@ -215,6 +257,10 @@ struct img *ilimg(struct imglist *il,int imgi){
 	if(imgi<0 || imgi>=il->nimg) return NULL;
 	for(img=il->imgs;img && imgi>0;imgi--) img=img->nxt;
 	return img;
+}
+
+char ilfiletime(struct imglist *il,enum eldft act){
+	return il->fn[0]!='[' && ldfiletime(&il->lf,act,il->fn);
 }
 
 /* thread: dpl */
@@ -279,79 +325,13 @@ int ildiffimgi(struct imglist *il,int ia,int ib){
 	return diff;
 }
 
-/******* il sort ***************************************************/
-
-void ilsortdo(struct img **imgs,struct img **last,avlcmp cmp){
-	struct avls *avls=avlinit(cmp,imgs,last);
-	struct img *img;
-	for(img=*imgs;img;){
-		struct img *nxt=img->nxt;
-		avlins(avls,img);
-		img=nxt;
-	}
-//	avlprint(avls,"AVL");
-	avlfree(avls);
-}
-
-void ilsort(struct imglist *il,avlcmp cmp){
-	ilsortdo(&il->imgs,&il->last,cmp);
-}
-
-char ilorderdo(struct imglist *il){
-	switch(il->sort){
-	case ILS_DATE: ilsort(il,avldatecmp); break;
-	case ILS_FILE: ilsort(il,avlfilecmp); break;
-	case ILS_RND:  ilsort(il,avlrndcmp);  break;
-	default: return 0;
-	}
-	effrefresh(EFFREF_ALL);
-	return 1;
-}
-
-char ilfiletime(struct imglist *il,enum eldft act){
-	return il->fn[0]!='[' && ldfiletime(&il->lf,act,il->fn);
-}
-
-void ilsortdel(struct imglist *il,struct img *img){
-	/* TODO */
-	ilorderdo(il);
-}
-
-void ilsortins(struct imglist *il,struct img *img){
-	char *fn=imgfilefn(img->file);
-	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && il->nimg<ilcfg.maxloadexif) imgexifload(img->exif,fn);
-	/* TODO */
-	ilorderdo(il);
-}
-
-char ilsortupd(struct imglist *il,struct img *img){
-	if(!(il=ilget(il))) return 0;
-	/* TODO: if(avlcheck(il,img)) return 0 */
-	ilsortdel(il,img);
-	ilsortins(il,img);
-	/* TODO: no effrefresh */
-	return 1;
-}
-
-void ilsortchg(struct imglist *il,int chg){
-	if(!(il=ilget(il))) return;
-	il->sort=((int)il->sort+ILS_NUM+chg)%ILS_NUM;
-	ilorderdo(il);
-}
-
 /******* il work ***************************************************/
 
 char iladdimg(struct imglist *il,struct img *img,const char *prg){
 	ilcfginit();
 	if(!(il=ilget(il))) return 0;
-	img->nxt=NULL;
-	img->prv=il->last;
-	if(il->last) il->last->nxt=img;
-	else il->imgs=img;
-	il->last=img;
-	il->nimg++;
-	if(prg) prgadd(&il->prg,prg,img);
 	ilsortins(il,img);
+	if(prg) prgadd(&il->prg,prg,img);
 	return 1;
 }
 
@@ -390,11 +370,8 @@ void ilunused(struct imglist *il){
 
 struct img *ilremoveimg(struct imglist *il,struct img *img,char final){
 	if(!(il=ilget(il))) return NULL;
-	if(img->prv) img->prv->nxt=img->nxt; else il->imgs=img->nxt;
-	if(img->nxt) img->nxt->prv=img->prv; else il->last=img->prv;
-	il->nimg--;
-	ilupdcimgi(il);
 	ilsortdel(il,img);
+	ilupdcimgi(il);
 	if(!final) iladdimg(ildel,img,NULL);
 	return img;
 }
