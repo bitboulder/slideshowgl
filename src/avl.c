@@ -53,39 +53,49 @@ int avldatecmp(const struct avl *a,const struct avl *b){
 	return avlfilecmp(a,b);
 }
 
-char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp){
+#if 0
+char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp,FILE *fd){
 	int i;
 	char err=0;
-	printf("[%2i]",d);
-	for(i=0;i<d;i++) printf(" ");
-	printf("%s",pre);
-	if(!avl) printf("(--)\n"); else {
-		printf("(%2i): %s",avl->h,imgfilefn(avl->img->file));
-		if(avl->ch[0]==avl) printf(" ERROR: ch0->loop\n");
-		else if(avl->ch[1]==avl) printf(" ERROR ch1->loop\n");
+	fprintf(fd,"[%2i]",d);
+	for(i=0;i<d;i++) fprintf(fd," ");
+	fprintf(fd,"%s",pre);
+	if(!avl) fprintf(fd,"(--)\n"); else {
+		fprintf(fd,"(%2i): %s",avl->h,imgfilefn(avl->img->file));
+		if(avl->ch[0]==avl) fprintf(fd," ERROR: ch0->loop\n");
+		else if(avl->ch[1]==avl) fprintf(fd," ERROR ch1->loop\n");
 		else{
 			int h0=avl->ch[0]?avl->ch[0]->h:0;
 			int h1=avl->ch[1]?avl->ch[1]->h:0;
 			int h=MAX(h0,h1)+1;
-			if(avl->h!=h) printf(" ERROR: h %i",h);
-			if((char)(avl->ch[0] && avl->ch[0]->pa!=avl)){ err=1; printf(" ERROR: ch0->pa"); }
-			if((char)(avl->ch[1] && avl->ch[1]->pa!=avl)){ err=1; printf(" ERROR: ch1->pa"); }
-			if((char)(avl->ch[0] && cmp(avl,avl->ch[0])<=0)){ err=1; printf(" ERROR: ch0->cmp"); }
-			if((char)(avl->ch[1] && cmp(avl,avl->ch[1])>0)){ err=1; printf(" ERROR: ch1->cmp"); }
-			if(abs(h0-h1)>1) printf(" ERROR: unbal");
-			printf("\n");
-			err|=avlprint1(avl->ch[0],"ch0",d+1,cmp);
-			err|=avlprint1(avl->ch[1],"ch1",d+1,cmp);
+			if(avl->h!=h) fprintf(fd," ERROR: h %i",h);
+			if((char)(avl->ch[0] && avl->ch[0]->pa!=avl)){ err=1; fprintf(fd," ERROR: ch0->pa"); }
+			if((char)(avl->ch[1] && avl->ch[1]->pa!=avl)){ err=1; fprintf(fd," ERROR: ch1->pa"); }
+			if((char)(avl->ch[0] && cmp(avl,avl->ch[0])<=0)){ err=1; fprintf(fd," ERROR: ch0->cmp"); }
+			if((char)(avl->ch[1] && cmp(avl,avl->ch[1])>0)){ err=1; fprintf(fd," ERROR: ch1->cmp"); }
+			if(abs(h0-h1)>1) fprintf(fd," ERROR: unbal");
+			fprintf(fd,"\n");
+			err|=avlprint1(avl->ch[0],"ch0",d+1,cmp,fd);
+			err|=avlprint1(avl->ch[1],"ch1",d+1,cmp,fd);
 		}
 	}
 	return err;
 }
 
-char avlprint(struct avls *avls,const char *pre){
+void avlprint(struct avls *avls,const char *pre,struct avl *pos){
 	static struct avls *savls;
+//	FILE *fd=fopen("avldebug","a");
+	FILE *fd=fopen("/dev/null","w");
+	char ret;
+	fprintf(fd,"POS: %s\n",imgfilefn(pos->img->file));
 	if(avls) savls=avls; else avls=savls;
-	return avlprint1(avls->avl->ch[0],pre,0,avls->cmp);
+	ret=avlprint1(avls->avl->ch[0],pre,0,avls->cmp,fd);
+	fclose(fd);
+	if(ret) abort();
 }
+#else
+	#define avlprint(avls,pre,pos)
+#endif
 
 void avlh(struct avl *avl){ avl->h=MAX(avl->ch[0]?avl->ch[0]->h:0,avl->ch[1]?avl->ch[1]->h:0)+1; }
 
@@ -118,31 +128,9 @@ void avlrot(struct avl *avl){
 	avl->h=MAX(h0,h1)+1;
 	if(h0<h1-1) avl=avlrot1(avl,1);
 	if(h1<h0-1) avl=avlrot1(avl,0);
-//	printf("%s\n",imgfilefn(avl->img->file)); if(avlprint(NULL,"ROT")) exit(1);
+	avlprint(NULL,"ROT",avl);
 	if(ho!=avl->h) avlrot(avl->pa);
 }
-
-void avlout1(struct avl *avl,struct img **first,struct img **last,struct img *img,char pos){
-	if(!avl) return;
-	if(!img){
-		avl->img->nxt=avl->img->prv=NULL;
-		*first=*last=avl->img;
-	}else if(!pos){
-		avl->img->nxt=img;
-		avl->img->prv=img->prv;
-		if(img->prv) img->prv->nxt=avl->img; else *first=avl->img;
-		img->prv=avl->img;
-	}else{
-		avl->img->prv=img;
-		avl->img->nxt=img->nxt;
-		if(img->nxt) img->nxt->prv=avl->img; else *last=avl->img;
-		img->nxt=avl->img;
-	}
-	avlout1(avl->ch[0],first,last,avl->img,0);
-	avlout1(avl->ch[1],first,last,avl->img,1);
-}
-
-void avlout(struct avls *avls){ avlout1(avls->avl->ch[0],avls->first,avls->last,NULL,0); }
 
 void avlins(struct avls *avls,struct img *img){
 	if(avls->cmp){
@@ -172,8 +160,9 @@ void avlins(struct avls *avls,struct img *img){
 			if(!img->nxt) *avls->last=img;
 			else img->nxt->prv=img;
 		}
-//		printf("%s\n",imgfilefn(img->file)); if(avlprint(avls,"INS")) exit(1);
+		avlprint(avls,"INSs",avl);
 		avlrot(avl->pa);
+		avlprint(avls,"INSf",avl);
 	}else{
 		img->nxt=NULL;
 		img->prv=avls->last[0];
@@ -187,14 +176,28 @@ void avlins(struct avls *avls,struct img *img){
 void avldel(struct avls *avls,struct img *img){
 	if(img->prv) img->prv->nxt=img->nxt; else avls->first[0]=img->nxt;
 	if(img->nxt) img->nxt->prv=img->prv; else avls->last[0]=img->prv;
-	if(avls->cmp){
-		struct avl *p=img->avl;
-		int pos=0;
-		if(p->ch[0]) while(p->ch[0]) p=p->ch[0];
-		else pos=p->pa->ch[0]==p?0:1;
-		p->pa->ch[pos]=p->ch[1];
-		if(p->ch[1]) p->ch[1]->pa=p->pa;
-		avlrot(p->pa);
+	img->nxt=img->prv=NULL;
+	if(avls->cmp && img->avl && img->avl->pa){
+		struct avl *avl=img->avl, *rot=avl->pa, *ins=NULL;
+		int pos=avl->pa->ch[0]==avl?0:1, posi=0;
+		if(!avl->ch[0]){  if((avl->pa->ch[pos]=avl->ch[1])) avl->ch[1]->pa=avl->pa; }
+		else if(!avl->ch[1]){ avl->pa->ch[pos]=avl->ch[0];  avl->ch[0]->pa=avl->pa; }
+		else{
+			for(ins=avl->ch[0];ins->ch[1];ins=ins->ch[1]) posi=1;
+			if((ins->pa->ch[posi]=ins->ch[0])) ins->ch[0]->pa=ins->pa; // del ins
+			rot=ins->pa;
+			avl->pa->ch[pos]=ins;       ins->pa=avl->pa;     // ins => pa->ch[pos]
+			if((ins->ch[0]=avl->ch[0])) ins->ch[0]->pa=ins;  // avl->ch[0] => ins->ch[0]
+			if((ins->ch[1]=avl->ch[1])) ins->ch[1]->pa=ins;  // avl->ch[1] => ins->ch[1]
+			ins->h=avl->h;
+		}
+		avlprint(avls,"DELs",avl);
+		avlrot(rot);
+		avlprint(avls,"DELm",avl);
+		if(ins) avlrot(ins);
+		avlprint(avls,"DELf",avl);
+		img->avl=NULL;
+		free(avl);
 	}
 }
 
