@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-02 21:26+0200\n"
+"POT-Creation-Date: 2012-04-13 14:44+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -141,41 +141,41 @@ msgid "Set duration to hold the mouse"
 msgstr "Tip-Info-Verzögerung"
 
 #: src/cfg.c:59
-msgid "Toggle image loop"
-msgstr "Bildschleife umschalten"
-
-#: src/cfg.c:60
 msgid "Set initial zoom"
 msgstr "Anfangszoom setzen"
 
-#: src/cfg.c:61
+#: src/cfg.c:60
 msgid "Play all and exit"
 msgstr "Alles abspielen und beenden"
 
-#: src/cfg.c:62
+#: src/cfg.c:61
 msgid "Enable playrecord + set file name base"
 msgstr "Aufnahme aktivieren und Basis-Dateiname setzen"
 
-#: src/cfg.c:63
+#: src/cfg.c:62
 msgid "Framerate for playrecord"
 msgstr "Bildrate für Aufnahme"
 
-#: src/cfg.c:64
+#: src/cfg.c:63
 msgid "Window width for playrecord"
 msgstr "Fensterbreite für Aufnahme"
 
-#: src/cfg.c:65
+#: src/cfg.c:64
 msgid "Window height for playrecord"
 msgstr "Fensterhöhe für Aufnahme"
 
-#: src/cfg.c:66
+#: src/cfg.c:65
 msgid "Set effect duration"
 msgstr "Effektdauer setzen"
 
-#: src/cfg.c:67
+#: src/cfg.c:66
 msgid "Factor to shrink all not-current images for zoom<0"
 msgstr ""
 "Faktor mit den alle nicht-aktuellen Bilder gestacht werdenn (bei zoom<0)"
+
+#: src/cfg.c:67
+msgid "Toggle image loop"
+msgstr "Bildschleife umschalten"
 
 #: src/cfg.c:68
 msgid "Toggle image random"
@@ -474,207 +474,207 @@ msgstr ""
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:94
+#: src/dpl.c:86
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:95
+#: src/dpl.c:87
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:96
+#: src/dpl.c:88
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:97
+#: src/dpl.c:89
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:99
+#: src/dpl.c:91
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:100
+#: src/dpl.c:92
 #, c-format
 msgid "[Mark-File]"
 msgstr "[Markierungsdatei]"
 
-#: src/dpl.c:171
+#: src/dpl.c:161
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:225
+#: src/dpl.c:215
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:440
+#: src/dpl.c:401
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:569
+#: src/dpl.c:526
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:570
+#: src/dpl.c:527
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:586
+#: src/dpl.c:543
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:587
+#: src/dpl.c:544
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:588
+#: src/dpl.c:545
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:592 src/map.c:1039
+#: src/dpl.c:549 src/map.c:1038
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:593
+#: src/dpl.c:550
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1028
+#: src/dpl.c:975
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
 
-#: src/eff.c:161
+#: src/eff.c:167
 #, c-format
 msgid "effpos img %3i (%6i) %4s: %5.2f->%5.2f (%4i->%4i)"
 msgstr ""
 
-#: src/eff.c:163
+#: src/eff.c:169
 #, c-format
 msgid "effpos img %3i (%6i) %4s: %5.2f"
 msgstr ""
 
-#: src/eff.c:415
+#: src/eff.c:414
 #, c-format
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:46 src/img.c:491
+#: src/exif.c:37 src/il.c:273
 msgid "Date"
 msgstr "Datum"
 
-#: src/exif.c:49
+#: src/exif.c:40
 msgid "Model"
 msgstr "Kamera"
 
-#: src/exif.c:50
+#: src/exif.c:41
 msgid "Resolution"
 msgstr "Auflösung"
 
-#: src/exif.c:53
+#: src/exif.c:44
 msgid "Lens"
 msgstr "Objektiv"
 
-#: src/exif.c:54
+#: src/exif.c:45
 msgid "Focal length"
 msgstr "Brennweite"
 
-#: src/exif.c:56
+#: src/exif.c:47
 msgid "Exposure time"
 msgstr "Belichtungszeit"
 
-#: src/exif.c:57
+#: src/exif.c:48
 msgid "Fnumber"
 msgstr "Blende"
 
-#: src/exif.c:58
+#: src/exif.c:49
 msgid "ISO speed rating"
 msgstr "Empfindlichkeit (ISO)"
 
-#: src/exif.c:59
+#: src/exif.c:50
 msgid "Exposure bias value"
 msgstr "Belichtunskorrektur"
 
-#: src/exif.c:60
+#: src/exif.c:51
 msgid "Metering mode"
 msgstr "Messmethode"
 
-#: src/exif.c:61
+#: src/exif.c:52
 msgid "Measured EV"
 msgstr "Gemessener EV"
 
-#: src/exif.c:63
+#: src/exif.c:54
 msgid "Flash"
 msgstr "Blitz"
 
-#: src/exif.c:64
+#: src/exif.c:55
 msgid "Flash bias value"
 msgstr "Blitzbelichtunskorrektur"
 
-#: src/exif.c:66
+#: src/exif.c:57
 msgid "Exposure program"
 msgstr "Belichtungsprogramm"
 
-#: src/exif.c:67
+#: src/exif.c:58
 msgid "Exposure mode"
 msgstr "Belichtungsmodus"
 
-#: src/exif.c:68
+#: src/exif.c:59
 msgid "White blanace"
 msgstr "Weißabgleich"
 
-#: src/exif.c:69
+#: src/exif.c:60
 msgid "Picture style"
 msgstr "Bildstil"
 
-#: src/exif.c:70
+#: src/exif.c:61
 msgid "Tone priority"
 msgstr "Tonwertpriorität"
 
-#: src/exif.c:72
+#: src/exif.c:63
 msgid "Focus mode"
 msgstr "Fokusmodus"
 
-#: src/exif.c:73
+#: src/exif.c:64
 msgid "Drive mode"
 msgstr "Betriebsart"
 
-#: src/exif.c:134
+#: src/exif.c:122
 #, c-format
 msgid "wrong orientation format (%i)"
 msgstr ""
 
-#: src/exif.c:136
+#: src/exif.c:124
 #, c-format
 msgid "orientation tag with too less components (%lu)"
 msgstr ""
 
-#: src/exif.c:175
+#: src/exif.c:163
 #, c-format
 msgid "date string parse error (in \"%s\" at \"%s\")"
 msgstr ""
 
-#: src/exif.c:186
+#: src/exif.c:174
 #, c-format
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:277 src/sdl.c:291
+#: src/exif.c:267 src/sdl.c:292
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/exif.c:299
+#: src/exif.c:290
 #, c-format
 msgid "exif loading img %s"
 msgstr ""
@@ -699,17 +699,17 @@ msgstr ""
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:283
+#: src/file.c:285
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:285
+#: src/file.c:287
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:361
+#: src/file.c:357
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
@@ -743,15 +743,15 @@ msgstr ""
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:706
+#: src/gl.c:703
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:741
+#: src/gl.c:738
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:1013
+#: src/gl.c:1010
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -766,67 +766,67 @@ msgstr ""
 msgid "mkdirm: mkdir \"%s\" failed"
 msgstr ""
 
-#: src/img.c:152
-#, c-format
-msgid "critical: double free img 0x%08lx\n"
-msgstr ""
-
-#: src/img.c:196
-#, c-format
-msgid "ilsetparent: maxhistory (%i) reached (is there a loop in history?)"
-msgstr ""
-
-#: src/img.c:216
-#, c-format
-msgid "imglist created for dir: %s"
-msgstr ""
-
-#: src/img.c:230
-#, c-format
-msgid "imglist destroyed for dir: %s"
-msgstr ""
-
-#: src/img.c:236
-#, c-format
-msgid "imglist free for dir: %s"
-msgstr ""
-
-#: src/img.c:278
-#, c-format
-msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
-msgstr ""
-
-#: src/img.c:281
-#, c-format
-msgid "ilcleanup state %2i: %7i %s"
-msgstr ""
-
-#: src/img.c:306
+#: src/il.c:92
 #, c-format
 msgid "imglist %i switch to dir: %s"
 msgstr ""
 
-#: src/img.c:358
+#: src/il.c:181
+#, c-format
+msgid "ilsetparent: maxhistory (%i) reached (is there a loop in history?)"
+msgstr ""
+
+#: src/il.c:199
+#, c-format
+msgid "imglist created for dir: %s"
+msgstr ""
+
+#: src/il.c:213
+#, c-format
+msgid "imglist destroyed for dir: %s"
+msgstr ""
+
+#: src/il.c:219
+#, c-format
+msgid "imglist free for dir: %s"
+msgstr ""
+
+#: src/il.c:272
+msgid "Rnd"
+msgstr "Zufall"
+
+#: src/il.c:274
+msgid "File"
+msgstr "Dateiname"
+
+#: src/il.c:275
+msgid "None"
+msgstr "Nichts"
+
+#: src/il.c:349
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/img.c:372
+#: src/il.c:425
+#, c-format
+msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
+msgstr ""
+
+#: src/il.c:428
+#, c-format
+msgid "ilcleanup state %2i: %7i %s"
+msgstr ""
+
+#: src/il.c:442
 #, c-format
 msgid "reload imglist: %s"
 msgstr ""
 
-#: src/img.c:490
-msgid "Rnd"
-msgstr "Zufall"
-
-#: src/img.c:492
-msgid "File"
-msgstr "Dateiname"
-
-#: src/img.c:493
-msgid "None"
-msgstr "Nichts"
+#: src/img.c:41
+#, c-format
+msgid "critical: double free img 0x%08lx\n"
+msgstr ""
 
 #: src/ldcp.c:52
 #, c-format
@@ -871,64 +871,64 @@ msgstr ""
 msgid "jpeg compression failure: file open failed"
 msgstr ""
 
-#: src/load.c:194
+#: src/load.c:193
 #, c-format
 msgid "sdlimg_unref: unref of %s image"
 msgstr ""
 
-#: src/load.c:204
+#: src/load.c:203
 msgid "sdlimg_ref: ref of NULL image"
 msgstr ""
 
-#: src/load.c:334
+#: src/load.c:333
 msgid "ldtexload: load of free'd image"
 msgstr ""
 
-#: src/load.c:376
+#: src/load.c:375
 #, c-format
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:433
+#: src/load.c:437
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:437
+#: src/load.c:441
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:438
+#: src/load.c:442
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:484
+#: src/load.c:488
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:515
+#: src/load.c:519
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:541
+#: src/load.c:545
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:608
+#: src/load.c:613
 msgid "ldreset done"
 msgstr ""
 
-#: src/main.c:152
+#: src/main.c:154
 #, c-format
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:361
+#: src/main.c:365
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s%s%s%s"
 msgstr ""
@@ -950,20 +950,20 @@ msgstr ""
 msgid "[Map-Selection]"
 msgstr "[Karte-Auswahl]"
 
-#: src/map.c:576
+#: src/map.c:575
 msgid "[Map]"
 msgstr "[Karte]"
 
-#: src/map.c:629
+#: src/map.c:628
 #, c-format
 msgid "map loading map %i/%i/%i"
 msgstr ""
 
-#: src/map.c:1040
+#: src/map.c:1039
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/map.c:1040
+#: src/map.c:1039
 msgid "Replace"
 msgstr "Ersetzen"
 
@@ -991,12 +991,12 @@ msgstr ""
 msgid "mapld_load: file loading failed (res: %i)"
 msgstr ""
 
-#: src/mark.c:190
+#: src/mark.c:183
 #, c-format
 msgid "marks loaded (%s)"
 msgstr ""
 
-#: src/mark.c:236
+#: src/mark.c:229
 #, c-format
 msgid "marks saved (%s)"
 msgstr ""
@@ -1016,81 +1016,81 @@ msgstr ""
 msgid "split txt failed (%s)"
 msgstr ""
 
-#: src/sdl.c:159
+#: src/sdl.c:160
 msgid "sdl All fullscreen modes available"
 msgstr ""
 
-#: src/sdl.c:160
+#: src/sdl.c:161
 msgid "sdl No fullscreen modes available"
-msgstr ""
-
-#: src/sdl.c:182
-#, c-format
-msgid "sdl set video mode fullscreen %ix%i on display %i"
 msgstr ""
 
 #: src/sdl.c:183
 #, c-format
+msgid "sdl set video mode fullscreen %ix%i on display %i"
+msgstr ""
+
+#: src/sdl.c:184
+#, c-format
 msgid "sdl set video mode fullscreen %ix%i"
 msgstr ""
 
-#: src/sdl.c:188
+#: src/sdl.c:189
 #, c-format
 msgid "sdl set video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:193
+#: src/sdl.c:194
 msgid "disable anti-aliasing for window size"
 msgstr ""
 
-#: src/sdl.c:203
+#: src/sdl.c:204
 msgid "disable anti-aliasing for mode failure"
 msgstr ""
 
-#: src/sdl.c:207
+#: src/sdl.c:208
 msgid "video mode init failed"
 msgstr ""
 
-#: src/sdl.c:210
+#: src/sdl.c:211
 #, c-format
 msgid "sdl get video mode %ix%i"
 msgstr ""
 
-#: src/sdl.c:214
+#: src/sdl.c:215
 #, c-format
 msgid "sdl sub display at %ix%i size %ix%i"
 msgstr ""
 
-#: src/sdl.c:219
+#: src/sdl.c:220
 #, c-format
 msgid "in sdl view mode (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:231
+#: src/sdl.c:232
 #, c-format
 msgid "sdl init (%ssync)"
 msgstr ""
 
-#: src/sdl.c:232
+#: src/sdl.c:233
 #, c-format
 msgid "in sdlinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:246
+#: src/sdl.c:247
 #, c-format
 msgid "icon load failed (%s)"
 msgstr ""
 
-#: src/sdl.c:285
+#: src/sdl.c:286
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:484
+#: src/sdl.c:485
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:501
+#: src/sdl.c:502
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
@@ -1634,4 +1634,3 @@ msgstr ""
 #: src/dpl_help.h:176
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
-
