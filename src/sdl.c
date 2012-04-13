@@ -232,7 +232,7 @@ void sdlresize(int w,int h){
 		debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
 		if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
 	}
-	effrefresh(EFFREF_FIT);
+	ileffref(CIL_ALL,EFFREF_FIT);
 	sdlforceredraw();
 #ifdef __WIN32__
 	done=1;

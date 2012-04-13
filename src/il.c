@@ -42,6 +42,7 @@ struct imglist {
 	char sort_chg;
 	struct ldft lf;
 	struct avls *avls;
+	enum effrefresh effref;
 } *ils=NULL, *ildel=NULL;
 
 struct curil {
@@ -72,7 +73,7 @@ struct imglist *ilget(struct imglist *il){
 	long cil=(long)il;
 	if(!il) return curil.ils[curil.actil];
 	if(cil<0 && cil>=-CIL_NUM) return curil.ils[-cil-1];
-	if(il==CIL_NONE) return NULL;
+	if(il==CIL_NONE || il==CIL_ALL) return NULL;
 	return il;
 }
 
@@ -395,6 +396,21 @@ struct img *ildelcimg(struct imglist *il){
 	return img;
 }
 
+void ileffref(struct imglist *il,enum effrefresh effref){
+	if(il==CIL_ALL){
+		int cil;
+		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))) il->effref|=effref;
+	}else if((il=ilget(il))) il->effref|=effref;
+}
+
+enum effrefresh ilgeteffref(struct imglist *il){
+	enum effrefresh effref;
+	if(!(il=ilget(il))) return EFFREF_NO;
+	effref=il->effref;
+	il->effref=EFFREF_NO;
+	return effref;
+}
+
 /******* ils *******************************************************/
 
 int ilscleanup_cmp(const void *a,const void *b){
@@ -437,12 +453,13 @@ void ilscleanup(){
 /* thread: dpl */
 void ilsftcheck(){
 	int cil;
+	struct imglist *il;
 	return; /* TODO: enable auto imglist reload */ 
-	for(cil=0;cil<CIL_NUM;cil++) if(curil.ils[cil] && ilfiletime(curil.ils[cil],FT_CHECK)){
-		debug(DBG_STA,"reload imglist: %s",curil.ils[cil]->fn);
-		ilfiletime(curil.ils[cil],FT_RESET);
-		ilreload(curil.ils[cil],NULL);
-		effrefresh(EFFREF_ALL);
+	for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))) && ilfiletime(il,FT_CHECK)){
+		debug(DBG_STA,"reload imglist: %s",il->fn);
+		ilfiletime(il,FT_RESET);
+		ilreload(il,NULL);
+		ileffref(il,EFFREF_ALL);
 	}
 }
 

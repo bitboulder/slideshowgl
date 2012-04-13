@@ -3,6 +3,8 @@
 
 #include "eff.h"
 #include "dpl.h"
+#include "img.h"
+#include "il.h"
 
 struct wh {
 	float w,h;

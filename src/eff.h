@@ -1,8 +1,8 @@
 #ifndef _EFF_H
 #define _EFF_H
 
-#include "img.h"
 #include <SDL.h>
+#include "img.h"
 
 #define IPOS	E(a) E(s) E(x) E(y) E(r) E(m) E(act) E(back)
 #define E(X)	float X; char FILL_##X[sizeof(float)+2*sizeof(Uint32)+sizeof(int)];
@@ -44,7 +44,6 @@ enum effrefresh {
 	EFFREF_ROT=0x10,
 };
 
-void effrefresh(enum effrefresh val);
 char effineff();
 struct istat *effstat();
 float effswf(enum esw id);

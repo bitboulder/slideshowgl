@@ -4,12 +4,16 @@
 #define CIL_NUM	2
 #define CIL(cil)	((struct imglist*)(long)-(cil+1))
 #define CIL_NONE	CIL(CIL_NUM)
+#define CIL_ALL		CIL(CIL_NUM+1)
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX
 #define IMGI_MAP	0x40000000
 #define IMGI_CAT	0x60000000
 #define IMGI_COL	(0x7FFFFFFF-NPRGCOL*3-2)
+
+#include "img.h"
+#include "eff.h"
 
 struct imglist;
 
@@ -54,6 +58,8 @@ enum eldft {FT_RESET, FT_UPDATE, FT_CHECK, FT_CHECKNOW};
 char ilfiletime(struct imglist *il,enum eldft act);
 void ilprgfrm(struct imglist *il,const char *prgfrm);
 struct img *ildelcimg(struct imglist *il);
+void ileffref(struct imglist *il,enum effrefresh effref);
+enum effrefresh ilgeteffref(struct imglist *il);
 /* ils */
 void ilscleanup();
 void ilsftcheck();

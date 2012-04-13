@@ -32,7 +32,6 @@ struct eval {
 };
 
 struct eff {
-	enum effrefresh refresh;
 	char ineff;
 	struct wh maxfit;
 	struct cfg {
@@ -60,7 +59,6 @@ struct eff {
 #define AIL_LEFT	(ep->dp->ailtyp!=AIL_NONE && ilget(ep->il)==ilget(CIL(0)))
 
 /* thread: all */
-void effrefresh(enum effrefresh val){ eff.refresh|=val; }
 char effineff(){ return eff.ineff; }
 /* thread: gl */
 struct istat *effstat(){ return &eff.stat.pos; }
@@ -610,8 +608,10 @@ char effdostat(){
 
 struct effdoarg { char ineff; char chg; };
 
-int effdo1(struct img *img,int imgi,struct imglist *UNUSED(il),void *arg){
+int effdo1(struct img *img,int imgi,struct imglist *il,void *arg){
 	struct effdoarg *ea=(struct effdoarg*)arg;
+	enum effrefresh effref=ilgeteffref(il);
+	if(effref!=EFFREF_NO) effinit(effref,0,il,-1);
 	if(!img->pos->eff) return 0;
 	if(effdoimg(img,imgi)) ea->chg=1;
 	ea->ineff=1;
@@ -622,10 +622,6 @@ void effdo(){
 	int i;
 	Uint32 now;
 	struct effdoarg ea[1]={ { .ineff=0, .chg=0 } };
-	if(eff.refresh!=EFFREF_NO){
-		effinit(eff.refresh,0,NULL,-1);
-		eff.refresh=EFFREF_NO;
-	}
 	ilsforallimgs(effdo1,ea,1,0);
 	if(delimg){
 		if(delimg->pos->eff) if(effdoimg(delimg,-1)) ea->chg=1;
@@ -645,7 +641,6 @@ void effdo(){
 
 void effcfginit(){
 	memset(&eff,0,sizeof(struct eff));
-	eff.refresh = EFFREF_NO,
 	eff.stat.mode = STAT_OFF,
 	eff.eprgcol.actimgi = -1,
 	eff.cfg.shrink=cfggetfloat("eff.shrink");

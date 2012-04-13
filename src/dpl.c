@@ -962,7 +962,7 @@ void dplinputtxtfinal(char ok){
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
 	break;
-	case ITM_MARKFN: if(ok && len && markswitchfn(dpl.input.res)) effrefresh(EFFREF_ALL); break;
+	case ITM_MARKFN: if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL); break;
 	}
 	dpl.input.mode=ITM_OFF;
 	sdlforceredraw();
@@ -1001,13 +1001,13 @@ void dplkey(unsigned short keyu){
 	case 'w':
 		if(dpl.pos.ailtyp&AIL_ED) cilsetact(!cilgetacti()); else{
 			dpl.writemode = dpl.writemode==1 ? 0 : 1;
-			effrefresh(EFFREF_ALL);
+			ileffref(CIL_ALL,EFFREF_ALL);
 		}
 	break;
 	case 'W':
 		if(!(dpl.pos.ailtyp&AIL_ED)){
 			dpl.writemode = dpl.writemode==2 ? 0 : 2;
-			effrefresh(EFFREF_ALL);
+			ileffref(CIL_ALL,EFFREF_ALL);
 		}
 	break;
 	case 'm':

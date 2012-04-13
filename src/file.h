@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "img.h"
+#include "il.h"
 
 struct txtimg {
 	char txt[FILELEN];

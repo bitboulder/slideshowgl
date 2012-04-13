@@ -2,7 +2,6 @@
 #define _IMG_H
 
 #include <limits.h>
-#include "il.h"
 
 #define IMGTEX	E2(TINY,  0),\
 				E2(SMALL, 1),\

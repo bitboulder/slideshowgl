@@ -2,6 +2,7 @@
 #define _PRG_H
 
 #include "img.h"
+#include "il.h"
 #include "eff.h"
 
 struct prg;

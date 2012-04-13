@@ -2,6 +2,7 @@
 #define _MAP_H
 
 #include "img.h"
+#include "il.h"
 #include "dpl.h"
 
 char mapon();

@@ -416,7 +416,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 		ld=imgexifload(il->img->exif,fn);
 		if(ld&0x2)  effref|=EFFREF_ROT;
 		if(ld&0x4 && ilsortupd(ilt,il->img)) effref|=EFFREF_ALL;
-		effrefresh(effref);
+		ileffref(ilt,effref);
 		ld&=0x1;
 		goto end0;
 	}
@@ -448,7 +448,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 		il->w=sdlimg->sf->h;
 		il->h=sdlimg->sf->w;
 	}
-	effrefresh(effref);
+	ileffref(ilt,effref);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
 	imghistgen(il->img->hist,il->w*il->h,
