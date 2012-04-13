@@ -14,12 +14,10 @@
 #include "exich.h"
 #include "avl.h"
 
-enum ilsort {ILS_NONE, ILS_DATE, ILS_FILE, ILS_RND, ILS_NUM, ILS_NXT};
-
 struct ilcfg {
 	char init;
-	enum ilsort sort_maindir;
-	enum ilsort sort_subdir;
+	enum avlcmp sort_maindir;
+	enum avlcmp sort_subdir;
 	int  maxhistory;
 	int  maxloadexif;
 	char loop;
@@ -34,14 +32,13 @@ struct imglist {
 	struct img *imgs,*last;
 	char fn[FILELEN];
 	char dir[FILELEN];
-	int nimg;
 	unsigned int simg;
 	struct imglist *nxt;
 	struct imglist *parent;
 	int cimgi;
 	Uint32 last_used;
 	struct prg *prg;
-	enum ilsort sort;
+	enum avlcmp sort;
 	char sort_chg;
 	struct ldft lf;
 	struct avls *avls;
@@ -141,15 +138,8 @@ char cilsecswitch(enum cilsecswitch type){
 /******* il sort ***************************************************/
 
 void ilsortinit(struct imglist *il){
-	avlcmp cmp;
 	struct img *img=il->imgs, *nxt;
-	switch(il->sort){
-	case ILS_DATE: cmp=avldatecmp; break;
-	case ILS_FILE: cmp=avlfilecmp; break;
-	case ILS_RND:  cmp=avlrndcmp;  break;
-	default:       cmp=NULL;       break;
-	}
-	il->avls=avlinit(cmp,&il->imgs,&il->last);
+	il->avls=avlinit(il->sort,&il->imgs,&il->last);
 	while(img){ nxt=img->nxt; avlins(il->avls,img); img=nxt; }
 }
 
@@ -160,15 +150,11 @@ void ilsortfree(struct imglist *il){
 
 void ilsortins(struct imglist *il,struct img *img){
 	char *fn=imgfilefn(img->file);
-	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && il->nimg<ilcfg.maxloadexif) imgexifload(img->exif,fn);
+	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && avlnimg(il->avls)<ilcfg.maxloadexif) imgexifload(img->exif,fn);
 	avlins(il->avls,img);
-	il->nimg++;
 }
 
-void ilsortdel(struct imglist *il,struct img *img){
-	avldel(il->avls,img);
-	il->nimg--;
-}
+void ilsortdel(struct imglist *il,struct img *img){ avldel(il->avls,img); }
 
 char ilsortupd(struct imglist *il,struct img *img){
 	if(!(il=ilget(il))) return 0;
@@ -241,7 +227,7 @@ void ilfree(struct imglist *il){
 int ilnimgs(struct imglist *il){
 	if(!(il=ilget(il))) return 0;
 	if(il->prg && dplgetzoom()==0) return prggetn(il->prg);
-	return il->nimg;
+	return avlnimg(ils->avls);
 }
 struct prg *ilprg(struct imglist *il){ return (il=ilget(il)) ? il->prg : NULL; }
 const char *ildir(struct imglist *il){ return (il=ilget(il)) && il->dir[0] ? il->dir : NULL; }
@@ -258,11 +244,10 @@ struct img *ilcimg(struct imglist *il){ return (il=ilget(il)) ? ilimg(il,il->cim
 
 /* thread: all */
 struct img *ilimg(struct imglist *il,int imgi){
-	struct img *img;
 	if(!(il=ilget(il))) return NULL;
-	if(imgi<0 || imgi>=il->nimg) return NULL;
-	for(img=il->imgs;img && imgi>0;imgi--) img=img->nxt;
-	return img;
+	if(!imgi) return il->imgs;
+	if(imgi<0 || imgi>=avlnimg(il->avls)) return NULL;
+	return avlimg(il->avls,imgi);
 }
 
 char ilfiletime(struct imglist *il,enum eldft act){
@@ -294,39 +279,42 @@ const char *ilsortget(struct imglist *il){
 int ilrelimgi(struct imglist *il,int imgi){
 	if(!(il=ilget(il))) return 0;
 	if(imgi==IMGI_START) return -1;
-	if(imgi==IMGI_END) return il->nimg;
+	if(imgi==IMGI_END) return avlnimg(il->avls);
 	return imgi;
 }
 
 /* thread: dpl */
 int ilclipimgi(struct imglist *il,int imgi,char strict){
+	int nimg;
 	if(!(il=ilget(il))) return IMGI_START;
+	nimg=avlnimg(il->avls);
 	if(ilcfg.loop){
-		if(imgi==IMGI_START)  imgi=0;
-		if(imgi==IMGI_END)    imgi=il->nimg-1;
-		while(imgi<0)         imgi+=il->nimg;
-		while(imgi>=il->nimg) imgi-=il->nimg;
+		if(imgi==IMGI_START) imgi=0;
+		if(imgi==IMGI_END)   imgi=nimg-1;
+		while(imgi<0)        imgi+=nimg;
+		while(imgi>=nimg)    imgi-=nimg;
 	}else if(!strict){
 		/* no change for dplmark without loop */
 	}else if(dplgetzoom()<0){
-		if(imgi<0)         imgi=0;
-		if(imgi>=il->nimg) imgi=il->nimg-1;
+		if(imgi<0)     imgi=0;
+		if(imgi>=nimg) imgi=nimg-1;
 	}else if(imgi!=IMGI_START && imgi!=IMGI_END){
-		if(imgi<0)         imgi=0;
-		if(imgi>=il->nimg) imgi=IMGI_END;
+		if(imgi<0)     imgi=0;
+		if(imgi>=nimg) imgi=IMGI_END;
 	}
 	return imgi;
 }
 
 int ildiffimgi(struct imglist *il,int ia,int ib){
-	int diff;
+	int diff,nimg;
 	if(!(il=ilget(il))) return 0;
+	nimg=avlnimg(il->avls);
 	ia=ilrelimgi(il,ia);
 	ib=ilrelimgi(il,ib);
 	diff=ib-ia;
 	if(ilcfg.loop){
-		while(diff> il->nimg/2) diff-=il->nimg;
-		while(diff<-il->nimg/2) diff+=il->nimg;
+		while(diff> nimg/2) diff-=nimg;
+		while(diff<-nimg/2) diff+=nimg;
 	}
 	return diff;
 }
@@ -466,13 +454,13 @@ int ilsforallimgs(int (*func)(struct img *img,int imgi,struct imglist *il,void *
 	if(cilonly){
 		int cil;
 		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))))
-			for(img=il->imgs,imgi=0;img && imgi<il->nimg*2;img=img->nxt,imgi++){
+			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
 				r+=func(img,imgi,il,arg);
 				if(brk && r>=brk) return 0;
 			}
 	}else{
 		for(il=ils;il;il=il->nxt)
-			for(img=il->imgs,imgi=0;img && imgi<il->nimg*2;img=img->nxt,imgi++){
+			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
 				r+=func(img,imgi,il,arg);
 				if(brk && r>=brk) return 0;
 			}
