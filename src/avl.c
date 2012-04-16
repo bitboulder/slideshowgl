@@ -6,12 +6,17 @@
 #include "exif.h"
 #include "help.h"
 
+//#define AVLDEBUG
+
 struct avl {
 	int id,rnd;
 	struct img *img;
 	struct avl *pa;
 	struct avl *ch[2];
 	int h,n;
+	#ifdef AVLDEBUG
+	char alloc;
+	#endif
 };
 typedef int (*avlcmp)(const struct avl *ia,const struct avl *ib);
 struct avls {
@@ -70,50 +75,51 @@ int avldatecmp(const struct avl *a,const struct avl *b){
 	return avlfilecmp(a,b);
 }
 
-#if 0
-char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp,FILE *fd){
+#ifdef AVLDEBUG
+char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp,FILE *fd,char ok){
 	int i;
 	char err=0;
 	fprintf(fd,"[%2i]",d);
 	for(i=0;i<d;i++) fprintf(fd," ");
 	fprintf(fd,"%s",pre);
 	if(!avl) fprintf(fd,"(--)\n"); else {
+		int h0=H0(avl), h1=H1(avl);
+		int h=MAX(h0,h1)+1;
+		int n0=N0(avl), n1=N1(avl);
 		fprintf(fd,"(%2i/%4i): %s",avl->h,avl->n,imgfilefn(avl->img->file));
-		if(avl->ch[0]==avl) fprintf(fd," ERROR: ch0->loop\n");
-		else if(avl->ch[1]==avl) fprintf(fd," ERROR ch1->loop\n");
-		else{
-			int h0=H0(avl), h1=H1(avl);
-			int h=MAX(h0,h1)+1;
-			int n0=N0(avl), n1=N1(avl);
-			if(avl->h!=h) fprintf(fd," ERROR: h %i",h);
-			if(avl->n!=n0+n1+1) fprintf(fd," ERROR: n %i+%i+1",n0,n1,1);
+		if(avl->alloc!=1){ err=1; fprintf(fd," ERROR: free'd avl"); }
+		if(!err && avl->ch[0]==avl){ err=1; fprintf(fd," ERROR: ch0->loop\n"); }
+		if(!err && avl->ch[1]==avl){ err=1; fprintf(fd," ERROR ch1->loop\n"); }
+		if(err) fprintf(fd,"\n"); else{
+			if(avl->h!=h){ err|=ok; fprintf(fd," %s: h %i",ok?"ERROR":"WARN",h); }
+			if(avl->n!=n0+n1+1){ err|=ok; fprintf(fd," %s: n %i+%i+1",ok?"ERROR":"WARN",n0,n1); }
+			if(abs(h0-h1)>1){ err|=ok; fprintf(fd," %s: unbal",ok?"ERROR":"WARN"); }
 			if((char)(avl->ch[0] && avl->ch[0]->pa!=avl)){ err=1; fprintf(fd," ERROR: ch0->pa"); }
 			if((char)(avl->ch[1] && avl->ch[1]->pa!=avl)){ err=1; fprintf(fd," ERROR: ch1->pa"); }
 			if((char)(avl->ch[0] && cmp(avl,avl->ch[0])<=0)){ err=1; fprintf(fd," ERROR: ch0->cmp"); }
 			if((char)(avl->ch[1] && cmp(avl,avl->ch[1])>0)){ err=1; fprintf(fd," ERROR: ch1->cmp"); }
-			if(abs(h0-h1)>1) fprintf(fd," ERROR: unbal");
 			fprintf(fd,"\n");
-			err|=avlprint1(avl->ch[0],"ch0",d+1,cmp,fd);
-			err|=avlprint1(avl->ch[1],"ch1",d+1,cmp,fd);
+			err|=avlprint1(avl->ch[0],"ch0",d+1,cmp,fd,ok);
+			err|=avlprint1(avl->ch[1],"ch1",d+1,cmp,fd,ok);
 		}
 	}
 	return err;
 }
 
-void avlprint(struct avls *avls,const char *pre,struct avl *pos){
+void avlprint(struct avls *avls,const char *pre,struct avl *pos,char ok){
 	static struct avls *savls;
-//	FILE *fd=fopen("avldebug","a");
+	FILE *fd=fopen("avldebug","a");
 //	FILE *fd=fopen("/dev/null","w");
-	FILE *fd=stdout;
+//	FILE *fd=stdout;
 	char ret;
 	fprintf(fd,"POS: %s\n",imgfilefn(pos->img->file));
 	if(avls) savls=avls; else avls=savls;
-	ret=avlprint1(avls->avl->ch[0],pre,0,avls->cmp,fd);
+	ret=avlprint1(avls->avl->ch[0],pre,0,avls->cmp,fd,ok);
 	if(fd!=stdout) fclose(fd);
 	if(ret) abort();
 }
 #else
-	#define avlprint(avls,pre,pos)
+	#define avlprint(avls,pre,pos,ok)
 #endif
 
 void avlh(struct avl *avl){ avl->h=MAX(H0(avl),H1(avl))+1; }
@@ -149,7 +155,7 @@ void avlrot(struct avl *avl){
 	avln(avl);
 	if(h0<h1-1) avl=avlrot1(avl,1);
 	if(h1<h0-1) avl=avlrot1(avl,0);
-	avlprint(NULL,"ROT",avl);
+	avlprint(NULL,"ROT",avl,0);
 	if(ho!=avl->h) avlrot(avl->pa);
 	else for(avl=avl->pa;avl;avl=avl->pa) avln(avl);
 }
@@ -161,6 +167,9 @@ void avlins(struct avls *avls,struct img *img){
 	avl->id=avls->id++;
 	avl->rnd=rand();
 	avl->img=img;
+	#ifdef AVLDEBUG
+	avl->alloc=1;
+	#endif
 	img->avl=avl;
 	while(*p){ pa=*p; p=p[0]->ch+(pos=(avls->cmp(avl,p[0])>0?1:0)); }
 	*p=avl;
@@ -182,9 +191,9 @@ void avlins(struct avls *avls,struct img *img){
 		if(!img->nxt) *avls->last=img;
 		else img->nxt->prv=img;
 	}
-	avlprint(avls,"INSs",avl);
+	avlprint(avls,"INSs",avl,0);
 	avlrot(avl->pa);
-	avlprint(avls,"INSf",avl);
+	avlprint(avls,"INSf",avl,1);
 }
 
 void avldel(struct avls *avls,struct img *img){
@@ -205,12 +214,15 @@ void avldel(struct avls *avls,struct img *img){
 			if((ins->ch[1]=avl->ch[1])) ins->ch[1]->pa=ins;  // avl->ch[1] => ins->ch[1]
 			ins->h=avl->h;
 		}
-		avlprint(avls,"DELs",avl);
+		avlprint(avls,"DELs",avl,0);
 		avlrot(rot);
-		avlprint(avls,"DELm",avl);
+		avlprint(avls,"DELm",avl,0);
 		if(ins) avlrot(ins);
-		avlprint(avls,"DELf",avl);
+		avlprint(avls,"DELf",avl,1);
 		img->avl=NULL;
+		#ifdef AVLDEBUG
+		avl->alloc=0;
+		#endif
 		free(avl);
 	}
 }
@@ -243,6 +255,9 @@ void avlfree1(struct avl *avl){
 	if(avl->img) avl->img->avl=NULL;
 	avlfree1(avl->ch[0]);
 	avlfree1(avl->ch[1]);
+	#ifdef AVLDEBUG
+	avl->alloc=0;
+	#endif
 	free(avl);
 }
 
