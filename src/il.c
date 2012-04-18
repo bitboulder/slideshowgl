@@ -367,7 +367,10 @@ struct img *ilremoveimg(struct imglist *il,struct img *img,char final){
 	if(!(il=ilget(il))) return NULL;
 	ilsortdel(il,img);
 	ilupdcimgi(il);
-	if(!final) iladdimg(ildel,img,NULL);
+	if(!final){
+		if(!ildel) ildel=ilnew("[DEL]","");
+		iladdimg(ildel,img,NULL);
+	}
 	return img;
 }
 
