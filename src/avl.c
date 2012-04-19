@@ -108,11 +108,11 @@ char avlprint1(struct avl *avl,const char *pre,int d,avlcmp cmp,FILE *fd,char ok
 
 void avlprint(struct avls *avls,const char *pre,struct avl *pos,char ok){
 	static struct avls *savls;
-	FILE *fd=fopen("avldebug","a");
+//	FILE *fd=fopen("avldebug","a");
 //	FILE *fd=fopen("/dev/null","w");
-//	FILE *fd=stdout;
+	FILE *fd=stdout;
 	char ret;
-	fprintf(fd,"POS: %s\n",imgfilefn(pos->img->file));
+	fprintf(fd,"POS: %s\n",pos && pos->img?imgfilefn(pos->img->file):"null");
 	if(avls) savls=avls; else avls=savls;
 	ret=avlprint1(avls->avl->ch[0],pre,0,avls->cmp,fd,ok);
 	if(fd!=stdout) fclose(fd);
@@ -208,15 +208,15 @@ void avldel(struct avls *avls,struct img *img){
 		else{
 			for(ins=avl->ch[0];ins->ch[1];ins=ins->ch[1]) posi=1;
 			if((ins->pa->ch[posi]=ins->ch[0])) ins->ch[0]->pa=ins->pa; // del ins
-			rot=ins->pa;
+			rot = ins->pa==avl ? NULL : ins->pa;
 			avl->pa->ch[pos]=ins;       ins->pa=avl->pa;     // ins => pa->ch[pos]
 			if((ins->ch[0]=avl->ch[0])) ins->ch[0]->pa=ins;  // avl->ch[0] => ins->ch[0]
 			if((ins->ch[1]=avl->ch[1])) ins->ch[1]->pa=ins;  // avl->ch[1] => ins->ch[1]
 			ins->h=avl->h;
 		}
-		avlprint(avls,"DELs",avl,0);
-		avlrot(rot);
-		avlprint(avls,"DELm",avl,0);
+		avlprint(avls,"DELs",rot,0);
+		if(rot) avlrot(rot);
+		avlprint(avls,"DELm",ins,0);
 		if(ins) avlrot(ins);
 		avlprint(avls,"DELf",avl,1);
 		img->avl=NULL;
@@ -239,8 +239,8 @@ char avlchk(struct avls *avls,struct img *img){
 struct avls *avlinit(enum avlcmp cmp,struct img **first,struct img **last){
 	struct avls *avls=calloc(1,sizeof(struct avls));
 	avls->avl=calloc(1,sizeof(struct avl));
-	avls->first=first;
-	avls->last=last;
+	avls->first=first; *first=NULL;
+	avls->last=last;   *last=NULL;
 	switch(cmp){
 	case ILS_DATE: avls->cmp=avldatecmp; break;
 	case ILS_FILE: avls->cmp=avlfilecmp; break;
