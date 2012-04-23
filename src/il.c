@@ -228,7 +228,7 @@ void ilfree(struct imglist *il){
 int ilnimgs(struct imglist *il){
 	if(!(il=ilget(il))) return 0;
 	if(il->prg && dplgetzoom()==0) return prggetn(il->prg);
-	return avlnimg(ils->avls);
+	return avlnimg(il->avls);
 }
 struct prg *ilprg(struct imglist *il){ return (il=ilget(il)) ? il->prg : NULL; }
 const char *ildir(struct imglist *il){ return (il=ilget(il)) && il->dir[0] ? il->dir : NULL; }
