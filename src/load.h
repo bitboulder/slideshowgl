@@ -20,6 +20,7 @@ struct imgld *imgldinit(struct img *img);
 void imgldfree(struct imgld *il);
 GLuint imgldtex(struct imgld *il,enum imgtex it);
 float imgldrat(struct imgld *il);
+char imgldwh(struct imgld *il,float *w,float *h);
 
 struct ldft { unsigned int ftchk; long ft; };
 char ldfiletime(struct ldft *lf,enum eldft act,char *fn);

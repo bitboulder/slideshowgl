@@ -140,12 +140,27 @@ GLuint imgldtex(struct imgld *il,enum imgtex it){
 	return 0;
 }
 
+struct imgld *imgldget(struct imgld *il){
+	if(!il) return NULL;
+	if(imgfiletxt(il->img->file)) return NULL;
+	if(imgfiledir(il->img->file)) return dirimg->ld;
+	if(il->loadfail) return defimg->ld;
+	return il;
+}
+
 /* thread: dpl, load, gl */
 float imgldrat(struct imgld *il){
-	if(imgfiletxt(il->img->file)) return 1.f;
-	if(imgfiledir(il->img->file)) il=dirimg->ld;
-	if(il->loadfail) il=defimg->ld;
-	return (!il->h || !il->w) ? 0.f : (float)il->w/(float)il->h;
+	if(!(il=imgldget(il))) return 1.f;
+	if(!il->h || !il->w) return 0.f;
+	return (float)il->w/(float)il->h;
+}
+
+/* thread: dpl */
+char imgldwh(struct imgld *il,float *w,float *h){
+	if(!(il=imgldget(il))) return 0;
+	if(w) *w=(float)il->w;
+	if(h) *h=(float)il->h;
+	return 1;
 }
 
 /* thread: ld, act, dpl */

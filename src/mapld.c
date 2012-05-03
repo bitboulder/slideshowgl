@@ -40,10 +40,11 @@ static size_t mapld_load_data(void *data,size_t size,size_t nmemb,void *arg){
 char mapld_filecheck(const char *fn){
 	FILE *fd=fopen(fn,"rb");
 	char buf[8];
+	size_t rd;
 	if(!fd) return 0;
-	if(fread(buf,1,8,fd)!=8){ fclose(fd); return 0; }
+	rd=fread(buf,1,8,fd);
 	fclose(fd);
-	if(!strncmp(buf,"<html>",6)) return 0;
+	if(rd!=8 || !strncmp(buf,"<html>",6) || !strncmp(buf,"<!DOC",5)) return 0;
 	return 1;
 }
 

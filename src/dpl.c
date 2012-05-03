@@ -522,15 +522,15 @@ void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
 	char run=dpl.run!=0;
 	int imgi=ilcimgi(NULL);
+	struct img *img;
 	if(mapstatupdate(dsttxt)) goto end;
 	if(imgi==IMGI_START) snprintf(dsttxt,ISTAT_TXTSIZE,_("BEGIN"));
 	else if(imgi==IMGI_END) snprintf(dsttxt,ISTAT_TXTSIZE,_("END"));
+	else if(!(img=ilcimg(NULL))) return;
 	else{
-		struct img *img=ilcimg(NULL);
 		struct icol *ic;
 		char *txt=dsttxt;
 		const char *tmp;
-		if(!img) return;
 		ic=imgposcol(img->pos);
 		ADDTXT("%i/%i ",imgi+1,ilnimgs(NULL));
 		if(!ilprg(NULL) || dpl.pos.zoom!=0){
@@ -554,6 +554,12 @@ void dplstatupdate(){
 			ADDTXT(" %sG:%.1f%s",dpl.colmode==COL_G?"[":"",ic->g,dpl.colmode==COL_G?"]":"");
 			ADDTXT(" %sC:%.1f%s",dpl.colmode==COL_C?"[":"",ic->c,dpl.colmode==COL_C?"]":"");
 			ADDTXT(" %sB:%.1f%s",dpl.colmode==COL_B?"[":"",ic->b,dpl.colmode==COL_B?"]":"");
+		}
+		if(dpl.pos.zoom>0){
+			float sw,iw,fitw;
+			sdlwh(&sw,NULL);
+			if(imgldwh(img->ld,&iw,NULL) && imgfit(img,&fitw,NULL))
+				ADDTXT(" (%.0f%%)",sw/iw*fitw*powf(2.f,(float)dpl.pos.zoom)*100.f);
 		}
 		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}

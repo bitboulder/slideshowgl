@@ -39,14 +39,17 @@
  * s - float  - screen position                    (-0.5 <= s <= 0.5)
  */
 
-#define N_ZOOM	18
+#define N_ZOOM	22
 
-#define MAPTYPE E(om)
-#define E(X)	MT_##X
+#define MAPTYPE E(om,17)
+#define E(X,Y)	MT_##X
 enum maptype { MAPTYPE, MT_NUM };
 #undef E
-#define E(X)	#X
+#define E(X,Y)	#X
 const char *maptype_str[]={ MAPTYPE };
+#undef E
+#define E(X,Y)	Y
+int maptype_maxz[]={ MAPTYPE };
 #undef E
 
 struct tile {
@@ -663,6 +666,7 @@ char mapldcheck(){
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
+	if(iz>maptype_maxz[map.maptype]) iz=maptype_maxz[map.maptype];
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);

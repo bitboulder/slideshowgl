@@ -6,6 +6,7 @@
 extern char sdl_quit;
 
 float sdlrat();
+void sdlwh(float *w,float *h);
 void sdlforceredraw();
 
 char sdlfullscreen(char dst);

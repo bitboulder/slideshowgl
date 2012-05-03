@@ -82,6 +82,12 @@ struct sdl {
 /* thread: gl */
 float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
 
+/* thread: dpl */
+void sdlwh(float *w,float *h){
+	if(w) *w=(float)sdl.scr_w;
+	if(h) *h=(float)sdl.scr_h;
+}
+
 void sdlforceredraw(){
 	sdl.lastfrm=0;
 }
