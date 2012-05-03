@@ -87,6 +87,7 @@ void mapld_load(struct mapldti ti){
 }
 #endif
 
+#ifndef MAPLDTEST
 char mapld_get(){
 	struct mapldti ti;
 	if(SDL_LockMutex(mapld.mutex)==-1) return 0;
@@ -152,3 +153,4 @@ int mapldthread(void *arg){
 	}
 	return 0;
 }
+#endif
