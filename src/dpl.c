@@ -236,7 +236,7 @@ void dplsecdir(){
 	struct img *img;
 	const char *dir;
 	if(dpl.pos.ailtyp!=AIL_DIRED) return;
-	if(!(img=ilcimg(NULL))) return;
+	if(!(img=ilcimg(CIL(0)))) return;
 	if(!(dir=imgfiledir(img->file))) return;
 	if(!(il=floaddir(imgfilefn(img->file),dir))) return;
 	if(cilset(il,1)==1) return;
