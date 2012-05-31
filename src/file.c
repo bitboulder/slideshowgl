@@ -336,7 +336,7 @@ void fgetfiles(int argc,char **argv){
 	}
 	for(i=0;i<argc;i++) fgetfile(argv[i],singlefile);
 end:
-	cilset(ilbase,0);
+	cilset(ilbase,0,0);
 	mapaddbasedir(NULL,NULL);
 }
 
@@ -352,7 +352,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 	struct imglist *src=NULL;
 	int count=0;
 	if(!dir) dir="";
-	if(ilfind(fn,&src,1)) return src;
+	if(ilfind(fn,&src)) return src;
 	if(!(dd=opendir(fn)) && !(fd=fopen(fn,"r"))){
 		error(ERR_CONT,"opendir failed (%s)",fn);
 		goto end;

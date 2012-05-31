@@ -239,7 +239,7 @@ void dplsecdir(){
 	if(!(img=ilcimg(CIL(0)))) return;
 	if(!(dir=imgfiledir(img->file))) return;
 	if(!(il=floaddir(imgfilefn(img->file),dir))) return;
-	if(cilset(il,1)==1) return;
+	if(cilset(il,1,1)==1) return;
 	ilupdcimgi(il);
 	effinit(EFFREF_CLR,0,CIL(1),-1);
 }
@@ -495,7 +495,7 @@ char dpldir(int imgi,char noleave){
 	if(imgi==IMGI_START) return 0;
 	if(!il && !fn && !(img=ilimg(NULL,imgi))){
 		if(noleave) return 0;
-		if(!cilset(NULL,0)) return 1;
+		if(!cilset(NULL,0,0)) return 1;
 	}else{
 		if(!il){
 			if(!fn){
@@ -505,7 +505,7 @@ char dpldir(int imgi,char noleave){
 			}else actforce();
 			if(!(il=floaddir(fn,dir))) return 1;
 		}
-		if(cilset(il,0)==1) return 1;
+		if(cilset(il,0,0)==1) return 1;
 		if(ilprg(CIL(0))){ dpl.pos.zoom=0; ilsetcimgi(NULL,IMGI_START); }
 		else if(ilcimgi(NULL)==IMGI_START) ilsetcimgi(NULL,0);
 	}
@@ -724,7 +724,7 @@ void dpldired(char *input,int id){
 	}
 	if(updatedirs && (il=floaddir(ilfn(CIL(0)),ildir(CIL(0))))){
 		ilsetcimgi(il,ilcimgi(CIL(0)));
-		cilset(il,0);
+		cilset(il,0,1);
 		effinit(EFFREF_ALL,DE_INIT,CIL(0),-1);
 	}
 	dplsecdir();
@@ -733,7 +733,7 @@ void dpldired(char *input,int id){
 void dplmap(){
 	if(mapon()) mapswtype(); else{
 		struct imglist *il=mapsetpos(ilcimg(NULL));
-		cilset(il,-1);
+		cilset(il,-1,0);
 		effinit(EFFREF_ALL,DE_ZOOM,NULL,-1);
 		sdlforceredraw();
 	}

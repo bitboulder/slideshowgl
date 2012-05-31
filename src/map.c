@@ -574,7 +574,7 @@ struct imglist *mapsetpos(struct img *img){
 		map.pos.gy=gy;
 		map.pos.iz=15;
 	}
-	if(!ilfind("[MAP]",&il,1)){
+	if(!ilfind("[MAP]",&il)){
 		il=ilnew("[MAP]",_("[Map]"));
 		faddfile(il,"[MAP]",NULL,0);
 	}

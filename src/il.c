@@ -83,13 +83,29 @@ int cilgetacti(){ return curil.actil; }
 /* thread: dpl */
 void cilsetact(int actil){ if(actil>=0 || actil<CIL_NUM) curil.actil=actil; }
 
+void ilsetparent(struct imglist *il,char reload){
+	struct imglist *cil=curil.ils[0];
+	if(reload && cil) cil=cil->parent;
+	if(il==cil) return;
+	if(cil){
+		struct imglist **pa=&(cil->parent);
+		int p=ilcfg.maxhistory;
+		while(p && pa[0] && pa[0]!=il){ pa=&(pa[0]->parent); p--; }
+		if(!p) error(ERR_CONT,"ilsetparent: maxhistory (%i) reached (is there a loop in history?)",ilcfg.maxhistory);
+		if(pa[0]==il) pa[0]=il->parent;
+	}
+	il->parent=cil;
+}
+
 /* thread: dpl */
-char cilset(struct imglist *il,int cil){
+char cilset(struct imglist *il,int cil,char reload){
+	char nopa=0;
 	if(cil==-1) cil=curil.actil;
 	if(cil<0 || cil>=CIL_NUM) return 0;
-	if(!il && curil.ils[cil] && curil.ils[cil]->parent) il=curil.ils[cil]->parent;
+	if((nopa=(!il && curil.ils[cil] && curil.ils[cil]->parent))) il=curil.ils[cil]->parent;
 	if(!il) return 0;
 	if(il==curil.ils[cil]) return 1;
+	if(!nopa && !cil) ilsetparent(il,reload);
 	debug(DBG_STA,"imglist %i switch to dir: %s",cil,il->fn);
 	curil.ils[cil]=il;
 	if(strcmp("[BASE]",il->fn)) il->last_used=SDL_GetTicks();
@@ -173,25 +189,12 @@ void ilsortchg(struct imglist *il,char chg){
 
 /******* il init ***************************************************/
 
-void ilsetparent(struct imglist *il){
-	if(il==curil.ils[0]) return;
-	if(curil.ils[0]){
-		struct imglist **pa=&(curil.ils[0]->parent);
-		int p=ilcfg.maxhistory;
-		while(p && pa[0] && pa[0]!=il){ pa=&(pa[0]->parent); p--; }
-		if(!p) error(ERR_CONT,"ilsetparent: maxhistory (%i) reached (is there a loop in history?)",ilcfg.maxhistory);
-		if(pa[0]==il) pa[0]=il->parent;
-	}
-	il->parent=curil.ils[0];
-}
-
 /* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
 	ilcfginit();
 	snprintf(il->fn,FILELEN,fn);
 	snprintf(il->dir,FILELEN,dir);
-	ilsetparent(il);
 	il->cimgi=IMGI_START;
 	il->nxt=ils;
 	ils=il;
@@ -256,12 +259,11 @@ char ilfiletime(struct imglist *il,enum eldft act){
 }
 
 /* thread: dpl */
-char ilfind(const char *fn,struct imglist **ilret,char setparent){
+char ilfind(const char *fn,struct imglist **ilret){
 	struct imglist *il;
 	for(il=ils;il;il=il->nxt) if(il->last_used!=1 && !strncmp(il->fn,fn,FILELEN)){
 		char ret=!ilfiletime(il,FT_CHECKNOW);
 		*ilret=il;
-		if(ret && setparent) ilsetparent(il);
 		return ret;
 	}
 	return 0;

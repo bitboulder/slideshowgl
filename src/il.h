@@ -23,7 +23,7 @@ void ilcfgswloop();
 
 /* cil */
 struct imglist *ilget(struct imglist *il);
-char cilset(struct imglist *il,int cil);
+char cilset(struct imglist *il,int cil,char reload);
 int cilgetacti();
 void cilsetact(int actil);
 enum cilsecswitch { ILSS_PRGON,ILSS_PRGOFF,ILSS_DIRON,ILSS_DIROFF };
@@ -40,7 +40,7 @@ const char *ilfn(struct imglist *il);
 int ilcimgi(struct imglist *il);
 struct img *ilcimg(struct imglist *il);
 struct img *ilimg(struct imglist *il,int imgi);
-char ilfind(const char *fn,struct imglist **ilret,char setparent);
+char ilfind(const char *fn,struct imglist **ilret);
 const char *ilsortget(struct imglist *il);
 int ilrelimgi(struct imglist *il,int imgi);
 int ilclipimgi(struct imglist *il,int imgi,char strict);
