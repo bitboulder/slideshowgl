@@ -516,7 +516,7 @@ char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir){
 	}else{
 		*il=ilnew("[MAP-SEL]",_("[Map-Selection]"));
 		for(;clti;clti=clti->nxtimg)
-			faddfile(*il,clti->img->dir,NULL,0);
+			faddfile(*il,clti->img->dir,NULL,NULL,0);
 	}
 	return 1;
 }
@@ -576,7 +576,7 @@ struct imglist *mapsetpos(struct img *img){
 	}
 	if(!ilfind("[MAP]",&il)){
 		il=ilnew("[MAP]",_("[Map]"));
-		faddfile(il,"[MAP]",NULL,0);
+		faddfile(il,"[MAP]",NULL,NULL,0);
 	}
 	return il;
 }

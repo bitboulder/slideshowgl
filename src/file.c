@@ -211,7 +211,7 @@ void fmovinit(struct imgfile *ifl){
 	ifl->mov[0]='\0';
 }
 
-int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase){
+int faddfile(struct imglist *il,const char *fn,const char *imgtxt,struct imglist *src,char mapbase){
 	struct img *img=NULL;
 	size_t len;
 	char *prg;
@@ -228,7 +228,7 @@ int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase)
 	if(ft&FT_DIREX){
 		img=imginit();
 		memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
-		fimgtxtinit(img->file,img->file->fn);
+		fimgtxtinit(img->file,imgtxt?imgtxt:img->file->fn);
 		img->file->dir=1;
 		debug(DBG_DBG,"directory found '%s': '%s'",img->file->imgtxt,img->file->fn);
 		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->imgtxt);
@@ -279,6 +279,7 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 	int count=0;
 	size_t lpfx=strlen(pfx);
 	char prg;
+	char *imgtxt=NULL,*fn;
 	if((prg=fileext(flst,0,"effprg"))){
 		char cmd[FILELEN*3];
 		snprintf(cmd,FILELEN*3,"perl \"%s\" \"%s\"",finddatafile("effprg.pl"),flst);
@@ -302,7 +303,12 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 			memcpy(buf,pfx,lpfx);
 			buf[LDFILELEN-1]='\0';
 		}
-		count+=faddfile(il,buf,src,mapbase);
+		if(buf[0]=='[' && (fn=strchr(buf,']')) && fn[1]){
+			imgtxt=buf+1;
+			*(fn++)='\0';
+		}else fn=buf;
+		printf("HALLO %s => %s\n",imgtxt?imgtxt:"NULL",fn);
+		count+=faddfile(il,fn,imgtxt,src,mapbase);
 	}
 	if(prg) pclose(fd); else fclose(fd);
 	return count;
@@ -321,7 +327,7 @@ void fgetfile(const char *fn,char singlefile){
 	if(!ilbase) ilbase=ilnew("[BASE]","");
 	if(fileext(fn,0,"flst")) faddflst(ilbase,fn,"",NULL,1);
 	else if(singlefile && fileext(fn,0,"effprg")) faddflst(ilbase,fn,"",NULL,1);
-	else faddfile(ilbase,fn,NULL,1);
+	else faddfile(ilbase,fn,NULL,NULL,1);
 }
 
 void fgetfiles(int argc,char **argv){
@@ -370,7 +376,7 @@ struct imglist *floaddir(const char *fn,const char *dir){
 			if(ld+l>=LDFILELEN) continue;
 			memcpy(buf+ld,de->d_name,l);
 			buf[ld+l]='\0';
-			count+=faddfile(il,buf,src,0);
+			count+=faddfile(il,buf,NULL,src,0);
 		}
 	}
 	if(dd) closedir(dd);

@@ -28,7 +28,7 @@ void frename(const char *fn,const char *dstdir);
 void fgetfile(const char *fn,char singlefile);
 void fgetfiles(int argc,char **argv);
 
-int faddfile(struct imglist *il,const char *fn,struct imglist *src,char mapbase); /* TODO: remove (for mapgetctl) */
+int faddfile(struct imglist *il,const char *fn,const char *imgtxt,struct imglist *src,char mapbase); /* TODO: remove (for mapgetctl) */
 struct imglist *floaddir(const char *fn,const char *dir);
 
 char fimgswitchmod(struct img *img);
