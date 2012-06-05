@@ -78,6 +78,8 @@ struct dpl {
 /* thread: all */
 struct dplpos *dplgetpos(){ return &dpl.pos; }
 int dplgetzoom(){ return dpl.pos.zoom; }
+float dplgetz(){ return dpl.pos.zoom<0?0.f:powf(2.f,.5f*(float)dpl.pos.zoom); }
+
 struct dplinput *dplgetinput(){
 	if(dpl.input.mode==ITM_OFF) return NULL;
 	if(dpl.input.in[0]=='\0'){
@@ -143,11 +145,12 @@ char imgfit(struct img *img,float *fitw,float *fith){
 
 char imgspos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 	float fitw,fith;
-	if(dpl.pos.zoom<0) return 0;
+	float z=dplgetz();
+	if(!z) return 0;
 	if(panospos2ipos(img,sx,sy,ix,iy)) return 1;
 	if(!imgfit(img,&fitw,&fith)) return 0;
-	fitw*=powf(2.f,(float)dpl.pos.zoom);
-	fith*=powf(2.f,(float)dpl.pos.zoom);
+	fitw*=z;
+	fith*=z;
 	if(ix) *ix = sx/fitw;
 	if(iy) *iy = sy/fith;
 	return 1;
@@ -156,8 +159,7 @@ char imgspos2ipos(struct img *img,float sx,float sy,float *ix,float *iy){
 void printixy(float sx,float sy){
 	struct img *img=ilcimg(NULL);
 	float ix,iy;
-	if(!img || dpl.pos.zoom<0) return;
-	if(!(imgspos2ipos(img,sx,sy,&ix,&iy))) return;
+	if(!img || !(imgspos2ipos(img,sx,sy,&ix,&iy))) return;
 	debug(DBG_NONE,"img pos %.3fx%.3f",ix+dpl.pos.x,iy+dpl.pos.y);
 }
 
@@ -563,7 +565,7 @@ void dplstatupdate(){
 			float sw,iw,fitw;
 			sdlwh(&sw,NULL);
 			if(imgldwh(img->ld,&iw,NULL) && imgfit(img,&fitw,NULL))
-				ADDTXT(" (%.0f%%)",sw/iw*fitw*powf(2.f,(float)dpl.pos.zoom)*100.f);
+				ADDTXT(" (%.0f%%)",sw/iw*fitw*dplgetz()*100.f);
 		}
 		run|=panostattxt(txt,(size_t)(dsttxt-ISTAT_TXTSIZE-txt));
 	}

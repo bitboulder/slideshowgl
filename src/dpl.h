@@ -52,6 +52,7 @@ struct dplinput {
 };
 
 int dplgetzoom();
+float dplgetz();
 struct dplinput *dplgetinput();
 char dplloop();
 const char *dplhelp();

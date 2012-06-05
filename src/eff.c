@@ -207,7 +207,7 @@ void effinitpos(struct effpar *ep,struct img *img,struct ecur *ip){
 		ip->y=-ep->dp->y;
 	}else if(!ep->diff){
 		float fitw,fith;
-		ip->s=powf(2.f,(float)ep->dp->zoom);
+		ip->s=dplgetz();
 		ip->x=-ep->dp->x*ip->s;
 		ip->y=-ep->dp->y*ip->s;
 		if(imgfit(img,&fitw,&fith)){
