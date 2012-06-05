@@ -174,6 +174,10 @@ struct zoomtab {
 	{ .move=3, .size=1.f/3.f, .inc=4,  .texcur=TEX_SMALL, .texoth=TEX_SMALL, },
 	{ .move=5, .size=1.f/5.f, .inc=12, .texcur=TEX_SMALL, .texoth=TEX_TINY,  },
 	{ .move=7, .size=1.f/7.f, .inc=24, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
+	{ .move=9, .size=1.f/9.f, .inc=40, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
+	{ .move=11,.size=1.f/11.f,.inc=60, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
+	{ .move=13,.size=1.f/13.f,.inc=84, .texcur=TEX_TINY,  .texoth=TEX_TINY,  },
+	{ .move=15,.size=1.f/15.f,.inc=112,.texcur=TEX_TINY,  .texoth=TEX_TINY,  },
 };
 
 void dplclippos(struct img *img){
