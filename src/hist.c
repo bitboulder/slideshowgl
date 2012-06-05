@@ -9,6 +9,7 @@
 #define HDIV	(256/HDIM)
 
 struct imghist {
+	int num;
 	float h[HT_NUM*HDIM];
 };
 
@@ -43,6 +44,7 @@ void imghistgen(struct imghist *ih,int num,char bgr,int bpp,unsigned char *pixel
 	int p,h,i;
 	int hist[HT_NUM][HDIM];
 	histinit();
+	if(ih->num>=num) return;
 	for(h=0;h<HT_NUM;h++) for(i=0;i<HDIM;i++) hist[h][i]=0;
 	for(p=0;p<num;p++,pixels+=bpp) for(h=0;h<HT_NUM;h++){
 		int hd=histcfg.def[h][bgr!=0];
@@ -57,5 +59,8 @@ void imghistgen(struct imghist *ih,int num,char bgr,int bpp,unsigned char *pixel
 		if(v>1.f) v=1.f;
 		ih->h[h*HDIM+i]=v;
 	}
+	ih->num=num;
 }
+
+void imghistclear(struct imghist *ih){ ih->num=0; }
 

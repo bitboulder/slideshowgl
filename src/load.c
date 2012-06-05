@@ -441,6 +441,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 			fthumbchecktime(il->img->file);
 			ldffree(il,TEX_NONE);
 			imgexifclear(il->img->exif);
+			imghistclear(il->img->hist);
 		}
 		goto end0;
 	}
