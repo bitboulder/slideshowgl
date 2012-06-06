@@ -222,7 +222,13 @@ void imgexifselupd(char *sel,enum exinfo info,char *txt){
 			txt+=l+1;
 			l=strcspn(txt,")");
 			SELl(2,l,txt);
-		}else SELl(2,5,txt);
+		}
+		else if(!strcmp(txt,"A-DEP")) SEL(2,"Adep");
+		else if(!strcmp(txt,"Blendenpriorität")) SEL(2,"Av");
+		else if(!strcmp(txt,"Verschlußpriorität")) SEL(2,"Tv");
+		else if(!strcmp(txt,"Manuell")) SEL(2,"M");
+		else if(!strcmp(txt,"Undefiniert")) SEL(2,"Undef");
+		else SELl(2,4,txt);
 	break;
 	case EX_PS: SELl(8,1,txt); break;
 	case EX_TP: if(!strncmp(txt,"on",2)) SELap(7,"+"); break;
