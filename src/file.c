@@ -307,7 +307,6 @@ int faddflst(struct imglist *il,const char *flst,const char *pfx,struct imglist 
 			imgtxt=buf+1;
 			*(fn++)='\0';
 		}else fn=buf;
-		printf("HALLO %s => %s\n",imgtxt?imgtxt:"NULL",fn);
 		count+=faddfile(il,fn,imgtxt,src,mapbase);
 	}
 	if(prg) pclose(fd); else fclose(fd);
