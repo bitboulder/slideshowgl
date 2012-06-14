@@ -263,7 +263,7 @@ void fileoutput(char doopen){
 	}
 }
 
-#ifdef __WIN32__
+#if defined __WIN32__ || defined DEBUG
 #define watchcoredump(X,Y,Z)	0
 #else
 int watchcoredump(int *ret,int argc,char **argv){
