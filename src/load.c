@@ -635,8 +635,8 @@ extern Uint32 paint_last;
 int ldthread(void *UNUSED(arg)){
 	tlb.pmx=SDL_CreateMutex();
 	ldconceptcompile();
-	ldfload(defimg->ld,CIL_NONE,TEX_BIG);
-	ldfload(dirimg->ld,CIL_NONE,TEX_BIG);
+	ldfload(defimg->ld,CIL_ALL,TEX_BIG);
+	ldfload(dirimg->ld,CIL_ALL,TEX_BIG);
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();
