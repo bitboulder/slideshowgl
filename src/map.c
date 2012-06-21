@@ -118,7 +118,7 @@ struct map {
 	.scr_w = NULL,
 	.scr_h = NULL,
 	.info  = -1,
-	.editmode  = MEM_REPLACE,
+	.editmode  = MEM_ADD,
 };
 
 char mapon(){
