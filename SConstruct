@@ -172,7 +172,7 @@ env.Append(CCFLAGS = ['-Wwrite-strings','-Wconversion','-Wunused-macros',
 #env.Append(CCFLAGS = ['-Wfloat-equal','-Wpadded'])
 
 if mode == 'debug':
-	env.Append(CCFLAGS = ['-g'])
+	env.Append(CCFLAGS = ['-g', '-DDEBUG'])
 else:
 	env.Append(CCFLAGS = ['-O2'])
 	env.Append(CCFLAGS = ['-g'])
