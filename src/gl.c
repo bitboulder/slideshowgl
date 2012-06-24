@@ -120,7 +120,7 @@ GLuint glprgload(const char *vs_fn,const char *fs_fn){
 	glGetShaderiv(vs,GL_COMPILE_STATUS,&ret);
 	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",vs_fn); info=vs; goto info_log; }
 	glGetShaderiv(fs,GL_COMPILE_STATUS,&ret);
-	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",fs_fn); info=fs; goto info_log; }
+	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling fragment shader %s failed",fs_fn); info=fs; goto info_log; }
 	prg=glCreateProgram();
 	glAttachShader(prg,vs);
 	glAttachShader(prg,fs);
