@@ -871,7 +871,7 @@ void dplimgsearch(struct dplinput *in){
 			memcpy(in->post,pos+p+ilen,plen-p-ilen);
 			in->post[plen-p-ilen]='\0';
 			if(in->mode==ITM_SEARCH) dplsel(i);
-			else in->id=i;
+			else in->id = !in->pre[0] && !in->post[0] ? i : -1;
 			return;
 		}
 	}
