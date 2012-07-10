@@ -974,11 +974,11 @@ char mapmarkpos(float sx,float sy,const char *dir){
 	return 1;
 }
 
-char mapsearch(struct dplinput *in){
+void mapsearch(struct dplinput *in){
 	struct mapimg *img,*imgf=NULL;
 	size_t pf=1000,ilen=strlen(in->in);
 	int id;
-	if(map.init || !mapon()) return 0;
+	if(map.init || !mapon()) return;
 	in->pre[0]='\0';
 	in->post[0]='\0';
 	in->id=-1;
@@ -998,7 +998,6 @@ char mapsearch(struct dplinput *in){
 			map.pos.gy=img->gy;
 		}
 	}
-	return 1;
 }
 
 /* thread: eff */
@@ -1012,10 +1011,9 @@ void mapsavepos(){
 	map.possave=map.pos;
 }
 
-char maprestorepos(){
-	if(map.init || !mapon()) return 0;
+void maprestorepos(){
+	if(map.init || !mapon()) return;
 	map.pos=map.possave;
-	return 1;
 }
 
 char mapstatupdate(char *dsttxt){

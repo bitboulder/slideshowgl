@@ -26,7 +26,7 @@ enum colmode { COL_NONE=-1, COL_G=0, COL_C=1, COL_B=2 };
 
 enum dplevgrp { DEG_RIGHT, DEG_LEFT, DEG_ZOOMIN, DEG_ZOOMOUT, DEG_PLAY, DEG_NUM, DEG_NONE };
 
-enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_DIRED, ITM_MAPMK, ITM_MARKFN};
+enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_MAPSCH, ITM_DIRED, ITM_MAPMK, ITM_MARKFN};
 
 const char *colmodestr[]={"G","B","C"};
 
@@ -88,6 +88,7 @@ struct dplinput *dplgetinput(){
 		case ITM_CATSEL: snprintf(in.pre,FILELEN,_("[Catalog]")); break;
 		case ITM_TXTIMG: snprintf(in.pre,FILELEN,_("[Text]")); break;
 		case ITM_NUM:    snprintf(in.pre,FILELEN,_("[Number]")); break;
+		case ITM_MAPSCH:
 		case ITM_SEARCH: snprintf(in.pre,FILELEN,_("[Search]")); break;
 		case ITM_DIRED:
 		case ITM_MAPMK:  snprintf(in.pre,FILELEN,_("[Directory]")); break;
@@ -938,7 +939,8 @@ void dplinputtxtadd(uint32_t c){
 	dpl.input.in[len]='\0';
 	switch(dpl.input.mode){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
-	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplimgsearch(&dpl.input); break;
+	case ITM_SEARCH: dplimgsearch(&dpl.input); break;
+	case ITM_MAPSCH: mapsearch(&dpl.input); break;
 	case ITM_DIRED:  dplimgsearch(&dpl.input); break;
 	case ITM_MAPMK:
 	case ITM_MARKFN: dplfilesearch(&dpl.input); break;
@@ -951,8 +953,8 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	if(mode==ITM_SEARCH && ilprg(NULL)) return 0;
 	if(mode==ITM_DIRED  && dpl.pos.ailtyp!=AIL_DIRED) return 0;
 	if(mode==ITM_MAPMK  && (!dpl.writemode || !mapon())) return 0;
-	if(mode==ITM_SEARCH) mapsavepos();
-	if(mode==ITM_SEARCH || mode==ITM_MAPMK) mapinfo(-1);
+	if(mode==ITM_MAPSCH) mapsavepos();
+	if(mode==ITM_MAPSCH || mode==ITM_MAPMK) mapinfo(-1);
 	if(mode==ITM_MARKFN && ((dpl.pos.ailtyp&AIL_ED) || !dpl.writemode)) return 0;
 	dpl.input.pre[0]='\0';
 	dpl.input.in[0]='\0';
@@ -975,7 +977,8 @@ void dplinputtxtfinal(char ok){
 	case ITM_CATSEL: if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT); break;
 	case ITM_TXTIMG: if(ok && len) dplprged("txtadd",-1,-1,-1); break;
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
-	case ITM_SEARCH: if(!ok && !maprestorepos()) dplsel(dpl.input.id); break;
+	case ITM_SEARCH: if(!ok) dplsel(dpl.input.id); break;
+	case ITM_MAPSCH: if(!ok) maprestorepos(); break;
 	case ITM_DIRED:  if(ok) dpldired(dpl.input.in,dpl.input.id); break;
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
@@ -1069,7 +1072,7 @@ void dplkey(unsigned short keyu){
 	case 'l': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;
 	case 'L': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer( 1,dpl.actimgi); else dplswloop(); break;
 	case 'G': dplgimp(); break;
-	case '/': dplinputtxtinit(ITM_SEARCH); break;
+	case '/': dplinputtxtinit(mapon()?ITM_MAPSCH:ITM_SEARCH); break;
 	case 'h': effsw(ESW_HELP,-1); break;
 	case 'D': glprgsw(); break;
 	default: break;
