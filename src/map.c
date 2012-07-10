@@ -996,6 +996,7 @@ void mapsearch(struct dplinput *in){
 			snprintf(in->post,FILELEN,img->name+n+ilen);
 			map.pos.gx=img->gx;
 			map.pos.gy=img->gy;
+			ileffref(NULL,EFFREF_ALL);
 		}
 	}
 }
@@ -1014,6 +1015,7 @@ void mapsavepos(){
 void maprestorepos(){
 	if(map.init || !mapon()) return;
 	map.pos=map.possave;
+	ileffref(NULL,EFFREF_ALL);
 }
 
 char mapstatupdate(char *dsttxt){
