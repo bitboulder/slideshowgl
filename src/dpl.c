@@ -924,7 +924,8 @@ void dplinputtxtadd(uint32_t c){
 			snprintf(buf,FILELEN,"%s%s%s",dpl.input.pre,dpl.input.in,dpl.input.post);
 			snprintf(dpl.input.in,FILELEN,buf);
 			len=strlen(dpl.input.in);
-		}
+		}else if(dpl.input.mode==ITM_MAPMK || dpl.input.mode==ITM_MARKFN)
+			if(len<FILELEN-1) dpl.input.in[len++]='/';
 	break;
 	default:
 	{
