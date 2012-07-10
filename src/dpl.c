@@ -985,8 +985,17 @@ void dplinputtxtfinal(char ok){
 	break;
 	case ITM_MARKFN: if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL); break;
 	}
+	dpl.input.lastmode=dpl.input.mode;
 	dpl.input.mode=ITM_OFF;
 	sdlforceredraw();
+}
+
+void dplsearchnext(){
+	struct dplinput in=dpl.input;
+	if(in.lastmode!=ITM_SEARCH) return;
+	in.mode=in.lastmode;
+	in.srcid=ilcimgi(in.il);
+	dplimgsearch(&in);
 }
 
 void dplkey(unsigned short keyu){
@@ -1073,6 +1082,7 @@ void dplkey(unsigned short keyu){
 	case 'L': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer( 1,dpl.actimgi); else dplswloop(); break;
 	case 'G': dplgimp(); break;
 	case '/': dplinputtxtinit(mapon()?ITM_MAPSCH:ITM_SEARCH); break;
+	case 'n': dplsearchnext(); break;
 	case 'h': effsw(ESW_HELP,-1); break;
 	case 'D': glprgsw(); break;
 	default: break;

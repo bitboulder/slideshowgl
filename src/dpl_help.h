@@ -95,6 +95,7 @@ __(" Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 #endif
 __(" [0-9]+Enter")"\0"         __("Goto image with number")"\0"
 __(" /")"\0"                   __("Search for image or directory")"\0"
+__(" n")"\0"                   __("Continue search")"\0"
 #endif
 
 #if !defined IF_MAP && !defined IF_MAPED

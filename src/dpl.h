@@ -44,6 +44,7 @@ enum dplevsrc { DES_KEY, DES_MOUSE };
 
 struct dplinput {
 	unsigned int mode;
+	unsigned int lastmode;
 	float x,y;
 	int id,srcid;
 	struct imglist *il;
