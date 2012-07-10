@@ -851,11 +851,13 @@ void dplmouseholdchk(){
 	dpl.mousehold.time=0;
 }
 
-void dplimgsearch(struct dplinput *in,struct imglist *il){
-	struct img *img=ilimg(il,0);
-	int i=0;
+void dplimgsearch(struct dplinput *in){
+	int nimgs=ilnimgs(in->il);
+	int i=(in->srcid+1)%nimgs;
+	int n=0;
 	size_t ilen=strlen(in->in);
-	if(in->in[0]) for(;img;img=img->nxt,i++){
+	if(in->in[0]) for(;n<nimgs;n++,i=(i+1)%nimgs){
+		struct img *img=ilimg(in->il,i);
 		const char *fn=imgfilefn(img->file);
 		const char *pos=strrchr(fn,'/');
 		size_t plen,p;
@@ -868,15 +870,15 @@ void dplimgsearch(struct dplinput *in,struct imglist *il){
 			memcpy(in->in,pos+p,ilen);
 			memcpy(in->post,pos+p+ilen,plen-p-ilen);
 			in->post[plen-p-ilen]='\0';
-			if(dpl.input.mode==ITM_SEARCH) dplsel(i);
-			else dpl.input.id=i;
+			if(in->mode==ITM_SEARCH) dplsel(i);
+			else in->id=i;
 			return;
 		}
 	}
 	in->pre[0]='\0';
 	in->post[0]='\0';
-	if(dpl.input.mode==ITM_SEARCH) dplsel(in->id);
-	else dpl.input.id=-1;
+	if(in->mode==ITM_SEARCH) dplsel(in->srcid);
+	else in->id=-1;
 }
 
 void dplfilesearch(struct dplinput *in){
@@ -935,8 +937,8 @@ void dplinputtxtadd(uint32_t c){
 	dpl.input.in[len]='\0';
 	switch(dpl.input.mode){
 	case ITM_CATSEL: markcatsel(&dpl.input); break;
-	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplimgsearch(&dpl.input,NULL); break;
-	case ITM_DIRED:  dplimgsearch(&dpl.input,CIL(0)); break;
+	case ITM_SEARCH: if(!mapsearch(&dpl.input)) dplimgsearch(&dpl.input); break;
+	case ITM_DIRED:  dplimgsearch(&dpl.input); break;
 	case ITM_MAPMK:
 	case ITM_MARKFN: dplfilesearch(&dpl.input); break;
 	}
@@ -958,7 +960,10 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 	dpl.input.x=x;
 	dpl.input.y=y;
 	dpl.input.mode=mode;
-	if(mode==ITM_SEARCH) dpl.input.id=ilcimgi(NULL);
+	if(mode==ITM_SEARCH || mode==ITM_DIRED){
+		dpl.input.il = mode==ITM_DIRED ? CIL(0) : NULL;
+		dpl.input.srcid=ilcimgi(dpl.input.il);
+	}
 	sdlforceredraw();
 	return 1;
 }

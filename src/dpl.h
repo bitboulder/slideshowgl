@@ -2,6 +2,7 @@
 #define _DPL_H
 
 #include "img.h"
+#include "il.h"
 #include "main.h"
 
 enum dplev {
@@ -44,7 +45,8 @@ enum dplevsrc { DES_KEY, DES_MOUSE };
 struct dplinput {
 	unsigned int mode;
 	float x,y;
-	int id;
+	int id,srcid;
+	struct imglist *il;
 	char pre[FILELEN];
 	char in[FILELEN];
 	char post[FILELEN];
