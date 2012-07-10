@@ -38,6 +38,7 @@ struct glfont {
 struct gl {
 	GLuint dls;
 	GLuint prg;
+	GLuint prgms;
 	GLuint prgfish;
 	GLuint movtex;
 	struct glfont font[NFT];
@@ -69,6 +70,12 @@ struct gl {
 } gl = {
 	.bar = 0.f,
 };
+
+void glprgsw(){
+	GLuint t=gl.prg;
+	gl.prg=gl.prgms;
+	gl.prgms=t;
+}
 
 void glcolora(float *col,float a){
 	float c[4];
@@ -241,6 +248,7 @@ void glinit(char done){
 	}
 	ldcheckvartex();
 	gl.prg=glprgload("vs.c","fs.c");
+	gl.prgms=glprgload("vs.c","fs_modsaetigung.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
 
 	gl.movtex=ldfile2tex(finddatafile("mov.png"));

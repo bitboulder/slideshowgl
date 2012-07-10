@@ -1065,6 +1065,7 @@ void dplkey(unsigned short keyu){
 	case 'G': dplgimp(); break;
 	case '/': dplinputtxtinit(ITM_SEARCH); break;
 	case 'h': effsw(ESW_HELP,-1); break;
+	case 'D': glprgsw(); break;
 	default: break;
 	}
 	if(key>='0' && key<='9'){
