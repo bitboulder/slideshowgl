@@ -155,9 +155,7 @@ char cilsecswitch(enum cilsecswitch type){
 /******* il sort ***************************************************/
 
 void ilsortinit(struct imglist *il){
-	struct img *img=il->imgs, *nxt;
 	il->avls=avlinit(il->sort,&il->imgs,&il->last);
-	while(img){ nxt=img->nxt; avlins(il->avls,img); img=nxt; }
 }
 
 void ilsortfree(struct imglist *il){
@@ -178,13 +176,14 @@ char ilsortupd(struct imglist *il,struct img *img){
 	return avlchk(il->avls,img);
 }
 
-void ilsortchg(struct imglist *il,char chg){
+void ilsortchg(struct imglist *il){
+	enum avlcmp sortori;
 	if(!(il=ilget(il))) return;
-	if(!chg) il->sort=il->dir[0]?ilcfg.sort_subdir:ilcfg.sort_maindir;
-	else if(++il->sort==ILS_NUM) il->sort=ILS_NONE+1;
-	ilsortfree(il);
-	ilsortinit(il);
-	if(chg) il->sort_chg=1;
+	sortori=il->sort;
+	do{
+		if(++il->sort==ILS_NUM) il->sort=0;
+	}while(!avlsortchg(il->avls,il->sort) && il->sort!=sortori);
+	il->sort_chg=1;
 }
 
 /******* il init ***************************************************/
@@ -199,7 +198,8 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	il->nxt=ils;
 	ils=il;
 	ilfiletime(il,FT_UPDATE);
-	ilsortchg(il,0);
+	il->sort=il->dir[0]?ilcfg.sort_subdir:ilcfg.sort_maindir;
+	ilsortinit(il);
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
 	return il;
 }

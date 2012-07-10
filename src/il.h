@@ -52,7 +52,7 @@ void ilupdcimgi(struct imglist *il);
 char ilreload(struct imglist *il,const char *cmd);
 void ilunused(struct imglist *il);
 char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len);
-void ilsortchg(struct imglist *il,char chg);
+void ilsortchg(struct imglist *il);
 char ilsortupd(struct imglist *il,struct img *img);
 enum eldft {FT_RESET, FT_UPDATE, FT_CHECK, FT_CHECKNOW};
 char ilfiletime(struct imglist *il,enum eldft act);

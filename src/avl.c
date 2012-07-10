@@ -160,11 +160,11 @@ void avlrot(struct avl *avl){
 	else for(avl=avl->pa;avl;avl=avl->pa) avln(avl);
 }
 
-void avlins(struct avls *avls,struct img *img){
+void avlinsid(struct avls *avls,struct img *img,int id){
 	struct avl **p=avls->avl->ch+0, *pa=avls->avl;
 	struct avl *avl=calloc(1,sizeof(struct avl));
 	int pos=-1;
-	avl->id=avls->id++;
+	avl->id=id<0 ? avls->id++ : id;
 	avl->rnd=rand();
 	avl->img=img;
 	#ifdef AVLDEBUG
@@ -195,6 +195,8 @@ void avlins(struct avls *avls,struct img *img){
 	avlrot(avl->pa);
 	avlprint(avls,"INSf",avl,1);
 }
+
+void avlins(struct avls *avls,struct img *img){ avlinsid(avls,img,-1); }
 
 void avldel(struct avls *avls,struct img *img){
 	if(img->prv) img->prv->nxt=img->nxt; else avls->first[0]=img->nxt;
@@ -228,11 +230,12 @@ void avldel(struct avls *avls,struct img *img){
 }
 
 char avlchk(struct avls *avls,struct img *img){
+	int id = img->avl ? img->avl->id : -1;
 	if(!avls->cmp) return 0;
 	if((!img->prv || avls->cmp(img->prv->avl,img->avl)<=0) &&
 	   (!img->nxt || avls->cmp(img->avl,img->nxt->avl)<=0)) return 0;
 	avldel(avls,img);
-	avlins(avls,img);
+	avlinsid(avls,img,id);
 	return 1;
 }
 
@@ -264,6 +267,28 @@ void avlfree1(struct avl *avl){
 void avlfree(struct avls *avls){
 	avlfree1(avls->avl);
 	free(avls);
+}
+
+char avlsortchg(struct avls *avls,enum avlcmp cmp){
+	struct avl *avl=avls->avl->ch[0];
+	struct avls *avlsn=avlinit(cmp,avls->first,avls->last);
+	char chg=0;
+	while(1){
+		if(!chg && avl->ch[0] && avlsn->cmp(avl,avl->ch[0])<=0) chg=1;
+		if(!chg && avl->ch[1] && avlsn->cmp(avl,avl->ch[1])>0 ) chg=1;
+		if(avl->img) avlinsid(avlsn,avl->img,avl->id);
+		if(avl->ch[0]) avl=avl->ch[0];
+		else if(avl->ch[1]) avl=avl->ch[1];
+		else{
+			while(avl->pa && (avl->pa->ch[1]==avl || avl->pa->ch[1]==NULL)) avl=avl->pa;
+			if(!avl->pa) break;
+			avl=avl->pa->ch[1];
+		}
+	}
+	avlfree1(avls->avl);
+	memcpy(avls,avlsn,sizeof(struct avls));
+	free(avlsn);
+	return chg;
 }
 
 int avlnimg(struct avls *avls){ return N0(avls->avl); }
