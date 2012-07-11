@@ -439,7 +439,7 @@ char dplmark(int imgi,char copy){
 		mark[mkid]=!mark[mkid];
 		markchange(mkid);
 	}else for(mkid=1;mkid<=markncat();mkid++) if(dpl.lastmark[mkid]!=mark[mkid]){
-		mark[mkid]=!dpl.lastmark[mkid];
+		mark[mkid]=dpl.lastmark[mkid];
 		markchange(mkid);
 	}
 	dpl.lastmark=mark;
