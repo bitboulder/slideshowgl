@@ -422,6 +422,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	char swap=0;
 	char panoenable=0;
 	enum effrefresh effref=EFFREF_FIT;
+	timer(TI_LDF,-1,0);
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
 	if(!strncmp(fn,"[MAP]",6)) goto end0;
@@ -452,10 +453,12 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
+	timer(TI_LDF,0,0);
 	sdlimg=sdlimg_gen(IMG_Load(fn));
 	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
 	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
 	if(!sdlimg->fmt){ error(ERR_CONT,"Not supported pixelformat \"%s\"",fn); goto end3; }
+	timer(TI_LDF,1,0);
 
 	if(!swap){
 		il->w=sdlimg->sf->w;
@@ -467,10 +470,12 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	ileffref(ilt,effref);
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
+	timer(TI_LDF,2,0);
 	imghistgen(il->img->hist,il->w*il->h,
 		sdlimg->fmt==GL_BGRA || sdlimg->fmt==GL_BGR,
 		sdlimg->sf->format->BytesPerPixel,
 		sdlimg->sf->pixels);
+	timer(TI_LDF,3,0);
 
 	for(i=0;i<=it;i++){
 		int scale=1;
@@ -546,6 +551,7 @@ end3:
 	il->loadfail=1;
 end2:
 	sdlimg_unref(sdlimg);
+	timer(TI_LDF,4,0);
 end0:
 	return ld;
 }
