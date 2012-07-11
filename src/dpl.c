@@ -435,11 +435,15 @@ char dplmark(int imgi,char copy){
 	if(imgfiledir(img->file)) return 0;
 	if(copy && !dpl.lastmark) return 0;
 	mark=imgposmark(img,MPC_ALLWAYS);
-	if(!copy) mark[mkid]=!mark[mkid];
-	else memcpy(mark+1,dpl.lastmark+1,sizeof(char)*markncat());
+	if(!copy){
+		mark[mkid]=!mark[mkid];
+		markchange(mkid);
+	}else for(mkid=1;mkid<=markncat();mkid++) if(dpl.lastmark[mkid]!=mark[mkid]){
+		mark[mkid]=!dpl.lastmark[mkid];
+		markchange(mkid);
+	}
 	dpl.lastmark=mark;
 	effinit(EFFREF_IMG,DE_MARK,NULL,imgi);
-	markchange(copy?INT_MAX:mkid);
 	actadd(ACT_SAVEMARKS,NULL,NULL);
 	return 1;
 }

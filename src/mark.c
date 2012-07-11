@@ -210,10 +210,7 @@ char *markimgget(struct img *img,enum mkcreate create){
 	return mk ? mk->mark : NULL;
 }
 
-void markchange(size_t id){
-	if(id<=mark.ncat) mark.mkchange[id]=1;
-	else for(id=1;id<=mark.ncat;id++) mark.mkchange[id]=1;
-}
+void markchange(size_t id){ mark.mkchange[id]=1; }
 
 void markssave(){
 	FILE *fd;
