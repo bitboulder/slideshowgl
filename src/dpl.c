@@ -436,10 +436,10 @@ char dplmark(int imgi,char copy){
 	if(copy && !dpl.lastmark) return 0;
 	mark=imgposmark(img,MPC_ALLWAYS);
 	if(!copy) mark[mkid]=!mark[mkid];
-	else memcpy(mark+1,dpl.lastmark+1,sizeof(char)*(markncat()-1));
+	else memcpy(mark+1,dpl.lastmark+1,sizeof(char)*markncat());
 	dpl.lastmark=mark;
 	effinit(EFFREF_IMG,DE_MARK,NULL,imgi);
-	markchange(mkid);
+	markchange(copy?INT_MAX:mkid);
 	actadd(ACT_SAVEMARKS,NULL,NULL);
 	return 1;
 }
