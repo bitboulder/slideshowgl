@@ -444,7 +444,6 @@ char dplmark(int imgi,char copy){
 	}
 	dpl.lastmark=mark;
 	effinit(EFFREF_IMG,DE_MARK,NULL,imgi);
-	actadd(ACT_SAVEMARKS,NULL,NULL);
 	return 1;
 }
 

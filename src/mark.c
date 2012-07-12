@@ -231,7 +231,6 @@ void markimgmove(struct img *img){
 			markchange(id);
 		}
 	}
-	actadd(ACT_SAVEMARKS,NULL,NULL);
 }
 
 void markimgclean(struct img *img){
@@ -243,10 +242,12 @@ void markimgclean(struct img *img){
 		mk[id]=0;
 		markchange(id);
 	}
-	actadd(ACT_SAVEMARKS,NULL,NULL);
 }
 
-void markchange(size_t id){ mark.mkchange[id]=1; }
+void markchange(size_t id){
+	mark.mkchange[id]=1;
+	actadd(ACT_SAVEMARKS,NULL,NULL);
+}
 
 void markssave(){
 	FILE *fd;
