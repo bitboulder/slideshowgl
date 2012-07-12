@@ -465,6 +465,7 @@ void dpldel(enum edpldel act){
 	if(act==DD_ORI && (img=ilcimg(NULL)) && fimgswitchmod(img)){
 		effinit(EFFREF_IMG|EFFREF_FIT,0,NULL,-1);
 	}else if((img=ildelcimg(NULL))){
+		markimgclean(img);
 		if(dpl.pos.zoom>0) dpl.pos.zoom=0;
 		if(delimg){
 			struct img *tmp=delimg;

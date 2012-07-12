@@ -205,9 +205,45 @@ void markinit(){
 
 char *markimgget(struct img *img,enum mkcreate create){
 	struct mk *mk;
+	if(!img || imgfiledir(img->file)) return NULL;
 	markinit();
 	mk=mkfind(imgfilefn(img->file),create);
 	return mk ? mk->mark : NULL;
+}
+
+void markimgmove(struct img *img){
+	struct mk *mk;
+	char *src,*dst;
+	size_t id=0;
+	if(!img || imgfiledir(img->file)) return;
+	markinit();
+	mk=mkfind(imgfiledelfn(img->file),MKC_NO); src=mk?mk->mark:NULL;
+	dst=markimgget(img,src?MKC_YES:MKC_NO);
+	if(!dst) return;
+	for(id=0;id<=markncat();id++){
+		char s=src && src[id];
+		if(s!=dst[id]){
+			dst[id]=s;
+			markchange(id);
+		}
+		if(src && src[id]){
+			src[id]=0;
+			markchange(id);
+		}
+	}
+	actadd(ACT_SAVEMARKS,NULL,NULL);
+}
+
+void markimgclean(struct img *img){
+	char *mk;
+	size_t id=0;
+	if(!img || imgfiledir(img->file)) return;
+	if(!(mk=markimgget(img,MKC_NO))) return;
+	for(id=0;id<=markncat();id++) if(mk[id]){
+		mk[id]=0;
+		markchange(id);
+	}
+	actadd(ACT_SAVEMARKS,NULL,NULL);
 }
 
 void markchange(size_t id){ mark.mkchange[id]=1; }

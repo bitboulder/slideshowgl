@@ -4,7 +4,7 @@
 #include "img.h"
 #include "dpl.h"
 
-enum mkcreate { MKC_NO, MKC_YES, MKC_ALLWAYS };
+enum mkcreate { MKC_NO, MKC_YES };
 
 size_t markncat();
 char *markcats();
@@ -13,6 +13,8 @@ void markcatadd(char *fn);
 void markcatsel(struct dplinput *in);
 
 char *markimgget(struct img *img,enum mkcreate create);
+void markimgmove(struct img *img);
+void markimgclean(struct img *img);
 void markchange(size_t id);
 
 void markssave();

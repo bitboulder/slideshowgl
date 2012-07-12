@@ -23,6 +23,7 @@
 #include "dpl.h"
 #include "eff.h"
 #include "map.h"
+#include "mark.h"
 
 #define IMGEXT		"jpg", "jpeg", "png", "tif", "tiff"
 #define MOVEXT		"mov", "avi", "mpg"
@@ -403,6 +404,7 @@ char fimgswitchmod(struct img *img){
 	fthumbinit(ifl);
 	fmovinit(ifl);
 	imgpanoload(img->pano,fn);
+	markimgmove(img);
 	imgposmark(img,MPC_RESET);
 	imgldfiletime(img->ld,FT_RESET);
 	return 1;
