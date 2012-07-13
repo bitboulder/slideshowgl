@@ -54,6 +54,7 @@ struct dpl {
 	} mousehold;
 	char fullscreen;
 	char *lastmark;
+	Uint32 catforce;
 } dpl = {
 	.pos.zoom = 0,
 	.pos.x = 0.,
@@ -67,6 +68,7 @@ struct dpl {
 	.mousehold.time = 0,
 	.fullscreen = 0,
 	.lastmark = NULL,
+	.catforce = 0,
 };
 
 #define AIL_ON		(dpl.pos.ailtyp!=AIL_NONE)
@@ -978,7 +980,10 @@ char dplinputtxtinitp(enum inputtxt mode,float x,float y){
 void dplinputtxtfinal(char ok){
 	size_t len=strlen(dpl.input.in);
 	switch(dpl.input.mode){
-	case ITM_CATSEL: if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT); break;
+	case ITM_CATSEL:
+		if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT);
+		if(dpl.catforce) dpl.catforce=SDL_GetTicks()+(ok?2000:0);
+	break;
 	case ITM_TXTIMG: if(ok && len) dplprged("txtadd",-1,-1,-1); break;
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
 	case ITM_SEARCH: if(!ok) dplsel(dpl.input.id); break;
@@ -1062,8 +1067,8 @@ void dplkey(unsigned short keyu){
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
 	case 'C': if(!dplprgcolcopy()) dplconvert(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
-	case 'k': effsw(ESW_CAT,-1); break;
-	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); effsw(ESW_CAT,1); } break;
+	case 'k': effsw(ESW_CAT,-1); dpl.catforce=0; break;
+	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); if(effsw(ESW_CAT,1) || dpl.catforce) dpl.catforce=1; } break;
 	case 'S': if(!dplmark(ilcimgi(NULL),1)){ ilsortchg(NULL); effinit(EFFREF_ALL,0,NULL,-1); } break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
@@ -1241,6 +1246,7 @@ int dplthread(void *UNUSED(arg)){
 		if(dpl.run) dplrun();
 		else dpl.cfg.playmode=0;
 		panorun();
+		if(dpl.catforce>1 && SDL_GetTicks()>=dpl.catforce){ dpl.catforce=0; effsw(ESW_CAT,0); }
 		timer(TI_DPL,0,0);
 		dplcheckev();
 		dplmouseholdchk();
