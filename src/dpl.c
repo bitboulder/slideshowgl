@@ -132,6 +132,18 @@ float *dplgethist(){
 	return imghistget(img->hist);
 }
 
+enum catforce { CF_ONRUN, CF_ON, CF_RUN, CF_RUNC, CF_OFF, CF_CHK };
+void catforce(enum catforce cf){
+	switch(cf){
+	case CF_ONRUN:
+	case CF_ON:  if(effsw(ESW_CAT,1) || dpl.catforce) dpl.catforce=1; if(cf!=CF_ONRUN) break;
+	case CF_RUNC:
+	case CF_RUN: if(dpl.catforce) dpl.catforce=SDL_GetTicks()+(cf==CF_RUNC?0:2000); break;
+	case CF_OFF: dpl.catforce=0; break;
+	case CF_CHK: if(dpl.catforce>1 && SDL_GetTicks()>=dpl.catforce){ dpl.catforce=0; effsw(ESW_CAT,0); } break;
+	}
+}
+
 /***************************** imgfit *****************************************/
 
 char imgfit(struct img *img,float *fitw,float *fith){
@@ -982,7 +994,7 @@ void dplinputtxtfinal(char ok){
 	switch(dpl.input.mode){
 	case ITM_CATSEL:
 		if(ok && dpl.input.id>=0) dplevputi(DE_MARK,dpl.input.id+IMGI_CAT);
-		if(dpl.catforce) dpl.catforce=SDL_GetTicks()+(ok?2000:0);
+		catforce(ok?CF_RUN:CF_RUNC);
 	break;
 	case ITM_TXTIMG: if(ok && len) dplprged("txtadd",-1,-1,-1); break;
 	case ITM_NUM:    if(ok && len) dplsel(atoi(dpl.input.in)-1); break;
@@ -1067,9 +1079,9 @@ void dplkey(unsigned short keyu){
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
 	case 'C': if(!dplprgcolcopy()) dplconvert(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
-	case 'k': effsw(ESW_CAT,-1); dpl.catforce=0; break;
-	case 's': if(dplwritemode()){ dplinputtxtinit(ITM_CATSEL); if(effsw(ESW_CAT,1) || dpl.catforce) dpl.catforce=1; } break;
-	case 'S': if(!dplmark(ilcimgi(NULL),1)){ ilsortchg(NULL); effinit(EFFREF_ALL,0,NULL,-1); } break;
+	case 'k': effsw(ESW_CAT,-1); catforce(CF_OFF); break;
+	case 's': if(dplwritemode() && dplinputtxtinit(ITM_CATSEL)) catforce(CF_ON); break;
+	case 'S': if(dplmark(ilcimgi(NULL),1)) catforce(CF_ONRUN); else{ ilsortchg(NULL); effinit(EFFREF_ALL,0,NULL,-1); } break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;
 	case '+': if(!dplprged("imgadd",-1,AIL_LEFT && dpl.actimgi>=0 ? dpl.actimgi : ilcimgi(CIL(0)),-1)) dplcol(1); break;
@@ -1246,7 +1258,7 @@ int dplthread(void *UNUSED(arg)){
 		if(dpl.run) dplrun();
 		else dpl.cfg.playmode=0;
 		panorun();
-		if(dpl.catforce>1 && SDL_GetTicks()>=dpl.catforce){ dpl.catforce=0; effsw(ESW_CAT,0); }
+		catforce(CF_CHK);
 		timer(TI_DPL,0,0);
 		dplcheckev();
 		dplmouseholdchk();

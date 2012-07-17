@@ -57,7 +57,7 @@ void mapld_load(struct mapldti ti){
 	struct curl_slist *lst=NULL;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
 	mkdirm(fn,1);
-	if(!strcmp(ti.maptype,"om")) snprintf(url,FILELEN*2,"http://tile.openstreetmap.org/mapnik/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
+	if(!strcmp(ti.maptype,"om")) snprintf(url,FILELEN*2,"http://a.tile.openstreetmap.org/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
 	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",ti.maptype); return; }
 	debug(DBG_STA,"mapld_load: \"%s\" => \"%s\"",url,fn);
 	curl=curl_easy_init();
