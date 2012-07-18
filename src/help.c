@@ -174,7 +174,7 @@ enum filetype filetype(const char *fn){
 	FILE *fd;
 #if HAVE_STAT
 	struct stat st;
-	if(stat(fn,&st)) return FT_NX;
+	if(!fn || stat(fn,&st)) return FT_NX;
 	if(S_ISDIR(st.st_mode)) ft|=FT_DIR|FT_DIREX;
 	else
 #endif

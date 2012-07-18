@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-07-10 22:14+0200\n"
+"POT-Creation-Date: 2012-07-18 13:56+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -384,172 +384,176 @@ msgid "Cache directory for map images (default: TMP/slideshowgl-cache)"
 msgstr "Cacheverzeichnis für Kartendateien (Standart: TMP/slideshowgl-cache)"
 
 #: src/cfg.c:119
+msgid "Dayes of expire for map cache"
+msgstr "Anzahl der Tage zum Ablauf des Caches für die Karte"
+
+#: src/cfg.c:120
 msgid "Maximal fraction displayed in histogram"
 msgstr "Größter Anteil im Histogramm"
 
-#: src/cfg.c:129
+#: src/cfg.c:130
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:137
+#: src/cfg.c:138
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:151
+#: src/cfg.c:152
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:152
+#: src/cfg.c:153
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:160
+#: src/cfg.c:161
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:169
+#: src/cfg.c:170
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:170
+#: src/cfg.c:171
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:177
+#: src/cfg.c:178
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:193
+#: src/cfg.c:194
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:197
+#: src/cfg.c:198
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:209
+#: src/cfg.c:210
 #, c-format
 msgid "cfgset do-option with no implemented action (%s)"
 msgstr ""
 
-#: src/cfg.c:216
+#: src/cfg.c:217
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:223
+#: src/cfg.c:224
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:224
+#: src/cfg.c:225
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:241
+#: src/cfg.c:242
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:252
+#: src/cfg.c:253
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:271
+#: src/cfg.c:272
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:275
+#: src/cfg.c:276
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:88
+#: src/dpl.c:90
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:89
+#: src/dpl.c:91
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:90
+#: src/dpl.c:92
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:92
+#: src/dpl.c:94
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:94
+#: src/dpl.c:96
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:95
+#: src/dpl.c:97
 #, c-format
 msgid "[Mark-File]"
 msgstr "[Markierungsdatei]"
 
-#: src/dpl.c:164
+#: src/dpl.c:178
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:222
+#: src/dpl.c:236
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:408
+#: src/dpl.c:422
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:534
+#: src/dpl.c:555
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:535
+#: src/dpl.c:556
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:550
+#: src/dpl.c:571
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:551
+#: src/dpl.c:572
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:552
+#: src/dpl.c:573
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:556 src/map.c:1042
+#: src/dpl.c:577 src/map.c:1042
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:557
+#: src/dpl.c:578
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1005
+#: src/dpl.c:1030
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -569,7 +573,7 @@ msgstr ""
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:37 src/il.c:276
+#: src/exif.c:37 src/il.c:277
 msgid "Date"
 msgstr "Datum"
 
@@ -679,37 +683,37 @@ msgstr "(unbekannt)"
 msgid "exif loading img %s"
 msgstr ""
 
-#: src/file.c:167
+#: src/file.c:168
 #, c-format
 msgid "thumbinit thumb too old for '%s'"
 msgstr ""
 
-#: src/file.c:175
+#: src/file.c:176
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:177
+#: src/file.c:178
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:233
+#: src/file.c:234
 #, c-format
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:286
+#: src/file.c:287
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:288
+#: src/file.c:289
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:362
+#: src/file.c:363
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
@@ -771,59 +775,59 @@ msgstr ""
 msgid "mkdirm: mkdir \"%s\" failed"
 msgstr ""
 
-#: src/il.c:94
+#: src/il.c:95
 #, c-format
 msgid "ilsetparent: maxhistory (%i) reached (is there a loop in history?)"
 msgstr ""
 
-#: src/il.c:109
+#: src/il.c:110
 #, c-format
 msgid "imglist %i switch to dir: %s"
 msgstr ""
 
-#: src/il.c:203
+#: src/il.c:204
 #, c-format
 msgid "imglist created for dir: %s"
 msgstr ""
 
-#: src/il.c:217
+#: src/il.c:218
 #, c-format
 msgid "imglist destroyed for dir: %s"
 msgstr ""
 
-#: src/il.c:223
+#: src/il.c:224
 #, c-format
 msgid "imglist free for dir: %s"
 msgstr ""
 
-#: src/il.c:275
+#: src/il.c:276
 msgid "Rnd"
 msgstr "Zufall"
 
-#: src/il.c:277
+#: src/il.c:278
 msgid "File"
 msgstr "Dateiname"
 
-#: src/il.c:278
+#: src/il.c:279
 msgid "None"
 msgstr "Nichts"
 
-#: src/il.c:352
+#: src/il.c:359
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/il.c:446
+#: src/il.c:453
 #, c-format
 msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
 msgstr ""
 
-#: src/il.c:449
+#: src/il.c:456
 #, c-format
 msgid "ilcleanup state %2i: %7i %s"
 msgstr ""
 
-#: src/il.c:464
+#: src/il.c:471
 #, c-format
 msgid "reload imglist: %s"
 msgstr ""
@@ -894,37 +898,37 @@ msgstr ""
 msgid "glTexImage2D %s failed (gl-err: %d)"
 msgstr ""
 
-#: src/load.c:453
+#: src/load.c:454
 #, c-format
 msgid "ld loading img tex %s %s"
 msgstr ""
 
-#: src/load.c:457
+#: src/load.c:459
 #, c-format
 msgid "Loading img failed \"%s\": %s"
 msgstr ""
 
-#: src/load.c:458
+#: src/load.c:460
 #, c-format
 msgid "Not supported pixelformat \"%s\""
 msgstr ""
 
-#: src/load.c:504
+#: src/load.c:509
 #, c-format
 msgid "ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)"
 msgstr ""
 
-#: src/load.c:535
+#: src/load.c:540
 #, c-format
 msgid "Not supported pixelformat after scale \"%s\""
 msgstr ""
 
-#: src/load.c:561
+#: src/load.c:567
 #, c-format
 msgid "ld freeing img tex %s %s"
 msgstr ""
 
-#: src/load.c:629
+#: src/load.c:635
 msgid "ldreset done"
 msgstr ""
 
@@ -972,26 +976,26 @@ msgstr "Hinzufügen"
 msgid "Replace"
 msgstr "Ersetzen"
 
-#: src/mapld.c:65
+#: src/mapld.c:68
 #, c-format
 msgid "mapld_load: unknown maptype \"%s\""
 msgstr ""
 
-#: src/mapld.c:66
+#: src/mapld.c:69
 #, c-format
 msgid "mapld_load: \"%s\" => \"%s\""
 msgstr ""
 
-#: src/mapld.c:68
+#: src/mapld.c:71
 msgid "mapld_load: curl-init failed"
 msgstr ""
 
-#: src/mapld.c:70
+#: src/mapld.c:73
 #, c-format
 msgid "mapld_load: cache-file open failed (%s)"
 msgstr ""
 
-#: src/mapld.c:89
+#: src/mapld.c:92
 #, c-format
 msgid "mapld_load: file loading failed (res: %i)"
 msgstr ""
@@ -1001,7 +1005,7 @@ msgstr ""
 msgid "marks loaded (%s)"
 msgstr ""
 
-#: src/mark.c:229
+#: src/mark.c:266
 #, c-format
 msgid "marks saved (%s)"
 msgstr ""

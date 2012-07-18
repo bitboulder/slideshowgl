@@ -116,6 +116,7 @@ struct cfg {
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
 	{ 'M', "map.base",            CT_STR, CM_SET,  "",       {NULL}, __("Base directory for gps.txt files") },
 	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images (default: TMP/slideshowgl-cache)") },
+	{ 0,   "mapld.expire",        CT_INT, CM_SET,  "7",      {NULL}, __("Dayes of expire for map cache") },
 	{ 0,   "hist.max",            CT_FLT, CM_SET,  "0.02",   {NULL}, __("Maximal fraction displayed in histogram") },
 	{ 0,   NULL,                  0,      0,       "",       {NULL}, NULL },
 };

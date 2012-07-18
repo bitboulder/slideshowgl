@@ -25,10 +25,12 @@ struct mapld {
 	char cachedir[FILELEN];
 	char init;
 	SDL_mutex *mutex;
+	int expire;
 } mapld = {
 	.wi=0,
 	.ri=0,
 	.init=0,
+	.expire=7,
 };
 
 #if HAVE_CURL
@@ -123,7 +125,10 @@ char mapld_check(const char *maptype,int iz,int ix,int iy,char web,char *fn){
 	if(!mapld.init) return 0;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptype,iz,ix,iy);
 	ft=filetype(fn);
-	if(ft&FT_FILE) return 2;
+	if(ft&FT_FILE){
+		if(filetime(fn)+mapld.expire*24*60*60<time(NULL)) mapld_put(maptype,iz,ix,iy);
+		return 2;
+	}
 	if(ft!=FT_NX) return 1;
 	if(!web) return 1;
 	return mapld_put(maptype,iz,ix,iy);
@@ -136,6 +141,7 @@ void mapldinit(){
 	if(cd && cd[0]) snprintf(mapld.cachedir,FILELEN,cd);
 	else snprintf(mapld.cachedir,FILELEN,"%s/slideshowgl-cache",gettmp());
 	mkdirm(mapld.cachedir,0);
+	mapld.expire=cfggetint("mapld.expire");
 #if HAVE_CURL
 	if(curl_global_init(CURL_GLOBAL_NOTHING)) return;
 #endif
