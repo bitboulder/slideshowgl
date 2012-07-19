@@ -520,7 +520,9 @@ char dpldir(int imgi,char noleave){
 	if(imgi==IMGI_START) return 0;
 	if(!il && !fn && !(img=ilimg(NULL,imgi))){
 		if(noleave) return 0;
+		il=ilget(NULL);
 		if(!cilset(NULL,0,0)) return 1;
+		if(dpl.pos.ailtyp==AIL_DIRED && !ildired(NULL)) cilset(il,0,0);
 	}else{
 		if(!il){
 			if(!fn){
@@ -529,6 +531,7 @@ char dpldir(int imgi,char noleave){
 				ilsetcimgi(NULL,imgi);
 			}else actforce();
 			if(!(il=floaddir(fn,dir))) return 1;
+			if(dpl.pos.ailtyp==AIL_DIRED && !ildired(il)) return 1;
 		}
 		if(cilset(il,0,0)==1) return 1;
 		if(ilprg(CIL(0))){ dpl.pos.zoom=0; ilsetcimgi(NULL,IMGI_START); }
@@ -665,7 +668,8 @@ void dpledit(){
 		else return;
 	}else{
 		if(ilprg(NULL)) type=ILSS_PRGON;
-		else type=ILSS_DIRON;
+		else if(ildired(NULL)) type=ILSS_DIRON;
+		else return;
 	}
 	if(!cilsecswitch(type)) return;
 	dpl.run=0;

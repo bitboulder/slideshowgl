@@ -43,6 +43,7 @@ struct imglist {
 	struct ldft lf;
 	struct avls *avls;
 	enum effrefresh effref;
+	char subdir;
 } *ils=NULL, *ildel=NULL;
 
 struct curil {
@@ -322,6 +323,11 @@ int ildiffimgi(struct imglist *il,int ia,int ib){
 	return diff;
 }
 
+char ildired(struct imglist *il){
+	if(!(il=ilget(il))) return 0;
+	return il->subdir && (filetype(il->fn)&FT_DIR);
+}
+
 /******* il work ***************************************************/
 
 char iladdimg(struct imglist *il,struct img *img,const char *prg){
@@ -329,6 +335,7 @@ char iladdimg(struct imglist *il,struct img *img,const char *prg){
 	if(!(il=ilget(il))) return 0;
 	ilsortins(il,img);
 	if(prg) prgadd(&il->prg,prg,img);
+	if(filetype(imgfilefn(img->file))&FT_DIR) il->subdir=1;
 	return 1;
 }
 

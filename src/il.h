@@ -45,6 +45,7 @@ const char *ilsortget(struct imglist *il);
 int ilrelimgi(struct imglist *il,int imgi);
 int ilclipimgi(struct imglist *il,int imgi,char strict);
 int ildiffimgi(struct imglist *il,int ia,int ib);
+char ildired(struct imglist *il);
 /* il work */
 char iladdimg(struct imglist *il,struct img *img,const char *prg);
 void ilsetcimgi(struct imglist *il,int imgi);
