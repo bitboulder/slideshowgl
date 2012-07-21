@@ -55,6 +55,7 @@ int maptype_maxz[]={ MAPTYPE };
 struct tile {
 	int ix,iy,iz;
 	long ft;
+	long ftchk;
 	char loading;
 	GLuint tex;
 };
@@ -106,6 +107,7 @@ struct map {
 	struct tile imgdir[2];
 	int info;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
+	long ftchk;
 } map = {
 	.init = 2,
 	.basedirs = NULL,
@@ -120,6 +122,7 @@ struct map {
 	.scr_h = NULL,
 	.info  = -1,
 	.editmode  = MEM_ADD,
+	.ftchk = 3000,
 };
 
 char mapon(){
@@ -626,14 +629,16 @@ char maploadtile(struct tile *ti){
 	char fn[FILELEN];
 	SDL_Surface *sf,*sfc;
 	SDL_PixelFormat fmt;
-	if(!ti || ti->loading>=2) return 0;
+	long time=SDL_GetTicks();
+	if(!ti) return 0;
+	if(ti->loading==2 && ti->ftchk+map.ftchk>=time) return 0;
+	ti->ftchk=time;
 	ti->loading=mapld_check(maptype_str[map.maptype],ti->iz,ti->ix,ti->iy,!ti->loading,fn);
-	if(ti->loading<2) return 0;
-	if(ti->tex && ti->ft>=filetime(fn)) goto end0;
-	debug(DBG_STA,"map loading map %i/%i/%i",ti->iz,ti->ix,ti->iy);
-	if(!(sf=IMG_Load(fn))) goto end0;
+	if(ti->loading<2 || ti->ft>=filetime(fn)) return 0;
 	ti->ft=filetime(fn);
-	if(sf->w!=256 || sf->h!=256) goto end0;
+	debug(DBG_STA,"map loading map %i/%i/%i",ti->iz,ti->ix,ti->iy);
+	if(!(sf=IMG_Load(fn))) return 0;
+	if(sf->w!=256 || sf->h!=256) return 0;
 	memset(&fmt,0,sizeof(SDL_PixelFormat));
 	fmt.BitsPerPixel=24;
 	fmt.BytesPerPixel=3;
@@ -642,13 +647,10 @@ char maploadtile(struct tile *ti){
 	fmt.Bmask=0x00ff0000;
 	sfc=SDL_ConvertSurface(sf,&fmt,sf->flags);
 	SDL_FreeSurface(sf);
-	if(!sfc) goto end0;
+	if(!sfc) return 0;
 	texloadput(ti,sfc);
 	sdlforceredraw();
 	return 1;
-end0:
-	ti->loading=0;
-	return 0;
 }
 
 char mapldchecktile(int ix,int iy,int iz){
@@ -733,6 +735,7 @@ void mapinit(){
 	char *bdir;
 	while(map.init>1) SDL_Delay(500);
 	mapaddbasedir(cfggetstr("map.base"),"");
+	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
 	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
 		char dir[FILELEN];
