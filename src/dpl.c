@@ -876,14 +876,15 @@ void dplmouseholdchk(){
 
 void dplimgsearch(struct dplinput *in){
 	int nimgs=ilnimgs(in->il);
-	int i=(in->srcid+1)%nimgs;
+	int i = in->srcid<0 || in->srcid>=nimgs ? 0 : (in->srcid+1)%nimgs;
 	int n=0;
 	size_t ilen=strlen(in->in);
 	if(in->in[0]) for(;n<nimgs;n++,i=(i+1)%nimgs){
 		struct img *img=ilimg(in->il,i);
-		const char *fn=imgfilefn(img->file);
-		const char *pos=strrchr(fn,'/');
+		const char *fn, *pos;
 		size_t plen,p;
+		if(!img || !(fn=imgfilefn(img->file))) continue;
+		pos=strrchr(fn,'/');
 		if(pos) pos++; else pos=fn;
 		if((plen=strlen(pos))<ilen) continue;
 		for(p=0;p<=plen-ilen;p++){
