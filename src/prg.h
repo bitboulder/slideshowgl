@@ -21,6 +21,6 @@ void prgadd(struct prg **prg,const char *txt,struct img *img);
 int prgimgidiff(struct imglist *il,int frm,int imgi,struct img *img);
 int prgget(struct prg *prg,struct img *img,int frm,int iev,struct pev **pev);
 char prgdelay(int frm,float *on,float *stay);
-char prgforoneldfrm(struct imglist *il,int frm,char (*func)(struct imgld *il,struct imglist *ilt,enum imgtex it),struct imglist *ilt,enum imgtex it);
+char prgforoneldfrm(struct imglist *il,int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it);
 
 #endif

@@ -164,13 +164,13 @@ void ilsortfree(struct imglist *il){
 	il->avls=NULL;
 }
 
-void ilsortins(struct imglist *il,struct img *img){
+void ilsortins(struct img *img){
 	char *fn=imgfilefn(img->file);
-	if(il->sort==ILS_DATE && !exichcheck(img->exif,fn) && avlnimg(il->avls)<ilcfg.maxloadexif) imgexifload(img->exif,fn);
-	avlins(il->avls,img);
+	if(img->il->sort==ILS_DATE && !exichcheck(img->exif,fn) && avlnimg(img->il->avls)<ilcfg.maxloadexif) imgexifload(img->exif,fn);
+	avlins(img->il->avls,img);
 }
 
-void ilsortdel(struct imglist *il,struct img *img){ avldel(il->avls,img); }
+void ilsortdel(struct img *img){ avldel(img->il->avls,img); }
 
 char ilsortupd(struct imglist *il,struct img *img){
 	if(!(il=ilget(il))) return 0;
@@ -333,7 +333,9 @@ char ildired(struct imglist *il){
 char iladdimg(struct imglist *il,struct img *img,const char *prg){
 	ilcfginit();
 	if(!(il=ilget(il))) return 0;
-	ilsortins(il,img);
+	if(img->il) error(ERR_CONT,"iladdimg: image still in il \"%s\"",imgfilefn(img->file));
+	img->il=il;
+	ilsortins(img);
 	if(prg) prgadd(&il->prg,prg,img);
 	if(filetype(imgfilefn(img->file))&FT_DIR) il->subdir=1;
 	return 1;
@@ -372,10 +374,11 @@ void ilunused(struct imglist *il){
 	actadd(ACT_ILCLEANUP,NULL,NULL);
 }
 
-struct img *ilremoveimg(struct imglist *il,struct img *img,char final){
-	if(!(il=ilget(il))) return NULL;
-	ilsortdel(il,img);
-	ilupdcimgi(il);
+struct img *ilremoveimg(struct img *img,char final){
+	if(!img->il) return img;
+	ilsortdel(img);
+	ilupdcimgi(img->il);
+	img->il=NULL;
 	if(!final){
 		if(!ildel) ildel=ilnew("[DEL]","");
 		iladdimg(ildel,img,NULL);
@@ -389,7 +392,7 @@ char ilmoveimg(struct imglist *dst,struct imglist *src,const char *fn,size_t len
 	for(img=src->imgs;img;img=img->nxt){
 		const char *ifn=imgfilefn(img->file);
 		if(ifn[len]!='\0' || strncmp(ifn,fn,len)) continue;
-		if(!ilremoveimg(src,img,1)) continue;
+		if(!ilremoveimg(img,1)) continue;
 		iladdimg(dst,img,fn[len]==';'?fn+len+1:NULL);
 		return 1;
 	}
@@ -404,7 +407,7 @@ void ilprgfrm(struct imglist *il,const char *prgfrm){
 struct img *ildelcimg(struct imglist *il){
 	struct img *img;
 	if(!(il=ilget(il)) || !(img=ilcimg(il)) || imgfiledir(img->file)) return NULL;
-	if(!ilremoveimg(il,img,0)) return NULL;
+	if(!ilremoveimg(img,0)) return NULL;
 	return img;
 }
 
@@ -475,7 +478,7 @@ void ilsftcheck(){
 	}
 }
 
-int ilsforallimgs(int (*func)(struct img *img,int imgi,struct imglist *il,void *arg),void *arg,char cilonly,int brk){
+int ilsforallimgs(int (*func)(struct img *img,int imgi,void *arg),void *arg,char cilonly,int brk){
 	struct imglist *il;
 	struct img *img;
 	int imgi;
@@ -484,13 +487,13 @@ int ilsforallimgs(int (*func)(struct img *img,int imgi,struct imglist *il,void *
 		int cil;
 		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))))
 			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
-				r+=func(img,imgi,il,arg);
+				r+=func(img,imgi,arg);
 				if(brk && r>=brk) return 0;
 			}
 	}else{
 		for(il=ils;il;il=il->nxt)
 			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
-				r+=func(img,imgi,il,arg);
+				r+=func(img,imgi,arg);
 				if(brk && r>=brk) return 0;
 			}
 	}

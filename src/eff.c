@@ -608,10 +608,10 @@ char effdostat(){
 
 struct effdoarg { char ineff; char chg; };
 
-int effdo1(struct img *img,int imgi,struct imglist *il,void *arg){
+int effdo1(struct img *img,int imgi,void *arg){
 	struct effdoarg *ea=(struct effdoarg*)arg;
-	enum effrefresh effref=ilgeteffref(il);
-	if(effref!=EFFREF_NO) effinit(effref,0,il,-1);
+	enum effrefresh effref=ilgeteffref(img->il);
+	if(effref!=EFFREF_NO) effinit(effref,0,img->il,-1);
 	if(!img->pos->eff) return 0;
 	if(effdoimg(img,imgi)) ea->chg=1;
 	ea->ineff=1;

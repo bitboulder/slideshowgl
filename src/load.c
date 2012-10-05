@@ -411,7 +411,7 @@ GLuint ldfile2tex(const char *fn){
 
 /***************************** load + free img ********************************/
 
-char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
+char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
 	char ld=0;
@@ -422,6 +422,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	char swap=0;
 	char panoenable=0;
 	enum effrefresh effref=EFFREF_FIT;
+	struct imglist *ilt=il->img->il?il->img->il:CIL_ALL;
 	timer(TI_LDF,-1,0);
 	if(imgfiledir(il->img->file)) goto end0;
 	if(imgfiletxt(il->img->file)) goto end0;
@@ -573,18 +574,18 @@ char ldffree(struct imgld *il,enum imgtex thold){
 
 /***************************** load check *************************************/
 
-int ldcheckfree(struct img *img,int imgi,struct imglist *il,void *arg){
+int ldcheckfree(struct img *img,int imgi,void *arg){
 	struct loadconcept *ldcp=(struct loadconcept*)arg;
-	int cimgi=ilrelimgi(il,ilcimgi(il));
+	int cimgi=ilrelimgi(img->il,ilcimgi(img->il));
 	enum imgtex hold=TEX_NONE;
-	int diff=prgimgidiff(il,cimgi,imgi,img);
+	int diff=prgimgidiff(img->il,cimgi,imgi,img);
 	if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 	hold=ldcp->hold[diff-ldcp->hold_min];
 	return ldffree(img->ld,hold);
 }
 
-int ldcheckexifload(struct img *img,int UNUSED(imgi),struct imglist *il,void *UNUSED(arg)){
-	return ldfload(img->ld,il,TEX_NONE);
+int ldcheckexifload(struct img *img,int UNUSED(imgi),void *UNUSED(arg)){
+	return ldfload(img->ld,TEX_NONE);
 }
 
 char ldcheck(){
@@ -603,7 +604,7 @@ char ldcheck(){
 			enum imgtex tex;
 			imgri=ilclipimgi(CIL(il),cimgi+ldcp->load[i].imgi,0);
 			tex=ldcp->load[i].tex;
-			if(prgforoneldfrm(CIL(il),imgri,ldfload,CIL(il),tex)){ ret=1; break; }
+			if(prgforoneldfrm(CIL(il),imgri,ldfload,tex)){ ret=1; break; }
 		}
 	}
 
@@ -614,7 +615,7 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
-int ldresetdoimg(struct img *img,int UNUSED(imgi),struct imglist *UNUSED(il),void *UNUSED(arg)){
+int ldresetdoimg(struct img *img,int UNUSED(imgi),void *UNUSED(arg)){
 	int it;
 	struct itex *itex = img->ld->texs;
 	for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
@@ -626,12 +627,12 @@ void ldresetdo(){
 	struct img *img=ilimg(CIL(0),0);
 	if(!img) return;
 	tlb.wi=tlb.ri; /* todo: cleanup texloadbuf */
-	ldresetdoimg(defimg,-1,NULL,NULL);
-	ldresetdoimg(dirimg,-1,NULL,NULL);
-	ldresetdoimg(delimg,-1,NULL,NULL);
+	ldresetdoimg(defimg,-1,NULL);
+	ldresetdoimg(dirimg,-1,NULL);
+	ldresetdoimg(delimg,-1,NULL);
 	ilsforallimgs(ldresetdoimg,NULL,0,0);
-	ldfload(defimg->ld,CIL_NONE,TEX_BIG);
-	ldfload(dirimg->ld,CIL_NONE,TEX_BIG);
+	ldfload(defimg->ld,TEX_BIG);
+	ldfload(dirimg->ld,TEX_BIG);
 	debug(DBG_STA,"ldreset done");
 	load.reset=0;
 }
@@ -641,8 +642,8 @@ extern Uint32 paint_last;
 int ldthread(void *UNUSED(arg)){
 	tlb.pmx=SDL_CreateMutex();
 	ldconceptcompile();
-	ldfload(defimg->ld,CIL_ALL,TEX_BIG);
-	ldfload(dirimg->ld,CIL_ALL,TEX_BIG);
+	ldfload(defimg->ld,TEX_BIG);
+	ldfload(dirimg->ld,TEX_BIG);
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();

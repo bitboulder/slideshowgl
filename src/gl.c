@@ -562,7 +562,7 @@ float glcalcback(float ef){
 	else                   return 1.f-(1.f-ef)/CB_TIME*(1.f-CB_SIZE);
 }
 
-void glrenderimg(struct img *img,char layer,struct imglist *il,char act){
+void glrenderimg(struct img *img,char layer,char act){
 	struct ecur *ecur=imgposcur(img->pos);
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
@@ -578,14 +578,14 @@ void glrenderimg(struct img *img,char layer,struct imglist *il,char act){
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
 	if(!ecur->a || !ecur->s) return;
 	icol=imgposcol(img->pos);
-	glmodeslave(!ilprg(il) && ecur->a<1.f ? GLM_2DA : GLM_2D);
+	glmodeslave(!ilprg(img->il) && ecur->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
-	if(il==ilget(CIL(1))){
+	if(img->il==ilget(CIL(1))){
 		srat*=1.f-gl.cfg.prged_w;
 		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
 		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
 	}
-	if(ilprg(il)){
+	if(ilprg(img->il)){
 		float drat=gl.cfg.prg_rat;
 		if(srat<drat) glScalef(1.f,srat/drat,1.f);
 		if(srat>drat) glScalef(drat/srat,1.f,1.f);
@@ -628,15 +628,15 @@ void glrenderimg(struct img *img,char layer,struct imglist *il,char act){
 	glPopMatrix();
 }
 
-int glrenderimgs1(struct img *img,int imgi,struct imglist *il,void *arg){
+int glrenderimgs1(struct img *img,int imgi,void *arg){
 	glLoadName((GLuint)imgi+1);
-	glrenderimg(img,*(char*)arg,il,dplgetactil(NULL)>=0 && imgi==ilcimgi(il));
+	glrenderimg(img,*(char*)arg,dplgetactil(NULL)>=0 && imgi==ilcimgi(img->il));
 	return 0;
 }
 void glrenderimgs(){
 	char layer;
 	glmode(GLM_2D);
-	if(delimg) glrenderimg(delimg,1,0,0);
+	if(delimg) glrenderimg(delimg,1,0);
 	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0);
 	glLoadName(0);
 }

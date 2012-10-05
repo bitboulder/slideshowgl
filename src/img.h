@@ -20,6 +20,7 @@ enum imgtex { IMGTEX };
 struct img {
 	char free;
 	struct img *nxt, *prv;
+	struct imglist *il;
 	struct imgld *ld;
 	struct imgpos *pos;
 	struct imgexif *exif;

@@ -23,9 +23,7 @@ struct img *delimg;
 /***************************** image init *************************************/
 
 struct img *imginit(){
-	struct img *img=malloc(sizeof(struct img));
-	img->free=0;
-	img->nxt=NULL;
+	struct img *img=calloc(1,sizeof(struct img));
 	img->ld=imgldinit(img);
 	img->pos=imgposinit();
 	img->exif=imgexifinit();
