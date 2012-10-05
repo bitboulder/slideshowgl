@@ -34,7 +34,7 @@ void imgpanoload(struct imgpano *ip,const char *fn){
 	ip->rotinit=4.f;
 	ip->gw=ip->gh=0.f;
 	snprintf(pfn,FILELEN,fn);
-	if(!findfilesubdir(pfn,"ori",".pano") && !findfilesubdir(pfn,"",".pano")) goto end;
+	if(!findfilesubdir(pfn,"ori",".pano",1) && !findfilesubdir(pfn,"",".pano",1)) goto end;
 	if(!(fd=fopen(pfn,"r"))) goto end;
 	fscanf(fd,"%f %f %f %f",&ip->gw,&ip->gh,&ip->gyoff,&ip->rotinit);
 	fclose(fd);
