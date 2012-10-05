@@ -20,7 +20,7 @@ const char *imgfilemov(struct imgfile *ifl);
 const char *imgfileimgtxt(struct imgfile *ifl);
 struct txtimg *imgfiletxt(struct imgfile *ifl);
 
-char findfilesubdir(char *dst,const char *subdir,const char *ext);
+char findfilesubdir(char *dst,const char *subdir,const char *ext,char exist);
 char finddirmatch(char *in,char *post,char *res,const char *basedir,char onlydir);
 
 char fthumbchecktime(struct imgfile *ifl);

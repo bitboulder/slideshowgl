@@ -471,7 +471,7 @@ char ldfload(struct imgld *il,struct imglist *ilt,enum imgtex it){
 	if(il->w<il->h){ slim=il->w; wide=il->h; }
 	else           { slim=il->h; wide=il->w; }
 	timer(TI_LDF,2,0);
-	imghistgen(il->img->hist,il->w*il->h,
+	imghistgen(il->img->hist,imgfilefn(il->img->file),il->w*il->h,
 		sdlimg->fmt==GL_BGRA || sdlimg->fmt==GL_BGR,
 		sdlimg->sf->format->BytesPerPixel,
 		sdlimg->sf->pixels);

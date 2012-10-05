@@ -3,12 +3,15 @@
 #include <string.h>
 #include <math.h>
 #include "hist.h"
+#include "main.h"
 #include "help.h"
+#include "file.h"
 #include "cfg.h"
 
 #define HDIV	(256/HDIM)
 
 struct imghist {
+	char hfn[FILELEN];
 	int num;
 	float h[HT_NUM*HDIM];
 };
@@ -40,10 +43,37 @@ unsigned char rgb2l(unsigned char *rgb){
 	return (unsigned char)r;
 }
 
-void imghistgen(struct imghist *ih,int num,char bgr,int bpp,unsigned char *pixels){
+void imghistload(struct imghist *ih,char *fn){
+	FILE *fd;
+	if(ih->hfn[0]) return;
+	snprintf(ih->hfn,FILELEN,fn);
+	switch(findfilesubdir(ih->hfn,"thumb",".hist",0)){
+		case  0: ih->hfn[0]='\0';
+		case -1: return;
+	}
+	if(filetime(ih->hfn)<filetime(fn)) return;
+	debug(DBG_DBG,"imghistload file '%s'",ih->hfn);
+	if(!(fd=fopen(ih->hfn,"rb"))) error(ERR_CONT,"imghistload open file failed '%s'",ih->hfn);
+	if(fread(&ih->num,sizeof(int),1,fd)<1 || fread(ih->h,sizeof(float),HT_NUM*HDIM,fd)<HT_NUM*HDIM){
+		ih->num=0; error(ERR_CONT,"imghistload file read failed '%s'",ih->hfn);
+	}
+	fclose(fd);
+}
+
+void imghistsave(struct imghist *ih){
+	FILE *fd;
+	if(!ih->hfn[0]) return;
+	if(!(fd=fopen(ih->hfn,"wb"))) error(ERR_CONT,"imghistsave open file failed '%s'",ih->hfn);
+	if(fwrite(&ih->num,sizeof(int),1,fd)<1 || fwrite(ih->h,sizeof(float),HT_NUM*HDIM,fd)<HT_NUM*HDIM)
+		error(ERR_CONT,"imghistload file write failed '%s'",ih->hfn);
+	fclose(fd);
+}
+
+void imghistgen(struct imghist *ih,char *fn,int num,char bgr,int bpp,unsigned char *pixels){
 	int p,h,i;
 	int hist[HT_NUM][HDIM];
 	histinit();
+	imghistload(ih,fn);
 	if(ih->num>=num) return;
 	for(h=0;h<HT_NUM;h++) for(i=0;i<HDIM;i++) hist[h][i]=0;
 	for(p=0;p<num;p++,pixels+=bpp) for(h=0;h<HT_NUM;h++){
@@ -60,7 +90,11 @@ void imghistgen(struct imghist *ih,int num,char bgr,int bpp,unsigned char *pixel
 		ih->h[h*HDIM+i]=v;
 	}
 	ih->num=num;
+	imghistsave(ih);
 }
 
-void imghistclear(struct imghist *ih){ ih->num=0; }
+void imghistclear(struct imghist *ih){
+	ih->hfn[0]='\0';
+	ih->num=0;
+}
 

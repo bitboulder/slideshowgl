@@ -66,7 +66,7 @@ char imgfiletfn(struct imgfile *ifl,const char **tfn){
 
 /***************************** find *******************************************/
 
-char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *ext){
+char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *ext,char exist){
 	size_t i;
 	FILE *fd;
 	char fn[FILELEN];
@@ -82,25 +82,31 @@ char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *e
 	for(i=strlen(dst);i--;) if(dst[i]=='/' || dst[i]=='\\'){
 		char dsti=dst[i];
 		dst[i]='\0';
-		snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
-		dst[i]=dsti;
-		if((fd=fopen(fn,"rb"))){
-			fclose(fd);
-			snprintf(dst,len,fn);
-			return 1;
+		snprintf(fn,FILELEN,"%s/%s",dst,subdir);
+		if(filetype(fn)&FT_DIR){
+			snprintf(fn,FILELEN,"%s/%s/%s%s",dst,subdir,dst+i+1,ext?ext:"");
+			if((fd=fopen(fn,"rb"))){
+				fclose(fd);
+				snprintf(dst,len,fn);
+				return 1;
+			}else if(!exist){
+				snprintf(dst,len,fn);
+				return -1;
+			}
 		}
+		dst[i]=dsti;
 		if(subdir[0]=='\0') break;
 	}
 	if(extrpl) extpos[0]=extrpl;
 	return 0;
 }
 
-char findfilesubdir(char *dst,const char *subdir,const char *ext){
-	if(findfilesubdir1(dst,FILELEN,subdir,ext)) return 1;
+char findfilesubdir(char *dst,const char *subdir,const char *ext,char exist){
+	if(findfilesubdir1(dst,FILELEN,subdir,ext,exist)) return 1;
 #if HAVE_REALPATH
 	{
 		static char rfn[MAXPATHLEN];
-		if(realpath(dst,rfn) && findfilesubdir1(rfn,MAXPATHLEN,subdir,ext)){
+		if(realpath(dst,rfn) && findfilesubdir1(rfn,MAXPATHLEN,subdir,ext,exist)){
 			snprintf(dst,FILELEN,rfn);
 			return 1;
 		}
@@ -171,7 +177,7 @@ char fthumbchecktime(struct imgfile *ifl){
 
 void fthumbinit(struct imgfile *ifl){
 	snprintf(ifl->tfn,FILELEN,ifl->fn);
-	if(!findfilesubdir(ifl->tfn,"thumb",NULL)){
+	if(!findfilesubdir(ifl->tfn,"thumb",NULL,1)){
 		ifl->tfn[0]='\0';
 		debug(DBG_DBG,"thumbinit no thumb found for '%s'",ifl->fn);
 	}else if(fthumbchecktime(ifl))
