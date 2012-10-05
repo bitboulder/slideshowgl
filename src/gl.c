@@ -628,9 +628,9 @@ void glrenderimg(struct img *img,char layer,char act){
 	glPopMatrix();
 }
 
-int glrenderimgs1(struct img *img,int imgi,void *arg){
-	glLoadName((GLuint)imgi+1);
-	glrenderimg(img,*(char*)arg,dplgetactil(NULL)>=0 && imgi==ilcimgi(img->il));
+int glrenderimgs1(struct img *img,void *arg){
+	glLoadName((GLuint)img->frm+1);
+	glrenderimg(img,*(char*)arg,dplgetactil(NULL)>=0 && img->frm==ilcimgi(img->il));
 	return 0;
 }
 void glrenderimgs(){

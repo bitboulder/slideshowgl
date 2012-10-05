@@ -163,7 +163,7 @@ void avlrot(struct avl *avl){
 void avlinsid(struct avls *avls,struct img *img,int id){
 	struct avl **p=avls->avl->ch+0, *pa=avls->avl;
 	struct avl *avl=calloc(1,sizeof(struct avl));
-	int pos=-1;
+	int pos=-1, frm;
 	avl->id=id<0 ? avls->id++ : id;
 	avl->rnd=rand();
 	avl->img=img;
@@ -191,6 +191,7 @@ void avlinsid(struct avls *avls,struct img *img,int id){
 		if(!img->nxt) *avls->last=img;
 		else img->nxt->prv=img;
 	}
+	for(frm= img->prv ? img->prv->frm+1 : 0;img;img=img->nxt,frm++) img->frm=frm;
 	avlprint(avls,"INSs",avl,0);
 	avlrot(avl->pa);
 	avlprint(avls,"INSf",avl,1);
@@ -199,9 +200,13 @@ void avlinsid(struct avls *avls,struct img *img,int id){
 void avlins(struct avls *avls,struct img *img){ avlinsid(avls,img,-1); }
 
 void avldel(struct avls *avls,struct img *img){
+	struct img *imgx=img->nxt;
+	int frm;
 	if(img->prv) img->prv->nxt=img->nxt; else avls->first[0]=img->nxt;
 	if(img->nxt) img->nxt->prv=img->prv; else avls->last[0]=img->prv;
 	img->nxt=img->prv=NULL;
+	for(frm=img->frm;imgx;imgx=imgx->nxt,frm++) imgx->frm=frm;
+	img->frm=-1;
 	if(img->avl && img->avl->pa){
 		struct avl *avl=img->avl, *rot=avl->pa, *ins=NULL;
 		int pos=POS(avl), posi=0;

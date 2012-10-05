@@ -21,6 +21,7 @@ struct img {
 	char free;
 	struct img *nxt, *prv;
 	struct imglist *il;
+	int frm;
 	struct imgld *ld;
 	struct imgpos *pos;
 	struct imgexif *exif;

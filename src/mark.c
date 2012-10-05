@@ -277,7 +277,7 @@ const char *markgetfndir(){
 	return mark.fndir;
 }
 
-int markupdateimg(struct img *img,int UNUSED(imgi),void *UNUSED(arg)){
+int markupdateimg(struct img *img,void *UNUSED(arg)){
 	imgposmark(img,MPC_YES);
 	return 1;
 }

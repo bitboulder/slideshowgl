@@ -105,12 +105,12 @@ void prgadd(struct prg **prg,const char *txt,struct img *img){
 	free(flt);
 }
 
-int prgimgidiff(struct imglist *il,int frm,int imgi,struct img *img){
-	struct prg *prg=ilprg(il);
+int prgimgidiff(int frm,struct img *img){
+	struct prg *prg=ilprg(img->il);
 	int fchg,fdir,f;
 	struct prgev *ev;
-	frm=ilrelimgi(il,frm);
-	if(!prg || !img || dplgetzoom()!=0) return ildiffimgi(il,frm,imgi);
+	frm=ilrelimgi(img->il,frm);
+	if(!prg || !img || dplgetzoom()!=0) return ildiffimgi(img->il,frm,img->frm);
 	for(fchg=0;fchg<prg->nfrm;fchg++) for(fdir=-1;fdir<=1;fdir+=2){
 		f=frm+fchg*fdir;
 		if(f<0 || f>=prg->nfrm) continue;

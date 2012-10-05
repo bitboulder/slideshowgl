@@ -574,17 +574,17 @@ char ldffree(struct imgld *il,enum imgtex thold){
 
 /***************************** load check *************************************/
 
-int ldcheckfree(struct img *img,int imgi,void *arg){
+int ldcheckfree(struct img *img,void *arg){
 	struct loadconcept *ldcp=(struct loadconcept*)arg;
 	int cimgi=ilrelimgi(img->il,ilcimgi(img->il));
 	enum imgtex hold=TEX_NONE;
-	int diff=prgimgidiff(img->il,cimgi,imgi,img);
+	int diff=prgimgidiff(cimgi,img);
 	if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 	hold=ldcp->hold[diff-ldcp->hold_min];
 	return ldffree(img->ld,hold);
 }
 
-int ldcheckexifload(struct img *img,int UNUSED(imgi),void *UNUSED(arg)){
+int ldcheckexifload(struct img *img,void *UNUSED(arg)){
 	return ldfload(img->ld,TEX_NONE);
 }
 
@@ -615,7 +615,7 @@ char ldcheck(){
 
 /***************************** load thread ************************************/
 
-int ldresetdoimg(struct img *img,int UNUSED(imgi),void *UNUSED(arg)){
+int ldresetdoimg(struct img *img,void *UNUSED(arg)){
 	int it;
 	struct itex *itex = img->ld->texs;
 	for(it=0;it<TEX_NUM;it++) free(itex[it].tx);
@@ -627,9 +627,9 @@ void ldresetdo(){
 	struct img *img=ilimg(CIL(0),0);
 	if(!img) return;
 	tlb.wi=tlb.ri; /* todo: cleanup texloadbuf */
-	ldresetdoimg(defimg,-1,NULL);
-	ldresetdoimg(dirimg,-1,NULL);
-	ldresetdoimg(delimg,-1,NULL);
+	ldresetdoimg(defimg,NULL);
+	ldresetdoimg(dirimg,NULL);
+	ldresetdoimg(delimg,NULL);
 	ilsforallimgs(ldresetdoimg,NULL,0,0);
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);

@@ -480,22 +480,21 @@ void ilsftcheck(){
 	}
 }
 
-int ilsforallimgs(int (*func)(struct img *img,int imgi,void *arg),void *arg,char cilonly,int brk){
+int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk){
 	struct imglist *il;
 	struct img *img;
-	int imgi;
 	int r=0;
 	if(cilonly){
 		int cil;
 		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))))
-			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
-				r+=func(img,imgi,arg);
+			for(img=il->imgs;img;img=img->nxt){
+				r+=func(img,arg);
 				if(brk && r>=brk) return 0;
 			}
 	}else{
 		for(il=ils;il;il=il->nxt)
-			for(img=il->imgs,imgi=0;img;img=img->nxt,imgi++){
-				r+=func(img,imgi,arg);
+			for(img=il->imgs;img;img=img->nxt){
+				r+=func(img,arg);
 				if(brk && r>=brk) return 0;
 			}
 	}

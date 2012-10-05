@@ -64,7 +64,7 @@ enum effrefresh ilgeteffref(struct imglist *il);
 /* ils */
 void ilscleanup();
 void ilsftcheck();
-int ilsforallimgs(int (*func)(struct img *img,int imgi,void *arg),void *arg,char cilonly,int brk);
+int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk);
 void ilsfinalize();
 
 #endif
