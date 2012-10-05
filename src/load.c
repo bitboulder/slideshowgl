@@ -432,7 +432,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		effref=0;
 		ld=imgexifload(il->img->exif,fn);
 		if(ld&0x2)  effref|=EFFREF_ROT;
-		if(ld&0x4 && ilsortupd(ilt,il->img)) effref|=EFFREF_ALL;
+		if(ld&0x4 && ilsortupd(il->img)) effref|=EFFREF_ALL;
 		ileffref(ilt,effref);
 		ld&=0x1;
 		goto end0;
@@ -450,7 +450,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	imgldfiletime(il,FT_UPDATE);
 	ld=imgexifload(il->img->exif,fn);
 	if(ld&0x2) effref|=EFFREF_ROT;
-	if(ld&0x4 && ilsortupd(ilt,il->img)) effref|=EFFREF_ALL;
+	if(ld&0x4 && ilsortupd(il->img)) effref|=EFFREF_ALL;
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);

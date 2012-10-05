@@ -165,16 +165,18 @@ void ilsortfree(struct imglist *il){
 }
 
 void ilsortins(struct img *img){
-	char *fn=imgfilefn(img->file);
-	if(img->il->sort==ILS_DATE && !exichcheck(img->exif,fn) && avlnimg(img->il->avls)<ilcfg.maxloadexif) imgexifload(img->exif,fn);
-	avlins(img->il->avls,img);
+	if(img->il){
+		char *fn=imgfilefn(img->file);
+		if(img->il->sort==ILS_DATE && !exichcheck(img->exif,fn) && avlnimg(img->il->avls)<ilcfg.maxloadexif) imgexifload(img->exif,fn);
+		avlins(img->il->avls,img);
+	}
 }
 
-void ilsortdel(struct img *img){ avldel(img->il->avls,img); }
+void ilsortdel(struct img *img){ if(img->il) avldel(img->il->avls,img); }
 
-char ilsortupd(struct imglist *il,struct img *img){
-	if(!(il=ilget(il))) return 0;
-	return avlchk(il->avls,img);
+char ilsortupd(struct img *img){
+	if(!img->il) return 0;
+	return avlchk(img->il->avls,img);
 }
 
 void ilsortchg(struct imglist *il){
