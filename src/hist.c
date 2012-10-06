@@ -63,6 +63,7 @@ void imghistload(struct imghist *ih,char *fn){
 void imghistsave(struct imghist *ih){
 	FILE *fd;
 	if(!ih->hfn[0]) return;
+	debug(DBG_DBG,"imghistsave file '%s'",ih->hfn);
 	if(!(fd=fopen(ih->hfn,"wb"))) error(ERR_CONT,"imghistsave open file failed '%s'",ih->hfn);
 	if(fwrite(&ih->num,sizeof(int),1,fd)<1 || fwrite(ih->h,sizeof(float),HT_NUM*HDIM,fd)<HT_NUM*HDIM)
 		error(ERR_CONT,"imghistload file write failed '%s'",ih->hfn);
