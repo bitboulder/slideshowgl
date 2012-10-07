@@ -28,6 +28,6 @@
 #define HAVE_CURL		%(HAVE_CURL)i
 #define HAVE_ZLIB		%(HAVE_ZLIB)i
 
-/*#define HAVE_PTHREAD*/
+#define HAVE_PTHREAD	%(HAVE_PTHREAD)i
 
 #endif

@@ -26,7 +26,7 @@
 #include "exich.h"
 #include "act.h"
 
-#if 0
+#if 1
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
 #include <pthread.h>
 typedef pthread_t SYS_ThreadHandle;
@@ -39,41 +39,6 @@ struct SDL_Thread {
 };
 #endif
 #endif
-
-enum timer tim;
-#define TIMER_NUM	16
-void timer(enum timer ti,int id,char reset){
-	static Uint32 ti_max[TIMER_NUM];
-	static Uint32 ti_sum[TIMER_NUM];
-	static Uint32 ti_cnt[TIMER_NUM];
-	static Uint32 last=0, lastp=0;
-	Uint32 now=SDL_GetTicks();
-	if(ti!=tim) return;
-	if(id>=0 && id<TIMER_NUM && last){
-		Uint32 diff=now-last;
-		if(ti_max[id]<diff) ti_max[id]=diff;
-		ti_sum[id]+=diff;
-		ti_cnt[id]++;
-	}
-	last=now;
-	if(now-lastp>2000){
-		if(lastp){
-			int i,l;
-			char tmp[256];
-			snprintf(tmp,256,"timer:");
-			for(l=TIMER_NUM-1;l>=0 && !ti_cnt[l];) l--;
-			for(i=0;i<=l;i++) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
-					(float)ti_sum[i]/(float)ti_cnt[i],ti_max[i]);
-			debug(DBG_NONE,tmp);
-		}
-		if(reset){
-			memset(ti_max,0,sizeof(Uint32)*TIMER_NUM);
-			memset(ti_sum,0,sizeof(Uint32)*TIMER_NUM);
-			memset(ti_cnt,0,sizeof(Uint32)*TIMER_NUM);
-		}
-		lastp=now;
-	}
-}
 
 enum debug dbg = DBG_NONE;
 enum debug logdbg = DBG_NONE;
@@ -196,7 +161,12 @@ size_t nthreads(){
 
 void start_threads(){
 	struct mainthread *mt=mainthreads;
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+	mainthreads->pt=malloc(sizeof(struct SDL_Thread));
+	mainthreads->pt->handle=pthread_self();
+#else
 	mainthreads->pt=NULL;
+#endif
 	mainthreads->init=1;
 	for(;mt->fnc;mt++) if(!mt->init){
 		mt->pt=SDL_CreateThread(mt->fnc,mt->data);
@@ -218,6 +188,58 @@ char end_threads(){
 	int i;
 	for(i=500;(sdl_quit&THR_OTH)!=THR_OTH && i>0;i--) SDL_Delay(10);
 	return i!=0;
+}
+
+enum timer tim;
+#define TIMER_NUM	16
+void timer(enum timer ti,int id,char reset){
+	static Uint32 ti_max[TIMER_NUM];
+	static Uint32 ti_sum[TIMER_NUM];
+	static Uint32 ti_cnt[TIMER_NUM];
+	static Uint32 ti_lst[TIMER_NUM];
+	static Uint32 last=0, lastp=0;
+	Uint32 now=SDL_GetTicks();
+	if(ti!=tim) return;
+	if(ti==TI_THR){
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+		struct mainthread *mt=mainthreads;
+		int i;
+		for(i=0;mt->fnc;mt++,i++) if(mt->pt){
+			clockid_t cid;
+			struct timespec time;
+			Uint32 t;
+			pthread_getcpuclockid(mt->pt->handle, &cid);
+			clock_gettime(cid,&time);
+			t=(Uint32)time.tv_sec*1000+(Uint32)time.tv_nsec/1000000;
+			if(ti_lst[i]) ti_sum[i]+=t-ti_lst[i];
+			ti_lst[i]=t;
+			ti_cnt[i]=2;
+		}
+#endif
+	}else if(id>=0 && id<TIMER_NUM && last){
+		Uint32 diff=now-last;
+		if(ti_max[id]<diff) ti_max[id]=diff;
+		ti_sum[id]+=diff;
+		ti_cnt[id]++;
+	}
+	last=now;
+	if(now-lastp>2000){
+		if(lastp){
+			int i,l;
+			char tmp[256];
+			snprintf(tmp,256,"timer:");
+			for(l=TIMER_NUM-1;l>=0 && !ti_cnt[l];) l--;
+			for(i=0;i<=l;i++) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
+					(float)ti_sum[i]/(float)ti_cnt[i],ti_max[i]);
+			debug(DBG_NONE,tmp);
+		}
+		if(reset){
+			memset(ti_max,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_sum,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_cnt,0,sizeof(Uint32)*TIMER_NUM);
+		}
+		lastp=now;
+	}
 }
 
 void setprogpath(char *pfn){

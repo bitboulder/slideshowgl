@@ -647,6 +647,7 @@ int ldthread(void *UNUSED(arg)){
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();
+		timer(TI_THR,0,1);
 	}
 	ldconceptfree();
 	sdl_quit|=THR_LD;

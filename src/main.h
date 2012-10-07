@@ -12,7 +12,7 @@
 #define FORMAT(a,b) __attribute__((format(printf,a,b)))
 #define NORETURN __attribute__((noreturn))
 
-#define ETIMER  E(NONE), E(SDL), E(DPL), E(LD), E(LDF), E(COL)
+#define ETIMER  E(NONE), E(SDL), E(DPL), E(LD), E(LDF), E(COL), E(THR)
 #define E(X)	TI_##X
 enum timer { ETIMER };
 #undef E
