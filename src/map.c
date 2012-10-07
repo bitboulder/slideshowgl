@@ -55,7 +55,7 @@ int maptype_maxz[]={ MAPTYPE };
 struct tile {
 	int ix,iy,iz;
 	long ft;
-	long ftchk;
+	unsigned long ftchk;
 	char loading;
 	GLuint tex;
 };
@@ -107,7 +107,7 @@ struct map {
 	struct tile imgdir[2];
 	int info;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
-	long ftchk;
+	unsigned long ftchk;
 } map = {
 	.init = 2,
 	.basedirs = NULL,
@@ -629,7 +629,7 @@ char maploadtile(struct tile *ti){
 	char fn[FILELEN];
 	SDL_Surface *sf,*sfc;
 	SDL_PixelFormat fmt;
-	long time=SDL_GetTicks();
+	unsigned long time=SDL_GetTicks();
 	if(!ti) return 0;
 	if(ti->loading==2 && ti->ftchk+map.ftchk>=time) return 0;
 	ti->ftchk=time;
