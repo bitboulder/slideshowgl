@@ -281,7 +281,7 @@ int markupdateimg(struct img *img,void *UNUSED(arg)){
 	imgposmark(img,MPC_YES);
 	return 1;
 }
-void markupdate(){ ilsforallimgs(markupdateimg,NULL,0,0); }
+void markupdate(){ ilsforallimgs(markupdateimg,NULL,0,0,ILO_ALL); }
 
 char markswitchfn(const char *fn){
 	if(!(filetype(fn)&(FT_FILE|FT_DIREX))) return 0;

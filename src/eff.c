@@ -378,6 +378,8 @@ void effinitimg(struct effpar *ep,struct img *img,enum dplev ev,int iev){
 	if(back) ipn->cur.back=1.f-ipn->cur.back;
 	img->pos->opt.layer=back;
 	effinitval(img->pos,ipn,ep->imgi);
+	if(img->pos->eff) ilsetopt(img,ILO_EFF);
+	if(img->pos->eff || img->pos->p.cur.act) ilsetopt(img,ILO_GL);
 	if(neff){
 		if(img->pos->eff) img->pos->eff=2;
 		else effinitpos(ep,img,&ipo->cur);
@@ -575,10 +577,13 @@ char effdoimg(struct img *img){
 		if(effdoeval(ip->a+i,time)) chg=1;
 		if(ip->a[i].tdst) effon=1;
 	}
-	if(!effon && --img->pos->eff){
-		struct effpar ep[1]={ { .dp=dplgetpos(), .il=NULL/*TODO*/, .imgi=img->frm, .cimgi=ilcimgi(ep->il), .dat=NULL } };
-		effinitimg(ep,img,0,img->pos->eff);
+	if(!effon){
+		if(--img->pos->eff){
+			struct effpar ep[1]={ { .dp=dplgetpos(), .il=img->il, .imgi=img->frm, .cimgi=ilcimgi(ep->il), .dat=NULL } };
+			effinitimg(ep,img,0,img->pos->eff);
+		}else ildelopt(img,ILO_EFF);
 	}
+	if(!ip->cur.act) ildelopt(img,ILO_GL);
 	return chg;
 }
 
@@ -612,6 +617,7 @@ int effdo1(struct img *img,void *arg){
 	struct effdoarg *ea=(struct effdoarg*)arg;
 	enum effrefresh effref=ilgeteffref(img->il);
 	if(effref!=EFFREF_NO) effinit(effref,0,img->il,-1);
+	ilchkopt(img,ILO_EFF,!!img->pos->eff);
 	if(!img->pos->eff) return 0;
 	if(effdoimg(img)) ea->chg=1;
 	ea->ineff=1;
@@ -622,7 +628,7 @@ void effdo(){
 	int i;
 	Uint32 now;
 	struct effdoarg ea[1]={ { .ineff=0, .chg=0 } };
-	ilsforallimgs(effdo1,ea,1,0);
+	ilsforallimgs(effdo1,ea,1,0,ILO_EFF);
 	if(delimg){
 		if(delimg->pos->eff) if(effdoimg(delimg)) ea->chg=1;
 		if(!delimg->pos->eff){

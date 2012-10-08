@@ -347,7 +347,7 @@ char ldtexload(){
 		struct sdlimg *sdlimg=tl->dat.img.sdlimg;
 		if(!sdlimg->ref || !sdlimg->sf){ error(ERR_CONT,"ldtexload: load of free'd image"); break; }
 		if(effineff() && (sdlimg->sf->w>=1024 || sdlimg->sf->h>=1024)) return 0;
-		timer(TI_LD,-1,0);
+		timer(TI_GLLD,-1,0);
 		if(!tl->itx->tex) glGenTextures(1,&tl->itx->tex);
 		glBindTexture(GL_TEXTURE_2D,tl->itx->tex);
 		// http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=256344
@@ -363,9 +363,9 @@ char ldtexload(){
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
 		}
-		timer(TI_LD,MAX(sdlimg->sf->w,sdlimg->sf->h)/256,0);
+		timer(TI_GLLD,MAX(sdlimg->sf->w,sdlimg->sf->h)/256,0);
 		sdlimg_unref(sdlimg);
-		timer(TI_LD,0,0);
+		timer(TI_GLLD,0,0);
 		if(tl->dat.img.itex){
 			ldgendl(tl->dat.img.itex);
 			tl->dat.img.itex->loaded=1;
@@ -431,6 +431,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(it<0){
 		effref=EFFREF_NO;
 		ld=imgexifload(il->img->exif,fn);
+		ildelopt(il->img,ILO_EXIF);
 		if(ld&0x2)  effref|=EFFREF_ROT;
 		if(ld&0x4 && ilsortupd(il->img)) effref|=EFFREF_ALL;
 		if(effref) ileffref(ilt,effref);
@@ -443,12 +444,15 @@ char ldfload(struct imgld *il,enum imgtex it){
 			fthumbchecktime(il->img->file);
 			ldffree(il,TEX_NONE);
 			imgexifclear(il->img->exif);
+			ilsetopt(il->img,ILO_EXIF);
 			imghistclear(il->img->hist);
 		}
 		goto end0;
 	}
+	ilsetopt(il->img,ILO_LOAD);
 	imgldfiletime(il,FT_UPDATE);
 	ld=imgexifload(il->img->exif,fn);
+	ildelopt(il->img,ILO_EXIF);
 	if(ld&0x2) effref|=EFFREF_ROT;
 	if(ld&0x4 && ilsortupd(il->img)) effref|=EFFREF_ALL;
 	if(it<TEX_BIG && imgfiletfn(il->img->file,&fn)) thumb=1;
@@ -569,6 +573,7 @@ char ldffree(struct imgld *il,enum imgtex thold){
 		for(tx=il->texs[it].tx;tx && tx->tex;tx++) ldtexload_put(tx,NULL,!tx[1].tex ? il->texs+it : NULL,0.f);
 		ret=1;
 	}
+	if(thold==TEX_NONE) ildelopt(il->img,ILO_LOAD);
 	return ret;
 }
 
@@ -579,6 +584,12 @@ int ldcheckfree(struct img *img,void *arg){
 	int cimgi=ilrelimgi(img->il,ilcimgi(img->il));
 	enum imgtex hold=TEX_NONE;
 	int diff=prgimgidiff(cimgi,img);
+#ifdef ILODEBUG
+	char ld=0;
+	int it;
+	for(it=0;!ld && it<TEX_NUM;it++) if(img->ld->texs[it].loaded) ld=1;
+	ilchkopt(img,ILO_LOAD,ld);
+#endif
 	if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
 	hold=ldcp->hold[diff-ldcp->hold_min];
 	return ldffree(img->ld,hold);
@@ -592,10 +603,13 @@ char ldcheck(){
 	int i,il;
 	struct loadconcept *ldcp=ldconceptget();
 	int ret=0;
+	timer(TI_LD,-1,1);
 
 	if(mapldcheck()) ret=1;
+	timer(TI_LD,0,1);
 
-	ilsforallimgs(ldcheckfree,ldcp,1,1);
+	if(ilsforallimgs(ldcheckfree,ldcp,1,1,ILO_LOAD)) ret=1;
+	timer(TI_LD,1,1);
 
 	for(il=0;il<CIL_NUM;il++){
 		int cimgi=ilrelimgi(CIL(il),ilcimgi(CIL(il)));
@@ -607,8 +621,10 @@ char ldcheck(){
 			if(prgforoneldfrm(CIL(il),imgri,ldfload,tex)){ ret=1; break; }
 		}
 	}
+	timer(TI_LD,2,1);
 
-	ilsforallimgs(ldcheckexifload,NULL,1,load.numexifloadperimg);
+	if(ilsforallimgs(ldcheckexifload,NULL,1,load.numexifloadperimg,ILO_EXIF)) ret=1;
+	timer(TI_LD,3,1);
 
 	return ret!=0;
 }
@@ -630,7 +646,7 @@ void ldresetdo(){
 	ldresetdoimg(defimg,NULL);
 	ldresetdoimg(dirimg,NULL);
 	ldresetdoimg(delimg,NULL);
-	ilsforallimgs(ldresetdoimg,NULL,0,0);
+	ilsforallimgs(ldresetdoimg,NULL,0,0,ILO_ALL);
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
 	debug(DBG_STA,"ldreset done");
@@ -647,7 +663,6 @@ int ldthread(void *UNUSED(arg)){
 	while(!sdl_quit){
 		if(!ldcheck()) SDL_Delay(100); else if(effineff()) SDL_Delay(20);
 		if(load.reset) ldresetdo();
-		timer(TI_THR,0,1);
 	}
 	ldconceptfree();
 	sdl_quit|=THR_LD;

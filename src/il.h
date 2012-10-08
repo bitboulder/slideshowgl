@@ -61,10 +61,15 @@ void ilprgfrm(struct imglist *il,const char *prgfrm);
 struct img *ildelcimg(struct imglist *il);
 void ileffref(struct imglist *il,enum effrefresh effref);
 enum effrefresh ilgeteffref(struct imglist *il);
+/* ilopt */
+enum ilopt {ILO_GL,ILO_EFF,ILO_LOAD,ILO_EXIF,ILO_N,ILO_ALL};
+void ilsetopt(struct img *img,enum ilopt opt);
+void ildelopt(struct img *img,enum ilopt opt);
+void ilchkopt(struct img *img,enum ilopt opt,char act);
 /* ils */
 void ilscleanup();
 void ilsftcheck();
-int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk);
+int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk,enum ilopt o);
 void ilsfinalize();
 
 #endif

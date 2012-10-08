@@ -13,6 +13,7 @@
 #include "exif.h"
 #include "exich.h"
 #include "avl.h"
+#include "ilo.h"
 
 struct ilcfg {
 	char init;
@@ -30,6 +31,7 @@ struct ilcfg {
 
 struct imglist {
 	struct img *imgs,*last;
+	struct ilo *opt[ILO_N];
 	char fn[FILELEN];
 	char dir[FILELEN];
 	unsigned int simg;
@@ -194,6 +196,7 @@ void ilsortchg(struct imglist *il){
 /* thread: dpl */
 struct imglist *ilnew(const char *fn,const char *dir){
 	struct imglist *il=calloc(1,sizeof(struct imglist));
+	int o;
 	ilcfginit();
 	snprintf(il->fn,FILELEN,fn);
 	snprintf(il->dir,FILELEN,dir);
@@ -204,6 +207,7 @@ struct imglist *ilnew(const char *fn,const char *dir){
 	il->sort=il->dir[0]?ilcfg.sort_subdir:ilcfg.sort_maindir;
 	ilsortinit(il);
 	debug(DBG_STA,"imglist created for dir: %s",il->fn);
+	for(o=0;o<ILO_N;o++) il->opt[o]=ilonew();
 	return il;
 }
 
@@ -211,7 +215,9 @@ struct imglist *ilnew(const char *fn,const char *dir){
 void ildestroy(struct imglist *il){
 	struct imglist **il2=&ils;
 	struct img *img;
+	int o;
 	if(!il) return;
+	for(o=0;o<ILO_N;o++) ilofree(il->opt[o]);
 	if(il->prg) prgdestroy(il->prg);
 	while(il2[0] && il2[0]!=il) il2=&il2[0]->nxt;
 	if(il2[0]) il2[0]=il->nxt;
@@ -340,6 +346,7 @@ char iladdimg(struct imglist *il,struct img *img,const char *prg){
 	ilsortins(img);
 	if(prg) prgadd(&il->prg,prg,img);
 	if(filetype(imgfilefn(img->file))&FT_DIR) il->subdir=1;
+	ilsetopt(img,ILO_EXIF);
 	return 1;
 }
 
@@ -377,7 +384,9 @@ void ilunused(struct imglist *il){
 }
 
 struct img *ilremoveimg(struct img *img,char final){
+	int o;
 	if(!img->il) return img;
+	for(o=0;o<ILO_N;o++) ilodel(img->il->opt[o],img);
 	ilsortdel(img);
 	ilupdcimgi(img->il);
 	img->il=NULL;
@@ -480,22 +489,33 @@ void ilsftcheck(){
 	}
 }
 
-int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk){
+int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk,enum ilopt o){
 	struct imglist *il;
 	struct img *img;
 	int r=0;
+	struct iloi *iloi;
+#ifdef ILODEBUG
+	o=ILO_ALL;
+#endif
 	if(cilonly){
 		int cil;
-		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))))
-			for(img=il->imgs;img;img=img->nxt){
+		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))){
+			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
 				r+=func(img,arg);
-				if(brk && r>=brk) return 0;
+				if(brk && r>=brk) return r;
+			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloi->nxt){
+				r+=func(iloi->ptr,arg);
+				if(brk && r>=brk) return r;
 			}
+		}
 	}else{
 		for(il=ils;il;il=il->nxt)
-			for(img=il->imgs;img;img=img->nxt){
+			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
 				r+=func(img,arg);
-				if(brk && r>=brk) return 0;
+				if(brk && r>=brk) return r;
+			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloi->nxt){
+				r+=func(iloi->ptr,arg);
+				if(brk && r>=brk) return r;
 			}
 	}
 	return r;
@@ -508,3 +528,28 @@ void ilsfinalize(){
 	imgfree(delimg);
 }
 
+
+#ifndef ILODEBUG
+	#define ilodbg(A,B,C)
+#else
+void ilodbg(struct img *img,enum ilopt opt,const char *txt){
+	const char *opts[]={"gl","eff","load","exif","n","all"};
+	if(img->il) printf("0x%08lx-%-4s: %9s 0x%08lx\n",(unsigned long)img->il->opt[opt],opts[opt],txt,(unsigned long)img);
+}
+#endif
+
+void ilsetopt(struct img *img,enum ilopt opt){
+	ilodbg(img,opt,"set");
+	if(img->il) iloset(img->il->opt[opt],img);
+}
+void ildelopt(struct img *img,enum ilopt opt){
+	ilodbg(img,opt,"del");
+	if(img->il) ilodel(img->il->opt[opt],img);
+}
+void ilchkopt(struct img *img,enum ilopt opt,char act){
+#ifdef ILODEBUG
+	if(!img->il) return;
+	if(act==ilofind(img->il->opt[opt],img)) return;
+	ilodbg(img,opt,act?"ERR-miss":"ERR-exist");
+#endif
+}

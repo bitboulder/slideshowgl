@@ -572,6 +572,7 @@ void glrenderimg(struct img *img,char layer,char act){
 	struct txtimg *txt;
 	float s;
 	const char *mov;
+	ilchkopt(img,ILO_GL,!!ecur->act);
 	if(!ecur->act) return;
 	if(iopt->layer!=layer) return;
 	if(!irat) return;
@@ -637,7 +638,7 @@ void glrenderimgs(){
 	char layer;
 	glmode(GLM_2D);
 	if(delimg) glrenderimg(delimg,1,0);
-	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0);
+	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0,ILO_GL);
 	glLoadName(0);
 }
 

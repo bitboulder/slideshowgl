@@ -164,6 +164,7 @@ int actthread(void *UNUSED(arg)){
 	while(!sdl_quit){
 		actcheckdelay(0);
 		if(!actpop()) SDL_Delay(500);
+		timer(TI_THR,0,1);
 	}
 	SDL_Delay(20);
 	actcheckdelay(1);
