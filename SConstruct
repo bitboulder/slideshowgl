@@ -151,12 +151,12 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('libcurl >= 0.2',0,'CURL')
 		conf.CheckPKG('zlib >= 1.2',0,'ZLIB')
 		conf.CheckFuncMy('iconv',0,'ICONV')
+		conf.CheckLibMy('pthread',0,'PTHREAD')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
-	conf.CheckLibMy('pthread',0,'PTHREAD')
 	if mode != 'debug':
 		conf.CheckFuncMy('gettext',0,'GETTEXT')
 	conf.CheckFuncMy('stat',0,'STAT')
