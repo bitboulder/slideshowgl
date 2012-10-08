@@ -129,19 +129,20 @@ const char *gettmp(){
 }
 
 struct mainthread {
+	const char *name;
 	int (*fnc)(void *);
 	int pri;
 	char init;
 	void *data;
 	SDL_Thread *pt;
 } mainthreads[] = {
-	{ &sdlthread, 15, 0, NULL },
-	{ &dplthread, 10, 0, NULL },
-	{ &ldthread,   5, 0, NULL },
-	{ &actthread,  2, 0, NULL },
-	{ &mapldthread,1, 0, (void*)0 },
-//	{ &mapldthread,1, 0, (void*)1 },
-	{ NULL,        0, 0, NULL },
+	{ "sdl",  &sdlthread, 15, 0, NULL },
+	{ "dpl",  &dplthread, 10, 0, NULL },
+	{ "ld",   &ldthread,   5, 0, NULL },
+	{ "act",  &actthread,  2, 0, NULL },
+	{ "map1", &mapldthread,1, 0, (void*)0 },
+//	{ "map2", &mapldthread,1, 0, (void*)1 },
+	{ NULL,   NULL,        0, 0, NULL },
 };
 
 int threadid(){
@@ -210,10 +211,10 @@ void timer(enum timer ti,int id,char reset){
 			Uint32 t;
 			pthread_getcpuclockid(mt->pt->handle, &cid);
 			clock_gettime(cid,&time);
-			t=(Uint32)time.tv_sec*1000+(Uint32)time.tv_nsec/1000000;
+			t=(Uint32)time.tv_sec*100000+(Uint32)time.tv_nsec/10000;
 			if(ti_lst[i]) ti_sum[i]+=t-ti_lst[i];
 			ti_lst[i]=t;
-			ti_cnt[i]=2;
+			ti_cnt[i]=1;
 		}
 #endif
 	}else if(id>=0 && id<TIMER_NUM && last){
@@ -229,7 +230,10 @@ void timer(enum timer ti,int id,char reset){
 			char tmp[256];
 			snprintf(tmp,256,"timer:");
 			for(l=TIMER_NUM-1;l>=0 && !ti_cnt[l];) l--;
-			for(i=0;i<=l;i++) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
+			for(i=0;i<=l;i++)
+				if(ti==TI_THR) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%-4s)",
+					(float)ti_sum[i]/(float)(now-lastp),mainthreads[i].name);
+				else snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
 					(float)ti_sum[i]/(float)ti_cnt[i],ti_max[i]);
 			debug(DBG_NONE,tmp);
 		}
