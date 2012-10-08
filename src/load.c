@@ -429,11 +429,11 @@ char ldfload(struct imgld *il,enum imgtex it){
 	if(!strncmp(fn,"[MAP]",6)) goto end0;
 	if(il->loadfail) goto end0;
 	if(it<0){
-		effref=0;
+		effref=EFFREF_NO;
 		ld=imgexifload(il->img->exif,fn);
 		if(ld&0x2)  effref|=EFFREF_ROT;
 		if(ld&0x4 && ilsortupd(il->img)) effref|=EFFREF_ALL;
-		ileffref(ilt,effref);
+		if(effref) ileffref(ilt,effref);
 		ld&=0x1;
 		goto end0;
 	}
