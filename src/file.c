@@ -70,12 +70,15 @@ char findfilesubdir1(char *dst,unsigned int len,const char *subdir,const char *e
 	size_t i;
 	FILE *fd;
 	char fn[FILELEN];
-	char *extpos = ext ? strrchr(dst,'.') : NULL;
+	char *extpos=NULL;
 	char extrpl=0;
-	if(extpos>dst+4 && !strncmp(extpos-4,"_mod",4)) extpos-=4;
-	if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
-	if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
-	if(extpos){
+	if(ext && (extpos=strrchr(dst,'.'))){
+		if(ext[0]=='_'){
+			ext++;
+			if(extpos>dst+4 && !strncmp(extpos-4,"_mod",4)) extpos-=4;
+			if(extpos>dst+4 && !strncmp(extpos-4,"_cut",4)) extpos-=4;
+			if(extpos>dst+6 && !strncmp(extpos-6,"_small",6)) extpos-=6;
+		}
 		extrpl=extpos[0];
 		extpos[0]='\0';
 	}
