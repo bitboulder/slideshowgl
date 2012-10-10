@@ -6,7 +6,7 @@ my %cnt=();
 my %ilo=();
 while(<STDIN>){
 	chomp $_;
-	if($_!~/^(0x[0-9a-f]+-(eff|gl|load)) *: *([A-Za-z-]+) (0x[0-9a-f]+)$/){
+	if($_!~/^(0x[0-9a-f]+-(eff|exif|gl|load)) *: *([A-Za-z-]+) (0x[0-9a-f]+)$/){
 		print "PARSE-ERROR: $_\n";
 		next;
 	}
@@ -36,7 +36,7 @@ foreach my $opt (sort keys %cnt){
 		while($cnt{$opt}->{$cnt}>=1000){ $cnt{$opt}->{$cnt}=int($cnt{$opt}->{$cnt}/1000); shift @ext; }
 		$cnt{$opt}->{$cnt}.=$ext[0];
 	}
-	$cnt{$opt}->{"DD"}="(".$cnt{$opt}->{"DD"}.")" if "load"eq$opt && exists $cnt{$opt}->{"DD"};
+	$cnt{$opt}->{"DD"}="(".$cnt{$opt}->{"DD"}.")" if $opt=~/^(exif|load)$/ && exists $cnt{$opt}->{"DD"};
 	foreach my $cnt (@cnt){ push @c,$cnt{$opt}->{$cnt}; }
 	printf $fmt,$opt,@c;
 }
