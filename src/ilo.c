@@ -60,7 +60,7 @@ void iloset(struct ilo *ilo,void *ptr){
 	struct iloi *iloi;
 	SDL_LockMutex(ilo->mx);
 	iloi=ilo->hash[ch];
-	for(;iloi;iloi=iloi->hnxt) if(iloi->ptr==ptr) return;
+	for(;iloi;iloi=iloi->hnxt) if(iloi->ptr==ptr) goto end;
 	iloi=malloc(sizeof(struct iloi));
 	iloi->ptr=ptr;
 	iloi->hnxt=ilo->hash[ch]; ilo->hash[ch]=iloi;
@@ -69,6 +69,7 @@ void iloset(struct ilo *ilo,void *ptr){
 	if(ilo->fst) ilo->fst->prv=iloi;
 	ilo->fst=iloi;
 	ilochk(ilo);
+end:
 	SDL_UnlockMutex(ilo->mx);
 }
 
