@@ -1102,7 +1102,8 @@ void dplkey(unsigned short keyu){
 	break;
 	case 'I': if(dplgetinfo(NULL)) effsw(ESW_INFO,-1); break;
 	case 'H': if(dplgethist()) effsw(ESW_HIST,-1); break;
-	case 'x': if(!dplprged("frmdel",-1,-1,-1)) optx=!optx; break;
+	case 'x': if(!dplprged("frmdel",-1,-1,-1)) optx++; break;
+	case 'X': optx=0; break;
 	case 't': if(dpl.pos.ailtyp==AIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'l': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;
 	case 'L': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer( 1,dpl.actimgi); else dplswloop(); break;
