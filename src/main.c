@@ -49,6 +49,8 @@ const char *dbgstr[] = { EDEBUG };
 FILE *fdlog=NULL;
 int errcnt=0;
 
+char optx=0;
+
 void debug_ex(enum debug lvl,const char *file,int line,const char *txt,...){
 	va_list ap;
 	char err = lvl==ERR_QUIT || lvl==ERR_CONT;

@@ -48,4 +48,6 @@ const char *gettmp();
 int threadid();
 size_t nthreads();
 
+extern char optx;
+
 #endif
