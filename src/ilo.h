@@ -2,6 +2,7 @@
 #define _ILO_H
 
 //#define ILODEBUG
+//#define ILODEBUGMISS
 
 struct iloi {
 	void *ptr;

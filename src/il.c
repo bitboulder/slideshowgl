@@ -494,7 +494,7 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 	struct img *img;
 	int r=0;
 	struct iloi *iloi;
-#ifdef ILODEBUG
+#if defined ILODEBUG && defined ILODEBUGMISS
 	o=ILO_ALL;
 #endif
 	if(cilonly){
@@ -534,7 +534,7 @@ void ilsfinalize(){
 #else
 void ilodbg(struct img *img,enum ilopt opt,const char *txt){
 	const char *opts[]={"gl","eff","load","exif","n","all"};
-	if(img->il) printf("0x%08lx-%-4s: %9s 0x%08lx\n",(unsigned long)img->il->opt[opt],opts[opt],txt,(unsigned long)img);
+	if(img->il) printf("%8i - 0x%08lx-%-4s: %9s 0x%08lx\n",SDL_GetTicks(),(unsigned long)img->il->opt[opt],opts[opt],txt,(unsigned long)img);
 }
 #endif
 
@@ -546,10 +546,12 @@ void ildelopt(struct img *img,enum ilopt opt){
 	ilodbg(img,opt,"del");
 	if(img->il) ilodel(img->il->opt[opt],img);
 }
-void ilchkopt(struct img *img,enum ilopt opt,char act){
 #ifdef ILODEBUG
+void ilchkopt(struct img *img,enum ilopt opt,char act){
 	if(!img->il) return;
 	if(act==ilofind(img->il->opt[opt],img)) return;
 	ilodbg(img,opt,act?"ERR-miss":"ERR-exist");
-#endif
 }
+#else
+void ilchkopt(struct img *UNUSED(img),enum ilopt UNUSED(opt),char UNUSED(act)){ }
+#endif
