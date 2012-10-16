@@ -534,7 +534,8 @@ void ilsfinalize(){
 #else
 void ilodbg(struct img *img,enum ilopt opt,const char *txt){
 	const char *opts[]={"gl","eff","load","exif","n","all"};
-	if(img->il) printf("%8i - 0x%08lx-%-4s: %9s 0x%08lx\n",SDL_GetTicks(),(unsigned long)img->il->opt[opt],opts[opt],txt,(unsigned long)img);
+	const char *fn=imgfilefn(img->file);
+	if(img->il) printf("%8i - 0x%08lx-%-4s: %9s 0x%08lx %s\n",SDL_GetTicks(),(unsigned long)img->il->opt[opt],opts[opt],txt,(unsigned long)img,fn?fn:"");
 }
 #endif
 

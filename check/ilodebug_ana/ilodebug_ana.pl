@@ -6,11 +6,11 @@ my %cnt=();
 my %ilo=();
 while(<STDIN>){
 	chomp $_;
-	if($_!~/^ *([0-9]+ - )?(0x[0-9a-f]+-(eff|exif|gl|load)) *: *([A-Za-z-]+) (0x[0-9a-f]+)$/){
+	if($_!~/^ *([0-9]+ - )?(0x[0-9a-f]+-(eff|exif|gl|load)) *: *([A-Za-z-]+) (0x[0-9a-f]+) *(.*)$/){
 		print "PARSE-ERROR: $_\n";
 		next;
 	}
-	(my $time,my $ilo,my $opt,my $typ,my $img)=($1,$2,$3,$4,$5);
+	(my $time,my $ilo,my $opt,my $typ,my $img,my $fn)=($1,$2,$3,$4,$5,$6);
 	if("set"eq$typ){
 		my $cnt=exists $ilo{$ilo}->{$img}?"SS":"DS";
 		$cnt{$opt}->{$cnt}++;
