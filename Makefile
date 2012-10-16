@@ -7,9 +7,12 @@ else
   S = 
 endif
 
-.PHONY: all release debug win win-release win-debug clean install uninstall deb gettext
+.PHONY: all cscope release debug win win-release win-debug clean install uninstall deb gettext
 
-all: release
+all: release cscope
+
+cscope:
+	cd src; cscope -b *.c *.h *.cpp
 
 release:
 	$(SCONS) mode=release
