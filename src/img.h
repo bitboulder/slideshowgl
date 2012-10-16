@@ -32,7 +32,6 @@ struct img {
 };
 extern struct img *defimg;
 extern struct img *dirimg;
-extern struct img *delimg;
 
 struct img *imginit();
 void imgfree(struct img *img);

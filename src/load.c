@@ -584,14 +584,15 @@ int ldcheckfree(struct img *img,void *arg){
 	int cimgi=ilrelimgi(img->il,ilcimgi(img->il));
 	enum imgtex hold=TEX_NONE;
 	int diff=prgimgidiff(cimgi,img);
+	char del = img->il==ilget(CIL_DEL) && !imgposcur(img->pos)->act;
 #ifdef ILODEBUG
 	char ld=0;
 	int it;
 	for(it=0;!ld && it<TEX_NUM;it++) if(img->ld->texs[it].loaded) ld=1;
 	ilchkopt(img,ILO_LOAD,ld);
 #endif
-	if(diff>=ldcp->hold_min && diff<=ldcp->hold_max)
-	hold=ldcp->hold[diff-ldcp->hold_min];
+	if(diff>=ldcp->hold_min && diff<=ldcp->hold_max && !del)
+		hold=ldcp->hold[diff-ldcp->hold_min];
 	return ldffree(img->ld,hold);
 }
 
@@ -645,7 +646,6 @@ void ldresetdo(){
 	tlb.wi=tlb.ri; /* todo: cleanup texloadbuf */
 	ldresetdoimg(defimg,NULL);
 	ldresetdoimg(dirimg,NULL);
-	ldresetdoimg(delimg,NULL);
 	ilsforallimgs(ldresetdoimg,NULL,0,0,ILO_ALL);
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);

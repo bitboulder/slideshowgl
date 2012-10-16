@@ -13,7 +13,7 @@ struct wh {
 struct wh effmaxfit();
 
 void effinit(enum effrefresh effref,enum dplev ev,struct imglist *il,int imgi);
-void effdel(struct imgpos *ip);
+void effdel(struct img *img);
 void effstaton();
 void effpanoend(struct img *img);
 char effsw(enum esw id,char dst);

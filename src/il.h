@@ -5,6 +5,7 @@
 #define CIL(cil)	((struct imglist*)(long)-(cil+1))
 #define CIL_NONE	CIL(CIL_NUM)
 #define CIL_ALL		CIL(CIL_NUM+1)
+#define CIL_DEL		CIL(CIL_NUM+2)
 
 #define IMGI_START	INT_MIN
 #define IMGI_END	INT_MAX

@@ -77,6 +77,7 @@ struct imglist *ilget(struct imglist *il){
 	if(!il) return curil.ils[curil.actil];
 	if(cil<0 && cil>=-CIL_NUM) return curil.ils[-cil-1];
 	if(il==CIL_NONE || il==CIL_ALL) return NULL;
+	if(il==CIL_DEL) return ildel;
 	return il;
 }
 
@@ -499,7 +500,7 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 #endif
 	if(cilonly){
 		int cil;
-		for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))){
+		for(cil=-1;cil<CIL_NUM;cil++) if((il=ilget(cil<0?CIL_DEL:CIL(cil)))){
 			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
 				r+=func(img,arg);
 				if(brk && r>=brk) return r;
@@ -525,7 +526,6 @@ void ilsfinalize(){
 	while(ils) ildestroy(ils);
 	imgfree(defimg);
 	imgfree(dirimg);
-	imgfree(delimg);
 }
 
 

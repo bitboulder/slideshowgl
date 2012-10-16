@@ -443,19 +443,22 @@ void effinit(enum effrefresh effref,enum dplev ev,struct imglist *il,int imgi){
 	if(ev&(DE_JUMP|DE_INIT)) sdlforceredraw();
 }
 
-void effdel(struct imgpos *imgp){
-	union uipos *ipo=&imgp->p;
+void effdel(struct img *img){
+	union uipos *ipo=&img->pos->p;
 	union uipos  ipn[1];
 	int i;
 	if(!ipo->cur.act) return;
 	for(i=0;i<NIPOS;i++) ipn->a[i].cur =
-		imgp->eff && ipo->a[i].tdst ? ipo->a[i].dst : ipo->a[i].cur;
+		img->pos->eff && ipo->a[i].tdst ? ipo->a[i].dst : ipo->a[i].cur;
 	ipn->cur.s=0.f;
 	ipn->cur.r+=180.f;
 	ipn->cur.act=0.f;
 	effinittime(ipn,0,1.f);
-	effinitval(imgp,ipn,-1);
-	imgp->opt.layer=1;
+	effinitval(img->pos,ipn,-1);
+	img->pos->opt.layer=1;
+	ilsetopt(img,ILO_LOAD);
+	ilsetopt(img,ILO_EFF);
+	ilsetopt(img,ILO_GL);
 }
 
 void effstaton(){
@@ -629,14 +632,6 @@ void effdo(){
 	Uint32 now;
 	struct effdoarg ea[1]={ { .ineff=0, .chg=0 } };
 	ilsforallimgs(effdo1,ea,1,0,ILO_EFF);
-	if(delimg){
-		if(delimg->pos->eff) if(effdoimg(delimg)) ea->chg=1;
-		if(!delimg->pos->eff){
-			struct img *tmp=delimg;
-			delimg=NULL;
-			ldffree(tmp->ld,TEX_NONE);
-		}
-	}
 	now=dplgetticks();
 	if(effdostat()) ea->chg=1;
 	for(i=0;i<ESW_N;i++) if(effdoeval(eff.esw+i,now)) ea->chg=1;

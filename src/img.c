@@ -18,7 +18,6 @@
 
 struct img *defimg;
 struct img *dirimg;
-struct img *delimg;
 
 /***************************** image init *************************************/
 

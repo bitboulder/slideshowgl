@@ -637,7 +637,6 @@ int glrenderimgs1(struct img *img,void *arg){
 void glrenderimgs(){
 	char layer;
 	glmode(GLM_2D);
-	if(delimg) glrenderimg(delimg,1,0);
 	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0,ILO_GL);
 	glLoadName(0);
 }

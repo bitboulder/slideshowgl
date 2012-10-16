@@ -480,15 +480,9 @@ void dpldel(enum edpldel act){
 	}else if((img=ildelcimg(NULL))){
 		markimgclean(img);
 		if(dpl.pos.zoom>0) dpl.pos.zoom=0;
-		if(delimg){
-			struct img *tmp=delimg;
-			delimg=NULL;
-			ldffree(tmp->ld,TEX_NONE);
-		}
 		dpl.pos.imgiold--;
-		effdel(img->pos);
+		effdel(img);
 		effinit(EFFREF_ALL|EFFREF_FIT,DE_RIGHT,NULL,-1);
-		delimg=img;
 	}else return;
 	actadd(act==DD_ORI ? ACT_DELORI : ACT_DELETE,img,ilget(NULL));
 }
