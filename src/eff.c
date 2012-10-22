@@ -118,9 +118,9 @@ struct imgpos *imgposinit(){ return calloc(1,sizeof(struct imgpos)); }
 void imgposfree(struct imgpos *ip){ free(ip); }
 
 /* thread: gl */
-struct iopt *imgposopt(struct imgpos *ip){ return &ip->opt; }
-struct ecur *imgposcur(struct imgpos *ip){ return &ip->p.cur; }
-struct icol *imgposcol(struct imgpos *ip){ return &ip->col; }
+struct iopt *imgposopt(struct imgpos *ip){ return ip?&ip->opt:NULL; }
+struct ecur *imgposcur(struct imgpos *ip){ return ip?&ip->p.cur:NULL; }
+struct icol *imgposcol(struct imgpos *ip){ return ip?&ip->col:NULL; }
 
 /* thread: act */
 char *imgposmark(struct img *img,enum mpcreate create){

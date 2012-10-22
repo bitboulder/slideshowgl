@@ -572,6 +572,7 @@ void glrenderimg(struct img *img,char layer,char act){
 	struct txtimg *txt;
 	float s;
 	const char *mov;
+	if(!ecur || !iopt) return;
 	ilchkopt(img,ILO_GL,!!ecur->act);
 	if(!ecur->act) return;
 	if(iopt->layer!=layer) return;
