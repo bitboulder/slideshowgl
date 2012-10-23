@@ -19,9 +19,9 @@ struct ilo *ilonew(){
 }
 
 void ilofree(struct ilo *ilo){
-	struct iloi *iloi=ilo->fst;
+	struct iloi *iloi=ilo->fst,*iloin;
 	SDL_DestroyMutex(ilo->mx);
-	for(;iloi;iloi=iloi->nxt) free(iloi);
+	for(;iloi;iloi=iloin){ iloin=iloi->nxt; free(iloi); }
 	free(ilo);
 }
 

@@ -494,7 +494,7 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 	struct imglist *il;
 	struct img *img;
 	int r=0;
-	struct iloi *iloi;
+	struct iloi *iloi,*iloin;
 #if defined ILODEBUG && defined ILODEBUGMISS
 	o=ILO_ALL;
 #endif
@@ -504,7 +504,8 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
 				r+=func(img,arg);
 				if(brk && r>=brk) return r;
-			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloi->nxt){
+			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloin){
+				iloin=iloi->nxt;
 				r+=func(iloi->ptr,arg);
 				if(brk && r>=brk) return r;
 			}
@@ -514,7 +515,8 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
 				r+=func(img,arg);
 				if(brk && r>=brk) return r;
-			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloi->nxt){
+			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloin){
+				iloin=iloi->nxt;
 				r+=func(iloi->ptr,arg);
 				if(brk && r>=brk) return r;
 			}
