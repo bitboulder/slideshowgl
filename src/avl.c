@@ -301,10 +301,7 @@ char avlsortchg(struct avls *avls,enum avlcmp cmp){
 	struct img *img=*avls->first;
 	avlcmp cmpfnc=avlcmpfnc(cmp);
 	while(img && img->nxt && cmpfnc(img->avl,img->nxt->avl)<=0) img=img->nxt;
-	if(!img || !img->nxt){
-		printf("%i => 0\n",cmp);
-		return 0;
-	}
+	if(!img || !img->nxt) return 0;
 	avl=avls->avl->ch[0];
 	avlsn=avlinit(cmp,avls->first,avls->last);
 	while(1){
@@ -320,7 +317,6 @@ char avlsortchg(struct avls *avls,enum avlcmp cmp){
 	avlfree1(avls->avl);
 	memcpy(avls,avlsn,sizeof(struct avls));
 	free(avlsn);
-	printf("%i => 1\n",cmp);
 	return 1;
 }
 
