@@ -56,10 +56,27 @@ int avlidcmp(const struct avl *a,const struct avl *b){
 }
 
 int avlfilecmp(const struct avl *a,const struct avl *b){
-	int str;
+	const char *fa,*fb;
 	AVLDIRCMP(a,b);
-	str=strcmp(imgfilefn(a->img->file),imgfilefn(b->img->file));
-	return str ? str : avlidcmp(a,b);
+	fa=imgfilefn(a->img->file);
+	fb=imgfilefn(b->img->file);
+	while(*fa && *fb){
+		if(*fa>='0' && *fa<='9' && *fb>='0' && *fb<='9'){
+			char *ea,*eb;
+			long ia=strtol(fa,&ea,10);
+			long ib=strtol(fb,&eb,10);
+			if(ea!=fa && eb!=fb){
+				if(ia<ib) return -1;
+				if(ia>ib) return 1;
+				fa=ea; fb=eb;
+				continue;
+			}
+		}
+		if(*fa<*fb) return -1;
+		if(*fa>*fb) return 1;
+		fa++; fb++;
+	}
+	return avlidcmp(a,b);
 }
 
 int avldatecmp(const struct avl *a,const struct avl *b){
@@ -244,23 +261,27 @@ char avlchk(struct avls *avls,struct img *img){
 	return 1;
 }
 
+avlcmp avlcmpfnc(enum avlcmp cmp){
+	switch(cmp){
+	case ILS_DATE: return avldatecmp;
+	case ILS_FILE: return avlfilecmp;
+	case ILS_RND:  return avlrndcmp;
+	default:       return avlidcmp;
+	}
+}
+
 struct avls *avlinit(enum avlcmp cmp,struct img **first,struct img **last){
 	struct avls *avls=calloc(1,sizeof(struct avls));
 	avls->avl=calloc(1,sizeof(struct avl));
 	avls->first=first; *first=NULL;
 	avls->last=last;   *last=NULL;
-	switch(cmp){
-	case ILS_DATE: avls->cmp=avldatecmp; break;
-	case ILS_FILE: avls->cmp=avlfilecmp; break;
-	case ILS_RND:  avls->cmp=avlrndcmp;  break;
-	default:       avls->cmp=avlidcmp;   break;
-	}
+	avls->cmp=avlcmpfnc(cmp);
 	return avls;
 }
 
 void avlfree1(struct avl *avl){
 	if(!avl) return;
-	if(avl->img) avl->img->avl=NULL;
+	if(avl->img && avl->img->avl==avl) avl->img->avl=NULL;
 	avlfree1(avl->ch[0]);
 	avlfree1(avl->ch[1]);
 	#ifdef AVLDEBUG
@@ -275,12 +296,18 @@ void avlfree(struct avls *avls){
 }
 
 char avlsortchg(struct avls *avls,enum avlcmp cmp){
-	struct avl *avl=avls->avl->ch[0];
-	struct avls *avlsn=avlinit(cmp,avls->first,avls->last);
-	char chg=0;
+	struct avl *avl;
+	struct avls *avlsn;
+	struct img *img=*avls->first;
+	avlcmp cmpfnc=avlcmpfnc(cmp);
+	while(img && img->nxt && cmpfnc(img->avl,img->nxt->avl)<=0) img=img->nxt;
+	if(!img || !img->nxt){
+		printf("%i => 0\n",cmp);
+		return 0;
+	}
+	avl=avls->avl->ch[0];
+	avlsn=avlinit(cmp,avls->first,avls->last);
 	while(1){
-		if(!chg && avl->ch[0] && avlsn->cmp(avl,avl->ch[0])<=0) chg=1;
-		if(!chg && avl->ch[1] && avlsn->cmp(avl,avl->ch[1])>0 ) chg=1;
 		if(avl->img) avlinsid(avlsn,avl->img,avl->id);
 		if(avl->ch[0]) avl=avl->ch[0];
 		else if(avl->ch[1]) avl=avl->ch[1];
@@ -293,7 +320,8 @@ char avlsortchg(struct avls *avls,enum avlcmp cmp){
 	avlfree1(avls->avl);
 	memcpy(avls,avlsn,sizeof(struct avls));
 	free(avlsn);
-	return chg;
+	printf("%i => 1\n",cmp);
+	return 1;
 }
 
 int avlnimg(struct avls *avls){ return N0(avls->avl); }
