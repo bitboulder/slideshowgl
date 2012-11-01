@@ -18,6 +18,7 @@ enum imgtex { IMGTEX };
 #undef E2
 
 struct img {
+	double marker; /* TODO: remove */
 	char free;
 	struct img *nxt, *prv;
 	struct imglist *il;
@@ -35,5 +36,6 @@ extern struct img *dirimg;
 
 struct img *imginit();
 void imgfree(struct img *img);
+char imgmarker(struct img *img);
 
 #endif

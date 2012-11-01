@@ -16,6 +16,9 @@
 #include "exich.h"
 #include "hist.h"
 
+/* TODO: remove */
+#define IMG_MARKER	123456789.
+
 struct img *defimg;
 struct img *dirimg;
 
@@ -23,6 +26,7 @@ struct img *dirimg;
 
 struct img *imginit(){
 	struct img *img=calloc(1,sizeof(struct img));
+	img->marker=IMG_MARKER;
 	img->ld=imgldinit(img);
 	img->pos=imgposinit();
 	img->exif=imgexifinit();
@@ -34,6 +38,7 @@ struct img *imginit(){
 
 void imgfree(struct img *img){
 	if(!img) return;
+	if(!imgmarker(img)) return;
 	if(img->free){
 		error(ERR_CONT,"critical: double free img 0x%08lx\n",(long)img);
 		return;
@@ -47,3 +52,8 @@ void imgfree(struct img *img){
 	free(img);
 }
 
+char imgmarker(struct img *img){
+	if(img && img->marker==IMG_MARKER) return 1;
+	error(ERR_CONT,"img marker failed: %e\n",img ? img->marker : 0.);
+	return 0;
+}

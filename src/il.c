@@ -502,9 +502,11 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 		int cil;
 		for(cil=-1;cil<CIL_NUM;cil++) if((il=ilget(cil<0?CIL_DEL:CIL(cil)))){
 			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
+				if(!imgmarker(img)) break;
 				r+=func(img,arg);
 				if(brk && r>=brk) return r;
 			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloin){
+				if(!imgmarker(iloi->ptr)) break;
 				iloin=iloi->nxt;
 				r+=func(iloi->ptr,arg);
 				if(brk && r>=brk) return r;
@@ -513,9 +515,11 @@ int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,
 	}else{
 		for(il=ils;il;il=il->nxt)
 			if(o==ILO_ALL) for(img=il->imgs;img;img=img->nxt){
+				if(!imgmarker(img)) break;
 				r+=func(img,arg);
 				if(brk && r>=brk) return r;
 			}else for(iloi=ilofst(il->opt[o]);iloi;iloi=iloin){
+				if(!imgmarker(iloi->ptr)) break;
 				iloin=iloi->nxt;
 				r+=func(iloi->ptr,arg);
 				if(brk && r>=brk) return r;
