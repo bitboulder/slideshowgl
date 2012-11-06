@@ -53,7 +53,7 @@ void imghistload(struct imghist *ih,char *fn){
 	}
 	if(filetime(ih->hfn)<filetime(fn)) return;
 	debug(DBG_DBG,"imghistload file '%s'",ih->hfn);
-	if(!(fd=fopen(ih->hfn,"rb"))) error(ERR_CONT,"imghistload open file failed '%s'",ih->hfn);
+	if(!(fd=fopen(ih->hfn,"rb"))){ error(ERR_CONT,"imghistload open file failed '%s'",ih->hfn); return; }
 	if(fread(&ih->num,sizeof(int),1,fd)<1 || fread(ih->h,sizeof(float),HT_NUM*HDIM,fd)<HT_NUM*HDIM){
 		ih->num=0; error(ERR_CONT,"imghistload file read failed '%s'",ih->hfn);
 	}
@@ -64,7 +64,8 @@ void imghistsave(struct imghist *ih){
 	FILE *fd;
 	if(!ih->hfn[0]) return;
 	debug(DBG_DBG,"imghistsave file '%s'",ih->hfn);
-	if(!(fd=fopen(ih->hfn,"wb"))) error(ERR_CONT,"imghistsave open file failed '%s'",ih->hfn);
+	mkdirm(ih->hfn,1);
+	if(!(fd=fopen(ih->hfn,"wb"))){ error(ERR_CONT,"imghistsave open file failed '%s'",ih->hfn); return; }
 	if(fwrite(&ih->num,sizeof(int),1,fd)<1 || fwrite(ih->h,sizeof(float),HT_NUM*HDIM,fd)<HT_NUM*HDIM)
 		error(ERR_CONT,"imghistload file write failed '%s'",ih->hfn);
 	fclose(fd);
