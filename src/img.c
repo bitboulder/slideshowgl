@@ -54,6 +54,6 @@ void imgfree(struct img *img){
 
 char imgmarker(struct img *img){
 	if(img && img->marker==IMG_MARKER) return 1;
-	error(ERR_CONT,"img marker failed: %e\n",img ? img->marker : 0.);
+	error(ERR_CONT,"img marker failed: %e",img ? img->marker : 0.);
 	return 0;
 }

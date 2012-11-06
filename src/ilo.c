@@ -83,6 +83,7 @@ void ilodel(struct ilo *ilo,void *ptr){
 		iloi[0]=idel->hnxt;
 		if(idel->prv) idel->prv->nxt=idel->nxt; else ilo->fst=idel->nxt;
 		if(idel->nxt) idel->nxt->prv=idel->prv;
+		idel->prv=idel->nxt=NULL;
 		free(idel);
 		if(!iloi[0]) break;
 	}
