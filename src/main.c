@@ -328,7 +328,6 @@ int watchcoredump(int *ret,int argc,char **argv){
 		fd=fopen(cmd,"w");
 		for(i=0;i<argc;i++) fprintf(fd,"%s\n",argv[i]);
 		fclose(fd);
-		errcnt++;
 	}
 	return 1;
 }
@@ -345,6 +344,7 @@ char terminate(){
 	if(!(dir=opendir("/proc"))) return 0;
 	while((de=readdir(dir))){
 		size_t l=0;
+		ssize_t ll;
 		long pid;
 		char fexe[FILELEN];
 		char exe[FILELEN];
@@ -355,13 +355,13 @@ char terminate(){
 		if(pid<=0 || pid==LONG_MAX) continue;
 		if(pid==pid_self) continue;
 		snprintf(fexe,FILELEN,"/proc/%li/exe",pid);
-		if(readlink(fexe,exe,FILELEN)<=0) continue;
-		if(strncmp(exe,exe_self,FILELEN)) continue;
+		if((ll=readlink(fexe,exe,FILELEN))<=0) continue;
+		if(strncmp(exe,exe_self,MIN(FILELEN,(size_t)ll))) continue;
 		if(!pid_kill || pid_kill<pid) pid_kill=pid; /* TODO: select by mem space */
 	}
 	closedir(dir);
 	if(!pid_kill) return 0;
-	kill((pid_t)pid_kill,SIGABRT);
+	kill((pid_t)pid_kill,SIGINT);
 	return 1;
 #else
 	return 0;
@@ -370,7 +370,7 @@ char terminate(){
 
 int main(int argc,char **argv){
 	int ret=0;
-	if(terminate()) return ret;
+	if(terminate()) return 0;
 	if(argc) setprogpath(argv[0]);
 #ifdef __WIN32__
 	fileoutput(1);
@@ -378,7 +378,7 @@ int main(int argc,char **argv){
 	srand((unsigned int)time(NULL));
 	cfgparseargs(argc,argv);
 	fileoutput(2);
-	if(watchcoredump(&ret,argc,argv)) goto end;
+	if(watchcoredump(&ret,argc,argv)) return ret;
 	dbg=cfggetint("main.dbg");
 	logdbg=cfggetint("main.logdbg");
 	if(dbg>logdbg) logdbg=dbg;
@@ -398,7 +398,6 @@ int main(int argc,char **argv){
 			(sdl_quit&THR_ML1)?"":" mapld1",
 			(sdl_quit&THR_ML2)?"":" mapld2");
 	else sdlquit();
-end:
 	fileoutput(0);
-	return ret;
+	return errcnt;
 }
