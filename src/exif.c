@@ -291,7 +291,7 @@ char imgexifload(struct imgexif *exif,const char *fn){
 	enum filetype ft=filetype(fn);
 	if(exif->load) return 0;
 	if(!(ft&FT_FILE) || (ft&FT_DIREX)) return 1;
-	if(exif->info) free(exif->info);
+	if(exif->info){ free(exif->info); exif->info=NULL; }
 	exif->load=1;
 	debug(DBG_DBG,"exif loading img %s",fn);
 #if HAVE_EXIV2
