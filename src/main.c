@@ -138,13 +138,13 @@ struct mainthread {
 	void *data;
 	SDL_Thread *pt;
 } mainthreads[] = {
-	{ "sdl",  &sdlthread, 15, 0, NULL },
-	{ "dpl",  &dplthread, 10, 0, NULL },
-	{ "ld",   &ldthread,   5, 0, NULL },
-	{ "act",  &actthread,  2, 0, NULL },
-	{ "map1", &mapldthread,1, 0, (void*)0 },
-//	{ "map2", &mapldthread,1, 0, (void*)1 },
-	{ NULL,   NULL,        0, 0, NULL },
+	{ "sdl",  &sdlthread, 15, 0, NULL, NULL },
+	{ "dpl",  &dplthread, 10, 0, NULL, NULL },
+	{ "ld",   &ldthread,   5, 0, NULL, NULL },
+	{ "act",  &actthread,  2, 0, NULL, NULL },
+	{ "map1", &mapldthread,1, 0, (void*)0, NULL },
+//	{ "map2", &mapldthread,1, 0, (void*)1, NULL },
+	{ NULL,   NULL,        0, 0, NULL, NULL },
 };
 
 int threadid(){
