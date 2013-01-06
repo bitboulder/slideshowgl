@@ -35,6 +35,7 @@ __(" Right click")"\0"               __("Set new marker")"\0"
 __(" Left drag")"\0"                 __("Move")"\0"
 __(" Left click")"\0"                __("Goto image / Forward")"\0"
 __(" Double click on directory")"\0" __("Enter directory")"\0"
+__(" Double click on movie")"\0"     __("Play movie")"\0"
 __(" Double click on space")"\0"     __("Leave directory")"\0"
 #if defined IF_WRM || defined IF_DIRED
 __(" Middle click")"\0"              __("Play/Stop / Toggle mark")"\0"
