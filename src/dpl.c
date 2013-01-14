@@ -927,6 +927,7 @@ void dplfilesearch(struct dplinput *in){
 			if(in->post[0]) break;
 		}
 	}
+	if(!in->res[0] && dpl.input.mode==ITM_MARKFN) snprintf(in->res,FILELEN,"%s/%s",markgetfndir(),in->in);
 }
 
 void dplinputtxtadd(uint32_t c){
@@ -1003,7 +1004,9 @@ void dplinputtxtfinal(char ok){
 	case ITM_MAPMK:
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
 	break;
-	case ITM_MARKFN: if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL); break;
+	case ITM_MARKFN:
+	printf("%i %lu +%s+%s+\n",ok,len,dpl.input.res,dpl.input.in);
+		if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL); break;
 	}
 	dpl.input.lastmode=dpl.input.mode;
 	dpl.input.mode=ITM_OFF;

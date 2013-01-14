@@ -20,6 +20,6 @@ void markchange(size_t id);
 void markssave();
 
 const char *markgetfndir();
-char markswitchfn(const char *fn);
+char markswitchfn(char *fn);
 
 #endif

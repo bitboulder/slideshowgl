@@ -283,8 +283,18 @@ int markupdateimg(struct img *img,void *UNUSED(arg)){
 }
 void markupdate(){ ilsforallimgs(markupdateimg,NULL,0,0,ILO_ALL); }
 
-char markswitchfn(const char *fn){
-	if(!(filetype(fn)&(FT_FILE|FT_DIREX))) return 0;
+char markswitchfn(char *fn){
+	enum filetype ft=filetype(fn);
+	if(ft==FT_NX){
+		FILE *fd;
+		if(!fileext(fn,0,"flst")){
+			size_t len=strlen(fn);
+			snprintf(fn+len,FILELEN-len,".flst");
+		}
+		if((fd=fopen(fn,"w"))) fclose(fd);
+		ft=filetype(fn);
+	}
+	if(!(ft&(FT_FILE|FT_DIREX))) return 0;
 	mark.nosave=1;
 	snprintf(mark.cfg.fn,FILELEN,"%s",fn);
 	marksloadcat(0,1);
