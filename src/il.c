@@ -269,11 +269,21 @@ char ilfiletime(struct imglist *il,enum eldft act){
 }
 
 /* thread: dpl */
+void ilftcheck(struct imglist *il){
+	if(!ilfiletime(il,FT_CHECK)) return;
+	debug(DBG_STA,"reload imglist: %s",il->fn);
+	ilfiletime(il,FT_RESET);
+	ilreload(il,NULL);
+	ileffref(il,EFFREF_ALL);
+}
+
+/* thread: dpl */
 char ilfind(const char *fn,struct imglist **ilret){
 	struct imglist *il;
 	for(il=ils;il;il=il->nxt) if(il->last_used!=1 && !strncmp(il->fn,fn,FILELEN)){
 		char ret=!ilfiletime(il,FT_CHECKNOW);
 		*ilret=il;
+		ilftcheck(il);
 		return ret;
 	}
 	return 0;
@@ -482,12 +492,7 @@ void ilsftcheck(){
 	int cil;
 	struct imglist *il;
 	return; /* TODO: enable auto imglist reload */ 
-	for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil))) && ilfiletime(il,FT_CHECK)){
-		debug(DBG_STA,"reload imglist: %s",il->fn);
-		ilfiletime(il,FT_RESET);
-		ilreload(il,NULL);
-		ileffref(il,EFFREF_ALL);
-	}
+	for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))) ilftcheck(il);
 }
 
 int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk,enum ilopt o){
