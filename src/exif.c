@@ -51,7 +51,7 @@ struct exifinfo {
 	{EX_XX, __("Metering mode"),       {"Easy.MeteringMode",NULL},           {0}},
 	{EX_XX, __("Measured EV"),         {"Exif.CanonSi.MeasuredEV2",NULL},    {0}},
 
-	{EX_FA, __("Flash"),               {"Exif.Photo.Flash",NULL},            {E(EXIF_TAG_FLASH),0}},
+	{EX_FA, __("Flash"),               {"Exif.CanonCs.FlashMode","Exif.Photo.Flash",NULL},{E(EXIF_TAG_FLASH),0}},
 	{EX_FV, __("Flash bias value"),    {"Exif.CanonSi.FlashBias",NULL},      {0}},
 
 	{EX_EP, __("Exposure program"),    {"Exif.CanonCs.ExposureProgram","Exif.Photo.ExposureProgram",NULL},{E(EXIF_TAG_EXPOSURE_PROGRAM),0}},
@@ -214,8 +214,12 @@ void imgexifselupd(char *sel,enum exinfo info,char *txt){
 	case EX_FN: SELf(4,"%.1f",atof(txt+(txt[0]=='F'))); break;
 	case EX_IO: SEL(7,txt); break;
 	case EX_EV: SELf(6,"%+.1f",frac2f(txt)); break;
-	case EX_FA: if(!strstr(txt,"nicht")) SEL(9,"B"); else SEL(9,""); break;
-	case EX_FV: if(selp(9)[0]=='B') SELfap(9,"%+.1f",frac2f(txt)); break;
+	case EX_FA:
+		if(strstr(txt,"nicht") || strstr(txt,"Aus") || strstr(txt,"Kein")) SEL(9,"");
+		else if(strstr(txt,"Extern")) SEL(9,"E");
+		else SEL(9,"B");
+	break;
+	case EX_FV: if(selp(9)[0]=='B' || selp(9)[0]=='E') SELfap(9,"%+.1f",frac2f(txt)); break;
 	case EX_EP:
 		l=strcspn(txt,"(");
 		if(txt[l]){
