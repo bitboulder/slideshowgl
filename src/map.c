@@ -272,7 +272,7 @@ struct tile *maptilefind(int ix,int iy,int iz,char create){
 
 const char *mapimgname(const char *dir){
 	size_t c=0,i,len=strlen(dir);
-	for(i=len;i>0 && c<2;i--) if(dir[i-1]=='/' || dir[i-1]=='\\') c++;
+	for(i=len;i>0 && c<3;i--) if(dir[i-1]=='/' || dir[i-1]=='\\') c++;
 	if(i) i++;
 	return dir+i;
 }
@@ -519,8 +519,26 @@ char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir){
 		*dir=clti->img->name;
 	}else{
 		*il=ilnew("[MAP-SEL]",_("[Map-Selection]"));
-		for(;clti;clti=clti->nxtimg)
-			faddfile(*il,clti->img->dir,NULL,NULL,0);
+		for(;clti;clti=clti->nxtimg){
+			char imgtxt[FILELEN],*p;
+			snprintf(imgtxt,FILELEN,"%s",clti->img->name);
+			while((p=strchr(imgtxt,'/')) || (p=strchr(imgtxt,'\\'))) *p='-';
+			if(imgtxt[0]>='0' && imgtxt[0]<='9' &&
+			   imgtxt[1]>='0' && imgtxt[1]<='9' &&
+			   imgtxt[2]>='0' && imgtxt[2]<='9' &&
+			   imgtxt[3]>='0' && imgtxt[3]<='9' &&
+			   imgtxt[4]=='-' &&
+			   imgtxt[5]>='0' && imgtxt[5]<='9' &&
+			   imgtxt[6]>='0' && imgtxt[6]<='9' &&
+			   imgtxt[7]=='-' &&
+			   imgtxt[8]>='0' && imgtxt[8]<='9' &&
+			   imgtxt[9]>='0' && imgtxt[9]<='9' &&
+			   strlen(imgtxt)<FILELEN-1){
+				memmove(imgtxt+11,imgtxt+10,strlen(imgtxt)-9);
+				imgtxt[10]=':';
+			}
+			faddfile(*il,clti->img->dir,imgtxt,NULL,0);
+		}
 	}
 	return 1;
 }
