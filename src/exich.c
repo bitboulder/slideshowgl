@@ -104,7 +104,7 @@ void exichsave(){
 	unsigned int hkey;
 	gzFile fd;
 	exichgetfile();
-	if(!(fd=gzopen(exich.fn,"wb"))) return;
+	if(!(fd=gzopen(exich.fn,"wb9"))) return;
 	for(hkey=0;hkey<ECCHAINS;hkey++)
 		for(ci=exich.ci[hkey];ci;ci=ci->nxt)
 			gzprintf(fd,"%li %li %s\n",ci->ft,ci->date,ci->fn);
