@@ -52,16 +52,18 @@ char exichcheck(struct imgexif *exif,const char *fn){
 /* thread: load,dpl */
 void exichadd(struct imgexif *exif,const char *fn){
 	struct exichi *ci=exichfind(fn);
+	long ft=filetime(fn);
 	if(!ci){
 		const char *cmp=fncmp(fn);
 		unsigned int hkey=exichhkey(cmp);
 		ci=malloc(sizeof(struct exichi));
 		snprintf(ci->fn,FILELEN,"%s",cmp);
-		ci->ft=filetime(fn);
+		ci->ft=ft;
 		ci->nxt=exich.ci[hkey];
 		exich.ci[hkey]=ci;
-	}else if(filetime(fn)<=ci->ft) return;
+	}else if(ft<=ci->ft) return;
 	ci->date=exif->date;
+	ci->ft=ft;
 	actadd(ACT_EXIFCACHE,NULL,NULL);
 }
 
