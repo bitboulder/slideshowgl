@@ -226,22 +226,25 @@ void avldel(struct avls *avls,struct img *img){
 	img->frm=-1;
 	if(img->avl && img->avl->pa){
 		struct avl *avl=img->avl, *rot=avl->pa, *ins=NULL;
-		int pos=POS(avl), posi=0;
+		int pos=POS(avl);
 		if(!avl->ch[0]){  if((avl->pa->ch[pos]=avl->ch[1])) avl->ch[1]->pa=avl->pa; }
 		else if(!avl->ch[1]){ avl->pa->ch[pos]=avl->ch[0];  avl->ch[0]->pa=avl->pa; }
 		else{
-			for(ins=avl->ch[0];ins->ch[1];ins=ins->ch[1]) posi=1;
-			if((ins->pa->ch[posi]=ins->ch[0])) ins->ch[0]->pa=ins->pa; // del ins
-			rot = ins->pa==avl ? NULL : ins->pa;
-			avl->pa->ch[pos]=ins;       ins->pa=avl->pa;     // ins => pa->ch[pos]
-			if((ins->ch[0]=avl->ch[0])) ins->ch[0]->pa=ins;  // avl->ch[0] => ins->ch[0]
-			if((ins->ch[1]=avl->ch[1])) ins->ch[1]->pa=ins;  // avl->ch[1] => ins->ch[1]
-			ins->h=avl->h;
+			if(!avl->img || !avl->img->prv || !(rot=avl->img->prv->avl))
+				for(rot=avl->ch[0];rot->ch[1];) rot=rot->ch[1];
+			if(avl->ch[0]!=rot){
+				if((rot->pa->ch[1]=rot->ch[0])) rot->ch[0]->pa=rot->pa; // del rot
+				ins=rot->pa;
+				if((rot->ch[0]=avl->ch[0])) rot->ch[0]->pa=rot;  // avl->ch[0] => rot->ch[0]
+			}
+			avl->pa->ch[pos]=rot;       rot->pa=avl->pa;     // rot => pa->ch[pos]
+			if((rot->ch[1]=avl->ch[1])) rot->ch[1]->pa=rot;  // avl->ch[1] => rot->ch[1]
+			rot->h=avl->h;
 		}
 		avlprint(avls,"DELs",rot,0);
-		if(rot) avlrot(rot);
-		avlprint(avls,"DELm",ins,0);
 		if(ins) avlrot(ins);
+		avlprint(avls,"DELm",ins,0);
+		if(rot) avlrot(rot);
 		avlprint(avls,"DELf",avl,1);
 		img->avl=NULL;
 		#ifdef AVLDEBUG
