@@ -30,10 +30,16 @@ enum inputtxt {ITM_OFF, ITM_CATSEL, ITM_TXTIMG, ITM_NUM, ITM_SEARCH, ITM_MAPSCH,
 
 const char *colmodestr[]={"G","B","C"};
 
+struct dplrun {
+	Uint32 time;
+	enum {DRM_OFF,DRM_STD,DRM_RET,DRM_PLD,DRM_PDO,DRM_MOV} mode;
+	char pit,prot;
+};
+
 struct dpl {
 	struct dplpos pos;
 	char writemode;
-	Uint32 run;
+	struct dplrun run;
 	struct {
 		Uint32 displayduration;
 		Uint32 holdduration;
@@ -55,13 +61,14 @@ struct dpl {
 	char fullscreen;
 	char *lastmark;
 	Uint32 catforce;
+	char cmdfin;
 } dpl = {
 	.pos.zoom = 0,
 	.pos.x = 0.,
 	.pos.y = 0.,
 	.pos.buble = NULL,
 	.writemode = 0,
-	.run = 0,
+	.run.mode = DRM_OFF,
 	.colmode = COL_NONE,
 	.input.mode = ITM_OFF,
 	.fid = 0,
@@ -176,6 +183,85 @@ void printixy(float sx,float sy){
 	float ix,iy;
 	if(!img || !(imgspos2ipos(img,sx,sy,&ix,&iy))) return;
 	debug(DBG_NONE,"img pos %.3fx%.3f",ix+dpl.pos.x,iy+dpl.pos.y);
+}
+
+/***************************** dpl run ****************************************/
+
+char dplrun(char dst){
+	char chg=0;
+	struct img *img;
+	if(dpl.run.mode!=DRM_OFF && dst==0){
+		dpl.run.mode=DRM_OFF;
+		return 1;
+	}
+	switch(dpl.run.mode){
+	case DRM_OFF:
+		if(dst>0){
+			chg=1;
+			dpl.run.mode=DRM_STD;
+			dplevput(DE_RIGHT);
+			dpl.run.time=dplgetticks();
+			if(dst==2) dpl.run.time+=1000-dpl.cfg.displayduration;
+		}
+	break;
+	case DRM_STD:
+	case DRM_RET:
+		if(dpl.pos.zoom>0 || (ilcimgi(NULL)==IMGI_END && !dpl.cfg.playmode)){
+			chg=1;
+			dpl.run.mode=DRM_OFF;
+		}else{
+			Uint32 time=dplgetticks();
+			unsigned int dpldur=dpl.cfg.displayduration;
+			char pano=dpl.run.mode!=DRM_RET && (img=ilcimg(NULL)) && imgpanoenable(img->pano) && dpl.pos.zoom==0;
+			char mov =dpl.run.mode!=DRM_RET && (img=ilcimg(NULL)) && imgfilemov(img->file) && dpl.pos.zoom==0;
+			if(ilcimgi(NULL)==IMGI_END) dpldur=2000;
+			if(pano || mov || dpl.run.mode==DRM_RET) dpldur=1500;
+			if(time-dpl.run.time>effdelay(ilcimgi(NULL),dpldur)){
+				if(dpl.cfg.playmode && ilcimgi(NULL)==IMGI_END) sdl_quit=1;
+				if(pano){
+					dpl.run.mode=DRM_PLD;
+					dplevput(DE_ZOOMIN);
+				}else if(mov){
+					dpl.run.mode=DRM_MOV;
+					dpl.cmdfin=0;
+					dplevput(DE_MOV);
+				}else{
+					dpl.run.mode=DRM_STD;
+					dpl.run.time=time;
+					dplevput(DE_RIGHT);
+				}
+			}
+		}
+	break;
+	case DRM_PLD:
+		if((img=ilcimg(NULL)) && imgldtex(img->ld,TEX_PANO)){
+			dpl.run.mode=DRM_PDO;
+			dpl.run.time=dplgetticks();
+			dpl.run.pit=2;
+			dpl.run.prot=0;
+			panoev(PE_PLAY);
+		}
+	break;
+	case DRM_PDO: {
+		char prot=panorot()<0.f ? -1 : 1;
+		if(dpl.run.prot!=prot && dplgetticks()-dpl.run.time>1000){
+			dpl.run.prot=prot;
+			if(--dpl.run.pit<0){
+				dplevput(DE_ZOOMOUT);
+				dpl.run.mode=DRM_RET;
+				dpl.run.time=dplgetticks();
+			}
+		}
+	break; }
+	case DRM_MOV:
+		if(dpl.cmdfin){
+			dpl.run.mode=DRM_RET;
+			dpl.run.time=dplgetticks();
+		}
+	break;
+	}
+	if(dpl.run.mode==DRM_OFF) dpl.cfg.playmode=0;
+	return chg;
 }
 
 /***************************** dpl img move ***********************************/
@@ -416,7 +502,6 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		}else dplzoompos(dpl.pos.zoom+dir,sx,sy);
 	}
 	if(dpl.pos.zoom<1-zoommin) dpl.pos.zoom=1-zoommin;
-	if(dpl.pos.zoom>0)    dpl.run=0;
 	ilupdcimgi(NULL);
 	if((ilcimgi(NULL)==IMGI_START || ilcimgi(NULL)==IMGI_END) && dpl.pos.zoom>0) dpl.pos.zoom=0;
 	debug(DBG_STA,"dpl move => imgi %i zoom %i pos %.2fx%.2f",ilcimgi(NULL),dpl.pos.zoom,dpl.pos.x,dpl.pos.y);
@@ -531,7 +616,7 @@ char dpldir(int imgi,char noleave){
 		if(ilprg(CIL(0))){ dpl.pos.zoom=0; ilsetcimgi(NULL,IMGI_START); }
 		else if(ilcimgi(NULL)==IMGI_START) ilsetcimgi(NULL,0);
 	}
-	dpl.run=0;
+	dplrun(0);
 	dpl.pos.imgiold=imgi;
 	effinit(EFFREF_CLR,0,NULL,-1);
 	sdlforceredraw(); /* TODO remove (for switch to map which does not use eff) */
@@ -542,7 +627,7 @@ char dpldir(int imgi,char noleave){
 #define ADDTXT(...)	{ snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),__VA_ARGS__); txt+=strlen(txt); }
 void dplstatupdate(){
 	char *dsttxt=effstat()->txt;
-	char run=dpl.run!=0;
+	char run=dpl.run.mode!=DRM_OFF;
 	int imgi=ilcimgi(NULL);
 	struct img *img;
 	if(mapstatupdate(dsttxt)) goto end;
@@ -604,7 +689,7 @@ char dplactil(float x,int clickimg){
 	return 1;
 }
 
-enum cmdact {CA_NONE=0x00, CA_FS=0x01, CA_BUBLE=0x02};
+enum cmdact {CA_NONE=0x00, CA_FS=0x01, CA_BUBLE=0x02, CA_FIN=0x04};
 int dplcmdrun(void *arg){
 	char *cmd=arg;
 	enum cmdact ca=cmd[0];
@@ -612,6 +697,7 @@ int dplcmdrun(void *arg){
 	free(arg);
 	if(ca&CA_FS) dpl.fullscreen=1;
 	if(ca&CA_BUBLE) dpl.pos.buble=NULL;
+	if(ca&CA_FIN) dpl.cmdfin=1;
 	return 0;
 }
 
@@ -629,12 +715,13 @@ void dplgimp(){
 char dplmov(){
 	struct img *img=ilcimg(NULL);
 	char *cmd;
-	enum cmdact ca=CA_NONE;
+	enum cmdact ca=CA_FIN;
 	const char *mov;
 	if(!img) return 0;
 	if(!(mov=imgfilemov(img->file))) return 0;
 	if(mov[0]=='m' && sdlfullscreen(0)) ca|=CA_FS;
 	if(mov[0]=='w'){ dpl.pos.buble=img; ca|=CA_BUBLE; effinit(EFFREF_IMG,0,NULL,ilcimgi(NULL)); }
+	dpl.cmdfin=0;
 	cmd=malloc(FILELEN*2);
 	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\" >/dev/null",ca,(ca&CA_FS)?"-fs ":"",mov+1);
 	SDL_CreateThread(dplcmdrun,cmd);
@@ -666,7 +753,7 @@ void dpledit(){
 		else return;
 	}
 	if(!cilsecswitch(type)) return;
-	dpl.run=0;
+	dplrun(0);
 	switch(type){
 	case ILSS_PRGOFF:
 	case ILSS_DIROFF:
@@ -1170,13 +1257,8 @@ char dplev(struct ev *ev){
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;
 	case DE_MARK:    if((evdone=dplwritemode())) dplmark(clickimg,0); break;
 	case DE_MOV:     evdone=dplmov(); break;
-	case DE_STOP:    if(dpl.run) dpl.run=0; else evdone=0; break;
-	case DE_PLAY:
-		if(dpl.pos.ailtyp!=AIL_PRGED && !panoev(PE_PLAY) && dpl.pos.zoom<=0){
-			dplmove(DE_RIGHT,0.f,0.f,-1);
-			dpl.run=dplgetticks();
-		}
-	break;
+	case DE_STOP:    if(!dplrun(0)) evdone=0; break;
+	case DE_PLAY:    if(dpl.pos.ailtyp!=AIL_PRGED && !panoev(PE_PLAY) && dpl.pos.zoom<=0) dplrun(1); break;
 	case DE_KEY: dplkey(ev->key); break;
 	case DE_STAT:
 		if(!dplactil(ev->sx,clickimg)) ret=0;
@@ -1190,7 +1272,6 @@ char dplev(struct ev *ev){
 		dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
 	break;
 	}
-	if(ilcimgi(NULL)==IMGI_END && !dpl.cfg.playmode) dpl.run=0;
 	if(dplwritemode() || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || ilcimgi(NULL)==IMGI_END) ret|=2;
 	return ret;
 }
@@ -1214,18 +1295,6 @@ void dplcheckev(){
 	if(statchg&2 && !dpl.cfg.playrecord) effstaton(statchg);
 }
 
-/***************************** dpl run ****************************************/
-
-void dplrun(){
-	Uint32 time=dplgetticks();
-	unsigned int dpldur = ilcimgi(NULL)==IMGI_END ? 2000 : dpl.cfg.displayduration;
-	if(time-dpl.run>effdelay(ilcimgi(NULL),dpldur)){
-		if(dpl.cfg.playmode && ilcimgi(NULL)==IMGI_END) sdl_quit=1;
-		dpl.run=time;
-		dplevput(DE_RIGHT);
-	}
-}
-
 /***************************** dpl thread *************************************/
 
 void dplcfginit(){
@@ -1244,7 +1313,7 @@ void dplcfginit(){
 	for(;z<0;z++) dplevput(DE_ZOOMIN);
 	memset(dpl.evdelay,0,sizeof(Uint32)*DEG_NUM);
 	if(dpl.cfg.playrecord) dpl.cfg.playmode=1;
-	if(dpl.cfg.playmode) dpl.run=dplgetticks()-dpl.cfg.displayduration+1000;
+	if(dpl.cfg.playmode) dplrun(2);
 }
 
 int dplthread(void *UNUSED(arg)){
@@ -1258,8 +1327,7 @@ int dplthread(void *UNUSED(arg)){
 
 		if(dpl.fullscreen){ sdlfullscreen(1); dpl.fullscreen=0; }
 		ilsftcheck();
-		if(dpl.run) dplrun();
-		else dpl.cfg.playmode=0;
+		if(dpl.run.mode!=DRM_OFF) dplrun(-1);
 		panorun();
 		catforce(CF_CHK);
 		timer(TI_DPL,0,0);

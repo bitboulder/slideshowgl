@@ -336,6 +336,9 @@ char panoev(enum panoev pe){
 }
 
 /* thread: dpl */
+float panorot(){ return pano.rot; }
+
+/* thread: dpl */
 void panorun(){
 	static Uint32 last=0;
 	Uint32 now;
