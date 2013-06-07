@@ -399,10 +399,12 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 		break;
 	}else switch(btn){
 		case SDL_BUTTON_LEFT:
-			if(zoom>0 || mapon())dplevputp(DE_MOVE,sx,sy);
-			else if(doubleclick) dplevputi(DE_MOV|DE_DIR|DE_ZOOMIN,clickimg);
-			else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
-			else                 dplevputi(DE_SEL,clickimg);
+			if(zoom>0 || mapon()) dplevputp(DE_MOVE,sx,sy);
+			else if(doubleclick){
+				if(zoom==0)       dplevputs(DE_LEFT,DES_MOUSE);
+				dplevputi(DE_MOV|DE_DIR|DE_ZOOMIN,clickimg);
+			}else if(zoom==0)     dplevputs(DE_RIGHT,DES_MOUSE);
+			else                  dplevputi(DE_SEL,clickimg);
 		break;
 		case SDL_BUTTON_MIDDLE: if(!mapon()) dplevputi(DE_MARK|DE_STOP|DE_PLAY,clickimg); break;
 		case SDL_BUTTON_RIGHT:
