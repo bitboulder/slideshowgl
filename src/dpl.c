@@ -237,16 +237,17 @@ char dplrun(char dst){
 		if((img=ilcimg(NULL)) && imgldtex(img->ld,TEX_PANO)){
 			dpl.run.mode=DRM_PDO;
 			dpl.run.time=dplgetticks();
-			dpl.run.pit=2;
-			dpl.run.prot=0;
+			dpl.run.pit=dpl.run.prot=0;
 			panoev(PE_PLAY);
 		}
 	break;
 	case DRM_PDO: {
 		char prot=panorot()<0.f ? -1 : 1;
-		if(dpl.run.prot!=prot && dplgetticks()-dpl.run.time>1000){
+		Uint32 dur=dplgetticks()-dpl.run.time;
+		if(dpl.run.prot!=prot && dur>1000){
 			dpl.run.prot=prot;
-			if(--dpl.run.pit<0){
+			if(dur>30000) dpl.run.pit++;
+			if(++dpl.run.pit>2){
 				dplevput(DE_ZOOMOUT);
 				dpl.run.mode=DRM_RET;
 				dpl.run.time=dplgetticks();
