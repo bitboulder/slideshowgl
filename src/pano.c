@@ -68,6 +68,7 @@ struct pano {
 	float rot;
 	char run;
 	enum panomode mode;
+	Uint32 runlast;
 	struct panocfg {
 		float defrot;
 		float minrot;
@@ -77,7 +78,9 @@ struct pano {
 		enum panofm fm;
 		float maxfishangle;
 	} cfg;
-} pano;
+} pano = {
+	.runlast=0,
+};
 
 /* thread: sdl */
 void panoinit(char done){
@@ -268,6 +271,7 @@ char panorender(char sel){
 	struct icol *icol;
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
+	float ecuroff=0.;
 	if(!(img=panoactive())) return 0;
 	if(sel) return 1;
 	ip=img->pano;
@@ -275,6 +279,10 @@ char panorender(char sel){
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
 	ecur=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
+	if(pano.run && pano.runlast){
+		panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
+		ecuroff=-pano.rot*(float)(SDL_GetTicks()-pano.runlast)/1000.f/img->pano->gw*perspectw;
+	}
 	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
@@ -283,7 +291,7 @@ char panorender(char sel){
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
 	else glColor4f(1.f,1.f,1.f,ecur->a);
 	if(mode==PM_PLAIN){
-		float x=ecur->x;
+		float x=ecur->x+ecuroff;
 		while(x<0.f) x+=1.f;
 		while(x>1.f) x-=1.f;
 		glScalef(ip->gw/perspectw,ip->gh/perspecth,1.f);
@@ -293,7 +301,7 @@ char panorender(char sel){
 		glCallList(dl);
 	}else{
 		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
-		glRotatef(-ecur->x*ip->gw, 0.,-1.,0.);
+		glRotatef(-(ecur->x+ecuroff)*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
 	}
 	glPopMatrix();
@@ -340,15 +348,14 @@ float panorot(){ return pano.rot; }
 
 /* thread: dpl */
 void panorun(){
-	static Uint32 last=0;
 	Uint32 now;
 	struct img *img;
 	if(!(img=panoactive())) return;
-	if(!pano.run){ last=0; return; }
+	if(!pano.run){ pano.runlast=0; return; }
 	now=SDL_GetTicks();
-	if(last){
-		float sec=(float)(now-last)/1000.f;
+	if(pano.runlast){
+		float sec=(float)(now-pano.runlast)/1000.f;
 		dplevputp(DE_JUMP,pano.rot*sec,0.f);
 	}
-	last=now;
+	pano.runlast=now;
 }
