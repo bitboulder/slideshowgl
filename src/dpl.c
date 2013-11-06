@@ -844,9 +844,11 @@ void dpldired(char *input,int id){
 void dplmap(){
 	if(mapon()) mapswtype(); else{
 		struct imglist *il=mapsetpos(ilcimg(NULL));
-		cilset(il,-1,0);
-		effinit(EFFREF_ALL,DE_ZOOM,NULL,-1);
-		sdlforceredraw();
+		if(il){
+			cilset(il,-1,0);
+			effinit(EFFREF_ALL,DE_ZOOM,NULL,-1);
+			sdlforceredraw();
+		}
 	}
 }
 
