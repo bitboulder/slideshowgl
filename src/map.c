@@ -96,7 +96,7 @@ struct mapimgs {
 } mapimgs;
 
 struct map {
-	char init;
+	enum mapinit {MI_ALL=0,MI_TEX=1,MI_BDIR=2,MI_NONE=3} init;
 	char *basedirs;
 	enum maptype maptype;
 	struct mappos pos;
@@ -109,7 +109,7 @@ struct map {
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
 } map = {
-	.init = 2,
+	.init = MI_NONE,
 	.basedirs = NULL,
 	.maptype = MT_om,
 	.pos.gx = 13.733098,
@@ -141,7 +141,7 @@ void mapinfo(int i){
 }
 const char *mapgetbasedirs(){ return map.basedirs; }
 void mapeditmode(){
-	if(map.init || !mapon()) return;
+	if(map.init>MI_TEX || !mapon()) return;
 	map.editmode=(map.editmode+1)%N_MEM;
 }
 
@@ -516,7 +516,7 @@ void mapimgclt(int izsel){
 
 struct mapclti *mapfindclt(int i){
 	struct mapclti *clti;
-	if(map.init || !mapon()) return NULL;
+	if(map.init>MI_TEX || !mapon()) return NULL;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i;clti=clti->nxtclt) i--;
 	if(!clti || clti->nimg<1) return NULL;
 	return clti;
@@ -587,7 +587,7 @@ struct imglist *mapsetpos(struct img *img){
 	char set=0;
 	double gx=0.,gy=0.;
 	struct imglist *il;
-	if(map.init) return NULL;
+	if(map.init>MI_TEX) return NULL;
 	if((fn=ilfn(CIL(0))) && (filetype(fn)&FT_DIR)){
 		set=mapgetgps(fn,&gx,&gy,1);
 	}
@@ -700,7 +700,7 @@ char mapldcheck(){
 	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
 	struct ecur *ecur=mapecur(&iz,NULL);
-	if(map.init || !mapon() || !ecur) return 0;
+	if(map.init>MI_TEX || !mapon() || !ecur) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
@@ -751,7 +751,7 @@ void mapfindgps(char *dir){
 void mapaddbasedir(const char *dir,const char *name){
 	size_t ndir;
 	char *bdir;
-	if(!dir){ map.init=1; return; }
+	if(!dir){ map.init=MI_BDIR; return; }
 	if(!dir[0]) return;
 	for(ndir=0,bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2) ndir++;
 	map.basedirs=realloc(map.basedirs,(ndir+1)*FILELEN*2+1);
@@ -763,18 +763,20 @@ void mapaddbasedir(const char *dir,const char *name){
 /* thread: act */
 void mapinit(){
 	char *bdir;
-	while(map.init>1) SDL_Delay(500);
+	while(map.init>2) SDL_Delay(500);
 	mapaddbasedir(cfggetstr("map.base"),"");
 	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
+	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
+	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
+	map.init=MI_TEX;
 	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
 		char dir[FILELEN];
 		snprintf(dir,FILELEN,bdir);
 		mapfindgps(dir);
+		actadd(ACT_MAPCLT,NULL,NULL);
 	}
-	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
-	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
-	map.init=0;
+	map.init=MI_ALL;
 	actadd(ACT_MAPCLT,NULL,NULL);
 }
 
@@ -868,7 +870,7 @@ void maprendermap(){
 	int ixc,iyc;
 	float iscale;
 	struct ecur *ecur=mapecur(&iz,&iscale);
-	float s,r;
+	float s,r=0.f;
 	if(!ecur || !mapscrtis(&iw,&ih)) return;
 	s=powf(2.f,ecur->s-(float)iz);
 	iw=(int)((float)iw*iscale);
@@ -981,7 +983,7 @@ void maprenderinfo(){
 }
 
 char maprender(char sel){
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
 	if(optx) glmodex(GLM_3D,35,0); else glmode(GLM_2D);
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
@@ -1005,7 +1007,7 @@ char mapscrsize(double *gw,double *gh){
 char mapmove(enum dplev ev,float sx,float sy){
 	int dir=DE_DIR(ev);
 	double gw,gh;
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!mapscrsize(&gw,&gh)) return 1;
 	if(ev&(DE_RIGHT|DE_LEFT)){
 		map.pos.gx+=(double)dir*gw/3.f;
@@ -1031,7 +1033,7 @@ char mapmove(enum dplev ev,float sx,float sy){
 /* thread: dpl */
 char mapmovepos(float sx,float sy){
 	double gx0,gx1,gy0,gy1;
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_TEX || !mapon()) return 0;
 	maps2g(0.,0.,map.pos.iz,gx0,gy0);
 	maps2g(sx,sy,map.pos.iz,gx1,gy1);
 	map.pos.gx+=gx1-gx0;
@@ -1059,7 +1061,7 @@ void mapimgsave(const char *dir){
 /* thread: dpl */
 char mapmarkpos(float sx,float sy,const char *dir){
 	double gx,gy;
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_ALL || !mapon()) return 0;
 	if(!(filetype(dir)&FT_DIR)) return 0;
 	maps2g(sx,sy,map.pos.iz,gx,gy);
 	mapimgadd(dir,-1,gx,gy,1);
@@ -1071,7 +1073,7 @@ void mapsearch(struct dplinput *in){
 	struct mapimg *img,*imgf=NULL;
 	size_t pf=1000,ilen=strlen(in->in);
 	int id;
-	if(map.init || !mapon()) return;
+	if(map.init>MI_ALL || !mapon()) return;
 	in->pre[0]='\0';
 	in->post[0]='\0';
 	in->id=-1;
@@ -1096,17 +1098,17 @@ void mapsearch(struct dplinput *in){
 
 /* thread: eff */
 struct mappos *mapgetpos(){
-	if(map.init || !mapon()) return NULL;
+	if(map.init>MI_TEX || !mapon()) return NULL;
 	return &map.pos;
 }
 
 void mapsavepos(){
-	if(map.init || !mapon()) return;
+	if(map.init>MI_TEX || !mapon()) return;
 	map.possave=map.pos;
 }
 
 void maprestorepos(){
-	if(map.init || !mapon()) return;
+	if(map.init>MI_TEX || !mapon()) return;
 	map.pos=map.possave;
 	ileffref(NULL,EFFREF_ALL);
 }
@@ -1115,7 +1117,7 @@ char mapstatupdate(char *dsttxt){
 	double gsx0,gsx1,gsy0,gsy1,t;
 	char fmt[128];
 	char *txt;
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_TEX || !mapon()) return 0;
 	maps2g( .5f,.0f,map.pos.iz,gsx0,t);
 	maps2g(-.5f,.0f,map.pos.iz,gsx1,t);
 	maps2g(.0f, .5f,map.pos.iz,t,gsy0);
@@ -1140,7 +1142,7 @@ char mapstatupdate(char *dsttxt){
 void mapcltmove(int i,float sx,float sy){
 	struct mapclti *clti;
 	float csx,csy;
-	if(map.init || !mapon()) return;
+	if(map.init>MI_ALL || !mapon()) return;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
 	if(!clti) return;
 	mapm2s(clti->mx,clti->my,map.pos.iz,csx,csy);
@@ -1153,7 +1155,7 @@ void mapcltmove(int i,float sx,float sy){
 char mapcltsave(int i){
 	struct mapclti *clti,*ci;
 	double mx=0.,my=0.;
-	if(map.init || !mapon()) return 0;
+	if(map.init>MI_ALL || !mapon()) return 0;
 	for(clti=mapimgs.clt[map.pos.iz].clts;clti && i>0;clti=clti->nxtclt) i--;
 	for(ci=clti;ci;ci=ci->nxtimg){
 		double cmx,cmy;
