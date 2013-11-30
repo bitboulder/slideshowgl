@@ -160,7 +160,6 @@ void actinit(){
 }
 
 int actthread(void *UNUSED(arg)){
-	mapinit();
 	while(!sdl_quit){
 		actcheckdelay(0);
 		if(!actpop()) SDL_Delay(500);

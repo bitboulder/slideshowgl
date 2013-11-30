@@ -152,7 +152,10 @@ int mapldthread(void *arg){
 	long id=(long)arg;
 	if(!mapld.init) return 0;
 	while(!sdl_quit){
-		if(!mapld_get()) SDL_Delay(250);
+		char done=0;
+		if(!id && maploadclt()) done=1;
+		if(mapld_get()) done=1;
+		if(!done) SDL_Delay(250);
 	}
 	switch(id){
 	case 0: sdl_quit|=THR_ML1; break;

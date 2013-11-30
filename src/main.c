@@ -25,6 +25,7 @@
 #include "help.h"
 #include "exich.h"
 #include "act.h"
+#include "map.h"
 
 #if 1
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -387,6 +388,7 @@ int main(int argc,char **argv){
 	exichload();
 	fgetfiles(argc-optind,argv+optind);
 	sdlinit();
+	mapinit();
 	mapldinit();
 	start_threads();
 	if(!end_threads())

@@ -728,12 +728,20 @@ char mapldcheck(){
 	return 0;
 }
 
-void mapfindgps(char *dir){
+struct maploaddir {
+	struct maploaddir *nxt;
+	char dir[FILELEN];
+};
+
+void mapfindgps(struct maploaddir **dirs){
 #if HAVE_OPENDIR
+	struct maploaddir *lddir=dirs[0];
+	char *dir=lddir->dir;
 	size_t ldir=strlen(dir);
 	DIR *dd=opendir(dir);
 	struct dirent *de;
-	if(!dd) return;
+	*dirs=dirs[0]->nxt;
+	if(!dd){ free(lddir); return; }
 	while((de=readdir(dd))){
 		if(de->d_name[0]=='.') continue;
 		if(!strncmp(de->d_name,"gps.txt",7)){
@@ -741,11 +749,36 @@ void mapfindgps(char *dir){
 			mapgetgps(dir,NULL,NULL,0);
 		}else{
 			snprintf(dir+ldir,MAX(NAME_MAX+1,FILELEN-ldir),"/%s",de->d_name);
-			if(filetype(dir)&FT_DIR) mapfindgps(dir);
+			if(filetype(dir)&FT_DIR){
+				struct maploaddir *ndir=malloc(sizeof(struct maploaddir));
+				snprintf(ndir->dir,FILELEN,dir);
+				ndir->nxt=*dirs;
+				*dirs=ndir;
+			}
 		}
 	}
 	closedir(dd);
+	free(lddir);
+	actadd(ACT_MAPCLT,NULL,NULL);
 #endif
+}
+
+char maploadclt(){
+	static struct maploaddir *dirs=NULL;
+	if(map.init!=MI_TEX) return 0;
+	if(!dirs){
+		char *bdir;
+		for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
+			struct maploaddir *ndir=malloc(sizeof(struct maploaddir));
+			snprintf(ndir->dir,FILELEN,bdir);
+			ndir->nxt=dirs;
+			dirs=ndir;
+		}
+	}
+	if(dirs) mapfindgps(&dirs);
+	if(!dirs) map.init=MI_ALL;
+	actadd(ACT_MAPCLT,NULL,NULL);
+	return 1;
 }
 
 void mapaddbasedir(const char *dir,const char *name){
@@ -760,9 +793,7 @@ void mapaddbasedir(const char *dir,const char *name){
 	map.basedirs[(ndir+1)*FILELEN*2]='\0';
 }
 
-/* thread: act */
 void mapinit(){
-	char *bdir;
 	while(map.init>2) SDL_Delay(500);
 	mapaddbasedir(cfggetstr("map.base"),"");
 	map.ftchk=cfggetuint("ld.filetime_check");
@@ -770,14 +801,6 @@ void mapinit(){
 	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
 	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
 	map.init=MI_TEX;
-	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
-		char dir[FILELEN];
-		snprintf(dir,FILELEN,bdir);
-		mapfindgps(dir);
-		actadd(ACT_MAPCLT,NULL,NULL);
-	}
-	map.init=MI_ALL;
-	actadd(ACT_MAPCLT,NULL,NULL);
 }
 
 void maprenderclt(){
