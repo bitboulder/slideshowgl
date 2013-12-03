@@ -702,14 +702,16 @@ int dplcmdrun(void *arg){
 	return 0;
 }
 
-void dplgimp(){
+void dplextprg(const char *prg,char raw){
 	struct img *img=ilcimg(NULL);
 	char *cmd;
+	const char *fn;
 	if(!img) return;
 	if(imgfiledir(img->file)) return;
+	if(!(fn=raw?imgfileraw(img->file):imgfilefn(img->file))) return;
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
-	snprintf(cmd,FILELEN+8,"%cgimp %s",CA_NONE,imgfilefn(img->file));
+	snprintf(cmd,FILELEN+8,"%c%s %s",CA_NONE,prg,fn);
 	SDL_CreateThread(dplcmdrun,cmd);
 }
 
@@ -1194,7 +1196,8 @@ void dplkey(unsigned short keyu){
 	case 't': if(dpl.pos.ailtyp==AIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;
 	case 'l': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer(-1,dpl.actimgi); else dplswloop(); break;
 	case 'L': if(dpl.pos.ailtyp==AIL_PRGED) dpllayer( 1,dpl.actimgi); else dplswloop(); break;
-	case 'G': dplgimp(); break;
+	case 'G': dplextprg("gimp",0); break;
+	case 'U': dplextprg("ufraw",1); break;
 	case '/': dplinputtxtinit(mapon()?ITM_MAPSCH:ITM_SEARCH); break;
 	case 'n': dplsearchnext(); break;
 	case 'h': effsw(ESW_HELP,-1); break;

@@ -17,6 +17,7 @@ char *imgfiledelfn(struct imgfile *ifl);
 char imgfiletfn(struct imgfile *ifl,const char **tfn);
 const char *imgfiledir(struct imgfile *ifl);
 const char *imgfilemov(struct imgfile *ifl);
+const char *imgfileraw(struct imgfile *ifl);
 const char *imgfileimgtxt(struct imgfile *ifl);
 struct txtimg *imgfiletxt(struct imgfile *ifl);
 

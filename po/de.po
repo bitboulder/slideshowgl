@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-01-06 19:20+0100\n"
+"POT-Creation-Date: 2013-12-03 22:09+0100\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -88,7 +88,7 @@ msgstr "Warte auf core dumps und kopiere sie nach ARG/core_dump"
 msgid "Add space seperated files to initial file list"
 msgstr "Durch Leerzeichen getrennte Dateien zu Anfangsliste hinzufügen"
 
-#: src/cfg.c:47 src/dpl_help.h:174
+#: src/cfg.c:47 src/dpl_help.h:175
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -478,82 +478,82 @@ msgstr ""
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/dpl.c:90
+#: src/dpl.c:97
 #, c-format
 msgid "[Catalog]"
 msgstr "[Katalog]"
 
-#: src/dpl.c:91
+#: src/dpl.c:98
 #, c-format
 msgid "[Text]"
 msgstr "[Text]"
 
-#: src/dpl.c:92
+#: src/dpl.c:99
 #, c-format
 msgid "[Number]"
 msgstr "[Nummer]"
 
-#: src/dpl.c:94
+#: src/dpl.c:101
 #, c-format
 msgid "[Search]"
 msgstr "[Suche]"
 
-#: src/dpl.c:96
+#: src/dpl.c:103
 #, c-format
 msgid "[Directory]"
 msgstr "[Verzeichnis]"
 
-#: src/dpl.c:97
+#: src/dpl.c:104
 #, c-format
 msgid "[Mark-File]"
 msgstr "[Markierungsdatei]"
 
-#: src/dpl.c:178
+#: src/dpl.c:185
 #, c-format
 msgid "img pos %.3fx%.3f"
 msgstr ""
 
-#: src/dpl.c:236
+#: src/dpl.c:323
 #, c-format
 msgid "dpl move pos => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:422
+#: src/dpl.c:508
 #, c-format
 msgid "dpl move => imgi %i zoom %i pos %.2fx%.2f"
 msgstr ""
 
-#: src/dpl.c:549
+#: src/dpl.c:635
 #, c-format
 msgid "BEGIN"
 msgstr "ANFANG"
 
-#: src/dpl.c:550
+#: src/dpl.c:636
 #, c-format
 msgid "END"
 msgstr "ENDE"
 
-#: src/dpl.c:565
+#: src/dpl.c:651
 msgid " rotated-right"
 msgstr " rechts-gedreht"
 
-#: src/dpl.c:566
+#: src/dpl.c:652
 msgid " rotated-twice"
 msgstr " doppelt-gedreht"
 
-#: src/dpl.c:567
+#: src/dpl.c:653
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:571 src/map.c:1116
+#: src/dpl.c:657 src/map.c:1162
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
-#: src/dpl.c:572
+#: src/dpl.c:658
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1025
+#: src/dpl.c:1120
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -573,7 +573,7 @@ msgstr ""
 msgid "eff refresh%s%s%s%s%s"
 msgstr ""
 
-#: src/exif.c:37 src/il.c:286
+#: src/exif.c:37 src/il.c:296
 msgid "Date"
 msgstr "Datum"
 
@@ -673,47 +673,47 @@ msgstr ""
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:273 src/sdl.c:298
+#: src/exif.c:277 src/sdl.c:298
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
 
-#: src/exif.c:296
+#: src/exif.c:300
 #, c-format
 msgid "exif loading img %s"
 msgstr ""
 
-#: src/file.c:177
+#: src/file.c:181
 #, c-format
 msgid "thumbinit thumb too old for '%s'"
 msgstr ""
 
-#: src/file.c:185
+#: src/file.c:189
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:187
+#: src/file.c:191
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:243
+#: src/file.c:271
 #, c-format
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:296
+#: src/file.c:325
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:298
+#: src/file.c:327
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:372
+#: src/file.c:401
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
@@ -830,41 +830,41 @@ msgstr ""
 msgid "imglist free for dir: %s"
 msgstr ""
 
-#: src/il.c:285
+#: src/il.c:274
+#, c-format
+msgid "reload imglist: %s"
+msgstr ""
+
+#: src/il.c:295
 msgid "Rnd"
 msgstr "Zufall"
 
-#: src/il.c:287
+#: src/il.c:297
 msgid "File"
 msgstr "Dateiname"
 
-#: src/il.c:288
+#: src/il.c:298
 msgid "None"
 msgstr "Nichts"
 
-#: src/il.c:345
+#: src/il.c:355
 #, c-format
 msgid "iladdimg: image still in il \"%s\""
 msgstr ""
 
-#: src/il.c:371
+#: src/il.c:381
 #, c-format
 msgid "reload cmd: %s"
 msgstr ""
 
-#: src/il.c:468
+#: src/il.c:478
 #, c-format
 msgid "ilcleanup: maxhistory (%i) reached (is there a loop in history?)"
 msgstr ""
 
-#: src/il.c:471
+#: src/il.c:481
 #, c-format
 msgid "ilcleanup state %2i: %7i %s"
-msgstr ""
-
-#: src/il.c:486
-#, c-format
-msgid "reload imglist: %s"
 msgstr ""
 
 #: src/img.c:43
@@ -972,12 +972,12 @@ msgstr ""
 msgid "ldreset done"
 msgstr ""
 
-#: src/main.c:121
+#: src/main.c:122
 #, c-format
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:393
+#: src/main.c:395
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s%s%s%s"
 msgstr ""
@@ -999,20 +999,25 @@ msgstr ""
 msgid "[Map-Selection]"
 msgstr "[Karte-Auswahl]"
 
-#: src/map.c:594
+#: src/map.c:612
 msgid "[Map]"
 msgstr "[Karte]"
 
-#: src/map.c:651
+#: src/map.c:669
 #, c-format
 msgid "map loading map %i/%i/%i"
 msgstr ""
 
-#: src/map.c:1117
+#: src/map.c:1052
+#, c-format
+msgid "map zoom %i (%s)"
+msgstr ""
+
+#: src/map.c:1163
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/map.c:1117
+#: src/map.c:1163
 msgid "Replace"
 msgstr "Ersetzen"
 
@@ -1134,12 +1139,12 @@ msgstr ""
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:491
+#: src/sdl.c:493
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:508
+#: src/sdl.c:510
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
@@ -1355,7 +1360,7 @@ msgstr " [0-9]+m"
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl_help.h:67 src/dpl_help.h:176
+#: src/dpl_help.h:67 src/dpl_help.h:177
 msgid " [0-9]+d"
 msgstr " [0-9]+d"
 
@@ -1379,7 +1384,7 @@ msgstr ""
 msgid "Change color of text"
 msgstr "Farbe eines Textes ändern"
 
-#: src/dpl_help.h:70 src/dpl_help.h:160
+#: src/dpl_help.h:70 src/dpl_help.h:161
 msgid " C"
 msgstr ""
 
@@ -1640,70 +1645,78 @@ msgstr ""
 msgid "Edit current image with gimp"
 msgstr "Aktuelles Bild mit gimp bearbeiten"
 
-#: src/dpl_help.h:160
+#: src/dpl_help.h:159
+msgid " U"
+msgstr ""
+
+#: src/dpl_help.h:159
+msgid "Edit raw image with ufraw"
+msgstr "Aktuelles Roh-Bild mit ufraw bearbeiten"
+
+#: src/dpl_help.h:161
 msgid "Open current image/directory for file-convert-utility"
 msgstr "Aktuelles Bild/Verzeichnis mit Datei-Konvertierung öffnen"
 
-#: src/dpl_help.h:164
+#: src/dpl_help.h:165
 msgid " Image information"
 msgstr " Bildinformationen"
 
-#: src/dpl_help.h:165
+#: src/dpl_help.h:166
 msgid " i/I"
 msgstr ""
 
-#: src/dpl_help.h:165
+#: src/dpl_help.h:166
 msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
-#: src/dpl_help.h:166
+#: src/dpl_help.h:167
 msgid " H"
 msgstr ""
 
-#: src/dpl_help.h:166
+#: src/dpl_help.h:167
 msgid "Show histograms"
 msgstr "Histogramme anzeigen"
 
-#: src/dpl_help.h:167
+#: src/dpl_help.h:168
 msgid " k"
 msgstr ""
 
-#: src/dpl_help.h:167
+#: src/dpl_help.h:168
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl_help.h:171
+#: src/dpl_help.h:172
 msgid " Program interface"
 msgstr " Programmbedienung"
 
-#: src/dpl_help.h:172
+#: src/dpl_help.h:173
 msgid " h"
 msgstr ""
 
-#: src/dpl_help.h:172
+#: src/dpl_help.h:173
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl_help.h:173
+#: src/dpl_help.h:174
 msgid " q/Esc"
 msgstr ""
 
-#: src/dpl_help.h:173
+#: src/dpl_help.h:174
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl_help.h:174
+#: src/dpl_help.h:175
 msgid " f"
 msgstr ""
 
-#: src/dpl_help.h:176
+#: src/dpl_help.h:177
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl_help.h:179
+#: src/dpl_help.h:180
 msgid " p"
 msgstr ""
 
-#: src/dpl_help.h:179
+#: src/dpl_help.h:180
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"

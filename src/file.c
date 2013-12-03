@@ -28,11 +28,13 @@
 #define IMGEXT		"jpg", "jpeg", "png", "tif", "tiff"
 #define MOVEXT		"mov", "avi", "mpg"
 #define WAVEXT		"wav", "mp3", "ogg"
+#define RAWEXT		"ufraw", "cr2"
 #define SLAVEEXT	MOVEXT, "thm"
 const char *const imgext[]  ={ IMGEXT,   NULL };
 const char *const slaveext[]={ SLAVEEXT, NULL };
 const char *const movext[]  ={ MOVEXT,   NULL };
 const char *const wavext[]  ={ WAVEXT,   NULL };
+const char *const rawext[]  ={ RAWEXT,   NULL };
 
 /***************************** imgfile ******************************************/
 
@@ -42,6 +44,7 @@ struct imgfile {
 	char dir;
 	char imgtxt[FILELEN];
 	char mov[FILELEN];
+	char raw[FILELEN];
 	struct txtimg txt;
 	char delfn[FILELEN];
 };
@@ -54,6 +57,7 @@ char *imgfilefn(struct imgfile *ifl){ return ifl->fn; }
 char *imgfiledelfn(struct imgfile *ifl){ return ifl->delfn; }
 const char *imgfiledir(struct imgfile *ifl){ return ifl->dir ? ifl->imgtxt : NULL; }
 const char *imgfilemov(struct imgfile *ifl){ return ifl->mov[0] ? ifl->mov : NULL; }
+const char *imgfileraw(struct imgfile *ifl){ return ifl->raw[0] ? ifl->raw : NULL; }
 const char *imgfileimgtxt(struct imgfile *ifl){ return ifl->imgtxt[0] ? ifl->imgtxt : NULL; }
 struct txtimg *imgfiletxt(struct imgfile *ifl){ return ifl->txt.txt[0] ? &ifl->txt : NULL; }
 
@@ -221,6 +225,30 @@ void fmovinit(struct imgfile *ifl){
 	ifl->mov[0]='\0';
 }
 
+void frawinit(struct imgfile *ifl){
+	int i;
+	snprintf(ifl->raw,FILELEN,ifl->fn);
+	for(i=0;i<2;i++){
+		size_t len=strlen(ifl->raw),ldir;
+		const char *const *ext;
+		while(len>0 && ifl->raw[len-1]!='.') len--;
+		if(!len){ ifl->raw[0]='\0'; return; }
+		for(ext=rawext;ext[0];ext++){
+			snprintf(ifl->raw+len,FILELEN-len,ext[0]);
+			if(filetype(ifl->raw)&FT_FILE) break;
+		}
+		if(ext[0]) break;
+		switch(i){
+		case 0:
+			for(ldir=len;ldir>0 && ifl->fn[ldir-1]!='/' && ifl->fn[ldir-1]!='\\';) ldir--;
+			snprintf(ifl->raw+ldir,FILELEN-ldir,"ori%c",ldir?ifl->fn[ldir-1]:'/');
+			snprintf(ifl->raw+ldir+4,FILELEN-ldir-4,"%s",ifl->fn+ldir);
+		break;
+		case 1: ifl->raw[0]='\0'; break;
+		}
+	}
+}
+
 int faddfile(struct imglist *il,const char *fn,const char *imgtxt,struct imglist *src,char mapbase){
 	struct img *img=NULL;
 	size_t len;
@@ -271,6 +299,7 @@ int faddfile(struct imglist *il,const char *fn,const char *imgtxt,struct imglist
 			memcpy(img->file->fn,fn,len); img->file->fn[len]='\0';
 			fthumbinit(img->file);
 			fmovinit(img->file);
+			frawinit(img->file);
 			imgpanoload(img->pano,fn);
 			imgposmark(img,MPC_YES);
 		}
@@ -412,6 +441,7 @@ char fimgswitchmod(struct img *img){
 	snprintf(ifl->fn,FILELEN,fn);
 	fthumbinit(ifl);
 	fmovinit(ifl);
+	frawinit(ifl);
 	imgpanoload(img->pano,fn);
 	markimgmove(img);
 	imgposmark(img,MPC_RESET);

@@ -156,6 +156,7 @@ __(" s")"\0"                   __("Enter and toggle image catalog")"\0"
 __(" S")"\0"                   __("Copy catalogs from last marked image (only if an image is active)")"\0"
 #endif
 __(" G")"\0"                   __("Edit current image with gimp")"\0"
+__(" U")"\0"                   __("Edit raw image with ufraw")"\0"
 #ifndef IF_PRGED
 __(" C")"\0"                   __("Open current image/directory for file-convert-utility")"\0"
 #endif
