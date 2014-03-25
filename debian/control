@@ -7,6 +7,6 @@ Standards-Version: 2.0.0
 
 Package: slideshowgl
 Architecture: any
-Depends: libgl1, libglu1, libglew1.7, libsdl1.2debian, libsdl-image1.2, libexif12, libftgl2, libx11-6, libxext6, libcurl3, libz1
+Depends: libgl1, libglu1, libglew1.10, libsdl1.2debian, libsdl-image1.2, libexif12, libftgl2, libx11-6, libxext6, libcurl3, libz1
 Description: myjpegtool
 

@@ -13,6 +13,7 @@
 #include "help.h"
 #include "cfg.h"
 #include "sdl.h"
+#include "map.h"
 
 #define N_TIS 6
 
