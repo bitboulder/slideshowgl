@@ -311,17 +311,20 @@ int watchcoredump(int *ret,int argc,char **argv){
 	waitpid(pid,&status,0);
 	*ret = WIFEXITED(status) ? WIFEXITED(status) : 1;
 	if(WIFSIGNALED(status) && WCOREDUMP(status)){
+		char core[64];
 		char cdir[FILELEN];
 		char cmd[FILELEN*2];
 		time_t t=time(NULL);
 		struct tm *tm=localtime(&t);
 		int i;
 		FILE *fd;
+		snprintf(core,64,"core.%i",pid);
+		if(filetype(core)!=FT_FILE) snprintf(core,64,"core");
 		snprintf(cdir,FILELEN,"%s/core_dump/%04i%02i%02i_%02i%02i%02i",dir,
 			tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,
 			tm->tm_hour,tm->tm_min,tm->tm_sec);
 		mkdirm(cdir,0);
-		snprintf(cmd,FILELEN*2,"mv core %s/",cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"mv %s %s/",core,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"cp %s/build/slideshowgl %s/",dir,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"svn info %s >%s/svn-info",dir,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"svn diff %s >%s/svn-diff",dir,cdir); system(cmd);
