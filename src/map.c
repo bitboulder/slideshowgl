@@ -41,7 +41,7 @@
 
 #define N_ZOOM	22
 
-#define MAPTYPE E(om,18)
+#define MAPTYPE E(om,19)
 #define E(X,Y)	MT_##X
 enum maptype { MAPTYPE, MT_NUM };
 #undef E

@@ -726,7 +726,7 @@ char dplmov(){
 	if(mov[0]=='w'){ dpl.pos.buble=img; ca|=CA_BUBLE; effinit(EFFREF_IMG,0,NULL,ilcimgi(NULL)); }
 	dpl.cmdfin=0;
 	cmd=malloc(FILELEN*2);
-	snprintf(cmd,FILELEN*2,"%cmplayer %s\"%s\" >/dev/null",ca,(ca&CA_FS)?"-fs ":"",mov+1);
+	snprintf(cmd,FILELEN*2,"%cmpv %s\"%s\" >/dev/null",ca,(ca&CA_FS)?"-fs ":"",mov+1);
 	SDL_CreateThread(dplcmdrun,cmd);
 	return 1;
 }
