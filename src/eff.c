@@ -575,7 +575,7 @@ char effdoimg(struct img *img){
 	char effon=0;
 	char chg=0;
 	if(!img->pos->eff) return 0;
-	if(!ip->cur.act) return 0;
+	if(!ip->cur.act){ img->pos->eff=0; return 0; }
 	for(i=0;i<NIPOS;i++){
 		if(effdoeval(ip->a+i,time)) chg=1;
 		if(ip->a[i].tdst) effon=1;
