@@ -901,6 +901,8 @@ void maprendermap(){
 	mapg2i(ecur->x,ecur->y,iz,ix,iy);
 	mapg2o(ecur->x,ecur->y,iz,ox,oy);
 	glPushMatrix();
+//	glRotatef(90.f,0.f,0.f,1.f);
+//	glScalef(16.f/9.f,9.f/16.f,0.f);
 	if(optx){
 //	glTranslated(0.f,0.f,*map.scr_h*M_PI/256./(1<<iz)/tan(35./2.)+1.f);
 	r=0.19f*powf(2.f,ecur->s);
