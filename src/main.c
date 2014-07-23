@@ -1,4 +1,9 @@
 #include "config.h"
+#ifndef __WIN32__
+	#define _POSIX_C_SOURCE 200809L
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -150,7 +155,7 @@ struct mainthread {
 
 int threadid(){
 	struct mainthread *mt=mainthreads;
-	Uint32 id=SDL_ThreadID();
+	SDL_threadID id=SDL_ThreadID();
 	int i=0;
 	for(;mt->fnc;mt++,i++) if(mt->init && mt->pt && SDL_GetThreadID(mt->pt)==id) return i;
 	return 0;
@@ -173,7 +178,7 @@ void start_threads(){
 #endif
 	mainthreads->init=1;
 	for(;mt->fnc;mt++) if(!mt->init){
-		mt->pt=SDL_CreateThread(mt->fnc,mt->data);
+		mt->pt=SDL_CreateThread(mt->fnc,mt->name,mt->data);
 		mt->init=1;
 	}
 #if 0
