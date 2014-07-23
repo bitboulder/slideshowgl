@@ -42,8 +42,8 @@ SDL_Surface *JPG_LoadSwap(const char *fn){
 		cinfo.out_color_space=JCS_CMYK;
 		cinfo.quantize_colors=FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
-		img=SDL_AllocSurface(SDL_SWSURFACE,
-				(int)cinfo.output_height,(int)cinfo.output_width,32,
+		img=SDL_CreateRGBSurface(0,
+				(int)cinfo.output_width,(int)cinfo.output_height,32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
 #else
@@ -60,7 +60,7 @@ SDL_Surface *JPG_LoadSwap(const char *fn){
 		cinfo.do_fancy_upsampling=FALSE;
 #endif
 		jpeg_calc_output_dimensions(&cinfo);
-		img=SDL_AllocSurface(SDL_SWSURFACE,
+		img=SDL_CreateRGBSurface(0,
 				(int)cinfo.output_height,(int)cinfo.output_width,24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x0000FF, 0x00FF00, 0xFF0000,

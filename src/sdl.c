@@ -1,4 +1,8 @@
 #include "config.h"
+#ifndef __WIN32__
+	#define _POSIX_C_SOURCE 200112L
+	#include <features.h>
+#endif
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_thread.h>
@@ -28,7 +32,7 @@
 
 char sdl_quit = 0;
 
-SDL_Surface *screen;
+SDL_Window *wnd;
 
 struct sdlcfg {
 	Uint32 hidecursor;
@@ -42,7 +46,7 @@ struct sdlcfg {
 };
 
 struct sdlmove {
-	Uint16 base_x, base_y;
+	Sint32 base_x, base_y;
 	int pos_x, pos_y;
 	int clickimg;
 	unsigned short mid;
@@ -62,7 +66,7 @@ struct sdl {
 	struct sdlclickdelay {
 		Uint32 time;
 		Uint8 btn;
-		Uint16 x,y;
+		Sint32 x,y;
 		int clickimg;
 	} clickdelay;
 	Uint32 lastfrm;
@@ -162,7 +166,7 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 }
 #endif
 {
-	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags);
+/*	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags); TODO: check
 	if(modes==(SDL_Rect**)-1) error(ERR_CONT,"sdl All fullscreen modes available");
 	else if(modes==(SDL_Rect**)0 || !modes[0]) error(ERR_CONT,"sdl No fullscreen modes available");
 	else{
@@ -170,30 +174,32 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 		*w=*h=0;
 		for(i=0;modes[i];i++) if(modes[i]->w>*w){ *w=modes[i]->w; *h=modes[i]->h; }
 	}
-	return *w && *h;
+	return *w && *h;*/
 }
+	return 0;
 }
 	
 void sdlresize(int w,int h){
 	static char done=0;
-	Uint32 flags=SDL_OPENGL;
-	const SDL_VideoInfo *vi;
+	Uint32 flags=SDL_WINDOW_OPENGL;
+	SDL_Renderer *rnd;
 	GLenum glerr;
 	struct subdpl subdpl={.set=0};
+	int wndw,wndh;
 	sdl.doresize=0;
-	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_FULLSCREEN,&w,&h,&subdpl)){
+	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_WINDOW_FULLSCREEN,&w,&h,&subdpl)){
 		if(subdpl.set && sdl.cfg.envdisplay){
 			subdpl.set=0;
 			w=subdpl.w;
 			h=subdpl.h;
 			debug(DBG_STA,"sdl set video mode fullscreen %ix%i on display %i",w,h,sdl.cfg.display);
 		}else debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
-		flags|=SDL_FULLSCREEN;
+		flags|=SDL_WINDOW_FULLSCREEN;
 	}else{
 		if(!w) w=sdl.scr_w;
 		if(!h) h=sdl.scr_h;
 		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		flags|=SDL_RESIZABLE;
+		flags|=SDL_WINDOW_RESIZABLE;
 	}
 	if(done>=0){
 		if(w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh){
@@ -201,11 +207,11 @@ void sdlresize(int w,int h){
 			sdl.cfg.fsaa=0;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync);
+		/*SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync); TODO: check */
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
 	}
-	if(!(screen=SDL_SetVideoMode(w,h,16,flags))){
+	if(SDL_CreateWindowAndRenderer(w,h,flags,&wnd,&rnd)<0){
 		if(!done && sdl.cfg.fsaa){
 			error(ERR_CONT,"disable anti-aliasing for mode failure");
 			sdl.cfg.fsaa=0;
@@ -213,25 +219,25 @@ void sdlresize(int w,int h){
 			return;
 		}else error(ERR_QUIT,"video mode init failed");
 	}
-	vi=SDL_GetVideoInfo();
-	debug(DBG_STA,"sdl get video mode %ix%i",vi->current_w,vi->current_h);
-	if(subdpl.set && vi->current_w>=subdpl.x+subdpl.w && vi->current_h>=subdpl.y+subdpl.h){
+	SDL_GetWindowSize(wnd,&wndw,&wndh);
+	debug(DBG_STA,"sdl get video mode %ix%i",wndw,wndh);
+	if(subdpl.set && wndw>=subdpl.x+subdpl.w && wndh>=subdpl.y+subdpl.h){
 		sdl.scr_w=subdpl.w;
 		sdl.scr_h=subdpl.h;
 		debug(DBG_STA,"sdl sub display at %ix%i size %ix%i",subdpl.x,subdpl.y,subdpl.w,subdpl.h);
 	}else{
-		sdl.scr_w=vi->current_w;
-		sdl.scr_h=vi->current_h;
+		sdl.scr_w=wndw;
+		sdl.scr_h=wndh;
 	}
 	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
 	if(subdpl.set){
-		sdl.off_y=vi->current_h-subdpl.h-subdpl.y;
+		sdl.off_y=wndh-subdpl.h-subdpl.y;
 		glViewport(subdpl.x,sdl.off_y,subdpl.w,subdpl.h);
 	}else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	if(done>=0){
 		int sync;
-		SDL_WM_SetCaption("Slideshowgl","slideshowgl");
-		if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync)<0 || sync!=1) sdl.sync=0;
+		SDL_SetWindowTitle(wnd,"Slideshowgl");
+		/*if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync)<0 || sync!=1) sdl.sync=0; TODO: check */
 		glinit(done);
 		panoinit(done);
 		if(done>0) ldreset();
@@ -260,7 +266,7 @@ void sdlicon(){
 		}
 	}
 #endif
-	SDL_WM_SetIcon(icon,NULL);
+	SDL_SetWindowIcon(wnd,icon);
 	SDL_FreeSurface(icon);
 }
 
@@ -290,12 +296,11 @@ void sdlinit(){
 #endif
 	}
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
-	SDL_EnableUNICODE(1);
+	/*SDL_EnableUNICODE(1); TODO: check */
 	if(cfggetint("cfg.version")){
-		const SDL_version* v = SDL_Linked_Version();
-		char buf[32];
-		mprintf("SDL-Version: %i.%i.%i (video: %s)\n",v->major,v->minor,v->patch,
-				SDL_VideoDriverName(buf,32)?buf:_("(unknown)"));
+		SDL_version v;
+		SDL_GetVersion(&v);
+		mprintf("SDL-Version: %i.%i.%i\n",v.major,v.minor,v.patch);
 	}
 	sdlicon();
 	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
@@ -309,7 +314,7 @@ void sdlquit(){
 	SDL_Quit();
 }
 
-void sdlkey(SDL_keysym key){
+void sdlkey(SDL_Keysym key){
 	switch(key.sym){
 		case SDLK_RIGHT:    dplevput(DE_RIGHT);   break;
 		case SDLK_LEFT:     dplevput(DE_LEFT);    break;
@@ -320,11 +325,11 @@ void sdlkey(SDL_keysym key){
 		case SDLK_KP_ENTER: dplevputk(' ');       break;
 		case SDLK_HOME:     dplevputi(DE_SEL,0); break;
 		case SDLK_END:      dplevputi(DE_SEL,IMGI_END-1); break;
-		default:            if(key.unicode) dplevputk(key.unicode); break;
+		/*default:            if(key.unicode) dplevputk(key.unicode); break; TODO: key->char */
 	}
 }
 
-char sdljump(Uint16 x,Uint16 y,char end){
+char sdljump(Sint32 x,Sint32 y,char end){
 	int xd=x-sdl.move.base_x, yd=y-sdl.move.base_y;
 	int zoom=dplgetzoom();
 	int w=100,wthr;
@@ -363,7 +368,7 @@ char sdljump(Uint16 x,Uint16 y,char end){
 	return 1;
 }
 
-void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
+void sdlclick(Uint8 btn,Sint32 x,Sint32 y,int clickimg){
 	int zoom=dplgetzoom();
 	float sx=(float)x/(float)sdl.scr_w-.5f;
 	float sy=(float)y/(float)sdl.scr_h-.5f;
@@ -414,7 +419,7 @@ void sdlclick(Uint8 btn,Uint16 x,Uint16 y,int clickimg){
 	}
 }
 
-void sdlmotion(Uint16 x,Uint16 y){
+void sdlmotion(Sint32 x,Sint32 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
 	SDL_ShowCursor(SDL_ENABLE);
@@ -426,9 +431,7 @@ void sdlmotion(Uint16 x,Uint16 y){
 	else dplevputs(DE_STAT,DES_MOUSE);
 }
 
-void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
-	float fx = (float)x/(float)sdl.scr_w - .5f;
-	float fy = (float)y/(float)sdl.scr_h - .5f;
+void sdlbutton(char down,Uint8 button,Sint32 x,Sint32 y){
 	int clickimg = glselect(x,y+sdl.off_y);
 	if(down) switch(button){
 		case SDL_BUTTON_RIGHT:
@@ -449,9 +452,14 @@ void sdlbutton(char down,Uint8 button,Uint16 x,Uint16 y){
 			sdl.move.base_x=0xffff;
 		break;
 		case SDL_BUTTON_MIDDLE:    sdlclick(button,x,y,clickimg);         break;
-		case SDL_BUTTON_WHEELUP:   dplevputpi(DE_ZOOMIN, fx,fy,clickimg); break;
-		case SDL_BUTTON_WHEELDOWN: dplevputpi(DE_ZOOMOUT,fx,fy,clickimg); break;
 	}
+}
+
+void sdlwheel(Sint32 wy,Sint32 x,Sint32 y){
+	float fx = (float)x/(float)sdl.scr_w - .5f;
+	float fy = (float)y/(float)sdl.scr_h - .5f;
+	int clickimg = glselect(x,y+sdl.off_y);
+	dplevputpi(wy<0?DE_ZOOMIN:DE_ZOOMOUT,fx,fy,clickimg);
 }
 
 void sdlhidecursor(){
@@ -464,12 +472,16 @@ char sdlgetevent(){
 	SDL_Event ev;
 	if(!SDL_PollEvent(&ev)) return 1;
 	switch(ev.type){
-	case SDL_VIDEORESIZE: sdlresize(ev.resize.w,ev.resize.h); break;
-	case SDL_VIDEOEXPOSE: sdlforceredraw(); break;
+	case SDL_WINDOWEVENT:
+		switch(ev.window.event){
+		case SDL_WINDOWEVENT_RESIZED: sdlresize(ev.window.data1,ev.window.data2); break;
+		case SDL_WINDOWEVENT_EXPOSED: sdlforceredraw(); break;
+		} break;
 	case SDL_KEYDOWN: sdlkey(ev.key.keysym); break;
 	case SDL_MOUSEMOTION: sdlmotion(ev.motion.x,ev.motion.y); break;
 	case SDL_MOUSEBUTTONDOWN: sdlbutton(1,ev.button.button,ev.button.x,ev.button.y); break;
 	case SDL_MOUSEBUTTONUP:   sdlbutton(0,ev.button.button,ev.button.x,ev.button.y); break;
+	case SDL_MOUSEWHEEL:      sdlwheel(ev.wheel.y,ev.button.x,ev.button.y); break;
 	case SDL_QUIT: return 0;
 	}
 	return 1;
@@ -537,7 +549,7 @@ int sdlthread(void *UNUSED(arg)){
 		if(sdl.cfg.playrecord) sdlsaveframe();
 		timer(TI_SDL,4,1);
 
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(wnd);
 		timer(TI_SDL,5,1);
 
 

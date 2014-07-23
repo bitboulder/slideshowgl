@@ -712,7 +712,7 @@ void dplextprg(const char *prg,char raw){
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
 	snprintf(cmd,FILELEN+8,"%c%s %s",CA_NONE,prg,fn);
-	SDL_CreateThread(dplcmdrun,cmd);
+	SDL_CreateThread(dplcmdrun,"dplextprg",cmd);
 }
 
 char dplmov(){
@@ -727,7 +727,7 @@ char dplmov(){
 	dpl.cmdfin=0;
 	cmd=malloc(FILELEN*2);
 	snprintf(cmd,FILELEN*2,"%cmpv %s\"%s\" >/dev/null",ca,(ca&CA_FS)?"-fs ":"",mov+1);
-	SDL_CreateThread(dplcmdrun,cmd);
+	SDL_CreateThread(dplcmdrun,"dplmov",cmd);
 	return 1;
 }
 
@@ -739,7 +739,7 @@ void dplconvert(){
 	sdlfullscreen(0);
 	cmd=malloc(FILELEN*8);
 	snprintf(cmd,FILELEN+8,"%ccnv_ui -img %s",CA_NONE,imgfilefn(img->file));
-	SDL_CreateThread(dplcmdrun,cmd);
+	SDL_CreateThread(dplcmdrun,"dplconvert",cmd);
 }
 
 void dplswloop(){ ilcfgswloop(); effinit(EFFREF_ALL,0,NULL,-1); }

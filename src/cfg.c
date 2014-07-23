@@ -1,3 +1,7 @@
+#ifndef __WIN32__
+	#define _POSIX_C_SOURCE 2
+	#include <features.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
