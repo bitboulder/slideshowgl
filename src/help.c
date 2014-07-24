@@ -1,3 +1,7 @@
+#ifndef __WIN32__
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <SDL.h>
 #include <math.h>
 #include <iconv.h>
