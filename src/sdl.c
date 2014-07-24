@@ -32,7 +32,7 @@
 
 char sdl_quit = 0;
 
-SDL_Window *wnd;
+SDL_Window *wnd=NULL;
 
 struct sdlcfg {
 	Uint32 hidecursor;
@@ -211,14 +211,9 @@ void sdlresize(int w,int h){
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
 	}
-	if(SDL_CreateWindowAndRenderer(w,h,flags,&wnd,&rnd)<0){
-		if(!done && sdl.cfg.fsaa){
-			error(ERR_CONT,"disable anti-aliasing for mode failure");
-			sdl.cfg.fsaa=0;
-			sdlresize(w,h);
-			return;
-		}else error(ERR_QUIT,"video mode init failed");
-	}
+	if(!wnd && SDL_CreateWindowAndRenderer(w,h,flags,&wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
+	SDL_SetWindowSize(wnd,w,h);
+	if(SDL_SetWindowFullscreen(wnd,sdl.fullscreen)<0) error(ERR_CONT,"fullscreen failed");
 	SDL_GetWindowSize(wnd,&wndw,&wndh);
 	debug(DBG_STA,"sdl get video mode %ix%i",wndw,wndh);
 	if(subdpl.set && wndw>=subdpl.x+subdpl.w && wndh>=subdpl.y+subdpl.h){
