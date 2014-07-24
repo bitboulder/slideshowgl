@@ -60,6 +60,7 @@ struct sdl {
 	int scrnof_w, scrnof_h;
 	Uint32 hidecursor;
 	struct sdlmove move;
+	Sint32 mousex,mousey;
 	char fullscreen;
 	char doresize;
 	char sync;
@@ -79,6 +80,8 @@ struct sdl {
 	.sync       = 0,
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
+	.mousex     = 0,
+	.mousey     = 0,
 	.clickdelay.time = 0,
 	.lastfrm    = 0,
 };
@@ -417,6 +420,7 @@ void sdlclick(Uint8 btn,Sint32 x,Sint32 y,int clickimg){
 void sdlmotion(Sint32 x,Sint32 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
+	sdl.mousex=x; sdl.mousey=y;
 	SDL_ShowCursor(SDL_ENABLE);
 	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
@@ -450,11 +454,11 @@ void sdlbutton(char down,Uint8 button,Sint32 x,Sint32 y){
 	}
 }
 
-void sdlwheel(Sint32 wy,Sint32 x,Sint32 y){
-	float fx = (float)x/(float)sdl.scr_w - .5f;
-	float fy = (float)y/(float)sdl.scr_h - .5f;
-	int clickimg = glselect(x,y+sdl.off_y);
-	dplevputpi(wy<0?DE_ZOOMIN:DE_ZOOMOUT,fx,fy,clickimg);
+void sdlwheel(Sint32 wy){
+	float fx = (float)sdl.mousex/(float)sdl.scr_w - .5f;
+	float fy = (float)sdl.mousey/(float)sdl.scr_h - .5f;
+	int clickimg = glselect(sdl.mousex,sdl.mousey+sdl.off_y);
+	dplevputpi(wy<0?DE_ZOOMOUT:DE_ZOOMIN,fx,fy,clickimg);
 }
 
 void sdlhidecursor(){
@@ -476,7 +480,7 @@ char sdlgetevent(){
 	case SDL_MOUSEMOTION: sdlmotion(ev.motion.x,ev.motion.y); break;
 	case SDL_MOUSEBUTTONDOWN: sdlbutton(1,ev.button.button,ev.button.x,ev.button.y); break;
 	case SDL_MOUSEBUTTONUP:   sdlbutton(0,ev.button.button,ev.button.x,ev.button.y); break;
-	case SDL_MOUSEWHEEL:      sdlwheel(ev.wheel.y,ev.button.x,ev.button.y); break;
+	case SDL_MOUSEWHEEL:      sdlwheel(ev.wheel.y); break;
 	case SDL_QUIT: return 0;
 	}
 	return 1;
