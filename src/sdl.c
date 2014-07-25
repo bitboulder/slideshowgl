@@ -32,8 +32,6 @@
 
 char sdl_quit = 0;
 
-SDL_Window *wnd=NULL;
-
 struct sdlcfg {
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
@@ -57,13 +55,13 @@ struct sdl {
 	struct sdlcfg cfg;
 	int scr_w, scr_h;
 	int off_y;
-	int scrnof_w, scrnof_h;
 	Uint32 hidecursor;
 	struct sdlmove move;
 	Sint32 mousex,mousey;
 	char fullscreen;
-	char doresize;
+	char dofullscreen;
 	char sync;
+	SDL_Window *wnd;
 	struct sdlclickdelay {
 		Uint32 time;
 		Uint8 btn;
@@ -76,7 +74,7 @@ struct sdl {
 	.scr_w      = 0,
 	.scr_h      = 0,
 	.off_y      = 0,
-	.doresize   = 0,
+	.dofullscreen= 0,
 	.sync       = 0,
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
@@ -119,16 +117,8 @@ void switchdpms(char UNUSED(val)){ }
 /* thread: dpl */
 char sdlfullscreen(char dst){
 	if(dst==sdl.fullscreen) return 0;
-	if(sdl.fullscreen){
-		sdl.scr_w=sdl.scrnof_w;
-		sdl.scr_h=sdl.scrnof_h;
-		sdl.fullscreen=0;
-	}else{
-		sdl.scrnof_w=sdl.scr_w;
-		sdl.scrnof_h=sdl.scr_h;
-		sdl.fullscreen=1;
-	}
-	sdl.doresize=1;
+	sdl.fullscreen=dst;
+	sdl.dofullscreen=1;
 	return 1;
 }
 
@@ -137,7 +127,7 @@ struct subdpl {
 	int x,y,w,h;
 };
 
-#if HAVE_X11 && HAVE_XINERAMA
+/*#if HAVE_X11 && HAVE_XINERAMA
 char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl)
 #else
 char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdpl))
@@ -168,7 +158,7 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 	XCloseDisplay(display);
 }
 #endif
-{
+{*/
 /*	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags); TODO: check
 	if(modes==(SDL_Rect**)-1) error(ERR_CONT,"sdl All fullscreen modes available");
 	else if(modes==(SDL_Rect**)0 || !modes[0]) error(ERR_CONT,"sdl No fullscreen modes available");
@@ -178,77 +168,52 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 		for(i=0;modes[i];i++) if(modes[i]->w>*w){ *w=modes[i]->w; *h=modes[i]->h; }
 	}
 	return *w && *h;*/
-}
+/*}
 	return 0;
-}
+}*/
 	
 void sdlresize(int w,int h){
-	static char done=0;
-	Uint32 flags=SDL_WINDOW_OPENGL;
-	SDL_Renderer *rnd;
-	GLenum glerr;
-	struct subdpl subdpl={.set=0};
-	int wndw,wndh;
-	sdl.doresize=0;
-	if(sdl.fullscreen && sdlgetfullscreenmode(flags|SDL_WINDOW_FULLSCREEN,&w,&h,&subdpl)){
-		if(subdpl.set && sdl.cfg.envdisplay){
-			subdpl.set=0;
-			w=subdpl.w;
-			h=subdpl.h;
-			debug(DBG_STA,"sdl set video mode fullscreen %ix%i on display %i",w,h,sdl.cfg.display);
-		}else debug(DBG_STA,"sdl set video mode fullscreen %ix%i",w,h);
-		flags|=SDL_WINDOW_FULLSCREEN;
-	}else{
-		if(!w) w=sdl.scr_w;
-		if(!h) h=sdl.scr_h;
-		debug(DBG_STA,"sdl set video mode %ix%i",sdl.scr_w,sdl.scr_h);
-		flags|=SDL_WINDOW_RESIZABLE;
+	int fsaa=sdl.cfg.fsaa;
+	debug(DBG_STA,"sdl window resize %ix%i",w,h);
+	sdl.scr_w=w; sdl.scr_h=h;
+	if(fsaa && (w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh)){
+		debug(DBG_STA,"disable anti-aliasing for window size");
+		fsaa=0;
 	}
-	if(done>=0){
-		if(w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh){
-			debug(DBG_STA,"disable anti-aliasing for window size");
-			sdl.cfg.fsaa=0;
-		}
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-		/*SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL,sdl.sync); TODO: check */
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,sdl.cfg.fsaa?1:0);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,sdl.cfg.fsaa);
-	}
-	if(!wnd && SDL_CreateWindowAndRenderer(w,h,flags,&wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
-	SDL_SetWindowSize(wnd,w,h);
-	if(SDL_SetWindowFullscreen(wnd,sdl.fullscreen)<0) error(ERR_CONT,"fullscreen failed");
-	SDL_GetWindowSize(wnd,&wndw,&wndh);
-	debug(DBG_STA,"sdl get video mode %ix%i",wndw,wndh);
-	if(subdpl.set && wndw>=subdpl.x+subdpl.w && wndh>=subdpl.y+subdpl.h){
-		sdl.scr_w=subdpl.w;
-		sdl.scr_h=subdpl.h;
-		debug(DBG_STA,"sdl sub display at %ix%i size %ix%i",subdpl.x,subdpl.y,subdpl.w,subdpl.h);
-	}else{
-		sdl.scr_w=wndw;
-		sdl.scr_h=wndh;
-	}
-	if((glerr=glGetError())) error(ERR_CONT,"in sdl view mode (gl-err: %d)",glerr);
-	if(subdpl.set){
-		sdl.off_y=wndh-subdpl.h-subdpl.y;
-		glViewport(subdpl.x,sdl.off_y,subdpl.w,subdpl.h);
-	}else glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
-	if(done>=0){
-		int sync;
-		SDL_SetWindowTitle(wnd,"Slideshowgl");
-		/*if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL,&sync)<0 || sync!=1) sdl.sync=0; TODO: check */
-		glinit(done);
-		panoinit(done);
-		if(done>0) ldreset();
-		debug(DBG_STA,"sdl init (%ssync)",sdl.sync?"":"no");
-		if((glerr=glGetError())) error(ERR_CONT,"in sdlinit (gl-err: %d)",glerr);
-	}
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,fsaa?1:0);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,fsaa);
+	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	ileffref(CIL_ALL,EFFREF_FIT);
 	sdlforceredraw();
-#ifdef __WIN32__
-	done=1;
-#else
-	done=-1;
-#endif
+}
+
+void sdlinitfullscreen(){
+	sdl.dofullscreen=0;
+	if(sdl.fullscreen){
+		SDL_SetWindowPosition(sdl.wnd,0,0); // TODO: set position according to desired display
+		SDL_SetWindowFullscreen(sdl.wnd,SDL_WINDOW_FULLSCREEN_DESKTOP);
+	}else{
+		SDL_SetWindowFullscreen(sdl.wnd,0);
+	}
+}
+
+void sdlinitwnd(){
+	GLenum glerr;
+	SDL_Renderer *rnd;
+	if(SDL_CreateWindowAndRenderer(sdl.scr_w,sdl.scr_h,SDL_WINDOW_OPENGL,&sdl.wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
+	SDL_GetWindowSize(sdl.wnd,&sdl.scr_w,&sdl.scr_h);
+	debug(DBG_STA,"sdl init window %ix%i",sdl.scr_w,sdl.scr_h);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+	if(sdl.sync && SDL_GL_SetSwapInterval(-1)<0 && SDL_GL_SetSwapInterval(1)<0){
+		sdl.sync=0;
+		error(ERR_CONT,"swap interval failed");
+	}
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+	sdlinitfullscreen();
+	if((glerr=glGetError())) error(ERR_CONT,"in sdl window creation (gl-err: %d)",glerr);
+	glinit(0);
+	panoinit(0);
+	if((glerr=glGetError())) error(ERR_CONT,"in glinit (gl-err: %d)",glerr);
 }
 
 void sdlicon(){
@@ -264,7 +229,7 @@ void sdlicon(){
 		}
 	}
 #endif
-	SDL_SetWindowIcon(wnd,icon);
+	SDL_SetWindowIcon(sdl.wnd,icon);
 	SDL_FreeSurface(icon);
 }
 
@@ -272,16 +237,16 @@ void sdlinit(){
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
-	sdl.scrnof_w=cfggetint("sdl.width");
-	sdl.scrnof_h=cfggetint("sdl.height");
+	sdl.scr_w=cfggetint("sdl.width");
+	sdl.scr_h=cfggetint("sdl.height");
 	sdl.cfg.doubleclicktime=cfggetuint("sdl.doubleclicktime");
 	sdl.cfg.fsaa=cfggetint("sdl.fsaa");
 	sdl.cfg.fsaamaxw=cfggetint("sdl.fsaa_max_w");
 	sdl.cfg.fsaamaxh=cfggetint("sdl.fsaa_max_h");
 	sdl.cfg.playrecord=cfggetstr("sdpl.playrecord");
 	if(sdl.cfg.playrecord && sdl.cfg.playrecord[0]){
-		sdl.scrnof_w=cfggetint("sdl.playrecord_w");
-		sdl.scrnof_h=cfggetint("sdl.playrecord_h");
+		sdl.scr_w=cfggetint("sdl.playrecord_w");
+		sdl.scr_h=cfggetint("sdl.playrecord_h");
 		sdl.fullscreen=0;
 	}else sdl.cfg.playrecord=NULL;
 	{
@@ -300,8 +265,9 @@ void sdlinit(){
 		SDL_GetVersion(&v);
 		mprintf("SDL-Version: %i.%i.%i\n",v.major,v.minor,v.patch);
 	}
+	sdlinitwnd();
 	sdlicon();
-	sdlresize(sdl.scrnof_w,sdl.scrnof_h);
+	sdlresize(sdl.scr_w,sdl.scr_h);
 	mapsdlsize(&sdl.scr_w,&sdl.scr_h);
 }
 
@@ -527,7 +493,7 @@ int sdlthread(void *UNUSED(arg)){
 	switchdpms(0);
 	while(!sdl_quit){
 		if(!sdlgetevent()) break;
-		if(sdl.doresize) sdlresize(0,0);
+		if(sdl.dofullscreen) sdlresize(0,0);
 		sdlhidecursor();
 		timer(TI_SDL,0,1);
 		
@@ -548,7 +514,7 @@ int sdlthread(void *UNUSED(arg)){
 		if(sdl.cfg.playrecord) sdlsaveframe();
 		timer(TI_SDL,4,1);
 
-		SDL_GL_SwapWindow(wnd);
+		SDL_GL_SwapWindow(sdl.wnd);
 		timer(TI_SDL,5,1);
 
 
