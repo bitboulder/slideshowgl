@@ -117,7 +117,7 @@ void switchdpms(char UNUSED(val)){ }
 /* thread: dpl */
 char sdlfullscreen(char dst){
 	if(dst==sdl.fullscreen) return 0;
-	sdl.fullscreen=dst;
+	sdl.fullscreen=!sdl.fullscreen;
 	sdl.dofullscreen=1;
 	return 1;
 }
@@ -174,6 +174,7 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 	
 void sdlresize(int w,int h){
 	int fsaa=sdl.cfg.fsaa;
+	printf("%ix%i\n",w,h);
 	debug(DBG_STA,"sdl window resize %ix%i",w,h);
 	sdl.scr_w=w; sdl.scr_h=h;
 	if(fsaa && (w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh)){
@@ -200,9 +201,10 @@ void sdlinitfullscreen(){
 void sdlinitwnd(){
 	GLenum glerr;
 	SDL_Renderer *rnd;
-	if(SDL_CreateWindowAndRenderer(sdl.scr_w,sdl.scr_h,SDL_WINDOW_OPENGL,&sdl.wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
+	if(SDL_CreateWindowAndRenderer(sdl.scr_w,sdl.scr_h,SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE,&sdl.wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
 	SDL_GetWindowSize(sdl.wnd,&sdl.scr_w,&sdl.scr_h);
 	debug(DBG_STA,"sdl init window %ix%i",sdl.scr_w,sdl.scr_h);
+	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS,"0");
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 	if(sdl.sync && SDL_GL_SetSwapInterval(-1)<0 && SDL_GL_SetSwapInterval(1)<0){
 		sdl.sync=0;
@@ -278,6 +280,46 @@ void sdlquit(){
 	SDL_Quit();
 }
 
+unsigned short keytabn[]={
+       /*  0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F */
+/* 00 */    0,   0,   0,   0,   0,   0,   0,   0, '\b',   0,   0,   0,   0,'\r',   0,   0,
+/* 10 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 20 */  ' ',   0,   0, '#',   0,   0,   0,   0,    0,   0,   0, '+', ',', '-', '.',   0,
+/* 30 */  '0', '1', '2', '3', '4', '5', '6', '7', '8',  '9',   0,   0, '<',   0,   0,   0,
+/* 40 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 50 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 60 */    0, 'a', 'b', 'c', 'd', 'e', 'f', 'g',  'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+/* 70 */  'p', 'q', 'r', 's', 't', 'u', 'v', 'w',  'x', 'y', 'z',   0,   0,   0,   0,   0,
+/* 80 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 90 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* A0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* B0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* C0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* D0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* E0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* F0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+};
+
+unsigned short keytabs[]={
+       /*  0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F */
+/* 00 */    0,   0,   0,   0,   0,   0,   0,   0, '\b',   0,   0,   0,   0,'\r',   0,   0,
+/* 10 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 20 */  ' ',   0,   0,'\'',   0,   0,   0,   0,    0,   0,   0, '*', ';', '_', ':',   0,
+/* 30 */  '=', '!', '"',   0, '$', '%', '&', '/', '(',  ')',   0,   0, '>',   0,   0,   0,
+/* 40 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 50 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 60 */    0, 'A', 'B', 'C', 'D', 'E', 'F', 'G',  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+/* 70 */  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',  'X', 'Y', 'Z',   0,   0,   0,   0,   0,
+/* 80 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* 90 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* A0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* B0 */    0,   0,   0,   0, '`',   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* C0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* D0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0, '?',
+/* E0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+/* F0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
+};
+
 void sdlkey(SDL_Keysym key){
 	switch(key.sym){
 		case SDLK_RIGHT:    dplevput(DE_RIGHT);   break;
@@ -289,7 +331,13 @@ void sdlkey(SDL_Keysym key){
 		case SDLK_KP_ENTER: dplevputk(' ');       break;
 		case SDLK_HOME:     dplevputi(DE_SEL,0); break;
 		case SDLK_END:      dplevputi(DE_SEL,IMGI_END-1); break;
-		/*default:            if(key.unicode) dplevputk(key.unicode); break; TODO: key->char */
+		default:
+			if((key.mod&KMOD_SHIFT)){
+				if(key.sym<(Sint32)sizeof(keytabs) && keytabs[key.sym]) dplevputk(keytabs[key.sym]);
+			}else{
+				if(key.sym<(Sint32)sizeof(keytabn) && keytabn[key.sym]) dplevputk(keytabn[key.sym]);
+			}
+		break;
 	}
 }
 
@@ -493,7 +541,7 @@ int sdlthread(void *UNUSED(arg)){
 	switchdpms(0);
 	while(!sdl_quit){
 		if(!sdlgetevent()) break;
-		if(sdl.dofullscreen) sdlresize(0,0);
+		if(sdl.dofullscreen) sdlinitfullscreen();
 		sdlhidecursor();
 		timer(TI_SDL,0,1);
 		
