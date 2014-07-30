@@ -14,13 +14,14 @@
 #include "cfg.h"
 #include "sdl.h"
 #include "map.h"
+#include "map_int.h"
 
 #define N_TIS 6
 
 struct mapld {
 	int wi,ri;
 	struct mapldti {
-		const char *maptype;
+		unsigned int mt;
 		int iz,ix,iy;
 	} tis[N_TIS];
 	char cachedir[FILELEN];
@@ -58,10 +59,11 @@ void mapld_load(struct mapldti ti){
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *lst=NULL;
-	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
+	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,maptypes[ti.mt].id,ti.iz,ti.ix,ti.iy);
 	mkdirm(fn,1);
-	if(!strcmp(ti.maptype,"om")) snprintf(url,FILELEN*2,"http://a.tile.openstreetmap.org/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
-	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",ti.maptype); return; }
+	/* TODO: use maptypes url */
+	if(!strcmp(maptypes[ti.mt].id,"om")) snprintf(url,FILELEN*2,"http://a.tile.openstreetmap.org/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
+	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",maptypes[ti.mt].id); return; }
 	debug(DBG_STA,"mapld_load: \"%s\" => \"%s\"",url,fn);
 	curl=curl_easy_init();
 	if(!curl){ error(ERR_CONT,"mapld_load: curl-init failed"); return; }
@@ -82,7 +84,7 @@ void mapld_load(struct mapldti ti){
 	curl_easy_cleanup(curl);
 	fclose(fd);
 	if(res==CURLE_OK && filesize(fn) && mapld_filecheck(fn)){
-		snprintf(url,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,ti.maptype,ti.iz,ti.ix,ti.iy);
+		snprintf(url,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptypes[ti.mt].id,ti.iz,ti.ix,ti.iy);
 		rename(fn,url);
 	}else{
 		error(ERR_CONT,"mapld_load: file loading failed (res: %i)",res);
@@ -110,10 +112,10 @@ char mapld_get(){
 #endif
 }
 
-char mapld_put(const char *maptype,int iz,int ix,int iy){
+char mapld_put(unsigned int mt,int iz,int ix,int iy){
 	int nwi=(mapld.wi+1)%N_TIS;
 	if(nwi==mapld.ri) return 0;
-	mapld.tis[mapld.wi].maptype=maptype;
+	mapld.tis[mapld.wi].mt=mt;
 	mapld.tis[mapld.wi].iz=iz;
 	mapld.tis[mapld.wi].ix=ix;
 	mapld.tis[mapld.wi].iy=iy;
@@ -121,18 +123,18 @@ char mapld_put(const char *maptype,int iz,int ix,int iy){
 	return 1;
 }
 
-char mapld_check(const char *maptype,int iz,int ix,int iy,char web,char *fn){
+char mapld_check(unsigned int mt,int iz,int ix,int iy,char web,char *fn){
 	enum filetype ft;
 	if(!mapld.init) return 0;
-	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptype,iz,ix,iy);
+	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptypes[mt].id,iz,ix,iy);
 	ft=filetype(fn);
 	if(ft&FT_FILE){
-		if(filetime(fn)+mapld.expire*24*60*60<time(NULL)) mapld_put(maptype,iz,ix,iy);
+		if(filetime(fn)+mapld.expire*24*60*60<time(NULL)) mapld_put(mt,iz,ix,iy);
 		return 2;
 	}
 	if(ft!=FT_NX) return 1;
 	if(!web) return 1;
-	return mapld_put(maptype,iz,ix,iy);
+	return mapld_put(mt,iz,ix,iy);
 }
 
 void mapldinit(){

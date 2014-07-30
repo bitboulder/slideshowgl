@@ -14,6 +14,7 @@
 #include "pano.h"
 #include "mark.h"
 #include "file.h"
+#include "map.h"
 
 enum cfgtype { CT_STR, CT_INT, CT_ENM, CT_FLT, CT_COL };
 
@@ -120,6 +121,7 @@ struct cfg {
 	{ 0,   "prged.w",             CT_FLT, CM_SET,  ".2",     {NULL}, __("Width of index il in prg edit mode") },
 	{ 0,   "prg.rat",             CT_FLT, CM_SET,  "1.3333333",{NULL}, __("Frame dimension rate for prg") },
 	{ 'M', "map.base",            CT_STR, CM_SET,  "",       {NULL}, __("Base directory for gps.txt files") },
+	{ 0,   "map.url",             CT_STR, CM_DO,   "",       {NULL}, __("Add url for another map type (ID,MAXZOOM,URL_WITH_[x][y][z])") },
 	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images (default: TMP/slideshowgl-cache)") },
 	{ 0,   "mapld.expire",        CT_INT, CM_SET,  "7",      {NULL}, __("Dayes of expire for map cache") },
 	{ 0,   "hist.max",            CT_FLT, CM_SET,  "0.02",   {NULL}, __("Maximal fraction displayed in histogram") },
@@ -248,6 +250,7 @@ void cfgset(struct cfg *cfg, char *val){
 		else if(!strcmp(cfg->name,"cfg.load")) cfgfiles(val);
 		else if(!strcmp(cfg->name,"cfg.include")) cfgfilesadd(val);
 		else if(!strcmp(cfg->name,"main.files")) cfgaddfiles(val);
+		else if(!strcmp(cfg->name,"map.url")) mapaddurl(val);
 		else error(ERR_QUIT,"cfgset do-option with no implemented action (%s)",cfg->name);
 	break;
 	default: break;
@@ -349,7 +352,6 @@ void cfgfile(const char *cfgfn,const char *load){
 	size_t loadlen=strlen(load);
 	char loadsec=0;
 	if(!cfgfn) return;
-	printf("cfg read section [%s] in \"%s\"\n",load,cfgfn);
 	debug(DBG_STA,"cfg read section [%s] in \"%s\"",load,cfgfn);
 	fd=fopen(cfgfn,"r");
 	while(!feof(fd)){

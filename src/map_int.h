@@ -8,6 +8,14 @@ struct mappos {
 	int iz;
 };
 
+struct maptype {
+	char id[8];
+	int maxz;
+	char url[FILELEN];
+};
+extern struct maptype *maptypes;
+extern unsigned int nmaptypes;
+
 struct mappos *mapgetpos();
 
 #endif

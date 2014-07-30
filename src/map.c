@@ -41,16 +41,8 @@
 
 #define N_ZOOM	22
 
-#define MAPTYPE E(om,19)
-#define E(X,Y)	MT_##X
-enum maptype { MAPTYPE, MT_NUM };
-#undef E
-#define E(X,Y)	#X
-const char *maptype_str[]={ MAPTYPE };
-#undef E
-#define E(X,Y)	Y
-int maptype_maxz[]={ MAPTYPE };
-#undef E
+struct maptype *maptypes=NULL;
+unsigned int nmaptypes=0;
 
 struct tile {
 	int ix,iy,iz;
@@ -98,7 +90,7 @@ struct mapimgs {
 struct map {
 	enum mapinit {MI_ALL=0,MI_TEX=1,MI_BDIR=2,MI_NONE=3} init;
 	char *basedirs;
-	enum maptype maptype;
+	unsigned int maptype;
 	struct mappos pos;
 	struct mappos possave;
 	struct tile ****tile;
@@ -111,7 +103,7 @@ struct map {
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
-	.maptype = MT_om,
+	.maptype = 0,
 	.pos.gx = 13.733098,
 	.pos.gy = 51.082175,
 	.pos.iz = 12,
@@ -131,7 +123,7 @@ char mapon(){
 }
 void mapsdlsize(int *w,int *h){ map.scr_w=w; map.scr_h=h; }
 void mapswtype(){
-	map.maptype=(map.maptype+1)%MT_NUM;
+	map.maptype=(map.maptype+1)%nmaptypes;
 	sdlforceredraw();
 }
 void mapinfo(int i){
@@ -143,6 +135,22 @@ const char *mapgetbasedirs(){ return map.basedirs; }
 void mapeditmode(){
 	if(map.init>MI_TEX || !mapon()) return;
 	map.editmode=(map.editmode+1)%N_MEM;
+}
+
+void mapaddurl(char *txt){
+	char *maxz,*url;
+	if(map.init<MI_NONE){ error(ERR_CONT,"map addurl with map init\n"); return; }
+	if(!(maxz=strchr(txt,',')) || !(url=strchr(maxz+1,','))){ error(ERR_CONT,"map addurl parse error \"%s\"",txt); return; }
+	*maxz='\0'; maxz++;
+	*url='\0'; url++;
+	maptypes=realloc(maptypes,sizeof(struct maptype)*(nmaptypes+1));
+	if(
+		snprintf(maptypes[nmaptypes].id,8,txt)<1 ||
+		!(maptypes[nmaptypes].maxz=atoi(maxz)) ||
+		snprintf(maptypes[nmaptypes].url,FILELEN,url)<4
+	){ error(ERR_CONT,"map addurl parse error \"%s\"",txt); return; }
+	debug(DBG_STA,"map addurl %s,%i,%s\n",maptypes[nmaptypes].id,maptypes[nmaptypes].maxz,maptypes[nmaptypes].url);
+	nmaptypes++;
 }
 
 struct ecur *mapecur(int *iz,float *iscale){
@@ -260,7 +268,7 @@ struct tile *maptilefind(int ix,int iy,int iz,char create){
 	if(iy<0 || iy>=1<<iz ) return NULL;
 	if(!map.tile){
 		if(!create) return NULL;
-		map.tile=calloc(MT_NUM,sizeof(struct tile **));
+		map.tile=calloc(nmaptypes,sizeof(struct tile **));
 	}
 	if(!map.tile[map.maptype]){
 		if(!create) return NULL;
@@ -587,7 +595,8 @@ struct imglist *mapsetpos(struct img *img){
 	char set=0;
 	double gx=0.,gy=0.;
 	struct imglist *il;
-	if(map.init>MI_TEX) return NULL;
+	if(!nmaptypes){ error(ERR_CONT,"no maptypes defined"); return NULL; }
+	if(map.init>MI_TEX){ error(ERR_CONT,"map init waiting"); return NULL; }
 	if((fn=ilfn(CIL(0))) && (filetype(fn)&FT_DIR)){
 		set=mapgetgps(fn,&gx,&gy,1);
 	}
@@ -663,7 +672,7 @@ char maploadtile(struct tile *ti){
 	if(!ti) return 0;
 	if(ti->loading==2 && ti->ftchk+map.ftchk>=time) return 0;
 	ti->ftchk=time;
-	ti->loading=mapld_check(maptype_str[map.maptype],ti->iz,ti->ix,ti->iy,!ti->loading,fn);
+	ti->loading=mapld_check(map.maptype,ti->iz,ti->ix,ti->iy,!ti->loading,fn);
 	if(ti->loading<2 || ti->ft>=filetime(fn)) return 0;
 	ti->ft=filetime(fn);
 	debug(DBG_STA,"map loading map %i/%i/%i",ti->iz,ti->ix,ti->iy);
@@ -704,7 +713,7 @@ char mapldcheck(){
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
-	if(iz>maptype_maxz[map.maptype]) iz=maptype_maxz[map.maptype];
+	if(iz>maptypes[map.maptype].maxz) iz=maptypes[map.maptype].maxz;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
@@ -1049,7 +1058,7 @@ char mapmove(enum dplev ev,float sx,float sy){
 		map.pos.iz=iz;
 		map.pos.gx-=gx1-gx0;
 		map.pos.gy-=gy1-gy0;
-		debug(DBG_DBG,"map zoom %i (%s)",iz,maptype_str[map.maptype]);
+		debug(DBG_DBG,"map zoom %i (%s)",iz,maptypes[map.maptype].id);
 	}
 	sdlforceredraw();
 	return 1;

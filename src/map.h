@@ -11,6 +11,7 @@ void mapswtype();
 void mapinfo(int i);
 const char *mapgetbasedirs();
 void mapeditmode();
+void mapaddurl(char *txt);
 char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir);
 char mapgetcltpos(int i,float *sx,float *sy);
 struct imglist *mapsetpos(struct img *img);
