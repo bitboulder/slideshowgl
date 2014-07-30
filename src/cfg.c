@@ -192,12 +192,12 @@ struct cfgfile {
 } *cfgfilelist=NULL;
 
 void cfgfilesadd(const char *fn){
-	struct cfgfile **cf=&cfgfilelist;
+	struct cfgfile *cf;
 	if(!(filetype(fn)&FT_FILE)) return;
-	while(cf[0]) cf=&cf[0]->nxt;
-	cf[0]=malloc(sizeof(struct cfgfile));
-	snprintf(cf[0]->fn,FILELEN,fn);
-	cf[0]->nxt=NULL;
+	cf=malloc(sizeof(struct cfgfile));
+	snprintf(cf->fn,FILELEN,fn);
+	cf->nxt=cfgfilelist;
+	cfgfilelist=cf;
 	debug(DBG_STA,"cfg add config file \"%s\"",fn);
 }
 
@@ -388,6 +388,7 @@ void cfgparseargs(int argc,char **argv){
 	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
 	cfgfilesfind();
+	cfgfiles("include");
 	cfgfiles("global");
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0) cfgopt(c,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0],cfggetint("cfg.usage")>1);
