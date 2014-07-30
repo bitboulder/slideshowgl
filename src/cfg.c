@@ -25,7 +25,7 @@ enum cfgmode { CM, CM_NUM };
 char cfgmodearg[CM_NUM]={CM};
 #undef E2
 
-void cfgfile(const char *load);
+void cfgfile(const char *fn,const char *load);
 
 #define E(X)	#X
 #define E2(X,N)	#X
@@ -41,6 +41,7 @@ struct cfg {
 	{ 'h', "cfg.usage",           CT_INT, CM_INC,  "0",      {NULL}, __("Print this usage") },
 	{ 'V', "cfg.version",         CT_INT, CM_FLIP, "0",      {NULL}, __("Print version") },
 	{ 'C', "cfg.load",            CT_STR, CM_DO,   "",       {NULL}, __("Load Cfg-Setup") },
+	{ 0,   "cfg.include",         CT_STR, CM_DO,   "",       {NULL}, __("Include another config") },
 	{ 'v', "main.dbg",            CT_INT, CM_INC,  "0",      {NULL}, __("Increase debug level") },
 	{ 0,   "main.logdbg",         CT_INT, CM_SET,  "2",      {NULL}, __("Set log debug level") },
 	{ 't', "main.timer",          CT_ENM, CM_SET,  "none",   {ETIMER,NULL}, __("Activate time measurement") },
@@ -183,6 +184,41 @@ const char *cfggetstr(const char *name){
 	return NULL;
 }
 
+struct cfgfile {
+	struct cfgfile *nxt;
+	char fn[FILELEN];
+} *cfgfilelist=NULL;
+
+void cfgfilesadd(const char *fn){
+	struct cfgfile **cf=&cfgfilelist;
+	if(!(filetype(fn)&FT_FILE)) return;
+	while(cf[0]) cf=&cf[0]->nxt;
+	cf[0]=malloc(sizeof(struct cfgfile));
+	snprintf(cf[0]->fn,FILELEN,fn);
+	cf[0]->nxt=NULL;
+	debug(DBG_STA,"cfg add config file \"%s\"",fn);
+}
+
+void cfgfilesfind(){
+	static char cfgfn[FILELEN];
+	const char *dir;
+	cfgfilesadd("/etc/slideshowgl.cfg");
+	if((dir=getprogpath())){
+		snprintf(cfgfn,FILELEN,"%s/slideshowgl.cfg",dir);
+		cfgfilesadd(cfgfn);
+	}
+	if((dir=getenv("HOME"))){
+		snprintf(cfgfn,FILELEN,"%s/.slideshowgl.cfg",dir);
+		cfgfilesadd(cfgfn);
+	}
+}
+
+void cfgfiles(const char *load){
+	struct cfgfile *cf=cfgfilelist;
+	for(;cf;cf=cf->nxt) cfgfile(cf->fn,load);
+}
+
+
 void cfgaddfiles(char *val){
 	char *pos;
 	while((pos=strchr(val,' '))){
@@ -209,7 +245,8 @@ void cfgset(struct cfg *cfg, char *val){
 	break;
 	case CM_DO:
 		if(!strcmp(cfg->name,"mark.catalog")) markcatadd(val);
-		else if(!strcmp(cfg->name,"cfg.load")) cfgfile(val);
+		else if(!strcmp(cfg->name,"cfg.load")) cfgfiles(val);
+		else if(!strcmp(cfg->name,"cfg.include")) cfgfilesadd(val);
 		else if(!strcmp(cfg->name,"main.files")) cfgaddfiles(val);
 		else error(ERR_QUIT,"cfgset do-option with no implemented action (%s)",cfg->name);
 	break;
@@ -307,28 +344,13 @@ char *cfgfilerun(char *str,size_t buflen){
 	return str;
 }
 
-const char *cfgfilefind(){
-	static char cfgfn[FILELEN];
-	const char *dir;
-	if((dir=getenv("HOME"))){
-		snprintf(cfgfn,FILELEN,"%s/.slideshowgl.cfg",dir);
-		if(filetype(cfgfn)&FT_FILE) return cfgfn;
-	}
-	snprintf(cfgfn,FILELEN,"/etc/slideshowgl.cfg");
-	if(filetype(cfgfn)&FT_FILE) return cfgfn;
-	if((dir=getprogpath())){
-		snprintf(cfgfn,FILELEN,"%s/slideshowgl.cfg",dir);
-		if(filetype(cfgfn)&FT_FILE) return cfgfn;
-	}
-	return NULL;
-}
-
-void cfgfile(const char *load){
-	const char *cfgfn=cfgfilefind();
+void cfgfile(const char *cfgfn,const char *load){
 	FILE *fd;
 	size_t loadlen=strlen(load);
 	char loadsec=0;
 	if(!cfgfn) return;
+	printf("cfg read section [%s] in \"%s\"\n",load,cfgfn);
+	debug(DBG_STA,"cfg read section [%s] in \"%s\"",load,cfgfn);
 	fd=fopen(cfgfn,"r");
 	while(!feof(fd)){
 		char buf[1024];
@@ -363,7 +385,8 @@ void cfgparseargs(int argc,char **argv){
 	textdomain(APPNAME);
 	bind_textdomain_codeset(APPNAME,"UTF-8");
 #endif
-	cfgfile("global");
+	cfgfilesfind();
+	cfgfiles("global");
 	while((c=getopt(argc,argv,cfgcompileopt()))>=0) cfgopt(c,optarg);
 	if(cfggetint("cfg.usage")) usage(argv[0],cfggetint("cfg.usage")>1);
 	if(cfggetint("cfg.version")) version();
