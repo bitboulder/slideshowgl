@@ -174,7 +174,6 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 	
 void sdlresize(int w,int h){
 	int fsaa=sdl.cfg.fsaa;
-	printf("%ix%i\n",w,h);
 	debug(DBG_STA,"sdl window resize %ix%i",w,h);
 	sdl.scr_w=w; sdl.scr_h=h;
 	if(fsaa && (w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh)){
