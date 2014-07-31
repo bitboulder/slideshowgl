@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-12-03 22:09+0100\n"
+"POT-Creation-Date: 2014-07-31 09:02+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -47,52 +47,56 @@ msgstr ""
 msgid "action %i run with delay"
 msgstr ""
 
-#: src/cfg.c:37
+#: src/cfg.c:42
 msgid "Print this usage"
 msgstr "Diese Hilfe ausgeben"
 
-#: src/cfg.c:38
+#: src/cfg.c:43
 msgid "Print version"
 msgstr "Version ausgeben"
 
-#: src/cfg.c:39
+#: src/cfg.c:44
 msgid "Load Cfg-Setup"
 msgstr "Konfiguration laden"
 
-#: src/cfg.c:40
+#: src/cfg.c:45
+msgid "Include another config"
+msgstr "Eine weitere Konfigurationsdatei einbinden"
+
+#: src/cfg.c:46
 msgid "Increase debug level"
 msgstr "Debug level erhöhen"
 
-#: src/cfg.c:41
+#: src/cfg.c:47
 msgid "Set log debug level"
 msgstr "Debug level für log-file setzen"
 
-#: src/cfg.c:42
+#: src/cfg.c:48
 msgid "Activate time measurement"
 msgstr "Zeitmessung aktivieren"
 
-#: src/cfg.c:43
+#: src/cfg.c:49
 msgid "Write stdout and stderr to that file (standart for win32)"
 msgstr ""
 "Schreibe Standart- und Fehlerausgabe in diese Datei (Standart für Win32)"
 
-#: src/cfg.c:44
+#: src/cfg.c:50
 msgid "Delete logfile if no error occurs"
 msgstr "Lösche Log-Datei wenn kein Fehler auftritt"
 
-#: src/cfg.c:45
+#: src/cfg.c:51
 msgid "Watch core dumps and copy to ARG/core_dump"
 msgstr "Warte auf core dumps und kopiere sie nach ARG/core_dump"
 
-#: src/cfg.c:46
+#: src/cfg.c:52
 msgid "Add space seperated files to initial file list"
 msgstr "Durch Leerzeichen getrennte Dateien zu Anfangsliste hinzufügen"
 
-#: src/cfg.c:47 src/dpl_help.h:175
+#: src/cfg.c:53 src/dpl_help.h:175
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
-#: src/cfg.c:48
+#: src/cfg.c:54
 msgid ""
 "Set display id to use in multihead mode (overwritten by "
 "SDL_VIDEO_FULLSCREEN_DISPLAY)"
@@ -100,382 +104,396 @@ msgstr ""
 "Display-ID mit mehreren Displays setzen (wird überschrieben von "
 "SDL_VIDEO_FULLSCREEN_DISPLAY)"
 
-#: src/cfg.c:49
+#: src/cfg.c:55
 msgid "Set window width"
 msgstr "Fensterbreite setzen"
 
-#: src/cfg.c:50
+#: src/cfg.c:56
 msgid "Set window height"
 msgstr "Fensterhöhe setzen"
 
-#: src/cfg.c:51
+#: src/cfg.c:57
 msgid "Toggle video sync"
 msgstr "Videosynchronisation umschalten"
 
-#: src/cfg.c:52
+#: src/cfg.c:58
 msgid "After that time (ms) the cursor is hidden"
 msgstr "Nach dieser Zeit (ms) wird der Cursor versteckt"
 
-#: src/cfg.c:53
+#: src/cfg.c:59
 msgid "Delay for double-click in ms"
 msgstr "Verzögerung für Doppelclick"
 
-#: src/cfg.c:54
+#: src/cfg.c:60
 msgid "Antialias mode"
 msgstr "Antialias Modus"
 
-#: src/cfg.c:55
+#: src/cfg.c:61
 msgid "Maximal window width for antialias"
 msgstr "Größe Fensterbreite mit Antialias"
 
-#: src/cfg.c:56
+#: src/cfg.c:62
 msgid "Maximal window height for antialias"
 msgstr "Größte Fensterhöhe mit Antialias"
 
-#: src/cfg.c:57
+#: src/cfg.c:63
 msgid "Set display duration"
 msgstr "Anzeigedauer setzen"
 
-#: src/cfg.c:58
+#: src/cfg.c:64
 msgid "Set duration to hold the mouse"
 msgstr "Tip-Info-Verzögerung"
 
-#: src/cfg.c:59
+#: src/cfg.c:65
 msgid "Set initial zoom"
 msgstr "Anfangszoom setzen"
 
-#: src/cfg.c:60
+#: src/cfg.c:66
 msgid "Play all and exit"
 msgstr "Alles abspielen und beenden"
 
-#: src/cfg.c:61
+#: src/cfg.c:67
 msgid "Enable playrecord + set file name base"
 msgstr "Aufnahme aktivieren und Basis-Dateiname setzen"
 
-#: src/cfg.c:62
+#: src/cfg.c:68
 msgid "Framerate for playrecord"
 msgstr "Bildrate für Aufnahme"
 
-#: src/cfg.c:63
+#: src/cfg.c:69
 msgid "Window width for playrecord"
 msgstr "Fensterbreite für Aufnahme"
 
-#: src/cfg.c:64
+#: src/cfg.c:70
 msgid "Window height for playrecord"
 msgstr "Fensterhöhe für Aufnahme"
 
-#: src/cfg.c:65
+#: src/cfg.c:71
 msgid "Set effect duration"
 msgstr "Effektdauer setzen"
 
-#: src/cfg.c:66
+#: src/cfg.c:72
 msgid "Factor to shrink all not-current images for zoom<0"
 msgstr ""
 "Faktor mit den alle nicht-aktuellen Bilder gestacht werdenn (bei zoom<0)"
 
-#: src/cfg.c:67
+#: src/cfg.c:73
 msgid "Toggle image loop"
 msgstr "Bildschleife umschalten"
 
-#: src/cfg.c:68
+#: src/cfg.c:74
 msgid "Toggle image random"
 msgstr "Zufällige Bildfolge umschalten"
 
-#: src/cfg.c:69
+#: src/cfg.c:75
 msgid "Toggle sort by exif date"
 msgstr "Sortierung nach Datum umschalten"
 
-#: src/cfg.c:70
+#: src/cfg.c:76
 msgid "Toggle sort by exif date of subdirectories"
 msgstr "Sortierung nach datum für Unterverzeichnisse umschalten"
 
-#: src/cfg.c:71
+#: src/cfg.c:77
 msgid "Maximal size of imglist history (for loop protection)"
 msgstr ""
 "Maximale Größe der Bildlisten-Vergangenheit (für Schleifenunterdrückung)"
 
-#: src/cfg.c:72
+#: src/cfg.c:78
 msgid "Maximal imglist size for instant exif load"
 msgstr "Maximale Bildlistengröße für sofortiges Laden der Exif-Daten"
 
-#: src/cfg.c:73
+#: src/cfg.c:79
 msgid "Cache file for exif dates (default: TMP/slideshowgl-cache/exif.gz)"
 msgstr "Exif-Cache Datei festlegen (Standart: TMP/slideshowgl-mark)"
 
-#: src/cfg.c:74
+#: src/cfg.c:80
 msgid "Maximal texture size"
 msgstr "Maximale Texturegröße"
 
-#: src/cfg.c:75
+#: src/cfg.c:81
 msgid "Maximal texture size for panoramas"
 msgstr "Maximale Texturgröße im Panoramamodus"
 
-#: src/cfg.c:76
+#: src/cfg.c:82
 msgid "Maximal pixels for panoramas (bigger ones are scaled down)"
 msgstr "Maximale Pixelanzahl für Panoramas (größere werden scaliert)"
 
-#: src/cfg.c:77
+#: src/cfg.c:83
 msgid "File time check delay"
 msgstr "Abstand des Überprüfens auf Dateiänderungen"
 
-#: src/cfg.c:78
+#: src/cfg.c:84
 msgid "Number of exif-file-loads per one img-file-load"
 msgstr ""
 "Anzahl der Exif-Daten, die während einem Datei-Lade-Vorgang geladen werden"
 
-#: src/cfg.c:79
+#: src/cfg.c:85
 msgid "Number of directories to hold"
 msgstr "Anzahl der Verzeichnisse, die gehalten werden"
 
-#: src/cfg.c:80
+#: src/cfg.c:86
 msgid "Filename of the font to use"
 msgstr "Dateiname der Schriftart"
 
-#: src/cfg.c:81
+#: src/cfg.c:87
 msgid "Textheight for input"
 msgstr "Texthöhe der Eingabe"
 
-#: src/cfg.c:82
+#: src/cfg.c:88
 msgid "Textheight for statusbar"
 msgstr "Texthöhe der Statuszeile"
 
-#: src/cfg.c:83
+#: src/cfg.c:89
 msgid "Textheight for text-images"
 msgstr "Texthöhe für Text-Bilder"
 
-#: src/cfg.c:84
+#: src/cfg.c:90
 msgid "Textheight for directory names"
 msgstr "Texthöhe für Verzeichnisnamen"
 
-#: src/cfg.c:85
+#: src/cfg.c:91
 msgid "Textheight for catalog names"
 msgstr "Texthöhe für Katalognamen"
 
-#: src/cfg.c:86
+#: src/cfg.c:92
 msgid "Border around text (in percent of height)"
 msgstr "Rand um Text (in Prozent der Höhe)"
 
-#: src/cfg.c:87
+#: src/cfg.c:93
 msgid "Border around dirname (in percent of height)"
 msgstr "Rand um Verzeichnisnamen (in Prozent der Höhe)"
 
-#: src/cfg.c:88
+#: src/cfg.c:94
 msgid "Text background color"
 msgstr "Hintergrundfarbe für Text"
 
-#: src/cfg.c:89
+#: src/cfg.c:95
 msgid "Text foreground color"
 msgstr "Vordergrundfarbe für Text"
 
-#: src/cfg.c:90
+#: src/cfg.c:96
 msgid "Text title color"
 msgstr "Farbe für Titel"
 
-#: src/cfg.c:91
+#: src/cfg.c:97
 msgid "Text mark color"
 msgstr "Markierungsfarbe für Text"
 
-#: src/cfg.c:92
+#: src/cfg.c:98
 msgid "Color selected color"
 msgstr "Farbe für Farbselection"
 
-#: src/cfg.c:93
+#: src/cfg.c:99
 msgid "Text dirname color"
 msgstr "Farbe für Verzeichnisnamen"
 
-#: src/cfg.c:94
+#: src/cfg.c:100
 msgid "Text play icon color"
 msgstr "Farbe for Play Icon"
 
-#: src/cfg.c:95
+#: src/cfg.c:101
 msgid "Default rotation speed for panoramas (screens per second)"
 msgstr "Standart Drehgeschwindigkeit für Panoramas (Bildschrime pro Sekunde)"
 
-#: src/cfg.c:96
+#: src/cfg.c:102
 msgid "Minimal rotation speed for panoramas"
 msgstr "Minimale Drehgeschwindigkeit für Panoramas"
 
-#: src/cfg.c:97
+#: src/cfg.c:103
 msgid "Maximal texture size for panoramas (in degree)"
 msgstr "Maximale Texturgröße für Panoramas (in Grad)"
 
-#: src/cfg.c:98
+#: src/cfg.c:104
 msgid "Set minimal texture size for panorama mode"
 msgstr "Minimale Texturgröße im Panoramamodus setzen"
 
-#: src/cfg.c:99
+#: src/cfg.c:105
 msgid "Radius of sphere for panoramas"
 msgstr "Radius der Kugel für Panoramas"
 
-#: src/cfg.c:100
+#: src/cfg.c:106
 msgid "Panorama fisheye mode"
 msgstr "Panorama Fishaugen-Modus"
 
-#: src/cfg.c:101
+#: src/cfg.c:107
 msgid "Maximal angle for isogonic panorama fisheye mode"
 msgstr "Maximaler Winkel im winkeltreuen Fishaugen-Modus"
 
-#: src/cfg.c:102
+#: src/cfg.c:108
 msgid "Rise time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile erscheint (ms)"
 
-#: src/cfg.c:103
+#: src/cfg.c:109
 msgid "Time the statusbar remains (ms)"
 msgstr "Zeit die die Statuszeile angezeigt wird (ms)"
 
-#: src/cfg.c:104
+#: src/cfg.c:110
 msgid "Fall time for statusbar (ms)"
 msgstr "Zeit in der die Statuszeile verschwindet (ms)"
 
-#: src/cfg.c:105
+#: src/cfg.c:111
 msgid "Rise and fall time for windows (ms)"
 msgstr "Zeit in der Fenster erscheinen/verschwinden (ms)"
 
-#: src/cfg.c:106
+#: src/cfg.c:112
 msgid "Rise and fall time for text windows (ms)"
 msgstr "Zeit in der Textfenster erscheinen/verschwinden (ms)"
 
-#: src/cfg.c:107
+#: src/cfg.c:113
 msgid "Set mark file (Default: $TEMP/slideshowgl-mark)"
 msgstr "Markierungsdatei festlegen (Standart: $TEMP/slideshowgl-mark)"
 
-#: src/cfg.c:108
+#: src/cfg.c:114
 msgid "Directory for mark files (for switching the file with 'M')"
 msgstr "Verzeichnis für Markierungsdateien (zum Umschalten mit 'M')"
 
-#: src/cfg.c:109
+#: src/cfg.c:115
 msgid "Add catalog (directory also possible)"
 msgstr "Katalog hinzufügen (Verzeichnis möglich)"
 
-#: src/cfg.c:110
+#: src/cfg.c:116
 msgid "Delay after that the mark file is written"
 msgstr "Wartedauer zum Schreiben der Markierungsdatei"
 
-#: src/cfg.c:111
+#: src/cfg.c:117
 msgid "Delay after that the img lists are cleaned"
 msgstr "Wartedauer zum Aufräumen der Verzeichnislisten"
 
-#: src/cfg.c:112
+#: src/cfg.c:118
 msgid "Delay after that the map clusters are refreshed"
 msgstr "Wartedauer bis die Cluster der Karte aktualisiert werden"
 
-#: src/cfg.c:113
+#: src/cfg.c:119
 msgid "Delay after that the exif cache is written"
 msgstr "Wartedauer zum Schreiben der Exif-Cache Datei"
 
-#: src/cfg.c:114
+#: src/cfg.c:120
 msgid "Toggle actions"
 msgstr "Aktionen (de-)aktivieren"
 
-#: src/cfg.c:115
+#: src/cfg.c:121
 msgid "Width of index il in prg edit mode"
 msgstr "Breite des Bildindex im Programm-Editier-Modus"
 
-#: src/cfg.c:116
+#: src/cfg.c:122
 msgid "Frame dimension rate for prg"
 msgstr "Seitenverhältnis im Programm-Modus"
 
-#: src/cfg.c:117
+#: src/cfg.c:123
 msgid "Base directory for gps.txt files"
 msgstr "Basisverzeichnis für gps.txt Dateien"
 
-#: src/cfg.c:118
+#: src/cfg.c:124
+msgid "Add url for another map type (ID,MAXZOOM,URL_WITH_[x][y][z])"
+msgstr "URL für weitern Kartentyp hinzufügen (ID,MAXZOOM,URL_MIT_[x][y][z])"
+
+#: src/cfg.c:125
 msgid "Cache directory for map images (default: TMP/slideshowgl-cache)"
 msgstr "Cacheverzeichnis für Kartendateien (Standart: TMP/slideshowgl-cache)"
 
-#: src/cfg.c:119
+#: src/cfg.c:126
 msgid "Dayes of expire for map cache"
 msgstr "Anzahl der Tage zum Ablauf des Caches für die Karte"
 
-#: src/cfg.c:120
+#: src/cfg.c:127
 msgid "Maximal fraction displayed in histogram"
 msgstr "Größter Anteil im Histogramm"
 
-#: src/cfg.c:130
+#: src/cfg.c:137
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:138
+#: src/cfg.c:145
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:152
+#: src/cfg.c:159
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:153
+#: src/cfg.c:160
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:161
+#: src/cfg.c:168
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:170
+#: src/cfg.c:177
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:171
+#: src/cfg.c:178
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:178
+#: src/cfg.c:185
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:194
+#: src/cfg.c:201
+#, c-format
+msgid "cfg add config file \"%s\""
+msgstr ""
+
+#: src/cfg.c:236
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:198
+#: src/cfg.c:240
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:210
+#: src/cfg.c:254
 #, c-format
 msgid "cfgset do-option with no implemented action (%s)"
 msgstr ""
 
-#: src/cfg.c:217
+#: src/cfg.c:261
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:224
+#: src/cfg.c:268
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:225
+#: src/cfg.c:269
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:242
+#: src/cfg.c:286
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:253
+#: src/cfg.c:297
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:272
+#: src/cfg.c:316
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:276
+#: src/cfg.c:320
 #, c-format
 msgid "unknown option: -c %s"
+msgstr ""
+
+#: src/cfg.c:355
+#, c-format
+msgid "cfg read section [%s] in \"%s\""
 msgstr ""
 
 #: src/dpl.c:97
@@ -545,7 +563,7 @@ msgstr " doppelt-gedreht"
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:657 src/map.c:1162
+#: src/dpl.c:657 src/map.c:1172
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
@@ -673,7 +691,7 @@ msgstr ""
 msgid "no enought digits for date (%s)"
 msgstr ""
 
-#: src/exif.c:277 src/sdl.c:298
+#: src/exif.c:277
 #, c-format
 msgid "(unknown)"
 msgstr "(unbekannt)"
@@ -765,12 +783,12 @@ msgstr "Bedienung"
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
 
-#: src/help.c:202
+#: src/help.c:206
 #, c-format
 msgid "mkdirm: \"%s\" is not a directory"
 msgstr ""
 
-#: src/help.c:212
+#: src/help.c:216
 #, c-format
 msgid "mkdirm: mkdir \"%s\" failed"
 msgstr ""
@@ -877,37 +895,37 @@ msgstr ""
 msgid "img marker failed: %e"
 msgstr ""
 
-#: src/ldcp.c:56
+#: src/ldcp.c:60
 #, c-format
 msgid "concept: unknown tex '%c'"
 msgstr ""
 
-#: src/ldcp.c:62
+#: src/ldcp.c:66
 #, c-format
 msgid "concept: no digits after '..': '%s'"
 msgstr ""
 
-#: src/ldcp.c:63
+#: src/ldcp.c:67
 #, c-format
 msgid "concept: str after '..[0-9]+': '%s'"
 msgstr ""
 
-#: src/ldcp.c:73
+#: src/ldcp.c:77
 #, c-format
 msgid "concept: no digits at begin: '%s'"
 msgstr ""
 
-#: src/ldcp.c:78
+#: src/ldcp.c:82
 #, c-format
 msgid "concept: no digits after '[0-9]+..': '%s'"
 msgstr ""
 
-#: src/ldcp.c:79
+#: src/ldcp.c:83
 #, c-format
 msgid "concept: str after '[0-9]+..[0-9]+': '%s'"
 msgstr ""
 
-#: src/ldcp.c:81
+#: src/ldcp.c:85
 #, c-format
 msgid "concept: str after '[0-9]+': '%s' (%s)"
 msgstr ""
@@ -972,75 +990,97 @@ msgstr ""
 msgid "ldreset done"
 msgstr ""
 
-#: src/main.c:122
+#: src/main.c:127
 #, c-format
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:395
+#: src/main.c:403
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s%s%s%s"
 msgstr ""
 
-#: src/map.c:319
+#: src/map.c:143
+msgid "map addurl with map init\n"
+msgstr ""
+
+#: src/map.c:144 src/map.c:152
+#, c-format
+msgid "map addurl parse error \"%s\""
+msgstr ""
+
+#: src/map.c:153
+#, c-format
+msgid "map addurl %s,%i,%s\n"
+msgstr ""
+
+#: src/map.c:328
 #, c-format
 msgid "mapimgadd: no free dirid found for \"%s\""
 msgstr ""
 
-#: src/map.c:477
+#: src/map.c:486
 msgid "mapimgclt: cluster with zero elements -> correcting"
 msgstr ""
 
-#: src/map.c:505
+#: src/map.c:514
 msgid "mapimgclt: join of pre-join clusters"
 msgstr ""
 
-#: src/map.c:533
+#: src/map.c:542
 msgid "[Map-Selection]"
 msgstr "[Karte-Auswahl]"
 
-#: src/map.c:612
+#: src/map.c:599
+msgid "no maptypes defined"
+msgstr ""
+
+#: src/map.c:600
+msgid "map init waiting"
+msgstr ""
+
+#: src/map.c:622
 msgid "[Map]"
 msgstr "[Karte]"
 
-#: src/map.c:669
+#: src/map.c:679
 #, c-format
 msgid "map loading map %i/%i/%i"
 msgstr ""
 
-#: src/map.c:1052
+#: src/map.c:1062
 #, c-format
 msgid "map zoom %i (%s)"
 msgstr ""
 
-#: src/map.c:1163
+#: src/map.c:1173
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/map.c:1163
+#: src/map.c:1173
 msgid "Replace"
 msgstr "Ersetzen"
 
-#: src/mapld.c:68
+#: src/mapld.c:129
 #, c-format
-msgid "mapld_load: unknown maptype \"%s\""
+msgid "mapld_cplurl failed: \"%s\""
 msgstr ""
 
-#: src/mapld.c:69
+#: src/mapld.c:130
 #, c-format
 msgid "mapld_load: \"%s\" => \"%s\""
 msgstr ""
 
-#: src/mapld.c:71
+#: src/mapld.c:132
 msgid "mapld_load: curl-init failed"
 msgstr ""
 
-#: src/mapld.c:73
+#: src/mapld.c:134
 #, c-format
 msgid "mapld_load: cache-file open failed (%s)"
 msgstr ""
 
-#: src/mapld.c:92
+#: src/mapld.c:153
 #, c-format
 msgid "mapld_load: file loading failed (res: %i)"
 msgstr ""
@@ -1065,86 +1105,58 @@ msgstr ""
 msgid "panoinit no pano found for '%s'"
 msgstr ""
 
-#: src/prg.c:57
+#: src/prg.c:61
 #, c-format
 msgid "split txt failed (%s)"
 msgstr ""
 
-#: src/sdl.c:166
-msgid "sdl All fullscreen modes available"
-msgstr ""
-
-#: src/sdl.c:167
-msgid "sdl No fullscreen modes available"
-msgstr ""
-
-#: src/sdl.c:189
+#: src/sdl.c:177
 #, c-format
-msgid "sdl set video mode fullscreen %ix%i on display %i"
+msgid "sdl window resize %ix%i"
 msgstr ""
 
-#: src/sdl.c:190
-#, c-format
-msgid "sdl set video mode fullscreen %ix%i"
-msgstr ""
-
-#: src/sdl.c:195
-#, c-format
-msgid "sdl set video mode %ix%i"
-msgstr ""
-
-#: src/sdl.c:200
+#: src/sdl.c:180
 msgid "disable anti-aliasing for window size"
 msgstr ""
 
-#: src/sdl.c:210
-msgid "disable anti-aliasing for mode failure"
+#: src/sdl.c:209
+msgid "window creation failed"
 msgstr ""
 
-#: src/sdl.c:214
-msgid "video mode init failed"
-msgstr ""
-
-#: src/sdl.c:217
+#: src/sdl.c:211
 #, c-format
-msgid "sdl get video mode %ix%i"
+msgid "sdl init window %ix%i"
 msgstr ""
 
-#: src/sdl.c:221
+#: src/sdl.c:216
+msgid "swap interval failed"
+msgstr ""
+
+#: src/sdl.c:220
 #, c-format
-msgid "sdl sub display at %ix%i size %ix%i"
+msgid "in sdl window creation (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:226
+#: src/sdl.c:223
 #, c-format
-msgid "in sdl view mode (gl-err: %d)"
+msgid "in glinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:238
-#, c-format
-msgid "sdl init (%ssync)"
-msgstr ""
-
-#: src/sdl.c:239
-#, c-format
-msgid "in sdlinit (gl-err: %d)"
-msgstr ""
-
-#: src/sdl.c:253
+#: src/sdl.c:229
 #, c-format
 msgid "icon load failed (%s)"
 msgstr ""
 
-#: src/sdl.c:292
+#: src/sdl.c:268
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:493
+#: src/sdl.c:523
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:510
+#: src/sdl.c:540
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
