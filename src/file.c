@@ -1,4 +1,8 @@
 #include "config.h"
+#ifndef __WIN32__
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
