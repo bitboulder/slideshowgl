@@ -331,8 +331,8 @@ int watchcoredump(int *ret,int argc,char **argv){
 		mkdirm(cdir,0);
 		snprintf(cmd,FILELEN*2,"mv %s %s/",core,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"cp %s/build/slideshowgl %s/",dir,cdir); system(cmd);
-		snprintf(cmd,FILELEN*2,"svn info %s >%s/svn-info",dir,cdir); system(cmd);
-		snprintf(cmd,FILELEN*2,"svn diff %s >%s/svn-diff",dir,cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"bash -c 'cd %s; git log -n 1 >%s/git-log'",dir,cdir); system(cmd);
+		snprintf(cmd,FILELEN*2,"bash -c 'cd %s; git diff >%s/git-diff'",dir,cdir); system(cmd);
 		snprintf(cmd,FILELEN*2,"%s/cmd",cdir);
 		fd=fopen(cmd,"w");
 		for(i=0;i<argc;i++) fprintf(fd,"%s\n",argv[i]);
