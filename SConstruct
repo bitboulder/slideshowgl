@@ -1,4 +1,4 @@
-env = Environment(APPNAME = 'slideshowgl', VERSION = '2.0.0')
+env = Environment(APPNAME = 'slideshowgl', VERSION = '2.2')
 
 Help("\n")
 Help("Type: 'scons mode=release' to build the production program.\n")
