@@ -52,6 +52,71 @@ char mapld_filecheck(const char *fn){
 	return 1;
 }
 
+#define MURL	64
+
+char mapld_parseurl(char **q,char *a,int x,int y,int z){
+	printf("#%c#\n",**q);
+	if(**q>='0' && **q<='9'){ snprintf(a,MURL,"%i",**q-'0'); (*q)++; return 1; }
+	switch(**q){
+	case 'x': snprintf(a,MURL,"%i",x); (*q)++; return 1;
+	case 'y': snprintf(a,MURL,"%i",y); (*q)++; return 1;
+	case 'z': snprintf(a,MURL,"%i",z); (*q)++; return 1;
+	case '"': {
+		char *e=strchr(*q+1,'"');
+		if(!e) return 0;
+		snprintf(a,(size_t)MIN(MURL,(e-*q)),"%s",*q+1);
+		*q=e+1;
+		return 1;
+	}
+	case '+': case '*': case '%': {
+		char o=**q,b[MURL],c[MURL];
+		int ai=0,bi,ci;
+		(*q)++;
+		if(!mapld_parseurl(q,b,x,y,z)) return 0;
+		if(!mapld_parseurl(q,c,x,y,z)) return 0;
+		bi=atoi(b); ci=atoi(c);
+		switch(o){
+		case '+': ai=bi+ci; break;
+		case '*': ai=bi*ci; break;
+		case '%': ai=bi%ci; break;
+		}
+		snprintf(a,MURL,"%i",ai);
+		return 1;
+	}
+	case 's': {
+		char b[MURL],c[MURL],d[MURL];
+		int ci,di;
+		(*q)++;
+		if(!mapld_parseurl(q,b,x,y,z)) return 0;
+		if(!mapld_parseurl(q,c,x,y,z)) return 0;
+		if(!mapld_parseurl(q,d,x,y,z)) return 0;
+		ci=atoi(c); di=atoi(d);
+		snprintf(a,(size_t)MIN(MIN(MURL,MURL-ci),di+1),"%s",b+ci);
+		return 1;
+	}
+	}
+	return 0;
+}
+
+char mapld_cplurl(char *url,const char *in,int x,int y,int z){
+	char *p=url;
+	int lu;
+	snprintf(url,FILELEN*2,"%s",in);
+	lu=(int)strlen(url);
+	while((p=strchr(p,'['))){
+		char *q=p+1,a[MURL];
+		int la;
+		if(!mapld_parseurl(&q,a,x,y,z) || *q!=']') return 0;
+		la=(int)strlen(a);
+		memmove(p+la,q+1,(size_t)MIN(FILELEN*2-(p-url)-la-1,lu-(q-url)));
+		memcpy(p,a,(size_t)la);
+		lu+=la-(int)(q-p)-1;
+		p+=la;
+	}
+	url[FILELEN*2-1]='\0';
+	return 1;
+}
+
 void mapld_load(struct mapldti ti){
 	char url[FILELEN*2];
 	char fn[FILELEN];
@@ -61,9 +126,8 @@ void mapld_load(struct mapldti ti){
 	struct curl_slist *lst=NULL;
 	snprintf(fn,FILELEN,"%s/%s/%i/%i/%i_ld.png",mapld.cachedir,maptypes[ti.mt].id,ti.iz,ti.ix,ti.iy);
 	mkdirm(fn,1);
-	/* TODO: use maptypes url */
-	if(!strcmp(maptypes[ti.mt].id,"om")) snprintf(url,FILELEN*2,"http://a.tile.openstreetmap.org/%i/%i/%i.png",ti.iz,ti.ix,ti.iy);
-	else{ error(ERR_CONT,"mapld_load: unknown maptype \"%s\"",maptypes[ti.mt].id); return; }
+	if(!mapld_cplurl(url,maptypes[ti.mt].url,ti.ix,ti.iy,ti.iz))
+	{ error(ERR_CONT,"mapld_cplurl failed: \"%s\"",maptypes[ti.mt].url); return; }
 	debug(DBG_STA,"mapld_load: \"%s\" => \"%s\"",url,fn);
 	curl=curl_easy_init();
 	if(!curl){ error(ERR_CONT,"mapld_load: curl-init failed"); return; }

@@ -137,6 +137,7 @@ void mapeditmode(){
 	map.editmode=(map.editmode+1)%N_MEM;
 }
 
+char mapld_cplurl(char *url,const char *in,int x,int y,int z);
 void mapaddurl(char *txt){
 	char *maxz,*url;
 	if(map.init<MI_NONE){ error(ERR_CONT,"map addurl with map init\n"); return; }
@@ -145,9 +146,9 @@ void mapaddurl(char *txt){
 	*url='\0'; url++;
 	maptypes=realloc(maptypes,sizeof(struct maptype)*(nmaptypes+1));
 	if(
-		snprintf(maptypes[nmaptypes].id,8,txt)<1 ||
+		snprintf(maptypes[nmaptypes].id,8,"%s",txt)<1 ||
 		!(maptypes[nmaptypes].maxz=atoi(maxz)) ||
-		snprintf(maptypes[nmaptypes].url,FILELEN,url)<4
+		snprintf(maptypes[nmaptypes].url,FILELEN,"%s",url)<4
 	){ error(ERR_CONT,"map addurl parse error \"%s\"",txt); return; }
 	debug(DBG_STA,"map addurl %s,%i,%s\n",maptypes[nmaptypes].id,maptypes[nmaptypes].maxz,maptypes[nmaptypes].url);
 	nmaptypes++;
