@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include <SDL.h>
 #include <time.h>
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+	#include <pthread.h>
+#endif
 #ifndef __WIN32__
 	#include <sys/types.h>
 	#include <sys/wait.h>
@@ -31,20 +34,6 @@
 #include "exich.h"
 #include "act.h"
 #include "map.h"
-
-#if 1
-#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
-#include <pthread.h>
-typedef pthread_t SYS_ThreadHandle;
-struct SDL_Thread {
-	Uint32 threadid;
-	SYS_ThreadHandle handle;
-	int status;
-	//SDL_error errbuf;
-	//void *data;
-};
-#endif
-#endif
 
 enum debug dbg = DBG_NONE;
 enum debug logdbg = DBG_NONE;
@@ -139,25 +128,29 @@ const char *gettmp(){
 struct mainthread {
 	const char *name;
 	int (*fnc)(void *);
-	int pri;
+	SDL_ThreadPriority pri;
 	char init;
 	void *data;
-	SDL_Thread *pt;
+	/* not initialized */
+	SDL_threadID id;
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+	pthread_t pt;
+#endif
 } mainthreads[] = {
-	{ "sdl",  &sdlthread, 15, 0, NULL, NULL },
-	{ "dpl",  &dplthread, 10, 0, NULL, NULL },
-	{ "ld",   &ldthread,   5, 0, NULL, NULL },
-	{ "act",  &actthread,  2, 0, NULL, NULL },
-	{ "map1", &mapldthread,1, 0, (void*)0, NULL },
-//	{ "map2", &mapldthread,1, 0, (void*)1, NULL },
-	{ NULL,   NULL,        0, 0, NULL, NULL },
+	{ "sdl",  &sdlthread,  SDL_THREAD_PRIORITY_HIGH,   0, NULL },
+	{ "dpl",  &dplthread,  SDL_THREAD_PRIORITY_NORMAL, 0, NULL },
+	{ "ld",   &ldthread,   SDL_THREAD_PRIORITY_LOW,    0, NULL },
+	{ "act",  &actthread,  SDL_THREAD_PRIORITY_LOW,    0, NULL },
+	{ "map1", &mapldthread,SDL_THREAD_PRIORITY_LOW,    0, (void*)0 },
+//	{ "map2", &mapldthread,SDL_THREAD_PRIORITY_LOW,    0, (void*)1 },
+	{ NULL,   NULL,        SDL_THREAD_PRIORITY_LOW,    0, NULL },
 };
 
 int threadid(){
 	struct mainthread *mt=mainthreads;
 	SDL_threadID id=SDL_ThreadID();
 	int i=0;
-	for(;mt->fnc;mt++,i++) if(mt->init && mt->pt && SDL_GetThreadID(mt->pt)==id) return i;
+	for(;mt->fnc;mt++,i++) if(mt->init && mt->id==id) return i;
 	return 0;
 }
 
@@ -168,29 +161,23 @@ size_t nthreads(){
 	return n;
 }
 
+int run_thread(void *arg){
+	struct mainthread *mt=(struct mainthread *)arg;
+	SDL_SetThreadPriority(mt->pri);
+	mt->id=SDL_ThreadID();
+#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
+	mt->pt=pthread_self();
+#endif
+	mt->init=1;
+	return mt->fnc(mt->data);
+}
+
 void start_threads(){
 	struct mainthread *mt=mainthreads;
-#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
-	mainthreads->pt=malloc(sizeof(struct SDL_Thread));
-	mainthreads->pt->handle=pthread_self();
-#else
-	mainthreads->pt=NULL;
-#endif
+	mainthreads->id=SDL_ThreadID();
 	mainthreads->init=1;
-	for(;mt->fnc;mt++) if(!mt->init){
-		mt->pt=SDL_CreateThread(mt->fnc,mt->name,mt->data);
-		mt->init=1;
-	}
-#if 0
-#if SDL_THREAD_PTHREAD && HAVE_PTHREAD
-	for(mt=mainthreads;mt->fnc;mt++){
-		struct sched_param par;
-		par.sched_priority=mt->pri;
-		pthread_setschedparam(mt->pt ? mt->pt->handle : pthread_self(),SCHED_RR,&par);
-	}
-#endif
-#endif
-	mainthreads->fnc(NULL);
+	for(;mt->fnc;mt++) if(!mt->init) SDL_CreateThread(run_thread,mt->name,mt);
+	run_thread(mainthreads);
 }
 
 char end_threads(){
@@ -217,7 +204,7 @@ void timer(enum timer ti,int id,char reset){
 			clockid_t cid;
 			struct timespec time;
 			Uint32 t;
-			pthread_getcpuclockid(mt->pt->handle, &cid);
+			pthread_getcpuclockid(mt->pt, &cid);
 			clock_gettime(cid,&time);
 			t=(Uint32)time.tv_sec*100000+(Uint32)time.tv_nsec/10000;
 			if(ti_lst[i]) ti_sum[i]+=t-ti_lst[i];
