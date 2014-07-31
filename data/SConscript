@@ -16,6 +16,8 @@ data = """
 	vs_fish.c
 	fs.c
 	effprg.pl
+	effprged.pl
+	fs_modsaetigung.c
 """.split()
 
 env['DATADIR'] = os.path.join(prefix,'share',env['APPNAME'])
