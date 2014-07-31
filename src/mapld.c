@@ -150,7 +150,7 @@ void mapld_load(struct mapldti ti){
 		snprintf(url,FILELEN,"%s/%s/%i/%i/%i.png",mapld.cachedir,maptypes[ti.mt].id,ti.iz,ti.ix,ti.iy);
 		rename(fn,url);
 	}else{
-		error(ERR_CONT,"mapld_load: file loading failed (res: %i)",res);
+		debug(DBG_STA,"mapld_load: file loading failed (res: %i)",res);
 		unlink(fn);
 	}
 }
