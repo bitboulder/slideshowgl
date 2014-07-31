@@ -55,7 +55,6 @@ char mapld_filecheck(const char *fn){
 #define MURL	64
 
 char mapld_parseurl(char **q,char *a,int x,int y,int z){
-	printf("#%c#\n",**q);
 	if(**q>='0' && **q<='9'){ snprintf(a,MURL,"%i",**q-'0'); (*q)++; return 1; }
 	switch(**q){
 	case 'x': snprintf(a,MURL,"%i",x); (*q)++; return 1;
