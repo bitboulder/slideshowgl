@@ -1,3 +1,4 @@
 - coredump
 - XWrapPointer on fullscreen activation
 - mpv in fullscreen mode
+- fit resize after fullscreen switch + window resize
