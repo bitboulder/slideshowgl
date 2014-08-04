@@ -5,10 +5,7 @@
 #endif
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_thread.h>
-#if HAVE_X11
-	#include <SDL_syswm.h>
-#endif
+#include <SDL_syswm.h>
 #if HAVE_X11 && HAVE_XEXT
 	#include <X11/Xlib.h>
 	#include <X11/extensions/dpms.h>
@@ -60,6 +57,7 @@ struct sdl {
 	Sint32 mousex,mousey;
 	char fullscreen;
 	char dofullscreen;
+	char docentermouse;
 	char sync;
 	SDL_Window *wnd;
 	struct sdlclickdelay {
@@ -75,6 +73,7 @@ struct sdl {
 	.scr_h      = 0,
 	.off_y      = 0,
 	.dofullscreen= 0,
+	.docentermouse=0,
 	.sync       = 0,
 	.hidecursor = 0,
 	.move.base_x= 0xffff,
@@ -172,6 +171,18 @@ char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdp
 	return 0;
 }*/
 	
+void sdlcentermouse(){
+	SDL_SysWMinfo wm;
+	SDL_VERSION(&wm.version);
+	if(SDL_GetWindowWMInfo(sdl.wnd,&wm)) switch(wm.subsystem){
+	#ifdef SDL_VIDEO_DRIVER_X11
+	case SDL_SYSWM_X11: XWarpPointer(wm.info.x11.display,0,wm.info.x11.window,0,0,0,0,sdl.scr_w/2,sdl.scr_h/2); break;
+	#endif
+	default: error(ERR_CONT,"not fully supported window subsystem: %i",wm.subsystem); break;
+	}else error(ERR_CONT,"get window subsystem info failed: %s",SDL_GetError());
+	sdl.docentermouse=0;
+}
+
 void sdlresize(int w,int h){
 	int fsaa=sdl.cfg.fsaa;
 	debug(DBG_STA,"sdl window resize %ix%i",w,h);
@@ -180,6 +191,7 @@ void sdlresize(int w,int h){
 		debug(DBG_STA,"disable anti-aliasing for window size");
 		fsaa=0;
 	}
+	if(sdl.docentermouse) sdlcentermouse();
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,fsaa?1:0);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,fsaa);
 	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
@@ -192,15 +204,10 @@ void sdlinitfullscreen(){
 	if(sdl.fullscreen){
 		SDL_SetWindowPosition(sdl.wnd,0,0); // TODO: set position according to desired display
 		SDL_SetWindowFullscreen(sdl.wnd,SDL_WINDOW_FULLSCREEN_DESKTOP);
+		sdl.docentermouse=1;
 	}else{
 		SDL_SetWindowFullscreen(sdl.wnd,0);
 	}
-/*#if HAVE_X11
-	{ TODO
-		Display *display=XOpenDisplay(NULL);
-		XWrapPointer(display,0,sdl.wnd,0,0,0,0,sdl.scr_w/2,sdl.scr_h/2);
-	}
-#endif*/
 }
 
 void sdlinitwnd(){
