@@ -880,7 +880,7 @@ void dplsetdisplayduration(int dur){
 struct dplevs {
 	struct ev {
 		enum dplev ev;
-		unsigned short key;
+		uint32_t key;
 		float sx,sy;
 		int imgi;
 		enum dplevsrc src;
@@ -896,7 +896,7 @@ struct dplevs {
 };
 
 /* thread: sdl */
-void dplevputx(enum dplev ev,unsigned short key,float sx,float sy,int imgi,enum dplevsrc src){
+void dplevputx(enum dplev ev,uint32_t key,float sx,float sy,int imgi,enum dplevsrc src){
 	if(ev&DE_JUMP){
 		if(key<DPLEV_NMOVE){
 			dev.move[key].sy+=sy;
@@ -1113,16 +1113,15 @@ void dplsearchnext(){
 	dplimgsearch(&in);
 }
 
-void dplkey(unsigned short keyu){
-	uint32_t key=unicode2utf8(keyu);
+void dplkey(uint32_t key){
 	int inputnum=-1;
 	if(!key) return;
 	debug(DBG_STA,"dpl key 0x%08x",key);
 	if(dpl.input.mode!=ITM_OFF){
 		if(key<0x20 || key==0x7f) switch(key){
-			case 8:  dplinputtxtadd(INPUTTXTBACK); break;
-			case 9:  dplinputtxtadd(INPUTTXTTAB); break;
-			case 13: dplinputtxtfinal(1); break;
+			case '\b': dplinputtxtadd(INPUTTXTBACK); break;
+			case '\t': dplinputtxtadd(INPUTTXTTAB); break;
+			case '\n': dplinputtxtfinal(1); break;
 			default: dplinputtxtfinal(0); break;
 		}else if(dpl.input.mode!=ITM_NUM || (key>='0' && key<='9')) dplinputtxtadd(key);
 		else{
@@ -1138,7 +1137,7 @@ void dplkey(unsigned short keyu){
 			  if(effsw(ESW_INFO,0)) break;
 			  if(effsw(ESW_HELP,0)) break;
 	case 'q': sdl_quit=1; break;
-	case   8: if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
+	case  '\b': if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
 	case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
 	case 'p': panoev(PE_FISHMODE); break;

@@ -273,6 +273,17 @@ void utf8check(char *str){
 #endif
 }
 
+/* thread: sdl */
+uint32_t utf8first(const unsigned char *text){
+	unsigned char *buf=(unsigned char *)text;
+	uint32_t key=buf[0];
+	int i;
+	if((buf[0]&0xC0)==0xC0)
+		for(i=1;i<4 && (buf[i]&0xC0)==0x80;i++)
+			key+=(uint32_t)buf[i]<<i*8;
+	return key;
+}
+
 /* thread: gl, eff */
 void col_hsl2rgb(float *dst,float *src){
 	float c=(1.f-fabsf(2.f*src[2]-1.f))*src[1];

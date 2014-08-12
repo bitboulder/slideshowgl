@@ -292,46 +292,6 @@ void sdlquit(){
 	SDL_Quit();
 }
 
-unsigned short keytabn[]={
-       /*  0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F */
-/* 00 */    0,   0,   0,   0,   0,   0,   0,   0, '\b','\t',   0,   0,   0,'\r',   0,   0,
-/* 10 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,0x1B,   0,   0,   0,   0,
-/* 20 */  ' ',   0,   0, '#',   0,   0,   0,   0,    0,   0,   0, '+', ',', '-', '.',   0,
-/* 30 */  '0', '1', '2', '3', '4', '5', '6', '7', '8',  '9',   0,   0, '<',   0,   0,   0,
-/* 40 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 50 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 60 */    0, 'a', 'b', 'c', 'd', 'e', 'f', 'g',  'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-/* 70 */  'p', 'q', 'r', 's', 't', 'u', 'v', 'w',  'x', 'y', 'z',   0,   0,   0,   0,0x7F,
-/* 80 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 90 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* A0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* B0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* C0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* D0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* E0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* F0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-};
-
-unsigned short keytabs[]={
-       /*  0    1    2    3    4    5    6    7     8    9    A    B    C    D    E    F */
-/* 00 */    0,   0,   0,   0,   0,   0,   0,   0, '\b','\t',   0,   0,   0,'\r',   0,   0,
-/* 10 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,0x1B,   0,   0,   0,   0,
-/* 20 */  ' ',   0,   0,'\'',   0,   0,   0,   0,    0,   0,   0, '*', ';', '_', ':',   0,
-/* 30 */  '=', '!', '"',   0, '$', '%', '&', '/', '(',  ')',   0,   0, '>',   0,   0,   0,
-/* 40 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 50 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 60 */    0, 'A', 'B', 'C', 'D', 'E', 'F', 'G',  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-/* 70 */  'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',  'X', 'Y', 'Z',   0,   0,   0,   0,0x7F,
-/* 80 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* 90 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* A0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* B0 */    0,   0,   0,   0, '`',   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* C0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* D0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0, '?',
-/* E0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-/* F0 */    0,   0,   0,   0,   0,   0,   0,   0,    0,   0,   0,   0,   0,   0,   0,   0,
-};
-
 void sdlkey(SDL_Keysym key){
 	switch(key.sym){
 		case SDLK_RIGHT:    dplevput(DE_RIGHT);   break;
@@ -340,17 +300,18 @@ void sdlkey(SDL_Keysym key){
 		case SDLK_DOWN:     dplevput(DE_DOWN);    break;
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
 		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
-		case SDLK_KP_ENTER: dplevputk(' ');       break;
-		case SDLK_HOME:     dplevputi(DE_SEL,0); break;
+		case SDLK_KP_ENTER: dplevputk(SDLK_SPACE);break;
+		case SDLK_HOME:     dplevputi(DE_SEL,0);  break;
 		case SDLK_END:      dplevputi(DE_SEL,IMGI_END-1); break;
-		default:
-			if((key.mod&KMOD_SHIFT)){
-				if(key.sym<(Sint32)sizeof(keytabs) && keytabs[key.sym]) dplevputk(keytabs[key.sym]);
-			}else{
-				if(key.sym<(Sint32)sizeof(keytabn) && keytabn[key.sym]) dplevputk(keytabn[key.sym]);
-			}
-		break;
+		case SDLK_TAB:      dplevputk('\t'); break;
+		case SDLK_BACKSPACE:dplevputk('\b'); break;
+		case SDLK_RETURN:   dplevputk('\n'); break;
+		case SDLK_ESCAPE:   dplevputk(127);  break;
 	}
+}
+
+void sdltext(const char *text){
+	if(text[0]) dplevputk(utf8first((const unsigned char*)text));
 }
 
 char sdljump(Sint32 x,Sint32 y,char end){
@@ -502,8 +463,9 @@ char sdlgetevent(){
 		case SDL_WINDOWEVENT_RESIZED: sdlresize(ev.window.data1,ev.window.data2); break;
 		case SDL_WINDOWEVENT_EXPOSED: sdlforceredraw(); break;
 		} break;
-	case SDL_KEYDOWN: sdlkey(ev.key.keysym); break;
-	case SDL_MOUSEMOTION: sdlmotion(ev.motion.x,ev.motion.y); break;
+	case SDL_KEYDOWN:         sdlkey(ev.key.keysym); break;
+	case SDL_TEXTINPUT:       sdltext(ev.text.text); break;
+	case SDL_MOUSEMOTION:     sdlmotion(ev.motion.x,ev.motion.y); break;
 	case SDL_MOUSEBUTTONDOWN: sdlbutton(1,ev.button.button,ev.button.x,ev.button.y); break;
 	case SDL_MOUSEBUTTONUP:   sdlbutton(0,ev.button.button,ev.button.x,ev.button.y); break;
 	case SDL_MOUSEWHEEL:      sdlwheel(ev.wheel.y); break;
