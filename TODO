@@ -1,5 +1,4 @@
 - coredump
 - mpv in fullscreen mode
-- fit resize after fullscreen switch + window resize
 - fullscreen: move to desired display
 - load cache for images

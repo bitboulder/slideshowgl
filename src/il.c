@@ -495,6 +495,12 @@ void ilsftcheck(){
 	for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))) ilftcheck(il);
 }
 
+void ilsforallcils(void (*func)(struct imglist *il)){
+	int cil;
+	struct imglist *il;
+	for(cil=0;cil<CIL_NUM;cil++) if((il=ilget(CIL(cil)))) func(il);
+}
+
 int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk,enum ilopt o){
 	struct imglist *il;
 	struct img *img;

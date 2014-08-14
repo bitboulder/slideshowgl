@@ -618,8 +618,6 @@ struct effdoarg { char ineff; char chg; };
 
 int effdo1(struct img *img,void *arg){
 	struct effdoarg *ea=(struct effdoarg*)arg;
-	enum effrefresh effref=ilgeteffref(img->il);
-	if(effref!=EFFREF_NO) effinit(effref,0,img->il,-1);
 	ilchkopt(img,ILO_EFF,!!img->pos->eff);
 	if(!img->pos->eff) return 0;
 	if(effdoimg(img)) ea->chg=1;
@@ -627,10 +625,16 @@ int effdo1(struct img *img,void *arg){
 	return 0;
 }
 
+void effdoil(struct imglist *il){
+	enum effrefresh effref=ilgeteffref(il);
+	if(effref!=EFFREF_NO) effinit(effref,0,il,-1);
+}
+
 void effdo(){
 	int i;
 	Uint32 now;
 	struct effdoarg ea[1]={ { .ineff=0, .chg=0 } };
+	ilsforallcils(effdoil);
 	ilsforallimgs(effdo1,ea,1,0,ILO_EFF);
 	now=dplgetticks();
 	if(effdostat()) ea->chg=1;

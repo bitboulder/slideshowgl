@@ -70,6 +70,7 @@ void ilchkopt(struct img *img,enum ilopt opt,char act);
 /* ils */
 void ilscleanup();
 void ilsftcheck();
+void ilsforallcils(void (*func)(struct imglist *il));
 int ilsforallimgs(int (*func)(struct img *img,void *arg),void *arg,char cilonly,int brk,enum ilopt o);
 void ilsfinalize();
 
