@@ -306,7 +306,8 @@ void sdlkey(SDL_Keysym key){
 		case SDLK_TAB:      dplevputk('\t'); break;
 		case SDLK_BACKSPACE:dplevputk('\b'); break;
 		case SDLK_RETURN:   dplevputk('\n'); break;
-		case SDLK_ESCAPE:   dplevputk(127);  break;
+		case SDLK_DELETE:   dplevputk(127);  break;
+		case SDLK_ESCAPE:   dplevputk(27);   break;
 	}
 }
 
