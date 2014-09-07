@@ -61,12 +61,15 @@ struct texload {
 	} buf[N_TEXLOAD];
 };
 
+enum mapimgdirs {MID_DIR,MID_DIRS,MID_STAR,MID_STARDIRS,MID_STARS};
+
 struct mapimg {
 	struct mapimg *nxt;
 	char dir[FILELEN];
 	int  dirid;
 	char *name;
 	double gx,gy;
+	char star;
 };
 
 struct mapclti {
@@ -74,6 +77,7 @@ struct mapclti {
 	struct mapimg  *img;
 	struct mapclti *nxtclt;
 	int nimg;
+	enum mapimgdirs id;
 	double mx,my;
 };
 
@@ -96,7 +100,7 @@ struct map {
 	struct tile ****tile;
 	struct texload tl;
 	int *scr_w, *scr_h;
-	struct tile imgdir[2];
+	struct tile imgdir[5];
 	int info;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
@@ -331,6 +335,7 @@ void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
 		img->name=img->dir+(name-dir);
 		img->dirid=dirid;
 		img->nxt=mapimgs.img;
+		img->star=strstr(img->dir,"/ausfluege/")!=NULL; // TODO: check star with config
 		mapimgs.img=img;
 	}else if(img->gx==gx && img->gy==gy) return;
 	img->gx=gx;
@@ -359,6 +364,7 @@ struct mapclt mapimgcltinit(int iz,size_t nimg){
 		clt.cltbuf[i].img=img;
 		clt.cltbuf[i].nxtclt=i+1<nimg ? clt.cltbuf+i+1 : NULL;
 		clt.cltbuf[i].nimg=1;
+		clt.cltbuf[i].id=img->star ? MID_STAR : MID_DIR;
 		mapg2m(img->gx,img->gy,iz,clt.cltbuf[i].mx,clt.cltbuf[i].my);
 	}
 	return clt;
@@ -435,6 +441,11 @@ int mapimgcltdjoin(struct mapclti **cltijoin,struct mapclti **clti){
 	dst->mx+=src0->mx;
 	dst->my+=src0->my;
 	src0->nimg=0;
+	if(src0->id>=MID_STAR) dst->id = (dst->id>=MID_STAR || src0->id==MID_STARS) ? MID_STARS : MID_STARDIRS;
+	else{
+		if(dst->id==MID_DIR)  dst->id=MID_DIRS;
+		if(dst->id==MID_STAR) dst->id=MID_STARDIRS;
+	}
 	if(clti[0]==src0) clti[0]=src0->nxtclt;
 	else for(ci=clti[0];ci;ci=ci->nxtclt) if(ci->nxtclt==src0)
 		ci->nxtclt=src0->nxtclt;
@@ -808,8 +819,11 @@ void mapinit(){
 	mapaddbasedir(cfggetstr("map.base"),"");
 	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
-	texloadput(map.imgdir+0,IMG_Load(finddatafile("mapdir.png")));
-	texloadput(map.imgdir+1,IMG_Load(finddatafile("mapdirs.png")));
+	texloadput(map.imgdir+MID_DIR,     IMG_Load(finddatafile("mapdir.png"     )));
+	texloadput(map.imgdir+MID_DIRS,    IMG_Load(finddatafile("mapdirs.png"    )));
+	texloadput(map.imgdir+MID_STAR,    IMG_Load(finddatafile("mapstar.png"    )));
+	texloadput(map.imgdir+MID_STARDIRS,IMG_Load(finddatafile("mapstardirs.png")));
+	texloadput(map.imgdir+MID_STARS,   IMG_Load(finddatafile("mapstars.png"   )));
 	map.init=MI_TEX;
 }
 
@@ -827,7 +841,7 @@ void maprenderclt(){
 		glLoadName(name++);
 		if(optx){
 		double k[3],xs=15./512.,ys=10./512.;
-		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
+		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.,0.); mapm2k(clti->mx-xs,clti->my-ys,iz,k); glVertex3dv(k);
 		glTexCoord2f(1.,0.); mapm2k(clti->mx+xs,clti->my-ys,iz,k); glVertex3dv(k);
@@ -839,7 +853,7 @@ void maprenderclt(){
 		glScalef(s*256.f/(float)*map.scr_w,s*256.f/(float)*map.scr_h,1.f);
 		glTranslated(clti->mx-mx,clti->my-my,0.);
 		glScalef(15.f/256.f/s,10.f/256.f/s,1.f);
-		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->nxtimg?1:0].tex);
+		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
 		glBegin(GL_QUADS);
 		glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
 		glTexCoord2f( 1.0, 0.0); glVertex2f( 0.5,-0.5);

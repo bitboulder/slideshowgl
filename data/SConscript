@@ -11,6 +11,9 @@ data = """
 	mov.png
 	mapdir.png
 	mapdirs.png
+	mapstar.png
+	mapstardirs.png
+	mapstars.png
 	FreeSans.ttf
 	vs.c
 	vs_fish.c
