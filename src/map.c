@@ -104,6 +104,7 @@ struct map {
 	int info;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
+	const char *starpat;
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
@@ -299,6 +300,7 @@ const char *mapimgname(const char *dir){
 	size_t c=0,i,len=strlen(dir);
 	for(i=len;i>0 && c<3;i--) if(dir[i-1]=='/' || dir[i-1]=='\\') c++;
 	if(i) i++;
+
 	return dir+i;
 }
 
@@ -335,7 +337,7 @@ void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
 		img->name=img->dir+(name-dir);
 		img->dirid=dirid;
 		img->nxt=mapimgs.img;
-		img->star=strstr(img->dir,"/ausfluege/")!=NULL; // TODO: check star with config
+		img->star=map.starpat[0] && strstr(img->dir,map.starpat)!=NULL;
 		mapimgs.img=img;
 	}else if(img->gx==gx && img->gy==gy) return;
 	img->gx=gx;
@@ -816,6 +818,7 @@ void mapaddbasedir(const char *dir,const char *name){
 
 void mapinit(){
 	while(map.init>2) SDL_Delay(500);
+	map.starpat=cfggetstr("map.star");
 	mapaddbasedir(cfggetstr("map.base"),"");
 	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
