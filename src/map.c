@@ -298,9 +298,16 @@ struct tile *maptilefind(int ix,int iy,int iz,char create){
 
 const char *mapimgname(const char *dir){
 	size_t c=0,i,len=strlen(dir);
+	char *bdir;
 	for(i=len;i>0 && c<3;i--) if(dir[i-1]=='/' || dir[i-1]=='\\') c++;
 	if(i) i++;
-
+	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
+		size_t l=strlen(bdir);
+		if(i<l && !strncmp(bdir,dir,l)){
+			i=l;
+			if(dir[i]=='/' || dir[i]=='\\') i++;
+		}
+	}
 	return dir+i;
 }
 
