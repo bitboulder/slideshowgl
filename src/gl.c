@@ -36,6 +36,7 @@ struct glfont {
 };
 
 struct gl {
+	float  ver;
 	GLuint dls;
 	GLuint prg;
 	GLuint prgms;
@@ -158,13 +159,15 @@ void glinit(char done){
 	float f;
 	int i;
 	if(!done){
+		const char *vstr=(const char *)glGetString(GL_VERSION);
+		if(sscanf(vstr,"%f",&gl.ver)<1) gl.ver=0;
 		if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 		if(cfggetint("cfg.version")){
-			const char *str=NULL;
-			if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
-				str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-			mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
-			mprintf("GLSL-Version: %s\n",str?str:"NONE");
+			mprintf("GL-Version: %s\n",vstr);
+			mprintf("GLSL-Version: %s\n",
+				GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader ?
+				(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION) :
+				"NONE");
 		}
 		gl.cfg.hrat_input    = cfggetfloat("gl.hrat_input");
 		gl.cfg.hrat_stat     = cfggetfloat("gl.hrat_stat");
@@ -272,7 +275,7 @@ void glmodeslave(enum glmode dst){
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
-		glSecondaryColor3f(1.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
 		else if(gl.prg) glUseProgram(gl.prg);
@@ -282,7 +285,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		glSecondaryColor3f(1.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		if(dst==GLM_2DA) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 		else glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(gl.prg) glUseProgram(gl.prg);
@@ -293,7 +296,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		glSecondaryColor3f(0.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(0.f,0.f,0.f);
 		if(dst==GLM_1DI){
 			glBlendFunc(GL_ONE_MINUS_DST_COLOR,GL_ONE_MINUS_SRC_ALPHA);
 		}else{
