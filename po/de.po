@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: slideshowgl 2.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-07-31 09:02+0200\n"
+"POT-Creation-Date: 2014-09-10 21:37+0200\n"
 "PO-Revision-Date: 2010-12-03 09:41+0100\n"
 "Last-Translator: Frank Duckhorn <frank@bitboulder.net>\n"
 "Language-Team: German\n"
@@ -92,7 +92,7 @@ msgstr "Warte auf core dumps und kopiere sie nach ARG/core_dump"
 msgid "Add space seperated files to initial file list"
 msgstr "Durch Leerzeichen getrennte Dateien zu Anfangsliste hinzufügen"
 
-#: src/cfg.c:53 src/dpl_help.h:175
+#: src/cfg.c:53 src/dpl_help.h:177
 msgid "Toggle fullscreen"
 msgstr "Vollbildmodus umschalten"
 
@@ -388,110 +388,114 @@ msgid "Add url for another map type (ID,MAXZOOM,URL_WITH_[x][y][z])"
 msgstr "URL für weitern Kartentyp hinzufügen (ID,MAXZOOM,URL_MIT_[x][y][z])"
 
 #: src/cfg.c:125
+msgid "Pattern for stared markers inside map.base"
+msgstr "Pattern für Marker mit Stern in map.base"
+
+#: src/cfg.c:126
 msgid "Cache directory for map images (default: TMP/slideshowgl-cache)"
 msgstr "Cacheverzeichnis für Kartendateien (Standart: TMP/slideshowgl-cache)"
 
-#: src/cfg.c:126
+#: src/cfg.c:127
 msgid "Dayes of expire for map cache"
 msgstr "Anzahl der Tage zum Ablauf des Caches für die Karte"
 
-#: src/cfg.c:127
+#: src/cfg.c:128
 msgid "Maximal fraction displayed in histogram"
 msgstr "Größter Anteil im Histogramm"
 
-#: src/cfg.c:137
+#: src/cfg.c:138
 #, c-format
 msgid "cfg not found '%s'"
 msgstr ""
 
-#: src/cfg.c:145
+#: src/cfg.c:146
 #, c-format
 msgid "cfg not of type int '%s'"
 msgstr ""
 
-#: src/cfg.c:159
+#: src/cfg.c:160
 #, c-format
 msgid "cfg enum with unknown value '%s': '%s'"
 msgstr ""
 
-#: src/cfg.c:160
+#: src/cfg.c:161
 #, c-format
 msgid "cfg not of type enum '%s'"
 msgstr ""
 
-#: src/cfg.c:168
+#: src/cfg.c:169
 #, c-format
 msgid "cfg not of type float '%s'"
 msgstr ""
 
-#: src/cfg.c:177
+#: src/cfg.c:178
 #, c-format
 msgid "cfg parse col error (%s)"
 msgstr ""
 
-#: src/cfg.c:178
+#: src/cfg.c:179
 #, c-format
 msgid "cfg not of type col '%s'"
 msgstr ""
 
-#: src/cfg.c:185
+#: src/cfg.c:186
 #, c-format
 msgid "cfg not of type str '%s'"
 msgstr ""
 
-#: src/cfg.c:201
+#: src/cfg.c:202
 #, c-format
 msgid "cfg add config file \"%s\""
 msgstr ""
 
-#: src/cfg.c:236
+#: src/cfg.c:237
 #, c-format
 msgid "cfgset no arg for '%s'"
 msgstr ""
 
-#: src/cfg.c:240
+#: src/cfg.c:241
 #, c-format
 msgid "cfgset unsupported mode for '%s'"
 msgstr ""
 
-#: src/cfg.c:254
+#: src/cfg.c:255
 #, c-format
 msgid "cfgset do-option with no implemented action (%s)"
 msgstr ""
 
-#: src/cfg.c:261
+#: src/cfg.c:262
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/cfg.c:268
+#: src/cfg.c:269
 #, c-format
 msgid "Usage: %s [Options] {FILES|FILELISTS.flst}\n"
 msgstr "Benutzung: %s [Optionen] {DATEIEN|DATEILISTEN.flst}\n"
 
-#: src/cfg.c:269
+#: src/cfg.c:270
 msgid "Options"
 msgstr "Optionen"
 
-#: src/cfg.c:286
+#: src/cfg.c:287
 msgid "cur"
 msgstr "akt"
 
-#: src/cfg.c:297
+#: src/cfg.c:298
 msgid "cfgcompileopt: opt too small"
 msgstr ""
 
-#: src/cfg.c:316
+#: src/cfg.c:317
 #, c-format
 msgid "option missing argument: -c %s"
 msgstr ""
 
-#: src/cfg.c:320
+#: src/cfg.c:321
 #, c-format
 msgid "unknown option: -c %s"
 msgstr ""
 
-#: src/cfg.c:355
+#: src/cfg.c:356
 #, c-format
 msgid "cfg read section [%s] in \"%s\""
 msgstr ""
@@ -563,7 +567,7 @@ msgstr " doppelt-gedreht"
 msgid " rotated-left"
 msgstr " links-gedreht"
 
-#: src/dpl.c:657 src/map.c:1172
+#: src/dpl.c:657 src/map.c:1215
 msgid " (write-mode)"
 msgstr " (Schreibmodus)"
 
@@ -571,7 +575,7 @@ msgstr " (Schreibmodus)"
 msgid " [MARK]"
 msgstr " [MARK]"
 
-#: src/dpl.c:1120
+#: src/dpl.c:1119
 #, c-format
 msgid "dpl key 0x%08x"
 msgstr ""
@@ -701,84 +705,84 @@ msgstr "(unbekannt)"
 msgid "exif loading img %s"
 msgstr ""
 
-#: src/file.c:181
+#: src/file.c:185
 #, c-format
 msgid "thumbinit thumb too old for '%s'"
 msgstr ""
 
-#: src/file.c:189
+#: src/file.c:193
 #, c-format
 msgid "thumbinit no thumb found for '%s'"
 msgstr ""
 
-#: src/file.c:191
+#: src/file.c:195
 #, c-format
 msgid "thumbinit thumb used: '%s'"
 msgstr ""
 
-#: src/file.c:271
+#: src/file.c:275
 #, c-format
 msgid "directory found '%s': '%s'"
 msgstr ""
 
-#: src/file.c:325
+#: src/file.c:329
 #, c-format
 msgid "ld read effprg failed \"%s\""
 msgstr ""
 
-#: src/file.c:327
+#: src/file.c:331
 #, c-format
 msgid "ld read flst failed \"%s\""
 msgstr ""
 
-#: src/file.c:401
+#: src/file.c:405
 #, c-format
 msgid "opendir failed (%s)"
 msgstr ""
 
-#: src/gl.c:117
+#: src/gl.c:118
 #, c-format
 msgid "loading vertex shader file %s failed"
 msgstr ""
 
-#: src/gl.c:118
+#: src/gl.c:119
 #, c-format
 msgid "loading fragment shader file %s failed"
 msgstr ""
 
-#: src/gl.c:128
+#: src/gl.c:129
 #, c-format
 msgid "compiling vertex shader %s failed"
 msgstr ""
 
-#: src/gl.c:130
+#: src/gl.c:131
 #, c-format
 msgid "compiling fragment shader %s failed"
 msgstr ""
 
-#: src/gl.c:136
+#: src/gl.c:137
 #, c-format
 msgid "linking program (%s,%s) failed"
 msgstr ""
 
-#: src/gl.c:143
+#: src/gl.c:144
 #, c-format
 msgid "InfoLog: %s"
 msgstr ""
 
-#: src/gl.c:161
+#: src/gl.c:164
 msgid "glew init failed"
 msgstr ""
 
-#: src/gl.c:712
+#: src/gl.c:715
 msgid "Image info"
 msgstr "Bildinformationen"
 
-#: src/gl.c:747
+#: src/gl.c:750
 msgid "Interface"
 msgstr "Bedienung"
 
-#: src/gl.c:1019
+#: src/gl.c:1022
 #, c-format
 msgid "in glpaint (gl-err: %d)"
 msgstr ""
@@ -990,74 +994,74 @@ msgstr ""
 msgid "ldreset done"
 msgstr ""
 
-#: src/main.c:127
+#: src/main.c:116
 #, c-format
 msgid "could not find data file: '%s'"
 msgstr ""
 
-#: src/main.c:403
+#: src/main.c:390
 #, c-format
 msgid "sdl timeout waiting for threads:%s%s%s%s%s%s"
 msgstr ""
 
-#: src/map.c:143
+#: src/map.c:156
 msgid "map addurl with map init\n"
 msgstr ""
 
-#: src/map.c:144 src/map.c:152
+#: src/map.c:157 src/map.c:165
 #, c-format
 msgid "map addurl parse error \"%s\""
 msgstr ""
 
-#: src/map.c:153
+#: src/map.c:166
 #, c-format
 msgid "map addurl %s,%i,%s\n"
 msgstr ""
 
-#: src/map.c:328
+#: src/map.c:349
 #, c-format
 msgid "mapimgadd: no free dirid found for \"%s\""
 msgstr ""
 
-#: src/map.c:486
+#: src/map.c:524
 msgid "mapimgclt: cluster with zero elements -> correcting"
 msgstr ""
 
-#: src/map.c:514
+#: src/map.c:552
 msgid "mapimgclt: join of pre-join clusters"
 msgstr ""
 
-#: src/map.c:542
+#: src/map.c:581
 msgid "[Map-Selection]"
 msgstr "[Karte-Auswahl]"
 
-#: src/map.c:599
+#: src/map.c:638
 msgid "no maptypes defined"
 msgstr ""
 
-#: src/map.c:600
+#: src/map.c:639
 msgid "map init waiting"
 msgstr ""
 
-#: src/map.c:622
+#: src/map.c:661
 msgid "[Map]"
 msgstr "[Karte]"
 
-#: src/map.c:679
+#: src/map.c:718
 #, c-format
 msgid "map loading map %i/%i/%i"
 msgstr ""
 
-#: src/map.c:1062
+#: src/map.c:1105
 #, c-format
 msgid "map zoom %i (%s)"
 msgstr ""
 
-#: src/map.c:1173
+#: src/map.c:1216
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/map.c:1173
+#: src/map.c:1216
 msgid "Replace"
 msgstr "Ersetzen"
 
@@ -1110,53 +1114,63 @@ msgstr ""
 msgid "split txt failed (%s)"
 msgstr ""
 
-#: src/sdl.c:177
+#: src/sdl.c:181
+#, c-format
+msgid "not fully supported window subsystem: %i"
+msgstr ""
+
+#: src/sdl.c:182
+#, c-format
+msgid "get window subsystem info failed: %s"
+msgstr ""
+
+#: src/sdl.c:188
 #, c-format
 msgid "sdl window resize %ix%i"
 msgstr ""
 
-#: src/sdl.c:180
+#: src/sdl.c:191
 msgid "disable anti-aliasing for window size"
 msgstr ""
 
-#: src/sdl.c:209
+#: src/sdl.c:216
 msgid "window creation failed"
 msgstr ""
 
-#: src/sdl.c:211
+#: src/sdl.c:218
 #, c-format
 msgid "sdl init window %ix%i"
 msgstr ""
 
-#: src/sdl.c:216
+#: src/sdl.c:223
 msgid "swap interval failed"
 msgstr ""
 
-#: src/sdl.c:220
+#: src/sdl.c:227
 #, c-format
 msgid "in sdl window creation (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:223
+#: src/sdl.c:230
 #, c-format
 msgid "in glinit (gl-err: %d)"
 msgstr ""
 
-#: src/sdl.c:229
+#: src/sdl.c:236
 #, c-format
 msgid "icon load failed (%s)"
 msgstr ""
 
-#: src/sdl.c:268
+#: src/sdl.c:275
 msgid "sdl init failed"
 msgstr ""
 
-#: src/sdl.c:523
+#: src/sdl.c:493
 #, c-format
 msgid "sdl framerate %.1f fps"
 msgstr ""
 
-#: src/sdl.c:540
+#: src/sdl.c:510
 #, c-format
 msgid "sdl save frame %s"
 msgstr ""
@@ -1185,7 +1199,7 @@ msgstr "Weiter"
 msgid " Middle click"
 msgstr " Mittelclick"
 
-#: src/dpl_help.h:21 src/dpl_help.h:149
+#: src/dpl_help.h:21 src/dpl_help.h:151
 msgid "Toggle mark"
 msgstr "Bildmarkierung umschalten"
 
@@ -1320,7 +1334,7 @@ msgstr " Programm-Editor"
 msgid " Pageup/Pagedown"
 msgstr " Bild hoch/runter"
 
-#: src/dpl_help.h:60 src/dpl_help.h:142
+#: src/dpl_help.h:60 src/dpl_help.h:144
 msgid " +/-"
 msgstr ""
 
@@ -1356,7 +1370,7 @@ msgstr "Seite löschen"
 msgid "Swap frame with next/previous one"
 msgstr "Seite mit nächster/vorheriger tauschen"
 
-#: src/dpl_help.h:65
+#: src/dpl_help.h:65 src/dpl_help.h:135
 msgid " d"
 msgstr ""
 
@@ -1372,7 +1386,7 @@ msgstr " [0-9]+m"
 msgid "Move frame to position"
 msgstr "Seite zu Position verschieben"
 
-#: src/dpl_help.h:67 src/dpl_help.h:177
+#: src/dpl_help.h:67 src/dpl_help.h:179
 msgid " [0-9]+d"
 msgstr " [0-9]+d"
 
@@ -1396,7 +1410,7 @@ msgstr ""
 msgid "Change color of text"
 msgstr "Farbe eines Textes ändern"
 
-#: src/dpl_help.h:70 src/dpl_help.h:161
+#: src/dpl_help.h:70 src/dpl_help.h:163
 msgid " C"
 msgstr ""
 
@@ -1456,8 +1470,8 @@ msgstr ""
 msgid "Search for marker"
 msgstr "Nach Verzeichnis suchen"
 
-#: src/dpl_help.h:85 src/dpl_help.h:118 src/dpl_help.h:120 src/dpl_help.h:149
-#: src/dpl_help.h:152
+#: src/dpl_help.h:85 src/dpl_help.h:118 src/dpl_help.h:120 src/dpl_help.h:151
+#: src/dpl_help.h:154
 msgid " m"
 msgstr ""
 
@@ -1521,7 +1535,7 @@ msgstr "Suche fortsetzen"
 msgid " Directory options"
 msgstr " Verzeichnis Optionen"
 
-#: src/dpl_help.h:106 src/dpl_help.h:108 src/dpl_help.h:156
+#: src/dpl_help.h:106 src/dpl_help.h:108 src/dpl_help.h:158
 msgid " S"
 msgstr ""
 
@@ -1582,153 +1596,157 @@ msgstr "Schreibmodus deaktivieren"
 msgid "Switch mode for new markers (add/replace)"
 msgstr "Modus für neue Marker ändern (hinzufügen/ersetzen)"
 
-#: src/dpl_help.h:136 src/dpl_help.h:138
+#: src/dpl_help.h:135
+msgid "Switch display mode for markers"
+msgstr "Anzeigemodus für Marker ändern"
+
+#: src/dpl_help.h:138 src/dpl_help.h:140
 msgid " r/R"
 msgstr ""
 
-#: src/dpl_help.h:136
+#: src/dpl_help.h:138
 msgid "Rotate image"
 msgstr "Bild drehen"
 
-#: src/dpl_help.h:138
+#: src/dpl_help.h:140
 msgid "Rotate image (only in writing mode permanent)"
 msgstr "Bild drehen (zum Speichern Schreibmodus aktivieren)"
 
-#: src/dpl_help.h:141
+#: src/dpl_help.h:143
 msgid " g/b/c"
 msgstr ""
 
-#: src/dpl_help.h:141
+#: src/dpl_help.h:143
 msgid "+/- mode: gamma/brightness/contrase (only with opengl shader support)"
 msgstr ""
 "+/- Modus: Gamma/Helligkeit/Kontrast(nur mit Unterstützung für OpenGL Shader)"
 
-#: src/dpl_help.h:142
+#: src/dpl_help.h:144
 msgid "Increase/decrease selected"
 msgstr "Ausgewähltes erhöhen/verringern"
 
-#: src/dpl_help.h:145
+#: src/dpl_help.h:147
 msgid " Del"
 msgstr ""
 
-#: src/dpl_help.h:145
+#: src/dpl_help.h:147
 msgid "Move image to del/ and remove from dpl-list"
 msgstr "Bild nach 'del' verschieben und nicht mehr anzeigen"
 
-#: src/dpl_help.h:146
+#: src/dpl_help.h:148
 msgid " o"
 msgstr ""
 
-#: src/dpl_help.h:146
+#: src/dpl_help.h:148
 msgid "Move image to ori/ and remove from dpl-list"
 msgstr "Bild nach 'ori' verschieben und nicht mehr anzeigen"
 
-#: src/dpl_help.h:150
+#: src/dpl_help.h:152
 msgid " M"
 msgstr ""
 
-#: src/dpl_help.h:150
+#: src/dpl_help.h:152
 msgid "Switch mark file"
 msgstr "Markierungsdatei umschalten"
 
-#: src/dpl_help.h:152
+#: src/dpl_help.h:154
 msgid "Show map"
 msgstr "Karte anzeigen"
 
-#: src/dpl_help.h:155
+#: src/dpl_help.h:157
 msgid " s"
 msgstr ""
 
-#: src/dpl_help.h:155
+#: src/dpl_help.h:157
 msgid "Enter and toggle image catalog"
 msgstr "Bildkatalog eingeben und ändern"
 
-#: src/dpl_help.h:156
+#: src/dpl_help.h:158
 msgid "Copy catalogs from last marked image (only if an image is active)"
 msgstr ""
 "Kataloge des letzten geänderten Bildes kopieren (nur wenn kein Bild aktiv "
 "ist)"
 
-#: src/dpl_help.h:158
+#: src/dpl_help.h:160
 msgid " G"
 msgstr ""
 
-#: src/dpl_help.h:158
+#: src/dpl_help.h:160
 msgid "Edit current image with gimp"
 msgstr "Aktuelles Bild mit gimp bearbeiten"
 
-#: src/dpl_help.h:159
+#: src/dpl_help.h:161
 msgid " U"
 msgstr ""
 
-#: src/dpl_help.h:159
+#: src/dpl_help.h:161
 msgid "Edit raw image with ufraw"
 msgstr "Aktuelles Roh-Bild mit ufraw bearbeiten"
 
-#: src/dpl_help.h:161
+#: src/dpl_help.h:163
 msgid "Open current image/directory for file-convert-utility"
 msgstr "Aktuelles Bild/Verzeichnis mit Datei-Konvertierung öffnen"
 
-#: src/dpl_help.h:165
+#: src/dpl_help.h:167
 msgid " Image information"
 msgstr " Bildinformationen"
 
-#: src/dpl_help.h:166
+#: src/dpl_help.h:168
 msgid " i/I"
 msgstr ""
 
-#: src/dpl_help.h:166
+#: src/dpl_help.h:168
 msgid "Show selected/full image info"
 msgstr "Ausgewählte/Alle Bildinformationen anzeigen"
 
-#: src/dpl_help.h:167
+#: src/dpl_help.h:169
 msgid " H"
 msgstr ""
 
-#: src/dpl_help.h:167
+#: src/dpl_help.h:169
 msgid "Show histograms"
 msgstr "Histogramme anzeigen"
 
-#: src/dpl_help.h:168
+#: src/dpl_help.h:170
 msgid " k"
 msgstr ""
 
-#: src/dpl_help.h:168
+#: src/dpl_help.h:170
 msgid "Show image catalog"
 msgstr "Bildkataloge anzeigen"
 
-#: src/dpl_help.h:172
+#: src/dpl_help.h:174
 msgid " Program interface"
 msgstr " Programmbedienung"
 
-#: src/dpl_help.h:173
+#: src/dpl_help.h:175
 msgid " h"
 msgstr ""
 
-#: src/dpl_help.h:173
+#: src/dpl_help.h:175
 msgid "Show help"
 msgstr "Hilfe anzeigen"
 
-#: src/dpl_help.h:174
+#: src/dpl_help.h:176
 msgid " q/Esc"
 msgstr ""
 
-#: src/dpl_help.h:174
+#: src/dpl_help.h:176
 msgid "Quit"
 msgstr "Programm beenden"
 
-#: src/dpl_help.h:175
+#: src/dpl_help.h:177
 msgid " f"
 msgstr ""
 
-#: src/dpl_help.h:177
+#: src/dpl_help.h:179
 msgid "Displayduration [s/ms]"
 msgstr "Anzeigedauer setzten [s/ms]"
 
-#: src/dpl_help.h:180
+#: src/dpl_help.h:182
 msgid " p"
 msgstr ""
 
-#: src/dpl_help.h:180
+#: src/dpl_help.h:182
 msgid "Toggle panorama fisheye mode (isogonic,equidistant,equal-area)"
 msgstr "Fishaugen-Modus ändern (winkeltreu,äquidistant,flächentreu)"
