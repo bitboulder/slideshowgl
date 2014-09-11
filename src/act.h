@@ -6,7 +6,8 @@
 
 enum act { ACT_SAVEMARKS, ACT_ROTATE, ACT_DELETE, ACT_DELORI, ACT_ILCLEANUP, ACT_MAPCLT, ACT_EXIFCACHE, ACT_NUM };
 
-void actadd(enum act act,struct img *img,struct imglist *il);
+#define actadd(a,i,l)	actaddx(a,i,l,1)
+void actaddx(enum act act,struct img *img,struct imglist *il,Uint32 delay);
 void actinit();
 int actthread(void *arg);
 void actforce();

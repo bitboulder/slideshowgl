@@ -89,19 +89,19 @@ void actdo(enum act act,struct img *img,struct imglist *il){
 	SDL_mutexV(ac.mx_do);
 }
 
-void actdelay(enum act act){
+void actdelay(enum act act,Uint32 delay){
 	struct actdelay *dl=ac.cfg.delay+act;
 	SDL_mutexP(ac.mx_dl);
 	if(!dl->countdown){
 		debug(DBG_STA,"action %i run with delay",act);
-		dl->countdown=SDL_GetTicks()+dl->delay;
+		dl->countdown=SDL_GetTicks()+delay;
 	}
 	SDL_mutexV(ac.mx_dl);
 }
 
-void actrun(enum act act,struct img *img,struct imglist *il){
-	Uint32 delay=ac.cfg.delay[act].delay;
-	if(delay) actdelay(act);
+void actrun(enum act act,struct img *img,struct imglist *il,Uint32 delay){
+	if(delay==1) delay=ac.cfg.delay[act].delay;
+	if(delay) actdelay(act,delay);
 	else actdo(act,img,il);
 }
 
@@ -123,26 +123,29 @@ struct qact {
 	enum act act;
 	struct img *img;
 	struct imglist *il;
+	Uint32 delay;
 } qacts[QACT_NUM];
 int qact_wi=0;
 int qact_ri=0;
 
 /* thread: dpl, load, main */
-void actadd(enum act act,struct img *img,struct imglist *il){
+void actaddx(enum act act,struct img *img,struct imglist *il,Uint32 delay){
 	int nwi=(qact_wi+1)%QACT_NUM;
 	if(!ac.init) return;
-	if(ac.cfg.delay[act].delay) actdelay(act); else{
+	if(delay==1) delay=ac.cfg.delay[act].delay;
+	if(delay) actdelay(act,delay); else{
 		while(nwi==qact_ri) SDL_Delay(100);
 		qacts[qact_wi].act=act;
 		qacts[qact_wi].img=img;
 		qacts[qact_wi].il=il;
+		qacts[qact_wi].delay=delay;
 		qact_wi=nwi;
 	}
 }
 
 char actpop(){
 	if(qact_wi==qact_ri) return 0;
-	actrun(qacts[qact_ri].act,qacts[qact_ri].img,qacts[qact_ri].il);
+	actrun(qacts[qact_ri].act,qacts[qact_ri].img,qacts[qact_ri].il,qacts[qact_ri].delay);
 	qact_ri=(qact_ri+1)%QACT_NUM;
 	return 1;
 }
