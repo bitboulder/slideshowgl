@@ -1167,7 +1167,7 @@ void dplkey(uint32_t key){
 		}
 	break;
 	case 'j': if(dplinputtxtinit(ITM_DIRED)) dpl.diredmode=DEM_ALL; break;
-	case 'd': if(!dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
+	case 'd': if(!mapdisplaymode() && !dplprged("frmcpy",1,-1,inputnum) && inputnum>=0) dplsetdisplayduration(inputnum); break;
 	case 'g': if(glprg()) dpl.colmode=COL_G; break;
 	case 'c': if(!dplprgcol() && glprg()) dpl.colmode=COL_C; break;
 	case 'C': if(!dplprgcolcopy()) dplconvert(); break;

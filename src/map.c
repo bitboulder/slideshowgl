@@ -102,6 +102,7 @@ struct map {
 	int *scr_w, *scr_h;
 	struct tile imgdir[5];
 	int info;
+	enum mapdisplaymode {MDM_ALL,MDM_NORMAL,MDM_STAR,MDM_NONE,N_MDM} displaymode;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
 	const char *starpat;
@@ -118,6 +119,7 @@ struct map {
 	.scr_w = NULL,
 	.scr_h = NULL,
 	.info  = -1,
+	.displaymode  = MDM_ALL,
 	.editmode  = MEM_ADD,
 	.ftchk = 3000,
 };
@@ -137,6 +139,12 @@ void mapinfo(int i){
 	sdlforceredraw();
 }
 const char *mapgetbasedirs(){ return map.basedirs; }
+char mapdisplaymode(){
+	if(!mapon()) return 0;
+	map.displaymode=(map.displaymode+1)%N_MDM;
+	actaddx(ACT_MAPCLT,NULL,NULL,0);
+	return 1;
+}
 void mapeditmode(){
 	if(map.init>MI_TEX || !mapon()) return;
 	map.editmode=(map.editmode+1)%N_MEM;
@@ -358,7 +366,12 @@ void mapimgadd(const char *dir,int dirid,double gx,double gy,char clt){
 size_t mapimgcltnimg(){
 	struct mapimg *img;
 	size_t nimg=0;
-	for(img=mapimgs.img;img;img=img->nxt) nimg++;
+	for(img=mapimgs.img;img;img=img->nxt) switch(map.displaymode){
+	case MDM_ALL:                   nimg++; break;
+	case MDM_NORMAL: if(!img->star) nimg++; break;
+	case MDM_STAR:   if( img->star) nimg++; break;
+	default:                                break;
+	}
 	return nimg;
 }
 
@@ -368,13 +381,18 @@ struct mapclt mapimgcltinit(int iz,size_t nimg){
 	size_t i;
 	clt.cltbuf=calloc((size_t)nimg,sizeof(struct mapclti));
 	clt.clts=clt.cltbuf;
-	for(img=mapimgs.img,i=0;i<nimg;img=img->nxt,i++){
+	for(img=mapimgs.img,i=0;i<nimg;img=img->nxt){
+		if(map.displaymode==MDM_NONE ||
+			(map.displaymode==MDM_NORMAL &&  img->star) ||
+			(map.displaymode==MDM_STAR   && !img->star))
+			continue;
 		clt.cltbuf[i].nxtimg=NULL;
 		clt.cltbuf[i].img=img;
 		clt.cltbuf[i].nxtclt=i+1<nimg ? clt.cltbuf+i+1 : NULL;
 		clt.cltbuf[i].nimg=1;
 		clt.cltbuf[i].id=img->star ? MID_STAR : MID_DIR;
 		mapg2m(img->gx,img->gy,iz,clt.cltbuf[i].mx,clt.cltbuf[i].my);
+		i++;
 	}
 	return clt;
 }
@@ -516,8 +534,8 @@ void mapimgclt(int izsel){
 	int iz;
 	size_t nimg=mapimgcltnimg();
 	struct mapcltd *cltd=malloc((nimg*(nimg-1)/2+1)*sizeof(struct mapcltd));
-	if(!nimg) return;
-	for(iz=izsel<0?0:izsel;izsel<0 ? iz<N_ZOOM : iz==izsel;iz++){
+	for(iz=izsel<0?0:izsel;izsel<0 ? iz<N_ZOOM : iz==izsel;iz++) if(!nimg) mapimgs.clt[iz].clts=NULL;
+	else{
 		size_t ncltd=0;
 		struct mapclt clt=mapimgcltinit(iz,nimg);
 		double thr=iz==N_ZOOM-1 ? 0. : MAPCLT_MAXTHR;
@@ -541,6 +559,7 @@ void mapimgclt(int izsel){
 		if(iz==map.pos.iz) sdlforceredraw();
 	}
 	free(cltd);
+	sdlforceredraw();
 }
 
 struct mapclti *mapfindclt(int i){

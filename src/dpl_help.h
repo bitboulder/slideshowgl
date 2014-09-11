@@ -131,7 +131,9 @@ __(" w")"\0"                   __("Enable writing mode")"\0"
 #ifdef IF_MAPED
 __(" e")"\0"                   __("Switch mode for new markers (add/replace)")"\0"
 #endif
-#if !defined IF_MAP && !defined IF_MAPED
+#if defined IF_MAP || defined IF_MAPED
+__(" d")"\0"                   __("Switch display mode for markers")"\0"
+#else
 #if defined IF_WRM || defined IF_DIRED || defined IF_PRGED
 __(" r/R")"\0"                 __("Rotate image")"\0"
 #else
