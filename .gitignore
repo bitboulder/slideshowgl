@@ -1,0 +1,84 @@
+
+# /
+/build
+/build-win
+/.sconsign.dblite
+/config.log
+/.sconf_temp
+
+# /core_dump/
+/core_dump/20*
+
+# /data/
+/data/*.xcf.bz2
+/data/GLSLangSpec.Full.1.20.8.pdf
+
+# /debian/
+/debian/files
+/debian/slideshowgl
+/debian/slideshowgl.debhelper.log
+/debian/slideshowgl.substvars
+
+# /log/
+/log/*.log
+
+# /src/
+/src/cscope.*
+/src/fncgraph.ps
+
+# /winbin/
+/winbin/img
+/winbin/img.flst
+
+# /winlib/curl/
+/winlib/curl/curl-7.21.7-devel-mingw32.zip
+/winlib/curl/include
+/winlib/curl/lib
+/winlib/curl/bin
+
+# /winlib/exif/
+/winlib/exif/*.tar.*
+/winlib/exif/include
+/winlib/exif/lib
+/winlib/exif/bin
+
+# /winlib/freetype/
+/winlib/freetype/*.tar.*
+/winlib/freetype/include
+/winlib/freetype/lib
+/winlib/freetype/bin
+
+# /winlib/ftgl/
+/winlib/ftgl/*.tar.*
+/winlib/ftgl/include
+/winlib/ftgl/lib
+
+# /winlib/gettext/
+/winlib/gettext/*.zip
+/winlib/gettext/include
+/winlib/gettext/lib
+/winlib/gettext/bin
+
+# /winlib/glew/
+/winlib/glew/*.tgz
+/winlib/glew/include
+/winlib/glew/lib
+/winlib/glew/bin
+
+# /winlib/iconv/
+/winlib/iconv/*.zip
+/winlib/iconv/include
+/winlib/iconv/lib
+/winlib/iconv/bin
+
+# /winlib/sdl/
+/winlib/sdl/*.tar.*
+/winlib/sdl/include
+/winlib/sdl/lib
+/winlib/sdl/bin
+
+# /winlib/sdl_image/
+/winlib/sdl_image/*.zip
+/winlib/sdl_image/include
+/winlib/sdl_image/include-libjpeg
+/winlib/sdl_image/bin
