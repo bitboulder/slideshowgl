@@ -6,6 +6,7 @@
 
 void glsetbar(float bar);
 char glprg();
+void glprgsw();
 
 void gldrawimg(struct itx *tx);
 

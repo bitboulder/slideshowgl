@@ -19,29 +19,49 @@
 #include "eff.h"
 #include "file.h"
 #include "help.h"
+#include "mark.h"
+#include "map.h"
+#include "hist.h"
 
-enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_NUM };
+enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
+
+enum glft { FT_NOR, FT_BIG, NFT };
+
+struct glfont {
+#if HAVE_FTGL
+	FTGLfont *f;
+#endif
+	float h;
+	float b;
+};
 
 struct gl {
+	float  ver;
 	GLuint dls;
 	GLuint prg;
+	GLuint prgms;
 	GLuint prgfish;
-#if HAVE_FTGL
-	FTGLfont *font;
-	FTGLfont *fontbig;
-#endif
+	GLuint movtex;
+	struct glfont font[NFT];
+	struct glfont *fontcur;
 	float bar;
 	struct glcfg {
-		float hrat_inputnum;
+		float hrat_input;
 		float hrat_stat;
 		float hrat_txtimg;
 		float hrat_dirname;
+		float hrat_cat;
 		float txt_border;
 		float dir_border;
 		float col_txtbg[4];
 		float col_txtfg[4];
+		float col_txtti[4];
+		float col_txtmk[4];
+		float col_colmk[4];
 		float col_dirname[4];
 		float col_playicon[4];
+		float prged_w;
+		float prg_rat;
 	} cfg;
 	struct glsel {
 		char act;
@@ -52,8 +72,22 @@ struct gl {
 	.bar = 0.f,
 };
 
+void glprgsw(){
+	GLuint t=gl.prg;
+	gl.prg=gl.prgms;
+	gl.prgms=t;
+}
+
+void glcolora(float *col,float a){
+	float c[4];
+	int i;
+	for(i=0;i<4;i++) c[i]=col[i];
+	c[3]*=a;
+	glColor4fv(c);
+}
+
 /* thread: all */
-void glsetbar(float bar){ gl.bar=bar; }
+void glsetbar(float bar){ gl.bar=bar; sdlforceredraw(); }
 char glprg(){ return !!gl.prg; }
 char glprgfish(){ return !!gl.prgfish; }
 
@@ -94,7 +128,7 @@ GLuint glprgload(const char *vs_fn,const char *fs_fn){
 	glGetShaderiv(vs,GL_COMPILE_STATUS,&ret);
 	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",vs_fn); info=vs; goto info_log; }
 	glGetShaderiv(fs,GL_COMPILE_STATUS,&ret);
-	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling vertex shader %s failed",fs_fn); info=fs; goto info_log; }
+	if(ret!=GL_TRUE){ error(ERR_CONT,"compiling fragment shader %s failed",fs_fn); info=fs; goto info_log; }
 	prg=glCreateProgram();
 	glAttachShader(prg,vs);
 	glAttachShader(prg,fs);
@@ -122,25 +156,35 @@ info_log:
 
 void glinit(char done){
 	char *fontfn;
+	float f;
+	int i;
 	if(!done){
+		const char *vstr=(const char *)glGetString(GL_VERSION);
+		if(sscanf(vstr,"%f",&gl.ver)<1) gl.ver=0;
 		if(glewInit()!=GLEW_OK) error(ERR_QUIT,"glew init failed");
 		if(cfggetint("cfg.version")){
-			const char *str=NULL;
-			if(GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
-				str=(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-			mprintf("GL-Version: %s\n",glGetString(GL_VERSION));
-			mprintf("GLSL-Version: %s\n",str?str:"NONE");
+			mprintf("GL-Version: %s\n",vstr);
+			mprintf("GLSL-Version: %s\n",
+				GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader ?
+				(const char *)glGetString(GL_SHADING_LANGUAGE_VERSION) :
+				"NONE");
 		}
-		gl.cfg.hrat_inputnum = cfggetfloat("gl.hrat_inputnum");
+		gl.cfg.hrat_input    = cfggetfloat("gl.hrat_input");
 		gl.cfg.hrat_stat     = cfggetfloat("gl.hrat_stat");
 		gl.cfg.hrat_txtimg   = cfggetfloat("gl.hrat_txtimg");
 		gl.cfg.hrat_dirname  = cfggetfloat("gl.hrat_dirname");
+		gl.cfg.hrat_cat      = cfggetfloat("gl.hrat_cat");
 		gl.cfg.txt_border    = cfggetfloat("gl.txt_border");
 		gl.cfg.dir_border    = cfggetfloat("gl.dir_border");
 		cfggetcol("gl.col_txtbg",   gl.cfg.col_txtbg);
 		cfggetcol("gl.col_txtfg",   gl.cfg.col_txtfg);
+		cfggetcol("gl.col_txtti",   gl.cfg.col_txtti);
+		cfggetcol("gl.col_txtmk",   gl.cfg.col_txtmk);
+		cfggetcol("gl.col_colmk",   gl.cfg.col_colmk);
 		cfggetcol("gl.col_dirname", gl.cfg.col_dirname);
 		cfggetcol("gl.col_playicon",gl.cfg.col_playicon);
+		gl.cfg.prged_w       = cfggetfloat("prged.w");
+		gl.cfg.prg_rat       = cfggetfloat("prg.rat");
 	}
 	ldmaxtexsize();
 	
@@ -180,30 +224,43 @@ void glinit(char done){
 	glVertex2f( .25f,  0.f);
 	glEnd();
 	glEndList();
+
+	glNewList(gl.dls+DLS_ARC,GL_COMPILE);
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex2f(0.f,0.f);
+	glVertex2f(0.f,1.f);
+	for(f=0.05f;f<1.f;f+=0.05f) glVertex2f(f,cosf(f*M_PIf)/2.f+0.5f);
+	glVertex2f(1.f,0.f);
+	glEnd();
+	glEndList();
 	
 	glDisable(GL_DITHER);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-#if HAVE_FTGL
+	memset(gl.font,0,sizeof(struct glfont)*NFT);
 	fontfn=finddatafile(cfggetstr("gl.font"));
-	if((gl.font=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
-		ftglSetFontFaceSize(gl.font, 24, 24);
-		ftglSetFontCharMap(gl.font,FT_ENCODING_UNICODE);
-	}
-	if((gl.fontbig=fontfn ? ftglCreateBufferFont(fontfn) : NULL)){
-		ftglSetFontFaceSize(gl.fontbig, 72, 72);
-		ftglSetFontCharMap(gl.fontbig,FT_ENCODING_UNICODE);
-	}
+	if(fontfn) for(i=0;i<NFT;i++){
+		unsigned int s = i ? 72 : 24;
+#if HAVE_FTGL
+		if(!(gl.font[i].f=ftglCreateBufferFont(fontfn))) continue;
+		ftglSetFontFaceSize(gl.font[i].f, s, s);
+		ftglSetFontCharMap(gl.font[i].f,FT_ENCODING_UNICODE);
+		gl.font[i].h=ftglGetFontLineHeight(gl.font[i].f);
+		gl.font[i].b=ftglGetFontDescender(gl.font[i].f);
 #endif
+	}
 	ldcheckvartex();
 	gl.prg=glprgload("vs.c","fs.c");
+	gl.prgms=glprgload("vs.c","fs_modsaetigung.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
+
+	gl.movtex=ldfile2tex(finddatafile("mov.png"));
 }
 
 void glfree(){
 #if HAVE_FTGL
-	if(gl.font)    ftglDestroyFont(gl.font);
-	if(gl.fontbig) ftglDestroyFont(gl.fontbig);
+	int i;
+	for(i=0;i<NFT;i++) if(gl.font[i].f) ftglDestroyFont(gl.font[i].f);
 #endif
 }
 
@@ -218,7 +275,7 @@ void glmodeslave(enum glmode dst){
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
-		glSecondaryColor3f(1.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
 		else if(gl.prg) glUseProgram(gl.prg);
@@ -228,7 +285,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		glSecondaryColor3f(1.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		if(dst==GLM_2DA) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 		else glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(gl.prg) glUseProgram(gl.prg);
@@ -239,7 +296,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		glSecondaryColor3f(0.f,0.f,0.f);
+		if(gl.ver>=1.4f) glSecondaryColor3f(0.f,0.f,0.f);
 		if(dst==GLM_1DI){
 			glBlendFunc(GL_ONE_MINUS_DST_COLOR,GL_ONE_MINUS_SRC_ALPHA);
 		}else{
@@ -309,87 +366,142 @@ enum glpos {
 };
 #define GP_CENTER	(GP_HCENTER|GP_VCENTER)
 
-void glpostranslate(enum glpos pos,float *rect){
-	if(pos&GP_LEFT   ) glTranslatef(-rect[0],0.f,0.f);
-	if(pos&GP_RIGHT  ) glTranslatef(-rect[3],0.f,0.f);
-	if(pos&GP_HCENTER) glTranslatef(-(rect[0]+rect[3])/2.f,0.f,0.f);
-	if(pos&GP_TOP    ) glTranslatef(0.f,-rect[1],0.f);
-	if(pos&GP_BOTTOM ) glTranslatef(0.f,-rect[4],0.f);
-	if(pos&GP_VCENTER) glTranslatef(0.f,-(rect[1]+rect[4])/2.f,0.f);
+void glpostranslate(enum glpos pos,float w,float h){
+	if(pos&GP_RIGHT  ) glTranslatef(-w,0.f,0.f);
+	if(pos&GP_HCENTER) glTranslatef(-w/2.f,0.f,0.f);
+	if(pos&GP_TOP    ) glTranslatef(0.f,-h,0.f);
+	if(pos&GP_VCENTER) glTranslatef(0.f,-h/2.f,0.f);
 }
 
-void glrect(float w,float h,enum glpos pos){
-	float rect[6];
-	w/=2.f; h/=2.f;
-	rect[0]=-w; rect[1]=-h; rect[2]=0.f;
-	rect[3]= w; rect[4]= h; rect[5]=0.f;
+#define glrect(w,h,p)	glrectarc(w,h,p,0.f);
+void glrectarc(float w,float h,enum glpos pos,float barc){
 	glPushMatrix();
-	glpostranslate(pos,rect);
-	glRectf(-w,-h,w,h);
+	glpostranslate(pos,w,h);
+	glRectf(0.f,0.f,w,h);
+	if(barc){
+		glTranslatef(0.f,h,0.f);
+		glScalef(-barc,-h,1.f);
+		glCallList(gl.dls+DLS_ARC);
+		glScalef(-1.f,1.f,1.f);
+		glTranslatef(w/barc,0.f,0.f);
+		glCallList(gl.dls+DLS_ARC);
+	}
 	glPopMatrix();
 }
 
-float glfontscale(FTGLfont *font,float hrat,float wrat){
-#if HAVE_FTGL
-	float lineh=ftglGetFontLineHeight(font);
-	glScalef(fabsf(hrat)/wrat/lineh,hrat/lineh,1.f);
-	return lineh;
-#else
-	return 1.f;
-#endif
+char glfontsel(enum glft i){
+	if(i>=NFT) return 0;
+	while(i && !gl.font[i].h) i--;
+	if(!gl.font[i].h) return 0;
+	gl.fontcur=gl.font+i;
+	return 1;
 }
 
-float glfontwidth(FTGLfont *font,const char *txt){
+float glfontscale(float hrat,float wrat){
 #if HAVE_FTGL
-	return ftglGetFontAdvance(font,txt);
-#else
-	return 1.f;
+	if(gl.fontcur){
+		glScalef(fabsf(hrat)/wrat/gl.fontcur->h,hrat/gl.fontcur->h,1.f);
+		return gl.fontcur->h;
+	}
 #endif
+	return 1.f;
 }
 
-void glfontrender(FTGLfont *font,const char *txt,enum glpos pos){
+float glfontwidth(const char *txt){
 #if HAVE_FTGL
-	float rect[6];
+	if(gl.fontcur) return ftglGetFontAdvance(gl.fontcur->f,txt);
+#endif
+	return 1.f;
+}
+
+void glfontrender(const char *txt,enum glpos pos){
+#if HAVE_FTGL
+	if(!gl.fontcur) return;
 	glPushMatrix();
-	ftglGetFontBBox(font,txt,-1,rect);
-	glpostranslate(pos,rect);
+	glpostranslate(pos,glfontwidth(txt),gl.fontcur->h);
+	glTranslatef(0.f,-gl.fontcur->b,0.f);
 	glmodeslave(GLM_TXT);
-	ftglRenderFont(font,txt,FTGL_RENDER_ALL);
+	ftglRenderFont(gl.fontcur->f,txt,FTGL_RENDER_ALL);
 	glPopMatrix();
 #endif
 }
 
-void glrendertxtimg(struct txtimg *txt,float a){
+void glrendermov(float rat,float a){
+	float bw=.05f,bh=.05f;
+	const float bmax=.15f;
+	if(!gl.movtex) return;
+	glmodeslave(GLM_2D);
+	if(gl.prg) glColor4f(.5f,.5f,.5f,a);
+	else glColor4f(1.f,1.f,1.f,a);
+	if(rat>=1.f){
+		if((bh=bw*rat)>bmax) bw=(bh=bmax)/rat;
+	}else{
+		if((bw=bh/rat)>bmax) bh=(bw=bmax)*rat;
+	}
+	glBindTexture(GL_TEXTURE_2D,gl.movtex);
+	glBegin(GL_QUADS);
+	glTexCoord2f( 0.f,0.f); glVertex2f(-0.5f,-0.5f);
+	glTexCoord2f(20.f,0.f); glVertex2f( 0.5f,-0.5f);
+	glTexCoord2f(20.f,1.f); glVertex2f( 0.5f,-0.5f+bh);
+	glTexCoord2f( 0.f,1.f); glVertex2f(-0.5f,-0.5f+bh);
+	glTexCoord2f( 0.f,0.f); glVertex2f(-0.5f, 0.5f);
+	glTexCoord2f(20.f,0.f); glVertex2f( 0.5f, 0.5f);
+	glTexCoord2f(20.f,1.f); glVertex2f( 0.5f, 0.5f-bh);
+	glTexCoord2f( 0.f,1.f); glVertex2f(-0.5f, 0.5f-bh);
+	glEnd();
+}
+
+void glrenderact(float rat,char prgcol){
+	float bw=.05f,bh=.05f;
+	const float bmax=.15f;
+	float *col=prgcol ? gl.cfg.col_colmk : gl.cfg.col_txtmk;
+	glmodeslave(GLM_1D);
+	glColor4f(col[0],col[1],col[2],.5f);
+	if(rat>=1.f){
+		if((bh=bw*rat)>bmax) bw=(bh=bmax)/rat;
+	}else{
+		if((bw=bh/rat)>bmax) bh=(bw=bmax)*rat;
+	}
+	glBegin(GL_QUADS);
+	glVertex2f(-0.5f,   -0.5f); glVertex2f(-0.5f+bw,-0.5f); glVertex2f(-0.5f+bw, 0.5f   ); glVertex2f(-0.5f,    0.5f   );
+	glVertex2f( 0.5f,   -0.5f); glVertex2f( 0.5f-bw,-0.5f); glVertex2f( 0.5f-bw, 0.5f   ); glVertex2f( 0.5f,    0.5f   );
+	glVertex2f(-0.5f+bw,-0.5f); glVertex2f( 0.5f-bw,-0.5f); glVertex2f( 0.5f-bw,-0.5f+bh); glVertex2f(-0.5f+bw,-0.5f+bh);
+	glVertex2f(-0.5f+bw, 0.5f); glVertex2f( 0.5f-bw, 0.5f); glVertex2f( 0.5f-bw, 0.5f-bh); glVertex2f(-0.5f+bw, 0.5f-bh);
+	glEnd();
+}
+
+void glrendertxtimg(struct txtimg *txt,float a,char act){
 	float col[4];
+	float *prgcol=NULL;
 	int i;
-	if(!gl.fontbig) return;
+	char prgcolact;
+	if(!glfontsel(FT_BIG)) return;
 	for(i=0;i<4;i++) col[i]=txt->col[i];
 	col[3]*=a;
+	prgcolact=!act && effprgcolf(&prgcol)!=0.f && prgcol==txt->col;
 	glPushMatrix();
 	glColor4fv(col);
-	glfontscale(gl.fontbig,-gl.cfg.hrat_txtimg,1.f);
-	glfontrender(gl.fontbig,txt->txt,GP_CENTER);
+	glfontscale(-gl.cfg.hrat_txtimg,1.f);
+	glfontrender(txt->txt,GP_CENTER);
+	if(act || prgcolact){
+		float w=glfontwidth(txt->txt);
+		glScalef(w,gl.fontcur->h,1.f);
+		glrenderact(w/gl.fontcur->h,prgcolact);
+	}
 	glPopMatrix();
 }
 
 void glrenderimgtext(const char *text,float irat,float a){
 	float col[4];
 	float w,h,wmax,wclip,hclip;
-	size_t l,i,n=1;
+	size_t i,l,n=1;
 	char buf[FILELEN],*pos;
-	FTGLfont *font=dplgetzoom()<-1 ? gl.font : gl.fontbig;
-	if(!text || !font) return;
+	if(!text || !glfontsel(dplgetzoom()<-1 ? FT_NOR : FT_BIG)) return;
 
-	for(l=i=0;l<FILELEN-1 && text[i];i++,l++){
-		if(text[i]=='.' && i>=2) break;
-		switch(text[i]){
-		case '/':
-		case '\\': buf[l]=' '; break;
-		case '_': buf[l]='\0'; n++; break;
-		default: buf[l]=text[i]; break;
-		}
-	}
-	while(l && buf[l-1]==' ') l--;
+	for(i=l=0;l<FILELEN-1 && text[i];i++,l++) if(text[i]==' '){
+		if(l && buf[l-1]=='\0') l--;
+		else{ buf[l]='\0'; n++; }
+	}else buf[l]=text[i];
 	buf[l]='\0';
 
 	for(i=0;i<4;i++) col[i]=gl.cfg.col_dirname[i];
@@ -397,20 +509,21 @@ void glrenderimgtext(const char *text,float irat,float a){
 	glColor4fv(col);
 
 	glPushMatrix();
+	glmodeslave(GLM_1D);
 	glTranslatef(-0.0293f,0.0293f,1.f); /* render to center of top image (outof image center) */
-	h=glfontscale(font,-gl.cfg.hrat_dirname,irat);
+	h=glfontscale(-gl.cfg.hrat_dirname,irat);
 	hclip=h/gl.cfg.hrat_dirname*(1.f-2.f*gl.cfg.dir_border);
 	wclip=hclip*irat;
 
 	wmax=0;
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1)
-		if((w=glfontwidth(font,pos))>wmax) wmax=w;
+		if((w=glfontwidth(pos))>wmax) wmax=w;
 	if(wmax>wclip) glScalef(wclip/wmax,1.f,1.f);
 	if((float)n*h>hclip) glScalef(1.f,hclip/(float)n/h,1.f);
 
 	glTranslatef(0.f,(float)(n-1)/2.f*h,0.f);
 	for(pos=buf,i=0;i<n;i++,pos+=strlen(pos)+1){
-		glfontrender(font,pos,GP_CENTER);
+		glfontrender(pos,GP_CENTER);
 		glTranslatef(0.f,-h,0.f);
 	}
 	glPopMatrix();
@@ -427,52 +540,76 @@ void gldrawimg(struct itx *tx){
 	}
 }
 
-void glrendermark(struct ipos *ipos,float rot,float irat){
+void glrendermark(float m,float rot,float irat){
 	glPushMatrix();
 	glRotatef(-rot,0.f,0.f,1.f);
 	glTranslatef(.4f,-.4f,0.f);
 	if(rot==90.f || rot==270.f) irat=1.f/irat;
 	glScalef(1.f/irat,1.f,1.f);
 	glmodeslave(GLM_1D);
-	glColor4f(1.f,1.f,1.f,ipos->m);
+	glColor4f(1.f,1.f,1.f,m);
 	glScalef(.1f,.1f,1.f);
 	glCallList(gl.dls+DLS_BRD);
 	glmodeslave(GLM_1DI);
-	glColor4f(ipos->m,ipos->m,ipos->m,ipos->m);
+	glColor4f(m,m,m,m);
 	glScalef(.9f,.9f,1.f);
 	glCallList(gl.dls+DLS_IMG);
 	glPopMatrix();
 }
 
-void glrenderimg(struct img *img,char back){
-	struct ipos *ipos;
+#define CB_TIME	0.2f
+#define CB_SIZE	0.3f
+float glcalcback(float ef){
+	if(ef<CB_TIME)         return 1.f-ef/CB_TIME*(1.f-CB_SIZE);
+	else if(ef<1.-CB_TIME) return CB_SIZE;
+	else                   return 1.f-(1.f-ef)/CB_TIME*(1.f-CB_SIZE);
+}
+
+void glrenderimg(struct img *img,char layer,char act){
+	struct ecur *ecur=imgposcur(img->pos);
 	struct iopt *iopt=imgposopt(img->pos);
 	struct icol *icol;
 	GLuint dl=0;
 	float irat=imgldrat(img->ld);
 	float srat=sdlrat();
 	struct txtimg *txt;
-	if(!iopt->active) return;
-	if(iopt->back!=back) return;
+	float s;
+	const char *mov;
+	if(!ecur || !iopt) return;
+	ilchkopt(img,ILO_GL,!!ecur->act);
+	if(!ecur->act) return;
+	if(iopt->layer!=layer) return;
 	if(!irat) return;
 	if(!(txt=imgfiletxt(img->file)) && !(dl=imgldtex(img->ld,iopt->tex))) return;
-	ipos=imgposcur(img->pos);
+	if(!ecur->a || !ecur->s) return;
 	icol=imgposcol(img->pos);
-	glmodeslave(ipos->a<1.f ? GLM_2DA : GLM_2D);
+	glmodeslave(!ilprg(img->il) && ecur->a<1.f ? GLM_2DA : GLM_2D);
 	glPushMatrix();
-	glTranslatef(ipos->x,ipos->y,0.);
-	glScalef(ipos->s,ipos->s,1.);
-	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
-	else glColor4f(1.f,1.f,1.f,ipos->a);
+	if(img->il==ilget(CIL(1))){
+		srat*=1.f-gl.cfg.prged_w;
+		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
+		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
+	}
+	if(ilprg(img->il)){
+		float drat=gl.cfg.prg_rat;
+		if(srat<drat) glScalef(1.f,srat/drat,1.f);
+		if(srat>drat) glScalef(drat/srat,1.f,1.f);
+		srat=drat;
+	}
+	glTranslatef(ecur->x,ecur->y,0.);
+	s=ecur->s*glcalcback(ecur->back);
+	glScalef(s,s,1.);
+	if(gl.prg) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
+	else glColor4f(1.f,1.f,1.f,ecur->a);
 	// rotate in real ratio
 	if(srat>irat) glScalef(1.f/srat,1.f, 1.f);
 	else          glScalef(1.f,     srat,1.f);
-	if(ipos->r) glRotatef(ipos->r,0.,0.,1.);
+	if(ecur->r) glRotatef(ecur->r,0.,0.,1.);
 	if(srat>irat) glScalef(irat,1.f,     1.f);
 	else          glScalef(1.f, 1.f/irat,1.f);
-	if(ipos->r){
+	if(ecur->r){
 		// get rotation near to 90°/270°
-		float rot90 = ipos->r;
+		float rot90 = ecur->r;
 		float schg=1.f;
 		while(rot90>= 90.f) rot90-=180.f;
 		while(rot90< -90.f) rot90+=180.f;
@@ -488,37 +625,37 @@ void glrenderimg(struct img *img,char back){
 	}
 	// draw img
 	if(dl) glCallList(dl);
-	if(txt) glrendertxtimg(txt,ipos->a);
-	glrenderimgtext(imgfiledir(img->file),irat,ipos->a);
-	if(ipos->m) glrendermark(ipos,imgexifrotf(img->exif),irat);
+	if((mov=imgfilemov(img->file)) && mov[0]=='m') glrendermov(irat,ecur->a);
+	if(txt) glrendertxtimg(txt,ecur->a,act);
+	else if(act) glrenderact(irat,0);
+	glrenderimgtext(imgfileimgtxt(img->file),irat,ecur->a);
+	if(ecur->m) glrendermark(ecur->m,imgexifrotf(img->exif),irat);
 	glPopMatrix();
 }
 
+int glrenderimgs1(struct img *img,void *arg){
+	glLoadName((GLuint)img->frm+1);
+	glrenderimg(img,*(char*)arg,dplgetactil(NULL)>=0 && img->frm==ilcimgi(img->il));
+	return 0;
+}
 void glrenderimgs(){
-	struct img *img;
-	char back;
+	char layer;
 	glmode(GLM_2D);
-	if(delimg) glrenderimg(delimg,1);
-	for(back=2;back>=0;back--){
-		GLuint imgi=1;
-		for(img=imgget(0);img;img=img->nxt){
-			glLoadName(imgi++);
-			glrenderimg(img,back);
-		}
-	}
+	for(layer=2;layer>=0;layer--) ilsforallimgs(glrenderimgs1,(void *)&layer,1,0,ILO_GL);
 	glLoadName(0);
 }
 
-#if HAVE_FTGL
 void gltextout(const char *text,float x,float y){
+#if HAVE_FTGL
+	if(!gl.fontcur) return;
 	glPushMatrix();
 	glTranslatef(x,y,0.0);
-	ftglRenderFont(gl.font,text,FTGL_RENDER_ALL);
+	ftglRenderFont(gl.fontcur->f,text,FTGL_RENDER_ALL);
 	glPopMatrix();
-}
 #endif
+}
 
-void glrendertext(const char *title,const char *text){
+void glrendertext(const char *title,const char *text,float f){
 #if HAVE_FTGL
 	/*
 	 * w: .05 | .05 x .05 .75-x .05 | .05
@@ -531,82 +668,174 @@ void glrendertext(const char *title,const char *text){
 	float lineh;
 	float winw;
 	float tw,tx;
-	if(!gl.font) return;
+	if(!glfontsel(FT_NOR)) return;
 	for(t=text,i=0;t[0];i+=2,lines++) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
-		float len=ftglGetFontAdvance(gl.font,_(t));
+		float len=glfontwidth(_(t));
 		if(len>maxw[j]) maxw[j]=len;
 	}
-	lineh=ftglGetFontLineHeight(gl.font);
+	lineh=gl.fontcur->h;
 	w=(maxw[0]+maxw[1])/.75f;
 	h=(float)lines*lineh/.8f;
 	winw=glmode(GLM_TXT);
 	if(w/h<winw) glScalef(1.f/h, 1.f/h, 1.f);
 	else         glScalef(winw/w,winw/w,1.f);
 	glPushMatrix();
-	glColor4fv(gl.cfg.col_txtbg);
+	glcolora(gl.cfg.col_txtbg,f);
 	glRectf(-.45f*w, -.45f*h, .45f*w, .45f*h);
 	x[0]=-.40f*w;
 	x[1]=-.35f*w+maxw[0];
 	y=.4f*h-lineh;
-	tw=ftglGetFontAdvance(gl.font,title);
+	tw=glfontwidth(title);
 	tx=-.375f*w+maxw[0]-tw/2.f;
 	if(tx+tw>.4f) tx=.4f-tw;
 	if(tx<-.4f) tx=-.4f;
-	glColor4fv(gl.cfg.col_txtfg);
+	glcolora(gl.cfg.col_txtti,f);
 	gltextout(title,tx,y);
 	y-=lineh*2;
-	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0])
-		gltextout(_(t),x[j],y);
+	for(t=text,i=0;t[0];i+=2,y-=lineh) for(j=0;j<2;j++,t+=strlen(t)+1) if(t[0]){
+		if(!j && !t[strlen(t)+1]) glcolora(gl.cfg.col_txtti,f);
+		else glcolora(gl.cfg.col_txtfg,f);
+		if(!gl.sel.act) gltextout(_(t),x[j],y);
+		else if(!j){
+			glPushMatrix();
+			glTranslatef(x[j],y-lineh*0.2f,0.f);
+			glrect(.8f*w,lineh*0.9f,GP_BOTTOM|GP_LEFT);
+			glPopMatrix();
+		}
+	}
 	glPopMatrix();
 #endif
 }
 
 void glrenderinfo(){
-	struct img *img;
 	char *info;
-	if(!dplshowinfo()) return;
-	if(!(img=imgget(dplgetimgi()))) return;
-	if(!(info=imgexifinfo(img->exif))) return;
-	glrendertext(_("Image info"),info);
+	float f;
+	if(!(f=effswf(ESW_INFO))) return;
+	if(!(info=dplgetinfo())) return;
+	glrendertext(_("Image info"),info+ISLEN,f);
+}
+
+void glrenderinfosel(){
+	char *info;
+	float f,ffull,w,h,b,n=6.f;
+	int i;
+	if(!(f=effswf(ESW_INFOSEL))) return;
+	if((ffull=effswf(ESW_INFO))){
+		if(ffull>=1.f) return;
+		else if((f*=1.f-ffull)<=0.f) return;
+	}
+	if(!(info=dplgetinfo())) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,-0.5f,0.f);
+	h=glfontscale(gl.cfg.hrat_cat,1.f);
+	b=h*gl.cfg.txt_border*2.f;
+	w*=80.f;
+	glTranslatef(0.f,-(h*n+b)*(1.f-f),0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b*2.f,h*n+b,GP_RIGHT|GP_BOTTOM);
+	glColor4fv(gl.cfg.col_txtfg);
+	glTranslatef(-b-w,(h+b)/2.f+h*(n-1),0.f);
+	for(i=0;i<10;i++,info+=16){
+		if(info[0]) glfontrender(info,GP_LEFT|GP_VCENTER);
+		if(i<2 || i%2) glTranslatef(0.f,-h,0.f);
+		if(i>1) glTranslatef((i%2?-1.f:1.f)*w/2.5f,0.f,0.f);
+	}
+	glPopMatrix();
 }
 
 void glrenderhelp(){
-	const char *help;
-	if((help=dplhelp())) glrendertext(_("Interface"),help);
+	const char *help=dplhelp();
+	float f;
+	if((f=effswf(ESW_HELP))) glrendertext(_("Interface"),help,f);
 }
 
-void glrenderinputnum(){
-	int i=dplinputnum();
-	char txt[16];
-	float w,h,b;
-	if(!i) return;
-	snprintf(txt,16,"%i",i);
+void glrendercat(){
+	char *mark=NULL;
+	char *cats,*cat;
+	float f,w,h,b;
+	float nc,hrat=gl.cfg.hrat_cat;
+	GLuint name=IMGI_CAT+1;
+	if(!(f=effswf(ESW_CAT))) return;
+	if(!(cats=markcats())) return;
+	if(!glfontsel(FT_NOR)) return;
+	mark=imgposmark(ilcimg(NULL),MPC_NO);
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(-w/2.f,0.5f,0.f);
+	for(w=0.f,nc=0.f,cat=cats;cat[0];cat+=FILELEN,nc++) if((b=glfontwidth(cat))>w) w=b;
+	if(hrat*nc>.95f) hrat=.95f/nc;
+	h=glfontscale(hrat,1.f);
+	b=h*gl.cfg.txt_border*2.f;
+	glScalef(f,1.f,1.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(w+b,b/2.f,GP_TOP|GP_LEFT);
+	glTranslatef(0.f,-b/2.f,0.f);
+	for(cat=cats;cat[0];cat+=FILELEN,name++){
+		if(mark) mark++;
+		glColor4fv(gl.cfg.col_txtbg);
+		glLoadName(name);
+		glrect(w+b,h,GP_TOP|GP_LEFT);
+		glLoadName(0);
+		glTranslatef(b/2.f,-h/2.f,0.f);
+		if(!gl.sel.act){
+			if(mark && mark[0]) glColor4fv(gl.cfg.col_txtmk);
+			else glcolora(gl.cfg.col_txtfg,.5f);
+			glfontrender(cat,GP_VCENTER|GP_LEFT);
+		}
+		glTranslatef(-b/2.f,-h/2.f,0.f);
+	}
+	glColor4fv(gl.cfg.col_txtbg);
+	glScalef(-(w+b),-h/2.f,1.f);
+	glRotatef(90.f,0.f,0.f,1.f);
+	glCallList(gl.dls+DLS_ARC);
+	glPopMatrix();
+}
+
+void glrenderinput(){
+	struct dplinput *in=dplgetinput();
+	float w[3],wg,h,b;
+	if(!in || !glfontsel(FT_NOR)) return;
 	glmode(GLM_TXT);
 	glPushMatrix();
-	h=glfontscale(gl.font,gl.cfg.hrat_inputnum,1.f);
-	w=glfontwidth(gl.font,txt);
+	h=glfontscale(gl.cfg.hrat_input,1.f);
+	w[0]=in->pre[0]  ? glfontwidth(in->pre)  : 0.f;
+	w[1]=in->in[0]   ? glfontwidth(in->in)   : 0.f;
+	w[2]=in->post[0] ? glfontwidth(in->post) : 0.f;
+	wg=w[0]+w[1]+w[2];
 	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(-(wg+b)/2.f,0.f,0.f);
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w+b,h+b,GP_CENTER);
+	glrect(wg+b,h+b,GP_VCENTER|GP_LEFT);
+	glTranslatef(b/2.f,0.f,0.f);
+	glColor4fv(gl.cfg.col_txtmk);
+	if(in->pre) glfontrender(in->pre,GP_VCENTER|GP_LEFT);
+	glTranslatef(w[0],0.f,0.f);
 	glColor4fv(gl.cfg.col_txtfg);
-	glfontrender(gl.font,txt,GP_CENTER);
+	if(in->in) glfontrender(in->in,GP_VCENTER|GP_LEFT);
+	glTranslatef(w[1],0.f,0.f);
+	glColor4fv(gl.cfg.col_txtmk);
+	if(in->post) glfontrender(in->post,GP_VCENTER|GP_LEFT);
 	glPopMatrix();
 }
 
 void glrenderstat(){
 	struct istat *stat=effstat();
+	const char *dir=ildir(NULL);
 	float winw;
 	float h,w,b;
-	if(!stat->h) return;
+	if(!stat->h || !glfontsel(FT_NOR)) return;
 	winw=glmode(GLM_TXT);
+
 	glPushMatrix();
 	glTranslatef(-winw/2.f,-0.5f,0.f);
-	h=glfontscale(gl.font,gl.cfg.hrat_stat,1.f);
-	w=glfontwidth(gl.font,stat->txt);
+	h=glfontscale(gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(stat->txt);
 	b=h*gl.cfg.txt_border*2.f;
+	glTranslatef(0.f,-(h+b)*(1.f-stat->h),0.f);
 
 	glColor4fv(gl.cfg.col_txtbg);
-	glrect(w+b+h+b,h+b,GP_LEFT|GP_TOP);
+	glrect(w+b+h+b,h+b,GP_LEFT|GP_BOTTOM);
 
 	glPushMatrix();
 	glColor4fv(gl.cfg.col_playicon);
@@ -617,8 +846,23 @@ void glrenderstat(){
 
 	glColor4fv(gl.cfg.col_txtfg);
 	glTranslatef(h+b,(h+b)/2.f,0.f);
-	glfontrender(gl.font,stat->txt,GP_LEFT|GP_VCENTER);
+	glfontrender(stat->txt,GP_LEFT|GP_VCENTER);
+	glPopMatrix();
 
+	if(!dir) return;
+	glPushMatrix();
+	glTranslatef(0.f,0.5f,0.f);
+	h=glfontscale(gl.cfg.hrat_stat,1.f);
+	w=glfontwidth(dir);
+	b=h*gl.cfg.txt_border*2.f;
+	glScalef(1.f,stat->h,1.f);
+	glTranslatef(0.f,-(b+h)/2.f,0.f);
+
+	glColor4fv(gl.cfg.col_txtbg);
+	glrectarc(w,h+b,GP_CENTER,h+b);
+
+	glColor4fv(gl.cfg.col_txtfg);
+	glfontrender(dir,GP_CENTER);
 	glPopMatrix();
 }
 
@@ -639,18 +883,140 @@ void glrenderbar(){
 	glPopMatrix();
 }
 
+void glrenderback(){
+	char prged;
+	int actil=dplgetactil(&prged);
+	float srat=sdlrat()*(1.f-gl.cfg.prged_w);
+	float drat=gl.cfg.prg_rat;
+	float w;
+	float col[4];
+	int i;
+	if(actil<0) return;
+	w=glmode(GLM_TXT);
+	for(i=0;i<3;i++) col[i]=gl.cfg.col_txtmk[i];
+	col[3]=.5f;
+	glPushMatrix();
+	glColor4fv(col);
+	glScalef(w,1.f,1.f);
+	glRectf(actil?-.5f:.5f,-.5f,-.5f+gl.cfg.prged_w,.5f);
+	if(actil && prged){
+		glTranslatef(gl.cfg.prged_w/2.f,0.f,0.f);
+		glScalef(1.f-gl.cfg.prged_w,1.f,1.f);
+		if(srat<drat){
+			glRectf(-.5f,-.5f,.5f,-srat/drat/2.f);
+			glRectf(-.5f, .5f,.5f, srat/drat/2.f);
+		}
+		if(srat>drat){
+			glRectf(-.5f,-.5f,-drat/srat/2.f,.5f);
+			glRectf( .5f,-.5f, drat/srat/2.f,.5f);
+		}
+	}
+	glPopMatrix();
+}
+
+void glrenderprgcol(){
+	float *col;
+	float colf=effprgcolf(&col);
+	float w;
+	int b,c;
+	float colhsl[4];
+	float chsl[4];
+	float crgb[4];
+	GLuint name=IMGI_COL+1;
+	if(!colf || !col) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,-.5f,0.f);
+	glScalef(.1f,.4f,1.f);
+	glScalef(colf,1.f,1.f);
+	glTranslatef(-.5f,.5f,0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glLoadName(name++);
+	glrect(1.f,1.f,GP_CENTER);
+	glScalef(1.f/5.f,1.f/20.f,1.f);
+	glTranslatef(-1.f,9.f,0.f);
+	col_rgb2hsl(colhsl,col);
+	memcpy(chsl,colhsl,sizeof(float)*4);
+	for(b=0;b<3;b++){
+		int p=0;
+		glPushMatrix();
+		glScalef(1.f,(b?8.5f:18.f)/(float)NPRGCOL,1.f);
+		for(c=0;c<NPRGCOL;c++){
+			chsl[b]=((float)c+0.5f)/(float)NPRGCOL;
+			if(chsl[b]<colhsl[b]) p=c;
+			col_hsl2rgb(crgb,chsl);
+			glColor4fv(crgb);
+			glLoadName(name++);
+			glrect(1.f,1.f,GP_CENTER);
+			glTranslatef(0.f,-1.f,0.f);
+		}
+		glLoadName(0);
+		chsl[b]=colhsl[b];
+		glTranslatef(0.f,(float)(NPRGCOL-p),0.f);
+		glColor4fv(col);
+		glrect(2.f,b?2.f:1.f,GP_CENTER);
+		glPopMatrix();
+		if(!b) glTranslatef(2.f,0.f,0.f);
+		else   glTranslatef(0.f,-9.5f,0.f);
+	}
+	glPopMatrix();
+}
+
+void glrenderhist(){
+	float histf=effswf(ESW_HIST);
+	float *hist=dplgethist();
+	float w;
+	int h,i;
+	if(!histf || !hist) return;
+	w=glmode(GLM_TXT);
+	glPushMatrix();
+	glTranslatef(w/2.f,.5f,0.f);
+	glScalef(.1f,.8f,1.f);
+	glScalef(histf,1.f,1.f);
+	glTranslatef(-.5f,-.5f,0.f);
+	glColor4fv(gl.cfg.col_txtbg);
+	glrect(1.f,1.f,GP_CENTER);
+//	glScalef(  .8f/.1f/w  ,1.f/45.f,1.f);
+	glScalef(1.f/1.5f,1.f/45.f,1.f);
+	glTranslatef(.5f,21.5f,0.f);
+	for(h=0;h<HT_NUM;h++){
+		glColor4fv(gl.cfg.col_txtbg);
+		glrect(1.f,10.f,GP_TOP|GP_RIGHT);
+		glPushMatrix();
+		glScalef(1.f,10.f/(float)HDIM,1.f);
+		switch(h){
+		case 0: glColor4f(1.f,1.f,1.f,1.f); break;
+		case 1: glColor4f(.9f,0.f,0.f,1.f); break;
+		case 2: glColor4f(0.f,.7f,0.f,1.f); break;
+		case 3: glColor4f(0.f,0.f,1.f,1.f); break;
+		}
+		for(i=0;i<HDIM;i++){
+			glrect(hist[(h+1)*HDIM-i-1],1.f,GP_TOP|GP_RIGHT);
+			glTranslatef(0.f,-1.f,0.f);
+		}
+		glPopMatrix();
+		glTranslatef(0.f,-11.f,0.f);
+	}
+	glPopMatrix();
+}
+
 void glpaint(){
 	GLenum glerr;
 
 	glClearColor(0.,0.,0.,1.);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if(!panorender()) glrenderimgs();
+	glrenderback();
+	if(!panorender(gl.sel.act) && !maprender(gl.sel.act)) glrenderimgs();
+	glrendercat();
+	glrenderprgcol();
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
+	glrenderhist();
+	glrenderinfosel();
 	glrenderinfo();
-	glrenderinputnum();
+	glrenderinput();
 	glrenderhelp();
 	
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);
@@ -658,7 +1024,7 @@ void glpaint(){
 
 int glselect(int x,int y){
 	GLuint selbuf[64]={0};
-	GLint hits;
+	GLint hits,i;
 	gl.sel.x=x;
 	gl.sel.y=y;
 	gl.sel.act=1;
@@ -670,5 +1036,6 @@ int glselect(int x,int y){
 	glpaint();
 	hits=glRenderMode(GL_RENDER);
 	gl.sel.act=0;
-	return hits ? (int)selbuf[3]-1 : -1;
+	for(i=hits-1;i>=0;i--) if(selbuf[4*i+3]) return (int)selbuf[4*i+3]-1;
+	return -1;
 }

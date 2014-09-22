@@ -1,0 +1,16 @@
+import os
+
+Import('env')
+Import('prefix')
+Import('destdir')
+
+doc = """
+	slideshowgl_example.cfg
+""".split()
+
+env['DOCDIR'] = os.path.join(prefix,'share','doc',env['APPNAME'])
+docdir = destdir + env['DOCDIR']
+env.Install(docdir, [doc])
+install_doc = env.Alias('install-doc', docdir)
+
+Export('install_doc')

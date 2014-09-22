@@ -8,11 +8,19 @@ data = """
 	defimg.png
 	dirimg.png
 	icon.png
+	mov.png
+	mapdir.png
+	mapdirs.png
+	mapstar.png
+	mapstardirs.png
+	mapstars.png
 	FreeSans.ttf
 	vs.c
 	vs_fish.c
 	fs.c
 	effprg.pl
+	effprged.pl
+	fs_modsaetigung.c
 """.split()
 
 env['DATADIR'] = os.path.join(prefix,'share',env['APPNAME'])

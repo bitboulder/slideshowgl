@@ -7,9 +7,12 @@ else
   S = 
 endif
 
-.PHONY: all release debug win win-release win-debug clean install uninstall deb gettext
+.PHONY: all cscope release debug win win-release win-debug clean install uninstall deb gettext
 
-all: release
+all: release cscope
+
+cscope:
+	cd src; cscope -b *.c *.h *.cpp
 
 release:
 	$(SCONS) mode=release
@@ -27,6 +30,7 @@ win-debug:
 
 clean:
 	$(SCONS) -c
+	$(SCONS) -c os=win
 
 install:
 	$(SCONS) install mode=release destdir="$(DESTDIR)"
@@ -38,6 +42,6 @@ deb:
 	debuild
 
 gettext:
-	xgettext -o po/template.pot -k_ -k__ -kerror:2 -kdebug:2 src/*.c
+	xgettext -o po/template.pot -k_ -k__ -kerror:2 -kdebug:2 src/*.c src/dpl_help.h
 	[ ! -f po/de.po ] && msginit --locale=de -o po/de.po -i po/template.pot || msgmerge --backup=none -U po/de.po po/template.pot
 	rm po/template.pot

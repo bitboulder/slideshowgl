@@ -1,6 +1,12 @@
+#ifndef __WIN32__
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <SDL.h>
 #include <math.h>
+#include <iconv.h>
 #include "help.h"
+#include "main.h"
 
 #define SDL_GetPixel(a,b,c)		SDL_GetPixelSw(a,b,c,0)
 Uint32 SDL_GetPixelSw(SDL_Surface *surface, int x, int y, char swap)
@@ -115,28 +121,207 @@ char *strsep(char **stringp, const char *delim){
 #endif
 
 
+enum truncstr truncstr_tab[256]={0xffffffff};
+
+void truncstr_tabinit(){
+	memset(truncstr_tab,0,256*sizeof(enum truncstr));
+	truncstr_tab[' ' ]=TS_SPACE;
+	truncstr_tab['\t']=TS_SPACE;
+	truncstr_tab['\n']=TS_NEWLINE;
+	truncstr_tab['\r']=TS_NEWLINE;
+}
+
+
+char *truncstr(char *str,size_t *len,enum truncstr pre,enum truncstr suf){
+	size_t l = len && *len ? *len : strlen(str);
+	if(truncstr_tab[0]==0xffffffff) truncstr_tabinit();
+	if(pre&TS_EQ) pre|=suf;
+	if(suf&TS_EQ) suf|=pre;
+	while(str[0] && (truncstr_tab[(unsigned char)str[0]]&pre)){ str++; l--; }
+	while(l>0 && (truncstr_tab[(unsigned char)str[l-1]]&suf)) l--;
+	str[l]='\0';
+	if(len) *len=l;
+	return str;
+}
+
 #if HAVE_STAT
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-char isdir(const char *fn){
+
+long filesize(const char *fn){
 	struct stat st;
 	if(stat(fn,&st)) return 0;
-	if(S_ISDIR(st.st_mode)) return 1;
-	if(fileext(fn,0,".flst")) return 1;
-	if(fileext(fn,0,".effprg")) return 1;
-	return 0;
+	return st.st_size;
 }
+
+long filetime(const char *fn){
+	struct stat st;
+	if(stat(fn,&st)) return 0;
+	return st.st_mtime;
+}
+
 #else
-char isdir(const char *fn __attribute__((unused))){
-	if(fileext(fn,".flst")) return 1;
-	if(fileext(fn,".effprg")) return 1;
+
+long filesize(const char *fn){
+	return 1;
+}
+
+long filetime(const char *fn){
 	return 0;
 }
+
 #endif
+
+enum filetype filetype(const char *fn){
+	enum filetype ft=FT_NX;	
+	FILE *fd;
+#if HAVE_STAT
+	struct stat st;
+	if(!fn || stat(fn,&st)) return FT_NX;
+	if(S_ISDIR(st.st_mode)) ft|=FT_DIR|FT_DIREX;
+	else
+#endif
+	if((fd=fopen(fn,"r"))){
+		fclose(fd);
+		ft|=FT_FILE;
+		if(fileext(fn,0,"flst")) ft|=FT_DIREX;
+		if(fileext(fn,0,"effprg")) ft|=FT_DIREX;
+	}
+	return ft;
+}
+
+#ifndef __WIN32__
+	#include <sys/stat.h>
+	#include <sys/types.h>
+#endif
+char mkdirm(const char *dir,char file){
+	char buf[FILELEN];
+	int l=snprintf(buf,FILELEN,"%s",dir),i;
+	for(i=l;i>0;i--) if(buf[i]=='/' || buf[i]=='\\' || (buf[i]=='\0' && !file)){
+		enum filetype ft;
+		buf[i]='\0';
+		ft=filetype(buf);
+		if(ft&FT_DIR) break;
+		if(ft!=FT_NX){ error(ERR_CONT,"mkdirm: \"%s\" is not a directory",buf); return 0; }
+	}
+	buf[i]=dir[i];
+	for(i++;i<=l;i++) if(!buf[i]){
+		if(!dir[i] && file) break;
+#ifdef __WIN32__
+		if(mkdir(buf)!=0)
+#else
+		if(mkdir(buf,00777)!=0)
+#endif
+		{ error(ERR_CONT,"mkdirm: mkdir \"%s\" failed",buf); return 0; }
+		buf[i]=dir[i];
+	}
+	return 1;
+}
 
 char fileext(const char *fn,size_t len,const char *ext){
 	size_t lext=strlen(ext);
 	if(!len) len=strlen(fn);
-	return len>lext+1 && !strncasecmp(fn+len-lext,ext,lext);
+	return len>lext+1 && fn[len-lext-1]=='.' && !strncasecmp(fn+len-lext,ext,lext);
 }
+
+#if HAVE_ICONV
+	#ifdef __WIN32__
+		#define WINCC	(const char **)
+	#else
+		#define WINCC
+	#endif
+#endif
+
+/* thread: dpl */
+uint32_t unicode2utf8(unsigned short key){
+#if HAVE_ICONV
+	static iconv_t ic=NULL;
+	static char buf[5];
+	char *in=(char*)&key;
+	char *out=buf;
+	size_t nin=sizeof(unsigned short);
+	size_t nout=4;
+	if(!ic) ic=iconv_open("utf-8","unicode");
+	if(ic!=(iconv_t)-1){
+		memset(buf,0,5*sizeof(char));
+		iconv(ic,NULL,NULL,NULL,NULL);
+		if(iconv(ic,WINCC &in,&nin,&out,&nout)!=(size_t)-1 && !nin){
+			out=buf;
+			return *(uint32_t*)out;
+		}
+	}
+#endif
+	return key&0xff;
+}
+
+/* thread: all */
+void utf8check(char *str){
+#if HAVE_ICONV
+	static iconv_t *ic=NULL;
+	size_t nstr=strlen(str);
+	size_t nout=FILELEN;
+	char buf[FILELEN];
+	char *out=buf;
+	int tid=threadid();
+	if(!ic) ic=calloc(nthreads(),sizeof(iconv_t));
+	if(!ic[tid]) ic[tid]=iconv_open("utf-8","utf-8");
+	if(ic[tid]==(iconv_t)-1) return;
+	iconv(ic[tid],NULL,NULL,NULL,NULL);
+	iconv(ic[tid],WINCC &str,&nstr,&out,&nout);
+	if(nstr) *str='\0';
+#endif
+}
+
+/* thread: sdl */
+uint32_t utf8first(const unsigned char *text){
+	unsigned char *buf=(unsigned char *)text;
+	uint32_t key=buf[0];
+	int i;
+	if((buf[0]&0xC0)==0xC0)
+		for(i=1;i<4 && (buf[i]&0xC0)==0x80;i++)
+			key+=(uint32_t)buf[i]<<i*8;
+	return key;
+}
+
+/* thread: gl, eff */
+void col_hsl2rgb(float *dst,float *src){
+	float c=(1.f-fabsf(2.f*src[2]-1.f))*src[1];
+	float h=src[0]*6;
+	float h2=h-truncf(h/2.f)*2.f;
+	float x=c*(1.f-fabsf(h2-1.f));
+	float m=src[2]-.5f*c;
+	     if(h<1){ dst[0]=c; dst[1]=x; dst[2]=0; }
+	else if(h<2){ dst[0]=x; dst[1]=c; dst[2]=0; }
+	else if(h<3){ dst[0]=0; dst[1]=c; dst[2]=x; }
+	else if(h<4){ dst[0]=0; dst[1]=x; dst[2]=c; }
+	else if(h<5){ dst[0]=x; dst[1]=0; dst[2]=c; }
+	else        { dst[0]=c; dst[1]=0; dst[2]=x; }
+	dst[0]+=m;
+	dst[1]+=m;
+	dst[2]+=m;
+	dst[3]=src[3];
+}
+
+void col_rgb2hsl(float *dst,float *src){
+	float M=MAX(src[0],MAX(src[1],src[2]));
+	float m=MIN(src[0],MIN(src[1],src[2]));
+	float c=M-m;
+		 if(c==0)      dst[0]=0.6f;
+	else if(M==src[0]) dst[0]=(src[1]-src[2])/c;
+	else if(M==src[1]) dst[0]=(src[2]-src[0])/c+2.f;
+	else               dst[0]=(src[0]-src[1])/c+4.f;
+	dst[0]/=6.f; if(dst[0]<0.f) dst[0]+=1.f;
+	dst[2]=(M+m)*0.5f;
+	if(c==0) dst[1]=0.f;
+	else dst[1]=c/(1.f-fabsf(2*dst[2]-1.f));
+	dst[3]=src[3];
+}
+
+const char *fncmp(const char *fn){
+	size_t c=0,i,len=strlen(fn);
+	for(i=len;i>0 && c<4;i--) if(fn[i-1]=='/' || fn[i-1]=='\\') c++;
+	if(i) i++;
+	return fn+i;
+}
+

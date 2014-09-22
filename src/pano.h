@@ -27,10 +27,11 @@ char panoend(float *s);
 
 void panodrawimg(struct itx *tx,struct imgpano *ip);
 void panoperspective(float h3d,int fm,float w);
-char panorender();
+char panorender(char sel);
 
 enum panoev { PE_PLAY, PE_SPEEDRIGHT, PE_SPEEDLEFT, PE_FLIPRIGHT, PE_FLIPLEFT, PE_MODE, PE_FISHMODE };
 char panoev(enum panoev pe);
+float panorot();
 
 void panorun();
 

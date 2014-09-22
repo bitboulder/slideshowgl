@@ -24,7 +24,7 @@ METHODDEF(void) ldjpg_error (j_common_ptr cinfo)
 }
 
 
-SDL_Surface *JPG_LoadSwap(char *fn){
+SDL_Surface *JPG_LoadSwap(const char *fn){
 #if HAVE_JPEG
 	FILE *fd;
 	struct jpeg_decompress_struct cinfo;
@@ -42,8 +42,8 @@ SDL_Surface *JPG_LoadSwap(char *fn){
 		cinfo.out_color_space=JCS_CMYK;
 		cinfo.quantize_colors=FALSE;
 		jpeg_calc_output_dimensions(&cinfo);
-		img=SDL_AllocSurface(SDL_SWSURFACE,
-				(int)cinfo.output_height,(int)cinfo.output_width,32,
+		img=SDL_CreateRGBSurface(0,
+				(int)cinfo.output_width,(int)cinfo.output_height,32,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000
 #else
@@ -60,7 +60,7 @@ SDL_Surface *JPG_LoadSwap(char *fn){
 		cinfo.do_fancy_upsampling=FALSE;
 #endif
 		jpeg_calc_output_dimensions(&cinfo);
-		img=SDL_AllocSurface(SDL_SWSURFACE,
+		img=SDL_CreateRGBSurface(0,
 				(int)cinfo.output_height,(int)cinfo.output_width,24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		                   0x0000FF, 0x00FF00, 0xFF0000,
@@ -88,5 +88,38 @@ end1:
 	return ret;
 #else
 	return NULL;
+#endif
+}
+
+void jpegsave(char *fn,unsigned int w,unsigned int h,unsigned char *buf){
+#if HAVE_JPEG
+	struct jpeg_compress_struct cinfo;
+	struct jpeg_error_mgr jerr;
+	FILE *fd;
+	JSAMPROW rowptr[1];
+	unsigned int rowstride;
+	cinfo.err=jpeg_std_error(&jerr);
+	jpeg_create_compress(&cinfo);
+	if(!(fd=fopen(fn,"wb"))){
+		error(ERR_CONT,"jpeg compression failure: file open failed");
+		return;
+	}
+	jpeg_stdio_dest(&cinfo,fd);
+	cinfo.image_width=w;
+	cinfo.image_height=h;
+	cinfo.input_components=3;
+	cinfo.in_color_space=JCS_RGB;
+	jpeg_set_defaults(&cinfo);
+	jpeg_set_quality(&cinfo,85,TRUE);
+	jpeg_start_compress(&cinfo,TRUE);
+	rowstride=w*3;
+	buf+=rowstride*(h-1);
+	while(cinfo.next_scanline<cinfo.image_height){
+		rowptr[0]=buf-cinfo.next_scanline*rowstride;
+		jpeg_write_scanlines(&cinfo,rowptr,1);
+	}
+	jpeg_finish_compress(&cinfo);
+	fclose(fd);
+	jpeg_destroy_compress(&cinfo);
 #endif
 }

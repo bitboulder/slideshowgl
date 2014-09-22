@@ -14,8 +14,8 @@
 # defsrc a:s:x:y:r       (0::::)
 # defdst a:s:x:y:r       (0::::)
 # defsd  => defsrc+defdst
-# defon  start:end:layer (0:1:0)
-# defoff start:end:layer (0:1:0)
+# defon  start:end:layer (0:1:1)
+# defoff start:end:layer (0:1:1)
 #
 # frm    on:stay         (deffrm)
 # pos    a:s:x:y:r       (defpos)
@@ -24,6 +24,7 @@
 # sd     => src+dst
 # on     start:end:layer (defon)
 # off    start:end:layer (defoff)
+# col    0xNNNNNN
 
 ## [OUTPUT-FORMAT]##
 #
@@ -37,12 +38,12 @@ my $fprg=shift;
 
 my %def=(
 	"frm"=>"1:1",
-	"col"=>"1:1:1:1",
+	"col"=>"1:1:1",
 	"pos"=>"1:1:0:0:0",
 	"src"=>"0",
 	"dst"=>"0",
-	"on" =>"0:1:0",
-	"off"=>"0:1:0",
+	"on" =>"0:1:1",
+	"off"=>"0:1:1",
 );
 
 foreach my $def (keys %def){
@@ -130,7 +131,7 @@ sub loadprg {
 				$arg=~s/^"|"$//g;
 				$arg="txt_".$arg;
 			}else{
-				$arg=$dir."/".$arg if $arg!~/^(\/|[A-Za-z]:\\)/;
+				$arg=$dir."/".$arg if ""ne$dir && $arg!~/^(\/|[A-Za-z]:\\)/;
 			}
 			$prg[-1]->{"imgs"}->[@{$prg[-1]->{"imgs"}}]->{"file"}=$arg;
 			@{$prg[-1]->{"imgs"}->[-1]->{"pos"}}=();
@@ -178,8 +179,9 @@ sub fillprg {
 	my @prg=@_;
 	for(my $fi=0;$fi<@prg;$fi++){
 		my $frm=$prg[$fi];
-		&fillarg($frm->{"frm"},$def{"frm"});
+		my @frmdef=@{$def{"frm"}};
 		foreach my $img (@{$frm->{"imgs"}}){
+			@{$img->{"col"}}=() if !exists $img->{"col"};
 			&fillarg($img->{"col"},$def{"col"});
 			my $prv=&findimg($fi-1,$img->{"file"},@prg);
 			my $nxt=&findimg($fi+1,$img->{"file"},@prg);
@@ -205,7 +207,10 @@ sub fillprg {
 			}
 			&fillarg($img->{"on" },$def{"on"});
 			&fillarg($img->{"off"},$def{"off"});
+			$frmdef[0]=$img->{"on"}->[0] if $img->{"on"}->[0]>$frmdef[0];
+			$frmdef[0]=$img->{"on"}->[1] if $img->{"on"}->[1]>$frmdef[0];
 		}
+		&fillarg($frm->{"frm"},\@frmdef);
 	}
 	return @prg;
 }
@@ -313,12 +318,19 @@ sub compilepath {
 	my $img=shift;
 	my $fi=shift;
 	my @path=@_;
-	for(my $pi=1;$pi<@path;$pi++){
-		next if $path[$pi-1]->{"p"}eq$path[$pi]->{"p"};
-		my $f=$img->{"file"};
-		@{$imgs->{$f}}=() if !exists $imgs->{$f};
-		my @ev=&compileev($fi,$path[$pi-1],$path[$pi]);
+	my $f=$img->{"file"};
+	@{$imgs->{$f}}=() if !exists $imgs->{$f};
+	if(@path==1){
+		my @ev=&compileev($fi,$path[0],$path[0]);
 		$imgs->{$f}->[@{$imgs->{$f}}]=\@ev;
+	}else{
+		my $done=0;
+		for(my $pi=1;$pi<@path;$pi++){
+			next if $path[$pi-1]->{"p"}eq$path[$pi]->{"p"} && ($pi<@path-1 || $done);
+			my @ev=&compileev($fi,$path[$pi-1],$path[$pi]);
+			$imgs->{$f}->[@{$imgs->{$f}}]=\@ev;
+			$done=1;
+		}
 	}
 }
 

@@ -1,19 +1,17 @@
 # Fixes
-- eaksn4: switch back from fullscreen if started in fullscreen
-
 - cleanup texloadbuf in ldresetdo
 - load: delete texs for img size reduce
 
-- fix: stop-icon disapears if zoomin and -out on flstln/panorama
-
-- xinerama => current screen (svn-branch!)
-
-- fix: keymap for win32
-
-- prg: img not in frame if ev-off
-
-
 # Want to have
-- load imgexif threaded
+- dpl.actimgi through eff + remove sdlforceredraw
+- dpl.pos.actil through eff + remove sdlforceredraw
+- dplgetinput through eff + remove sdlforceredraw
+- imgposmark for cat through eff
 
 ? thread priorities
+
+- map title => img / free titles
+- diredit in normal write mode (basedir/current dir)
+- menu with submenu for active actions
+- action register (replace dpl / menu)
+

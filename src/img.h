@@ -11,47 +11,31 @@
 				E2(NONE, -1),\
 				E2(PANO, -2)
 
-#define IMGI_START	INT_MIN
-#define IMGI_END	INT_MAX
+#define NPRGCOL		128
 
 #define E2(X,N)	TEX_##X=N
 enum imgtex { IMGTEX };
 #undef E2
 
-struct imglist;
-
 struct img {
-	struct img *nxt;
+	double marker; /* TODO: remove */
+	char free;
+	struct img *nxt, *prv;
+	struct imglist *il;
+	int frm;
 	struct imgld *ld;
 	struct imgpos *pos;
 	struct imgexif *exif;
 	struct imgfile *file;
 	struct imgpano *pano;
+	struct imghist *hist;
+	struct avl *avl;
 };
 extern struct img *defimg;
 extern struct img *dirimg;
-extern struct img *delimg;
 
-struct imglist *ilnew(const char *dir);
-void ildestroy(struct imglist *il);
-struct imglist *ilfind(const char *dir);
-void ilcleanup();
-int ilswitch(struct imglist *il);
-
-int imggetn();
-struct prg *ilprg();
-int imginarrorlimits(int i);
-int imgidiff(int ia,int ib,int *ira,int *irb);
-
-struct img *imgget(int i);
 struct img *imginit();
-struct img *imgadd(struct imglist *il,const char *prg);
-struct img *imgdel(int i);
-
-void imgfinalize();
-void imgrandom(struct imglist *il);
-void imgsort(struct imglist *il,char date);
-void ilforallimgs(void (*func)(struct img *img,void *arg),void *arg);
-void ilprgfrm(struct imglist *il,const char *prgfrm);
+void imgfree(struct img *img);
+char imgmarker(struct img *img);
 
 #endif

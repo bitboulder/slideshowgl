@@ -15,12 +15,6 @@
 #include "eff.h"
 #include "dpl.h"
 
-#define M_PIf		3.14159265358979323846f
-#define RAD(x)		((x)/180.f*M_PIf)
-#define SIN(x)		sinf(RAD(x))
-#define COS(x)		cosf(RAD(x))
-#define TAN(x)		tanf(RAD(x))
-
 struct imgpano {
 	char enable;
 	float gw;
@@ -39,8 +33,8 @@ void imgpanoload(struct imgpano *ip,const char *fn){
 	if(!fn){ ip->enable=0; return; }
 	ip->rotinit=4.f;
 	ip->gw=ip->gh=0.f;
-	strncpy(pfn,fn,FILELEN);
-	if(!findfilesubdir(pfn,"ori",".pano") && !findfilesubdir(pfn,"",".pano")) goto end;
+	snprintf(pfn,FILELEN,fn);
+	if(!findfilesubdir(pfn,"ori","_.pano",1) && !findfilesubdir(pfn,"","_.pano",1)) goto end;
 	if(!(fd=fopen(pfn,"r"))) goto end;
 	fscanf(fd,"%f %f %f %f",&ip->gw,&ip->gh,&ip->gyoff,&ip->rotinit);
 	fclose(fd);
@@ -74,6 +68,7 @@ struct pano {
 	float rot;
 	char run;
 	enum panomode mode;
+	Uint32 runlast;
 	struct panocfg {
 		float defrot;
 		float minrot;
@@ -83,7 +78,9 @@ struct pano {
 		enum panofm fm;
 		float maxfishangle;
 	} cfg;
-} pano;
+} pano = {
+	.runlast=0,
+};
 
 /* thread: sdl */
 void panoinit(char done){
@@ -101,7 +98,7 @@ void panoinit(char done){
 struct img *panoactive(){
 	struct img *img;
 	if(dplgetzoom()<=0) return NULL;
-	if(!(img=imgget(dplgetimgi()))) return NULL;
+	if(!(img=ilcimg(NULL))) return NULL;
 	if(!img->pano->enable) return NULL;
 	return img;
 }
@@ -266,40 +263,46 @@ void panoperspective(float h3d,int fm,float w){
 }
 
 /* thread: gl */
-char panorender(){
+char panorender(char sel){
 	struct img *img;
 	struct imgpano *ip;
 	GLuint dl;
-	struct ipos *ipos;
+	struct ecur *ecur;
 	struct icol *icol;
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
+	float ecuroff=0.;
 	if(!(img=panoactive())) return 0;
+	if(sel) return 1;
 	ip=img->pano;
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
-	ipos=imgposcur(img->pos);
+	ecur=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
-	panoperspect(ip,ipos->s,&perspectw,&perspecth);
+	if(pano.run && pano.runlast){
+		panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
+		ecuroff=-pano.rot*(float)(SDL_GetTicks()-pano.runlast)/1000.f/img->pano->gw*perspectw;
+	}
+	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
 	glmodex(panoglmode[mode], perspecth, mode==PM_FISHEYE?(int)pano.cfg.fm:-1);
 	glPushMatrix();
-	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ipos->a);
-	else glColor4f(1.f,1.f,1.f,ipos->a);
+	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
+	else glColor4f(1.f,1.f,1.f,ecur->a);
 	if(mode==PM_PLAIN){
-		float x=ipos->x;
+		float x=ecur->x+ecuroff;
 		while(x<0.f) x+=1.f;
 		while(x>1.f) x-=1.f;
 		glScalef(ip->gw/perspectw,ip->gh/perspecth,1.f);
-		glTranslatef(x,ipos->y,0.f);
+		glTranslatef(x,ecur->y,0.f);
 		glCallList(dl);
 		glTranslatef(-1.f,0.f,0.f);
 		glCallList(dl);
 	}else{
-		printf("%7u pano: %.7f\n",SDL_GetTicks(),ipos->x);
-		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
-		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
+		printf("%7u pano: %.7f %.7f\n",SDL_GetTicks(),ecur->x,ecuroff);
+		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
+		glRotatef(-(ecur->x+ecuroff)*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
 	}
 	glPopMatrix();
@@ -342,16 +345,18 @@ char panoev(enum panoev pe){
 }
 
 /* thread: dpl */
+float panorot(){ return pano.rot; }
+
+/* thread: dpl */
 void panorun(){
-	static Uint32 last=0;
 	Uint32 now;
 	struct img *img;
 	if(!(img=panoactive())) return;
-	if(!pano.run){ last=0; return; }
+	if(!pano.run){ pano.runlast=0; return; }
 	now=SDL_GetTicks();
-	if(last){
-		float sec=(float)(now-last)/1000.f;
+	if(pano.runlast){
+		float sec=(float)(now-pano.runlast)/1000.f;
 		dplevputp(DE_JUMP,pano.rot*sec,0.f);
 	}
-	last=now;
+	pano.runlast=now;
 }
