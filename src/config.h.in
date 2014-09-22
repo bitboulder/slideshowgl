@@ -7,6 +7,7 @@
 #define LOCALEDIR "%(LOCALEDIR)s"
 
 #define HAVE_EXIF		%(HAVE_EXIF)i
+#define HAVE_EXIV2		%(HAVE_EXIV2)i
 
 #define HAVE_FTGL		%(HAVE_FTGL)i
 
@@ -19,10 +20,14 @@
 #define HAVE_STRSEP		%(HAVE_STRSEP)i
 #define HAVE_REALPATH	%(HAVE_REALPATH)i
 #define HAVE_GETTEXT	%(HAVE_GETTEXT)i
+#define HAVE_ICONV		%(HAVE_ICONV)i
 #define HAVE_STAT		%(HAVE_STAT)i
 #define HAVE_MKTIME		%(HAVE_MKTIME)i
 #define HAVE_OPENDIR	%(HAVE_OPENDIR)i
 
-/*#define HAVE_PTHREAD*/
+#define HAVE_CURL		%(HAVE_CURL)i
+#define HAVE_ZLIB		%(HAVE_ZLIB)i
+
+#define HAVE_PTHREAD	%(HAVE_PTHREAD)i
 
 #endif

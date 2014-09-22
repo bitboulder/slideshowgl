@@ -1,10 +1,9 @@
 
-BINS = bin/libintl3.dll bin/libiconv2.dll
+BINS = bin/libintl3.dll
 LIBS = lib/libintl.dll.a
 INCS = include/libintl.h
 
 SRCBINZIP = gettext-0.14.4-bin.zip
-SRCDEPZIP = gettext-0.14.4-dep.zip
 SRCINCZIP = gettext-0.14.4-lib.zip
 
 all: $(BINS) $(LIBS) $(INCS)
@@ -12,11 +11,7 @@ all: $(BINS) $(LIBS) $(INCS)
 clean:
 	rm -rf bin lib include
 
-bin/libintl%: $(SRCBINZIP)
-	unzip -j -d bin $< $@
-	touch $@
-
-bin/%: $(SRCDEPZIP)
+bin/%: $(SRCBINZIP)
 	unzip -j -d bin $< $@
 	touch $@
 

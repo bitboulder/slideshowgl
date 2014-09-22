@@ -1,4 +1,4 @@
-env = Environment(APPNAME = 'slideshowgl', VERSION = '2.0.0')
+env = Environment(APPNAME = 'slideshowgl', VERSION = '2.2')
 
 Help("\n")
 Help("Type: 'scons mode=release' to build the production program.\n")
@@ -68,6 +68,24 @@ if not env.GetOption('clean'):
 
 	conf = Configure(env, custom_tests = { 'CheckPKGConfig' : CheckPKGConfig, 'CheckPKG' : CheckPKG, 'CheckFuncMy': CheckFuncMy, 'CheckLibMy' : CheckLibMy })
 
+	env['HAVE_EXIF'] = 0
+	env['HAVE_EXIV2'] = 0
+	env['HAVE_FTGL'] = 0
+	env['HAVE_X11'] = 0
+	env['HAVE_XEXT'] = 0
+	env['HAVE_XINERAMA'] = 0
+	env['HAVE_ICONV'] = 0
+	env['HAVE_JPEG'] = 0
+	env['HAVE_REALPATH'] = 0
+	env['HAVE_STRSEP'] = 0
+	env['HAVE_GETTEXT'] = 0
+	env['HAVE_STAT'] = 0
+	env['HAVE_MKTIME'] = 0
+	env['HAVE_OPENDIR'] = 0
+	env['HAVE_CURL'] = 0
+	env['HAVE_ZLIB'] = 0
+	env['HAVE_PTHREAD'] = 0
+
 	if os == 'win':
 		env.Replace(PROGSUFFIX = '.exe')
 		env.Replace(CC        = ['i586-mingw32msvc-gcc'])
@@ -101,40 +119,45 @@ if not env.GetOption('clean'):
 		env.Append(LIBPATH    = ['#/winlib/gettext/lib'])
 		conf.CheckLibMy('intl',0,0)
 
+		env.Append(CPPPATH    = ['#/winlib/iconv/include'])
+		env.Append(LIBPATH    = ['#/winlib/iconv/lib'])
+		conf.CheckLibMy('iconv',0,'ICONV')
+
 		conf.CheckLibMy('opengl32',1,0)
 		conf.CheckLibMy('glu32',1,0)
 
-		env.Append(CPPPATH    = ['#/winlib/glew/include/'])
-		env.Append(LIBPATH    = ['#/winlib/glew/lib/'])
+		env.Append(CPPPATH    = ['#/winlib/glew/include'])
+		env.Append(LIBPATH    = ['#/winlib/glew/lib'])
 		conf.CheckLibMy('glew32',1,0)
 
-		conf.CheckLibMy('stdc++',1,0)
+		env.Append(CPPPATH    = ['#/winlib/curl/include'])
+		env.Append(LIBPATH    = ['#/winlib/curl/lib'])
+		conf.CheckLibMy('curldll',0,'CURL')
 
-#		env['HAVE_PTHREAD'] = 0
-		env['HAVE_X11'] = 0
-		env['HAVE_XEXT'] = 0
-		env['HAVE_XINERAMA'] = 0
+		conf.CheckLibMy('stdc++',1,0)
 	else:
-#		conf.CheckCHeader('pthread.h')
-#		conf.CheckLibMy('pthread',0,'PTHREAD')
 		conf.CheckPKGConfig('0.2')
 		conf.CheckPKG('gl >= 7.0',1,0)
+		conf.CheckPKG('glu >= 7.0',1,0)
 		conf.CheckPKG('glew >= 1.5',1,0)
-		conf.CheckPKG('sdl >= 1.2',1,0)
-		conf.CheckPKG('SDL_image >= 1.2',1,0)
+		conf.CheckPKG('sdl2 >= 2.0',1,0)
+		conf.CheckPKG('SDL2_image >= 2.0',1,0)
 		conf.CheckPKG('libexif >= 0.6',0,'EXIF')
+		conf.CheckPKG('exiv2 >= 0.22',0,'EXIV2')
 		conf.CheckPKG('ftgl >= 2.1',0,'FTGL')
 		conf.CheckPKG('x11 >= 1.3',0,'X11')
 		conf.CheckPKG('xext >= 1.1',0,'XEXT')
 		conf.CheckPKG('xinerama >= 1.0',0,'XINERAMA')
+		conf.CheckPKG('libcurl >= 0.2',0,'CURL')
+		conf.CheckPKG('zlib >= 1.2',0,'ZLIB')
+		conf.CheckFuncMy('iconv',0,'ICONV')
+		conf.CheckLibMy('pthread',0,'PTHREAD')
 
 	conf.CheckLibMy('jpeg',0,'JPEG')
 	conf.CheckFuncMy('realpath',0,'REALPATH')
 	conf.CheckFuncMy('strsep',0,'STRSEP')
 	conf.CheckLibMy('m',1,0)
-	if mode == 'debug':
-		env['HAVE_GETTEXT'] = 0
-	else:
+	if mode != 'debug':
 		conf.CheckFuncMy('gettext',0,'GETTEXT')
 	conf.CheckFuncMy('stat',0,'STAT')
 	conf.CheckFuncMy('mktime',0,'MKTIME')
@@ -151,9 +174,10 @@ env.Append(CCFLAGS = ['-Wwrite-strings','-Wconversion','-Wunused-macros',
 #env.Append(CCFLAGS = ['-Wfloat-equal','-Wpadded'])
 
 if mode == 'debug':
-	env.Append(CCFLAGS = ['-g'])
+	env.Append(CCFLAGS = ['-g', '-DDEBUG'])
 else:
 	env.Append(CCFLAGS = ['-O2'])
+	env.Append(CCFLAGS = ['-g'])
 
 Export('env')
 Export('prefix')
@@ -161,10 +185,12 @@ Export('destdir')
 
 SConscript(build + '/src/SConscript')
 SConscript(build + '/data/SConscript')
+SConscript(build + '/doc/SConscript')
 SConscript(build + '/po/SConscript')
 
 Import('install_bin')
 Import('install_data')
+Import('install_doc')
 Import('install_po')
 
-env.Alias('install', [install_bin, install_data, install_po])
+env.Alias('install', [install_bin, install_data, install_po, install_doc])

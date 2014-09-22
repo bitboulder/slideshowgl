@@ -2,6 +2,9 @@
 #define _EXIF_H
 
 #include <stdint.h>
+#include "img.h"
+
+#define ISLEN	256
 
 enum rot {ROT_0, ROT_90, ROT_180, ROT_270};
 
@@ -13,7 +16,8 @@ int64_t imgexifdate(struct imgexif *exif);
 char *imgexifinfo(struct imgexif *exif);
 float imgexifrotf(struct imgexif *exif);
 
-void imgexifload(struct imgexif *exif,char *fn);
+char imgexifload(struct imgexif *exif,const char *fn);
+void imgexifclear(struct imgexif *exif);
 
 void exifrotate(struct imgexif *exif,int r);
 

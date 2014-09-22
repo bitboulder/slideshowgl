@@ -1,3 +1,7 @@
+#ifndef __WIN32__
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,13 +109,12 @@ void prgadd(struct prg **prg,const char *txt,struct img *img){
 	free(flt);
 }
 
-int prgimgidiff(int frm,int imgi){
-	struct prg *prg=ilprg();
-	struct img *img=imgget(imgi);
+int prgimgidiff(int frm,struct img *img){
+	struct prg *prg=ilprg(img->il);
 	int fchg,fdir,f;
 	struct prgev *ev;
-	frm=imginarrorlimits(frm);
-	if(!prg || !img || dplgetzoom()!=0) return imgidiff(frm,imgi,NULL,NULL);
+	frm=ilrelimgi(img->il,frm);
+	if(!prg || !img || dplgetzoom()!=0) return ildiffimgi(img->il,frm,img->frm);
 	for(fchg=0;fchg<prg->nfrm;fchg++) for(fdir=-1;fdir<=1;fdir+=2){
 		f=frm+fchg*fdir;
 		if(f<0 || f>=prg->nfrm) continue;
@@ -133,17 +136,17 @@ int prgget(struct prg *prg,struct img *img,int frm,int iev,struct pev **pev){
 }
 
 char prgdelay(int frm,float *on,float *stay){
-	struct prg *prg=ilprg();
+	struct prg *prg=ilprg(0);
 	if(!prg || frm<0 || frm>=prg->nfrm) return 0;
 	if(on  ) *on  =prg->frms[frm].on;
 	if(stay) *stay=prg->frms[frm].stay;
 	return 1;
 }
 
-char prgforoneldfrm(int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it){
-	struct prg *prg=ilprg();
+char prgforoneldfrm(struct imglist *il,int frm,char (*func)(struct imgld *il,enum imgtex it),enum imgtex it){
+	struct prg *prg=ilprg(il);
 	if(!prg || dplgetzoom()!=0){
-		struct img *img=imgget(frm);
+		struct img *img=ilimg(il,frm);
 		return img && func(img->ld,it);
 	}else{
 		struct prgev *ev;
@@ -153,3 +156,4 @@ char prgforoneldfrm(int frm,char (*func)(struct imgld *il,enum imgtex it),enum i
 		return 0;
 	}
 }
+

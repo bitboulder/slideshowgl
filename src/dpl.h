@@ -1,8 +1,9 @@
 #ifndef _DPL_H
 #define _DPL_H
 
-#include <SDL.h>
 #include "img.h"
+#include "il.h"
+#include "main.h"
 
 enum dplev {
 	DE_STAT    = 0x00000001,
@@ -14,15 +15,20 @@ enum dplev {
 	DE_LEFT    = 0x00000040,
 	DE_UP      = 0x00000080,
 	DE_DOWN    = 0x00000100,
-	DE_ZOOMIN  = 0x00000200,
-	DE_ZOOMOUT = 0x00000400,
-	DE_ROT1    = 0x00000800,
-	DE_ROT2    = 0x00001000,
-	DE_STOP    = 0x00002000,
-	DE_DIR     = 0x00004000,
-	DE_MARK    = 0x00008000,
-	DE_PLAY    = 0x00010000,
-	DE_SEL     = 0x00020000,
+	DE_ROT1    = 0x00000200,
+	DE_ROT2    = 0x00000400,
+	DE_STOP    = 0x00000800,
+	DE_DIR     = 0x00001000,
+	DE_MARK    = 0x00002000,
+	DE_MOV     = 0x00004000,
+	DE_PLAY    = 0x00008000,
+	DE_ZOOMIN  = 0x00010000,
+	DE_ZOOMOUT = 0x00020000,
+	DE_SEL     = 0x00040000,
+	DE_JUMPEND = 0x00080000,
+	DE_INIT    = 0x00100000,
+	DE_COL     = 0x00200000,
+	DE_MAPMK   = 0x00400000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
@@ -36,22 +42,38 @@ enum dplev {
 
 enum dplevsrc { DES_KEY, DES_MOUSE };
 
-int dplgetimgi();
+struct dplinput {
+	unsigned int mode;
+	unsigned int lastmode;
+	float x,y;
+	int id,srcid;
+	struct imglist *il;
+	char pre[FILELEN];
+	char in[FILELEN];
+	char post[FILELEN];
+	char res[FILELEN];
+};
+
 int dplgetzoom();
-char dplshowinfo();
-int dplinputnum();
+float dplgetz();
+struct dplinput *dplgetinput();
 char dplloop();
 const char *dplhelp();
+int dplgetactil(char *prged);
+int dplgetactimgi(int il);
+unsigned int dplgetfid();
+char *dplgetinfo();
+float *dplgethist();
 
 void printixy(float sx,float sy);
 
-#define dplevput(e)			dplevputx(e,0,0.f,0.f,-2,DES_KEY)
-#define dplevputk(k)		dplevputx(DE_KEY,k,0.f,0.f,-2,DES_KEY)
-#define dplevputp(e,x,y)	dplevputx(e,0,x,y,-2,DES_MOUSE)
-#define dplevputi(e,i)		dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
-#define dplevputpi(e,x,y,i)	dplevputx(e,0,x,y,i,DES_MOUSE)
-#define dplevputs(e,src)	dplevputx(e,0,0.f,0.f,-2,src)
-void dplevputx(enum dplev ev,SDLKey key,float sx,float sy,int imgi,enum dplevsrc src);
+#define dplevput(e)				dplevputx(e,0,0.f,0.f,-2,DES_KEY)
+#define dplevputk(k)			dplevputx(DE_KEY,k,0.f,0.f,-2,DES_KEY)
+#define dplevputp(e,x,y)		dplevputx(e,0,x,y,-2,DES_MOUSE)
+#define dplevputi(e,i)			dplevputx(e,0,0.f,0.f,i,DES_MOUSE)
+#define dplevputpi(e,x,y,i)		dplevputx(e,0,x,y,i,DES_MOUSE)
+#define dplevputs(e,src)		dplevputx(e,0,0.f,0.f,-2,src)
+void dplevputx(enum dplev ev,uint32_t key,float sx,float sy,int imgi,enum dplevsrc src);
 int dplthread(void *arg);
 
 #endif

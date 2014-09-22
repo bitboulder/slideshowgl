@@ -1,3 +1,7 @@
+#ifndef __WIN32__
+	#define	_BSD_SOURCE
+	#include <features.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include "ldcp.h"
@@ -11,7 +15,11 @@ struct loadconcept loadconcepts[] = {
 	{ "B:0..2,-1;S:+-5,+-10,3..4,-2..-4",     "F:0,B:-2..4;S:..15;T:..24" }, /* zoom =  0 */
 	{ "S:..17;B:0,1",                         "F:0,B:-1..2;S:..22;T:..38" }, /* zoom = -1 */
 	{ "S:..22;T:+-23..31;B:0",                "B:..1;S:..37;T:..52"       }, /* zoom = -2 */
-	{ "T:..38;S:..22;B:0",                    "B:..1;S:..37;T:..59"       }, /* zoom = -3 */
+	{ "T:..38;S:..22;B:0",                    "B:..1;S:..22;T:..59"       }, /* zoom = -3 */
+	{ "T:..58;B:0",                           "B:..1;T:..83"              }, /* zoom = -4 */
+	{ "T:..82;B:0",                           "B:..1;T:..111"             }, /* zoom = -5 */
+	{ "T:..110;B:0",                          "B:..1;T:..143"             }, /* zoom = -6 */
+	{ "T:..142;B:0",                          "B:..1;T:..179"             }, /* zoom = -7 */
 };
 #define NUM_CONCEPTS (sizeof(loadconcepts)/sizeof(struct loadconcept))
 
