@@ -297,6 +297,7 @@ char panorender(){
 		glTranslatef(-1.f,0.f,0.f);
 		glCallList(dl);
 	}else{
+		printf("%7u pano: %.7f\n",SDL_GetTicks(),ipos->x);
 		glRotatef( ipos->y*ip->gh+ip->gyoff,-1.,0.,0.);
 		glRotatef(-ipos->x*ip->gw, 0.,-1.,0.);
 		glCallList(dl);

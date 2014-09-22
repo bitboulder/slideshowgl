@@ -28,6 +28,7 @@ struct SDL_Thread {
 #endif
 #endif
 
+#include <sys/time.h>
 enum timer tim;
 #define TIMER_NUM	16
 void timer(enum timer ti,int id,char reset){
@@ -37,6 +38,11 @@ void timer(enum timer ti,int id,char reset){
 	static Uint32 last=0, lastp=0;
 	Uint32 now=SDL_GetTicks();
 	if(ti!=tim) return;
+	{
+		struct timeval tv;
+		gettimeofday(&tv,NULL);
+		printf("tim %i %u %li %li\n",id,now,tv.tv_sec,tv.tv_usec);
+	}
 	if(id>=0 && id<TIMER_NUM && last){
 		Uint32 diff=now-last;
 		if(ti_max[id]<diff) ti_max[id]=diff;
