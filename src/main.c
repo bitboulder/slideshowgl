@@ -197,9 +197,9 @@ void timer(enum timer ti,int id,char reset){
 	Uint32 now=SDL_GetTicks();
 	if(ti!=tim) return;
 	{
-		struct timeval tv;
-		gettimeofday(&tv,NULL);
-		printf("tim %i %u %li %li\n",id,now,tv.tv_sec,tv.tv_usec);
+		struct timespec tv;
+		clock_gettime(CLOCK_MONOTONIC,&tv);
+		printf("tim %i %u %li %li\n",id,now,tv.tv_sec,tv.tv_nsec);
 	}
 	if(ti==TI_THR){
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD

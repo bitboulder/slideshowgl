@@ -1,8 +1,13 @@
+#ifndef __WIN32__
+	#define _POSIX_C_SOURCE 199309L
+	#include <features.h>
+#endif
 #include <stdlib.h>
 #include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <math.h>
+#include <time.h>
 #include "pano.h"
 #include "img.h"
 #include "load.h"
@@ -300,7 +305,11 @@ char panorender(char sel){
 		glTranslatef(-1.f,0.f,0.f);
 		glCallList(dl);
 	}else{
-		printf("%7u pano: %.7f %.7f\n",SDL_GetTicks(),ecur->x,ecuroff);
+		{
+			struct timespec tv;
+			clock_gettime(CLOCK_MONOTONIC,&tv);
+			printf("pano: %.7f %.7f %u %li %li\n",ecur->x,ecuroff,SDL_GetTicks(),tv.tv_sec,tv.tv_nsec);
+		}
 		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
 		glRotatef(-(ecur->x+ecuroff)*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
