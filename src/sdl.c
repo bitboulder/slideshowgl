@@ -121,55 +121,25 @@ char sdlfullscreen(char dst){
 	return 1;
 }
 
-struct subdpl {
-	char set;
-	int x,y,w,h;
-};
-
-/*#if HAVE_X11 && HAVE_XINERAMA
-char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *subdpl)
-#else
-char sdlgetfullscreenmode(Uint32 flags,int *w,int *h,struct subdpl *UNUSED(subdpl))
-#endif
-{
+void sdlfullscreenpos(int *x,int *y){
+	*x=*y=0;
 #if HAVE_X11 && HAVE_XINERAMA
 {
 	Display *display=XOpenDisplay(NULL);
 	XineramaScreenInfo *info;
 	int ninfo,i;
 	if(display && XineramaIsActive(display) && (info=XineramaQueryScreens(display,&ninfo))){
-		*w=*h=0;
-		for(i=0;i<ninfo;i++){
-			//info[i].screen_number
-			if(info[i].x_org+info[i].width> *w) *w=info[i].x_org+info[i].width;
-			if(info[i].y_org+info[i].height>*h) *h=info[i].y_org+info[i].height;
-			if(info[i].screen_number==sdl.cfg.display){
-				subdpl->set=1;
-				subdpl->x=info[i].x_org;
-				subdpl->y=info[i].y_org;
-				subdpl->w=info[i].width;
-				subdpl->h=info[i].height;
-			}
+		for(i=0;i<ninfo;i++) if(info[i].screen_number==sdl.cfg.display){
+			*x=info[i].x_org;
+			*y=info[i].y_org;
+			debug(DBG_STA,"sdl fullscreen window position: %i: %i,%i",sdl.cfg.display,*x,*y);
 		}
 		free(info);
-		if(*w && *h) return 1;
 	}
 	XCloseDisplay(display);
 }
 #endif
-{*/
-/*	SDL_Rect** modes=SDL_ListModes(SDL_GetVideoInfo()->vfmt,flags); TODO: check
-	if(modes==(SDL_Rect**)-1) error(ERR_CONT,"sdl All fullscreen modes available");
-	else if(modes==(SDL_Rect**)0 || !modes[0]) error(ERR_CONT,"sdl No fullscreen modes available");
-	else{
-		int i;
-		*w=*h=0;
-		for(i=0;modes[i];i++) if(modes[i]->w>*w){ *w=modes[i]->w; *h=modes[i]->h; }
-	}
-	return *w && *h;*/
-/*}
-	return 0;
-}*/
+}
 	
 void sdlcentermouse(){
 	SDL_SysWMinfo wm;
@@ -202,7 +172,9 @@ void sdlresize(int w,int h){
 void sdlinitfullscreen(){
 	sdl.dofullscreen=0;
 	if(sdl.fullscreen){
-		SDL_SetWindowPosition(sdl.wnd,0,0); // TODO: set position according to desired display
+		int x,y;
+		sdlfullscreenpos(&x,&y);
+		SDL_SetWindowPosition(sdl.wnd,x,y);
 		SDL_SetWindowFullscreen(sdl.wnd,SDL_WINDOW_FULLSCREEN_DESKTOP);
 		sdl.docentermouse=1;
 	}else{
