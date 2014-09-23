@@ -317,7 +317,7 @@ char panorender(char sel){
 		{
 			struct timespec tv;
 			clock_gettime(CLOCK_MONOTONIC,&tv);
-			printf("pano: %.7f 0 %u %li %li\n",ecur->x,SDL_GetTicks(),tv.tv_sec,tv.tv_nsec);
+			printf("pano: %.7f 0 %u %li %li\n",ecurx,SDL_GetTicks(),tv.tv_sec,tv.tv_nsec);
 		}
 		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
 		glRotatef(-ecurx*ip->gw, 0.,-1.,0.);
