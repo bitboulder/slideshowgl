@@ -276,14 +276,23 @@ char panorender(char sel){
 	struct icol *icol;
 	enum panomode mode=pano.mode;
 	float perspectw,perspecth;
-	float ecuroff=0.;
+	float ecurx;
 	if(!(img=panoactive())) return 0;
 	if(sel) return 1;
 	ip=img->pano;
 	if(mode!=PM_PLAIN && !(dl=imgldtex(img->ld,TEX_PANO))) mode=PM_PLAIN;
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
-	ecur=imgposcur(img->pos);
+	ecur=imgposcur(img->pos); ecurx=ecur->x;
 	icol=imgposcol(img->pos);
+	if(pano.run && pano.runlast.nt){
+		Uint32 rl;
+		float ecuroff;
+		panoperspect(img->pano,PSPOS_DPL,&perspectw,NULL);
+		rl = pano.runlast.lt && ecurx==pano.runlast.lecur ? pano.runlast.lt : pano.runlast.nt;
+		ecuroff=-pano.rot*(float)(SDL_GetTicks()-rl)/1000.f/img->pano->gw*perspectw; // panospos2ipos
+		if(perspectw>90.f) ecuroff/=perspectw/90.f; // panotrimmovepos
+		ecurx+=ecuroff;
+	}
 	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
@@ -291,25 +300,17 @@ char panorender(char sel){
 	glPushMatrix();
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
 	else glColor4f(1.f,1.f,1.f,ecur->a);
-	if(pano.run && pano.runlast.nt){
-		Uint32 rl;
-		panoperspect(img->pano,PSPOS_DPL,&perspectw,NULL);
-		rl = pano.runlast.lt && ecur->x==pano.runlast.lecur ? pano.runlast.lt : pano.runlast.nt;
-		ecuroff=-pano.rot*(float)(SDL_GetTicks()-rl)/1000.f/img->pano->gw*perspectw; // panospos2ipos
-		if(perspectw>90.f) ecuroff/=perspectw/90.f; // panotrimmovepos
-	}
 	if(mode==PM_PLAIN){
-		float x=ecur->x+ecuroff;
-		while(x<0.f) x+=1.f;
-		while(x>1.f) x-=1.f;
+		while(ecurx<0.f) ecurx+=1.f;
+		while(ecurx>1.f) ecurx-=1.f;
 		glScalef(ip->gw/perspectw,ip->gh/perspecth,1.f);
-		glTranslatef(x,ecur->y,0.f);
+		glTranslatef(ecurx,ecur->y,0.f);
 		glCallList(dl);
 		glTranslatef(-1.f,0.f,0.f);
 		glCallList(dl);
 	}else{
 		glRotatef( ecur->y*ip->gh+ip->gyoff,-1.,0.,0.);
-		glRotatef(-(ecur->x+ecuroff)*ip->gw, 0.,-1.,0.);
+		glRotatef(-ecurx*ip->gw, 0.,-1.,0.);
 		glCallList(dl);
 	}
 	glPopMatrix();
