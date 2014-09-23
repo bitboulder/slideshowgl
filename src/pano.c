@@ -73,7 +73,10 @@ struct pano {
 	float rot;
 	char run;
 	enum panomode mode;
-	Uint32 runlast;
+	struct {
+		Uint32 lt,nt;
+		float lecur;
+	} runlast;
 	struct panocfg {
 		float defrot;
 		float minrot;
@@ -84,7 +87,7 @@ struct pano {
 		float maxfishangle;
 	} cfg;
 } pano = {
-	.runlast=0,
+	.runlast.nt=0,
 };
 
 char panorunning(){ return pano.run; }
@@ -286,11 +289,6 @@ char panorender(char sel){
 	if(mode==PM_PLAIN && !(dl=imgldtex(img->ld,TEX_FULL))) return 0;
 	ecur=imgposcur(img->pos);
 	icol=imgposcol(img->pos);
-	if(pano.run && pano.runlast){
-		panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
-		ecuroff=-pano.rot*(float)(SDL_GetTicks()-pano.runlast)/1000.f/img->pano->gw*perspectw; // panospos2ipos
-		if(perspectw>90.f) ecuroff/=perspectw/90.f; // panotrimmovepos
-	}
 	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
 	if(mode==PM_FISHEYE && !glprgfish()) mode=PM_NORMAL;
@@ -298,6 +296,13 @@ char panorender(char sel){
 	glPushMatrix();
 	if(glprg()) glColor4f((icol->g+1.f)/2.f,(icol->c+1.f)/2.f,(icol->b+1.f)/2.f,ecur->a);
 	else glColor4f(1.f,1.f,1.f,ecur->a);
+	if(pano.run && pano.runlast.nt){
+		Uint32 rl;
+		panoperspect(img->pano,PSPOS_DPL,&perspectw,NULL);
+		rl = pano.runlast.lt && ecur->x==pano.runlast.lecur ? pano.runlast.lt : pano.runlast.nt;
+		ecuroff=-pano.rot*(float)(SDL_GetTicks()-rl)/1000.f/img->pano->gw*perspectw; // panospos2ipos
+		if(perspectw>90.f) ecuroff/=perspectw/90.f; // panotrimmovepos
+	}
 	if(mode==PM_PLAIN){
 		float x=ecur->x+ecuroff;
 		while(x<0.f) x+=1.f;
@@ -364,11 +369,13 @@ void panorun(){
 	Uint32 now;
 	struct img *img;
 	if(!(img=panoactive())) return;
-	if(!pano.run){ pano.runlast=0; return; }
+	if(!pano.run){ pano.runlast.nt=0; return; }
 	now=SDL_GetTicks();
-	if(pano.runlast){
-		float sec=(float)(now-pano.runlast)/1000.f;
+	if(pano.runlast.nt){
+		float sec=(float)(now-pano.runlast.nt)/1000.f;
 		dplevputp(DE_JUMP,pano.rot*sec,0.f);
 	}
-	pano.runlast=now;
+	pano.runlast.lecur=imgposcur(img->pos)->x;
+	pano.runlast.lt=pano.runlast.nt;
+	pano.runlast.nt=now;
 }
