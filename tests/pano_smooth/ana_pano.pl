@@ -2,22 +2,25 @@
 
 use strict;
 
+my $fn=shift;
+$fn="log.txt" if !-f $fn;
+
 my @npano=();
 my @lpano=();
 my @ltim=();
 
 my @plot=();
 
-open FD,"<log.txt";
+open FD,"<".$fn;
 while(<FD>){
 	chomp $_;
-	if($_=~/^pano: +(.*)$/){
+	if($_=~/pano: +(.*)$/){
 		(my $gh,my $goff,my $tsdl,my $ts,my $tns)=split / /,$1;
 #		$goff*=0.85;
 #		my $goff=0;
 		@npano=($gh,$goff,$ts,$tns);
 	}
-	if($_=~/^tim +5 +(.*)$/){
+	if($_=~/tim +5 +(.*)$/){
 		(my $tsdl,my $ts,my $tns)=split / /,$1;
 		if(@lpano && @ltim){
 			my $tt=($ts-$ltim[0])*1e3+($tns-$ltim[1])/1e6;
@@ -47,9 +50,10 @@ my @plo=(
 	$pl1[2]-$pl1[1]*$pld[1],
 );
 foreach my $pl (@plot){
+	printf "##%10s %12g\n","",$pl->[2]+($lpano[0]+$lpano[1]);
 	printf "%12g %12g %12g %12g\n",
-		$pl->[0],
+		$pl->[0]-$plot[-1]->[0],
 		$pl->[2]-$pl->[0]*$pld[0]-$plo[0],
-		$pl->[1],
+		$pl->[1]-$plot[-1]->[1],
 		$pl->[2]-$pl->[1]*$pld[1]-$plo[1];
 }
