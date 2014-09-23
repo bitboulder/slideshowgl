@@ -640,7 +640,7 @@ void effdo(){
 	if(effdostat()) ea->chg=1;
 	for(i=0;i<ESW_N;i++) if(effdoeval(eff.esw+i,now)) ea->chg=1;
 	if(effdoeval(&eff.eprgcol.v,now)) ea->chg=1;
-	eff.ineff=ea->ineff;
+	eff.ineff=ea->ineff || panorunning();
 	if(ea->chg) eff.lastchg=SDL_GetTicks();
 }
 

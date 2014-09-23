@@ -87,6 +87,8 @@ struct pano {
 	.runlast=0,
 };
 
+char panorunning(){ return pano.run; }
+
 /* thread: sdl */
 void panoinit(char done){
 	if(done) return;
