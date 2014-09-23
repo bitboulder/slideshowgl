@@ -288,7 +288,8 @@ char panorender(char sel){
 	icol=imgposcol(img->pos);
 	if(pano.run && pano.runlast){
 		panoperspect(img->pano,PSPOS_DPL,&perspectw,&perspecth);
-		ecuroff=-pano.rot*(float)(SDL_GetTicks()-pano.runlast)/1000.f/img->pano->gw*perspectw;
+		ecuroff=-pano.rot*(float)(SDL_GetTicks()-pano.runlast)/1000.f/img->pano->gw*perspectw; // panospos2ipos
+		if(perspectw>90.f) ecuroff/=perspectw/90.f; // panotrimmovepos
 	}
 	panoperspect(ip,ecur->s,&perspectw,&perspecth);
 	if(mode==PM_NORMAL && perspecth>90.f && glprgfish()) mode=PM_FISHEYE;
