@@ -185,15 +185,21 @@ void sdlinitfullscreen(){
 void sdlinitwnd(){
 	GLenum glerr;
 	SDL_Renderer *rnd;
-	if(SDL_CreateWindowAndRenderer(sdl.scr_w,sdl.scr_h,SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE,&sdl.wnd,&rnd)<0) error(ERR_QUIT,"window creation failed");
+	if(!(sdl.wnd=SDL_CreateWindow("slideshowgl",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,sdl.scr_w,sdl.scr_h,SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE)))
+		error(ERR_QUIT,"window creation failed: %s",SDL_GetError());
+	if(!(rnd=SDL_CreateRenderer(sdl.wnd,-1,SDL_RENDERER_ACCELERATED|(sdl.sync?SDL_RENDERER_PRESENTVSYNC:0))))
+		error(ERR_QUIT,"renderer creation failed: %s",SDL_GetError());
+	if(SDL_GetError()[0]) SDL_ClearError();
 	SDL_GetWindowSize(sdl.wnd,&sdl.scr_w,&sdl.scr_h);
 	debug(DBG_STA,"sdl init window %ix%i",sdl.scr_w,sdl.scr_h);
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS,"0");
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-	if(sdl.sync && SDL_GL_SetSwapInterval(-1)<0 && SDL_GL_SetSwapInterval(1)<0){
-		sdl.sync=0;
-		error(ERR_CONT,"swap interval failed");
-	}
+	if(sdl.sync){
+		if(SDL_GL_SetSwapInterval(-1)<0 && SDL_GL_SetSwapInterval(1)<0){
+			sdl.sync=0;
+			error(ERR_CONT,"swap interval failed");
+		}
+	}else SDL_GL_SetSwapInterval(0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 	sdlinitfullscreen();
 	if((glerr=glGetError())) error(ERR_CONT,"in sdl window creation (gl-err: %d)",glerr);
@@ -244,7 +250,7 @@ void sdlinit(){
 		sdl.cfg.envdisplay=!setenv("SDL_VIDEO_FULLSCREEN_DISPLAY",buf,1);
 #endif
 	}
-	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed");
+	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO)<0) error(ERR_QUIT,"sdl init failed: %s",SDL_GetError());
 	/*SDL_EnableUNICODE(1); TODO: check */
 	if(cfggetint("cfg.version")){
 		SDL_version v;
