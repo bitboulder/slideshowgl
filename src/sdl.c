@@ -502,7 +502,6 @@ int sdlthread(void *UNUSED(arg)){
 		while(SDL_GetTicks()-paint_last < (effineff()?6:20)) if(!ldtexload()) break;
 
 		timer(TI_SDL,1,1);
-		printf("lastfrm %i %i (%i)\n",sdl.lastfrm,efflastchg(),effineff());
 		if(!effineff() && sdl.lastfrm && sdl.lastfrm>efflastchg()){
 			if(sdl.cfg.playrecord) sdlsaveframe();
 			else sdldelay(&paint_last,10);
