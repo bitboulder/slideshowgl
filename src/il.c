@@ -404,6 +404,7 @@ struct img *ilremoveimg(struct img *img,char final){
 	if(!final){
 		if(!ildel) ildel=ilnew("[DEL]","");
 		iladdimg(ildel,img,NULL);
+		ilsetcimgi(ildel,IMGI_END-1);
 	}
 	return img;
 }
