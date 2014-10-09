@@ -18,7 +18,7 @@ char mapgetcltpos(int i,float *sx,float *sy);
 struct imglist *mapsetpos(struct img *img);
 void mapimgclt(int izsel);
 char maploadclt();
-void mapaddbasedir(const char *dir,const char *name);
+void mapaddbasedir(const char *dir,const char *name,char cfg);
 void mapinit();
 char mapldcheck();
 char maprender(char sel);

@@ -273,7 +273,7 @@ int faddfile(struct imglist *il,const char *fn,const char *imgtxt,struct imglist
 		fimgtxtinit(img->file,imgtxt?imgtxt:img->file->fn);
 		img->file->dir=1;
 		debug(DBG_DBG,"directory found '%s': '%s'",img->file->imgtxt,img->file->fn);
-		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->imgtxt);
+		if(mapbase && (ft&FT_DIR)) mapaddbasedir(img->file->fn,img->file->imgtxt,0);
 	}else if(len>=5 && !strncmp(fn,"txt_",4)){
 		char *pos,*end;
 		size_t ltxt;
@@ -379,13 +379,13 @@ void fgetfiles(int argc,char **argv){
 	finitimg(&defimg,"defimg.png");
 	finitimg(&dirimg,"dirimg.png");
 	if(singlefile && ((ft=filetype(argv[0]))&FT_DIREX) && (ilbase=floaddir(argv[0],""))){
-		if(ft&FT_DIR) mapaddbasedir(argv[0],"");
+		if(ft&FT_DIR) mapaddbasedir(argv[0],"",0);
 		goto end;
 	}
 	for(i=0;i<argc;i++) fgetfile(argv[i],singlefile);
 end:
 	cilset(ilbase,0,0);
-	mapaddbasedir(NULL,NULL);
+	mapaddbasedir(NULL,NULL,0);
 }
 
 /* thread: dpl */

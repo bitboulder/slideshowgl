@@ -309,7 +309,7 @@ const char *mapimgname(const char *dir){
 	char *bdir;
 	for(i=len;i>0 && c<3;i--) if(dir[i-1]=='/' || dir[i-1]=='\\') c++;
 	if(i) i++;
-	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2){
+	for(bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2) if(bdir[FILELEN*2-1]){
 		size_t l=strlen(bdir);
 		if(i<l && !strncmp(bdir,dir,l)){
 			i=l;
@@ -830,7 +830,7 @@ char maploadclt(){
 	return 1;
 }
 
-void mapaddbasedir(const char *dir,const char *name){
+void mapaddbasedir(const char *dir,const char *name,char cfg){
 	size_t ndir;
 	char *bdir;
 	if(!dir){ map.init=MI_BDIR; return; }
@@ -838,14 +838,15 @@ void mapaddbasedir(const char *dir,const char *name){
 	for(ndir=0,bdir=map.basedirs;bdir && bdir[0];bdir+=FILELEN*2) ndir++;
 	map.basedirs=realloc(map.basedirs,(ndir+1)*FILELEN*2+1);
 	snprintf(map.basedirs+ndir*FILELEN*2,FILELEN,dir);
-	snprintf(map.basedirs+ndir*FILELEN*2+FILELEN,FILELEN,name);
+	snprintf(map.basedirs+ndir*FILELEN*2+FILELEN,FILELEN-1,name);
+	map.basedirs[(ndir+1)*FILELEN*2-1]=cfg;
 	map.basedirs[(ndir+1)*FILELEN*2]='\0';
 }
 
 void mapinit(){
 	while(map.init>2) SDL_Delay(500);
 	map.starpat=cfggetstr("map.star");
-	mapaddbasedir(cfggetstr("map.base"),"");
+	mapaddbasedir(cfggetstr("map.base"),"",1);
 	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
 	texloadput(map.imgdir+MID_DIR,     IMG_Load(finddatafile("mapdir.png"     )));
