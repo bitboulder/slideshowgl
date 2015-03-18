@@ -366,7 +366,7 @@ char terminate(){
 
 int main(int argc,char **argv){
 	int ret=0;
-	if(terminate()) return 0;
+//	if(terminate()) return 0;
 	if(argc) setprogpath(argv[0]);
 #ifdef __WIN32__
 	fileoutput(1);
