@@ -200,7 +200,7 @@ char mapld_check(unsigned int mt,int iz,int ix,int iy,char web,char *fn){
 	return mapld_put(mt,iz,ix,iy);
 }
 
-void mapldinit(){
+const char *mapldinit(){
 	const char *cd;
 	mapld.mutex=SDL_CreateMutex();
 	cd=cfggetstr("mapld.cachedir");
@@ -209,9 +209,10 @@ void mapldinit(){
 	mkdirm(mapld.cachedir,0);
 	mapld.expire=cfggetint("mapld.expire");
 #if HAVE_CURL
-	if(curl_global_init(CURL_GLOBAL_NOTHING)) return;
+	if(curl_global_init(CURL_GLOBAL_ALL)) return mapld.cachedir;
 #endif
 	mapld.init=1;
+	return mapld.cachedir;
 }
 
 int mapldthread(void *arg){

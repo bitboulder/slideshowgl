@@ -1189,7 +1189,7 @@ void dplkey(uint32_t key){
 		else if(dplgetinfo(NULL)) effsw(ESW_INFOSEL,-1);
 	break;
 	case 'I': if(dplgetinfo(NULL)) effsw(ESW_INFO,-1); break;
-	case 'H': if(dplgethist()) effsw(ESW_HIST,-1); break;
+	case 'H': if(!mapelevation() && dplgethist()) effsw(ESW_HIST,-1); break;
 	case 'x': if(!dplprged("frmdel",-1,-1,-1)) optx++; break;
 	case 'X': optx=0; break;
 	case 't': if(dpl.pos.ailtyp==AIL_PRGED) dplinputtxtinit(ITM_TXTIMG); break;

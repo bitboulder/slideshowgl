@@ -27,6 +27,7 @@
 #include "eff.h"     //ISTAT_TXTSIZE
 #include "dpl_int.h" //dplwritemode
 #include "mapld.h"
+#include "mapele.h"
 
 /* Coordinate abreviations *
  *
@@ -102,6 +103,7 @@ struct map {
 	int *scr_w, *scr_h;
 	struct tile imgdir[5];
 	int info;
+	char ele;
 	enum mapdisplaymode {MDM_ALL,MDM_NORMAL,MDM_STAR,MDM_NONE,N_MDM} displaymode;
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
@@ -119,6 +121,7 @@ struct map {
 	.scr_w = NULL,
 	.scr_h = NULL,
 	.info  = -1,
+	.ele = 0,
 	.displaymode  = MDM_ALL,
 	.editmode  = MEM_ADD,
 	.ftchk = 3000,
@@ -143,6 +146,11 @@ char mapdisplaymode(){
 	if(!mapon()) return 0;
 	map.displaymode=(map.displaymode+1)%N_MDM;
 	actaddx(ACT_MAPCLT,NULL,NULL,0);
+	return 1;
+}
+char mapelevation(){
+	if(!mapon()) return 0;
+	map.ele=!map.ele;
 	return 1;
 }
 void mapeditmode(){
@@ -751,6 +759,14 @@ char mapldcheck(){
 	struct ecur *ecur=mapecur(&iz,NULL);
 	if(map.init>MI_TEX || !mapon() || !ecur) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
+	if(map.ele){
+		double gsx0,gsx1,gsy0,gsy1,t;
+		maps2g( .5f,.0f,map.pos.iz,gsx0,t);
+		maps2g(-.5f,.0f,map.pos.iz,gsx1,t);
+		maps2g(.0f, .5f,map.pos.iz,t,gsy0);
+		maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
+		if(mapele_ld((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
+	}
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
 	if(iz>maptypes[map.maptype].maxz) iz=maptypes[map.maptype].maxz;
@@ -855,6 +871,7 @@ void mapinit(){
 	texloadput(map.imgdir+MID_STARDIRS,IMG_Load(finddatafile("mapstardirs.png")));
 	texloadput(map.imgdir+MID_STARS,   IMG_Load(finddatafile("mapstars.png"   )));
 	map.init=MI_TEX;
+	mapeleinit(mapldinit());
 }
 
 void maprenderclt(){

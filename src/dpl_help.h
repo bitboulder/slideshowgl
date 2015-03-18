@@ -133,6 +133,7 @@ __(" e")"\0"                   __("Switch mode for new markers (add/replace)")"\
 #endif
 #if defined IF_MAP || defined IF_MAPED
 __(" d")"\0"                   __("Switch display mode for markers")"\0"
+__(" H")"\0"                   __("Toggle elevation display")"\0"
 #else
 #if defined IF_WRM || defined IF_DIRED || defined IF_PRGED
 __(" r/R")"\0"                 __("Rotate image")"\0"
