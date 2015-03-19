@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <GL/glew.h>
 #if HAVE_CURL
 	#undef DATADIR
 	#include <curl/curl.h>
@@ -12,6 +13,7 @@
 #include "mapld.h"
 #include "help.h"
 #include "cfg.h"
+#include "sdl.h"
 
 /* SRTM3 Format
  
@@ -39,8 +41,17 @@
 struct meld {
 	struct meld *nxt;
 	int gx,gy;
-	int w,h;
-	float *v;
+	int tw,th;
+	float rw,rh;
+	char loading;
+	GLuint tex;
+	unsigned char *v;
+};
+
+#define N_ETEXLOAD	16
+struct etexload {
+	int wi,ri;
+	struct meld *buf[N_ETEXLOAD];
 };
 
 #define MEHNUM	128
@@ -48,9 +59,48 @@ struct mapele {
 	struct meld *ld[MEHNUM];
 	const char *cachedir;
 	const char *url;
+	struct etexload tl;
 } mapele = {
 	.ld={ NULL },
 };
+
+void etexloadput(struct meld *ld){
+	int nwi=(mapele.tl.wi+1)%N_ETEXLOAD;
+	while(nwi==mapele.tl.ri){
+		if(sdl_quit) return;
+		SDL_Delay(10);
+	}
+	ld->loading=1;
+	mapele.tl.buf[mapele.tl.wi]=ld;
+	mapele.tl.wi=nwi;
+}
+
+char etexload(){
+	struct meld *ld;
+	if(mapele.tl.wi==mapele.tl.ri) return 0;
+	ld=mapele.tl.buf[mapele.tl.ri];
+	if(ld->v){
+		if(!ld->tex) glGenTextures(1,&ld->tex);
+		glBindTexture(GL_TEXTURE_2D,ld->tex);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RED,ld->tw,ld->th,0,GL_RED,GL_UNSIGNED_BYTE,ld->v);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		if(GLEW_EXT_texture_edge_clamp){
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE); /* TODO: correct ? */
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE); /* TODO: correct ? */
+		}else{
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
+		}
+		free(ld->v); ld->v=NULL;
+		ld->loading=0;
+	}else{
+		glDeleteTextures(1,&ld->tex);
+		ld->tex=0;
+	}
+	mapele.tl.ri=(mapele.tl.ri+1)%N_ETEXLOAD;
+	return 1;
+}
 
 #if HAVE_CURL
 static size_t mapele_ld1_srtmdata(void *data,size_t size,size_t nmemb,void *arg){
@@ -98,54 +148,71 @@ void mapele_ld1_srtmget(int gx,int gy,char *fn){
 }
 #endif
 
-#define SRTMW	1201
-#define SRTMH	1201
-
-void mapele_ld1_srtm(int gx,int gy,float *v){
+void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	char fn[FILELEN];
 	char cmd[FILELEN];
 	enum filetype ft;
 	FILE *fd;
-	char buf[SRTMW*SRTMH*2],*b=buf;
-	int i;
+	unsigned char *buf,*b;
+	unsigned char *v;
+	int x,y;
+	int w=1201,h=1201;
+	ld->tw=2048; ld->th=2048;
+	ld->rw=(float)w/(float)ld->tw;
+	ld->rh=(float)h/(float)ld->th;
+	ld->v=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned char));
 	if(!mapele.cachedir || !mapele.cachedir[0]) return;
 	snprintf(fn,FILELEN,"%s/srtm/%c%02i%c%03i.hgt.zip",mapele.cachedir,gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
 	ft=filetype(fn);
+#if HAVE_CURL
 	if(ft==FT_NX) mapele_ld1_srtmget(gx,gy,fn);
 	ft=filetype(fn);
+#endif
 	if(!(ft&FT_FILE)) return;
 	snprintf(cmd,FILELEN,"unzip -p '%s'\n",fn);
 	if(!(fd=popen(cmd,"r"))){
 		debug(ERR_CONT,"mapele_load: file unzip failed (fn: %s)",fn);
 		return;
 	}
-	if(fread(buf,1,2*SRTMW*SRTMH,fd)!=2*SRTMW*SRTMH){
+	buf=malloc((size_t)(2*w*h));
+	if(fread(buf,1,(size_t)(2*w*h),fd)!=(size_t)(2*w*h)){
 		debug(ERR_CONT,"mapele_load: file read failed (fn: %s)",fn);
+		free(buf);
 		return;
 	}
 	pclose(fd);
-	for(i=SRTMW*SRTMH;i>=0;i--,b+=2,v++){
-		short t;
-		((char *)&t)[1]=b[0];
-		((char *)&t)[2]=b[1];
-		*v=t;
+	for(v=ld->v,b=buf,y=0;y<w;y++,v+=(ld->th-h)){
+		for(x=0;x<h;x++,b+=2,v++){
+			int t=(b[0]<<16)+b[1];
+			t-=70;
+			if(t>255) *v=255;
+			else if(t<0) *v=0;
+			else *v=(unsigned char)t;
+		}
 	}
+	free(buf);
+}
+
+#define MELDCH(gx,gy)	(((gx)*90+(gy))%MEHNUM)
+
+struct meld *mapele_ldfind(int gx,int gy){
+	struct meld *ld=mapele.ld[MELDCH(gx,gy)];
+	while(ld && (ld->gx!=gx || ld->gy!=gy)) ld=ld->nxt;
+	return ld;
 }
 
 char mapele_ld1(int gx,int gy){
-	int ch=(gx*90+gy)%MEHNUM;
-	struct meld *ld=mapele.ld[ch];
-	while(ld && (ld->gx!=gx || ld->gy!=gy)) ld=ld->nxt;
+	struct meld *ld=mapele_ldfind(gx,gy);
 	if(ld) return 0;
 	ld=malloc(sizeof(struct meld));
 	ld->gx=gx;
 	ld->gy=gy;
-	ld->w=SRTMW-1;
-	ld->h=SRTMH-1;
-	ld->v=calloc((size_t)((ld->w+1)*(ld->h+1)),sizeof(float));
-	mapele_ld1_srtm(gx,gy,ld->v);
-	ld->nxt=mapele.ld[ch];
-	mapele.ld[ch]=ld;
+	ld->loading=0;
+	ld->tex=0;
+	mapele_ld1_srtm(gx,gy,ld);
+	ld->nxt=mapele.ld[MELDCH(gx,gy)];
+	mapele.ld[MELDCH(gx,gy)]=ld;
+	etexloadput(ld);
 	return 1;
 }
 
@@ -154,6 +221,38 @@ char mapele_ld(int gx0,int gx1,int gy0,int gy1){
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++) if(mapele_ld1(gx,gy)) return 1;
 	return 0;
+}
+
+void mapelerenderld(struct meld *ld){
+	if(!ld) return;
+	if(!ld->tex) return;
+	glBindTexture(GL_TEXTURE_2D,ld->tex);
+	glBegin(GL_QUADS);
+	glTexCoord2f(    0.,    0.); glVertex2f(0.,0.);
+	glTexCoord2f(ld->rw,    0.); glVertex2f(1.,0.);
+	glTexCoord2f(ld->rw,ld->rh); glVertex2f(1.,1.);
+	glTexCoord2f(    0.,ld->rh); glVertex2f(0.,1.);
+	glEnd();
+}
+
+void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
+	int gx0=(int)trunc(gsx0);
+	int gx1=(int)trunc(gsx1);
+	int gy0=(int)trunc(gsy0);
+	int gy1=(int)trunc(gsy1);
+	int gx,gy;
+	while(etexload()) ;
+	glPushMatrix();
+	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.);
+	glTranslated(trunc(gsx0)-gsx0,gsy1-trunc(gsy1),0.);
+	for(gx=gx0;gx<=gx1;gx++){
+		for(gy=gy0;gy<=gy1;gy++){
+			mapelerenderld(mapele_ldfind(gx,gy));
+			glTranslatef(0.f,-1.f,0.f);
+		}
+		glTranslatef(1.f,(float)(gy1-gy0),0.f);
+	}
+	glPopMatrix();
 }
 
 void mapeleinit(const char *cachedir){

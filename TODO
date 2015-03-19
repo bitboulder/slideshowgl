@@ -1,2 +1,3 @@
 - coredump
 - load cache for images
+- unify mapld_load and mapele_ld1_srtmget

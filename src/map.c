@@ -761,8 +761,8 @@ char mapldcheck(){
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(map.ele){
 		double gsx0,gsx1,gsy0,gsy1,t;
-		maps2g( .5f,.0f,map.pos.iz,gsx0,t);
-		maps2g(-.5f,.0f,map.pos.iz,gsx1,t);
+		maps2g(-.5f,.0f,map.pos.iz,gsx0,t);
+		maps2g( .5f,.0f,map.pos.iz,gsx1,t);
 		maps2g(.0f, .5f,map.pos.iz,t,gsy0);
 		maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
 		if(mapele_ld((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
@@ -1085,6 +1085,14 @@ char maprender(char sel){
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 	else        glColor4f(1.f,1.f,1.f,1.f);
 	if(!sel) maprendermap();
+	if(!sel && map.ele){
+		double gsx0,gsx1,gsy0,gsy1,t;
+		maps2g(-.5f,.0f,map.pos.iz,gsx0,t);
+		maps2g( .5f,.0f,map.pos.iz,gsx1,t);
+		maps2g(.0f, .5f,map.pos.iz,t,gsy0);
+		maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
+		mapelerender(gsx0,gsx1,gsy0,gsy1);
+	}
 	if(!optx) maprenderclt();
 	if(!sel) maprenderinfo();
 	return 1;
