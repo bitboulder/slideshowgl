@@ -14,6 +14,7 @@
 #include "help.h"
 #include "cfg.h"
 #include "sdl.h"
+#include "gl.h"
 
 /* SRTM3 Format
  
@@ -42,10 +43,18 @@ struct meld {
 	struct meld *nxt;
 	int gx,gy;
 	int tw,th;
+	int w,h;
 	float rw,rh;
 	char loading;
 	GLuint tex;
-	unsigned char *v;
+	short *maxmin;
+		/* tw   x th   x 1 : value   (1201x1201x2)
+		 * tw/2 x th/2 x 2 : min,max (600x600x2)
+		 * tw/4 x th/4 x 2 : min,max (300x300x2)
+		 * ...
+		 * tw/512 x th/512 x 2 : min,max (2x2x2)
+		 */
+	unsigned short *dtex;
 };
 
 #define N_ETEXLOAD	16
@@ -79,10 +88,10 @@ char etexload(){
 	struct meld *ld;
 	if(mapele.tl.wi==mapele.tl.ri) return 0;
 	ld=mapele.tl.buf[mapele.tl.ri];
-	if(ld->v){
+	if(ld->dtex){
 		if(!ld->tex) glGenTextures(1,&ld->tex);
 		glBindTexture(GL_TEXTURE_2D,ld->tex);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RED,ld->tw,ld->th,0,GL_RED,GL_UNSIGNED_BYTE,ld->v);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_R16,ld->tw,ld->th,0,GL_RED,GL_UNSIGNED_SHORT,ld->dtex);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		if(GLEW_EXT_texture_edge_clamp){
@@ -92,7 +101,7 @@ char etexload(){
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
 		}
-		free(ld->v); ld->v=NULL;
+		free(ld->dtex); ld->dtex=NULL;
 		ld->loading=0;
 	}else{
 		glDeleteTextures(1,&ld->tex);
@@ -148,19 +157,89 @@ void mapele_ld1_srtmget(int gx,int gy,char *fn){
 }
 #endif
 
+int mapele_mmsize(struct meld *ld){
+	int wi=ld->w;
+	int hi=ld->h;
+	int s=wi*hi;
+	while(wi>1 && hi>1){
+		wi/=2;
+		hi/=2;
+		s+=wi*hi*2;
+	}
+	return s;
+}
+
+void mapele_mmgen(struct meld *ld){
+	int wi=ld->w, wo;
+	int hi=ld->h, ho;
+	short *mi=ld->maxmin;
+	short *mo=ld->maxmin+wi*hi;
+	int x,y,i=1;
+	while(wi>1 && hi>1){
+		wo=wi/2;
+		ho=hi/2;
+		for(y=0;y<ho;y++){
+			for(x=0;x<wo;x++){
+				short v;
+				v=mi[0];
+				if((mi[i]<v && mi[i]!=-32768) || v==-32768) v=mi[i];
+				if((mi[i*hi]<v && mi[i*hi]!=-32768) || v==-32768) v=mi[i*hi];
+				if((mi[i*(hi+1)]<v && mi[i*(hi+1)]!=-32768) || v==-32768) v=mi[i*(hi+1)];
+				/* TODO: add last row */
+				/* TODO: add last col */
+				*(mo++)=v;
+				if(i>1) mi++;
+				v=mi[0];
+				if(mi[i]>v) v=mi[i];
+				if(mi[i*hi]>v) v=mi[i*hi];
+				if(mi[i*(hi+1)]>v) v=mi[i*(hi+1)];
+				/* TODO: add last row */
+				/* TODO: add last col */
+				*(mo++)=v;
+				mi++;
+				mi+=i;
+			}
+			if(wi%2) mi+=i;
+			mi+=i*wi;
+		}
+		if(hi%2) mi+=i*wi;
+		wi=wo;
+		hi=ho;
+		i=2;
+	}
+}
+
+void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,double gsy1){
+	if(!ld) return;
+	double rx0=gsx0-(double)ld->gx,    rx1=gsx1-(double)ld->gx;
+	double ry1=1.+(double)ld->gy-gsy0, ry0=1.+(double)ld->gy-gsy1;
+	int ix0 = rx0<=0. ? 0     : (int)round(rx0*(double)ld->w);
+	int ix1 = rx1>=1. ? ld->w : (int)round(rx1*(double)ld->w);
+	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
+	int iy1 = ry1>=1. ? ld->h : (int)round(ry1*(double)ld->h);
+	int x,y;
+	short v;
+	/* TODO: speedup by precalc values */
+	for(y=iy0;y<iy1;y++)
+		for(x=ix0;x<ix1;x++) if((v=ld->maxmin[y*ld->h+x])!=-32768){
+			if(v<mm[0]) mm[0]=v;
+			if(v>mm[1]) mm[1]=v;
+		}
+}
+
 void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	char fn[FILELEN];
 	char cmd[FILELEN];
 	enum filetype ft;
 	FILE *fd;
-	unsigned char *buf,*b;
-	unsigned char *v;
+	unsigned short *dtex;
+	short *mm;
 	int x,y;
-	int w=1201,h=1201;
+	ld->w=1201; ld->h=1201;
 	ld->tw=2048; ld->th=2048;
-	ld->rw=(float)w/(float)ld->tw;
-	ld->rh=(float)h/(float)ld->th;
-	ld->v=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned char));
+	ld->rw=(float)ld->w/(float)ld->tw;
+	ld->rh=(float)ld->h/(float)ld->th;
+	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
 	if(!mapele.cachedir || !mapele.cachedir[0]) return;
 	snprintf(fn,FILELEN,"%s/srtm/%c%02i%c%03i.hgt.zip",mapele.cachedir,gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
 	ft=filetype(fn);
@@ -174,23 +253,20 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 		debug(ERR_CONT,"mapele_load: file unzip failed (fn: %s)",fn);
 		return;
 	}
-	buf=malloc((size_t)(2*w*h));
-	if(fread(buf,1,(size_t)(2*w*h),fd)!=(size_t)(2*w*h)){
+	ld->maxmin=malloc(sizeof(short)*(size_t)mapele_mmsize(ld));
+	if(fread(ld->maxmin,1,sizeof(short)*(size_t)(ld->w*ld->h),fd)!=sizeof(short)*(size_t)(ld->w*ld->h)){
 		debug(ERR_CONT,"mapele_load: file read failed (fn: %s)",fn);
-		free(buf);
 		return;
 	}
 	pclose(fd);
-	for(v=ld->v,b=buf,y=0;y<w;y++,v+=(ld->th-h)){
-		for(x=0;x<h;x++,b+=2,v++){
-			int t=(b[0]<<16)+b[1];
-			t-=70;
-			if(t>255) *v=255;
-			else if(t<0) *v=0;
-			else *v=(unsigned char)t;
+	for(dtex=ld->dtex,mm=ld->maxmin,y=0;y<ld->w;y++,dtex+=((size_t)(ld->th-ld->h)))
+		for(x=0;x<ld->h;x++,mm++,dtex++){
+			unsigned char *b=(unsigned char*)mm;
+			*mm=(short)((b[0]<<8)+b[1]);
+			/* TODO: fix -32768 */
+			*dtex=(unsigned short)((int)*mm+32768);
 		}
-	}
-	free(buf);
+	mapele_mmgen(ld);
 }
 
 #define MELDCH(gx,gy)	(((gx)*90+(gy))%MEHNUM)
@@ -213,11 +289,13 @@ char mapele_ld1(int gx,int gy){
 	ld->nxt=mapele.ld[MELDCH(gx,gy)];
 	mapele.ld[MELDCH(gx,gy)]=ld;
 	etexloadput(ld);
+	sdlforceredraw();
 	return 1;
 }
 
 char mapele_ld(int gx0,int gx1,int gy0,int gy1){
 	int gx,gy;
+	if(!glprg()) return 0;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++) if(mapele_ld1(gx,gy)) return 1;
 	return 0;
@@ -241,10 +319,17 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	int gy0=(int)trunc(gsy0);
 	int gy1=(int)trunc(gsy1);
 	int gx,gy;
+	short mm[2]={32767,-32768};
 	while(etexload()) ;
+	if(!glprg()) return;
+	for(gx=gx0;gx<=gx1;gx++)
+		for(gy=gy0;gy<=gy1;gy++)
+			mapele_mmget(mm,mapele_ldfind(gx,gy),gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.);
 	glTranslated(trunc(gsx0)-gsx0,gsy1-trunc(gsy1),0.);
+	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
+	glColor4d((double)mm[0]/65535.+0.5,(double)(mm[1]-mm[0])/65535.,0.,1.);
 	for(gx=gx0;gx<=gx1;gx++){
 		for(gy=gy0;gy<=gy1;gy++){
 			mapelerenderld(mapele_ldfind(gx,gy));
@@ -252,6 +337,8 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 		}
 		glTranslatef(1.f,(float)(gy1-gy0),0.f);
 	}
+	glSecondaryColor3f(1.f,0.f,0.f); /* TODO: reset to previous value */
+	glColor4f(.5f,.5f,.5f,1.f); /* TODO: reset to previous value */
 	glPopMatrix();
 }
 
