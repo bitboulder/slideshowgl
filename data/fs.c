@@ -7,6 +7,7 @@ void main(){
 		color = texture2D(tex,gl_TexCoord[0].st);
 		if(gl_SecondaryColor[1]>0.0){
 			color.x=(color.x-gl_Color.x)/gl_Color.y;
+			color.y=1-color.x;
 		}else{
 			if(gl_Color.x!=0.5) color.xyz = pow(color.xyz,-log2(gl_Color.x));
 			if(gl_Color.y!=0.5) color.xyz = (0.5-color.xyz)*log2(1.0-gl_Color.y) + 0.5;
