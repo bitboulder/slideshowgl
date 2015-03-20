@@ -171,7 +171,7 @@ int mapele_mmsize(struct meld *ld){
 	int wi=ld->w>>1;
 	int hi=ld->h>>1;
 	int s=ld->w*ld->h;
-	for(;wi>1 || hi>1;wi>>=1,hi>>=1) s+=wi*hi*2;
+	for(;wi>0 || hi>0;wi>>=1,hi>>=1) s+=wi*hi*2;
 	return s;
 }
 
@@ -181,7 +181,7 @@ void mapele_mmgen(struct meld *ld){
 	short *mi=ld->maxmin;
 	short *mo=ld->maxmin+wi*hi;
 	int x,y,i=1;
-	for(;wi>1 || hi>1;wi=wo,hi=ho,i=2){
+	for(;wi>0 || hi>0;wi=wo,hi=ho,i=2){
 		wo=wi>>1;
 		ho=hi>>1;
 		for(y=0;y<ho;y++){
@@ -221,9 +221,14 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
 	int iy1 = ry1>=1. ? ld->h : (int)round(ry1*(double)ld->h);
 	int wi=ld->w, hi=ld->h;
-	int i,x,y;
+	int i;
 	short *v,*vm=ld->maxmin;
 	if(ix0==ix1 || iy0==iy1) return;
+	if(ix0==0 && iy0==0 && ix1==ld->w && iy1==ld->h){
+		v=ld->maxmin+mapele_mmsize(ld)-2;
+		MMUPD(1);
+		return;
+	}
 	if(ix0%2) for(v=vm+iy0*wi+ix0,    i=iy0;i<iy1;v+=wi,i++) MMUPD(0);
 	if(ix1%2) for(v=vm+iy0*wi+ix1-1,  i=iy0;i<iy1;v+=wi,i++) MMUPD(0);
 	if(iy0%2) for(v=vm+iy0*wi+ix0,    i=ix0;i<ix1;v++  ,i++) MMUPD(0);
@@ -233,7 +238,7 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 	iy0=(iy0+1)>>1; iy1>>=1;
 	if(ix0==ix1 || iy0==iy1) return;
 	wi>>=1; hi>>=1;
-	for(;wi>2 || hi>2;wi>>=1,hi>>=1){
+	for(;wi>0 || hi>0;wi>>=1,hi>>=1){
 		if(ix0%2) for(v=vm+(iy0*wi+ix0)*2,    i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
 		if(ix1%2) for(v=vm+(iy0*wi+ix1-1)*2,  i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
 		if(iy0%2) for(v=vm+(iy0*wi+ix0)*2,    i=ix0;i<ix1;v+=2   ,i++) MMUPD(1);
@@ -243,7 +248,6 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 		iy0=(iy0+1)>>1; iy1>>=1;
 		if(ix0==ix1 || iy0==iy1) return;
 	}
-	for(y=iy0;y<iy1;y++) for(v=vm+(y*wi+ix0)*2,x=ix0;x<ix1;v+=2,x++) MMUPD(1);
 }
 
 void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
