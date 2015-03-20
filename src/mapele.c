@@ -234,19 +234,16 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 	if(iy0%2) for(v=vm+iy0*wi+ix0,    i=ix0;i<ix1;v++  ,i++) MMUPD(0);
 	if(iy1%2) for(v=vm+(iy1-1)*wi+ix0,i=ix0;i<ix1;v++  ,i++) MMUPD(0);
 	vm+=wi*hi;
-	ix0=(ix0+1)>>1; ix1>>=1;
-	iy0=(iy0+1)>>1; iy1>>=1;
-	if(ix0==ix1 || iy0==iy1) return;
 	wi>>=1; hi>>=1;
 	for(;wi>0 || hi>0;wi>>=1,hi>>=1){
+		ix0=(ix0+1)>>1; ix1>>=1;
+		iy0=(iy0+1)>>1; iy1>>=1;
+		if(ix0==ix1 || iy0==iy1) return;
 		if(ix0%2) for(v=vm+(iy0*wi+ix0)*2,    i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
 		if(ix1%2) for(v=vm+(iy0*wi+ix1-1)*2,  i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
 		if(iy0%2) for(v=vm+(iy0*wi+ix0)*2,    i=ix0;i<ix1;v+=2   ,i++) MMUPD(1);
 		if(iy1%2) for(v=vm+((iy1-1)*wi+ix0)*2,i=ix0;i<ix1;v+=2   ,i++) MMUPD(1);
 		vm+=wi*hi*2;
-		ix0=(ix0+1)>>1; ix1>>=1;
-		iy0=(iy0+1)>>1; iy1>>=1;
-		if(ix0==ix1 || iy0==iy1) return;
 	}
 }
 
