@@ -44,9 +44,9 @@ struct meld {
 	int gx,gy;
 	int tw,th;
 	int w,h;
-	float rw,rh;
 	char loading;
 	GLuint tex;
+	GLuint dls;
 	short *maxmin;
 		/* tw   x th   x 1 : value   (1201x1201x2)
 		 * tw/2 x th/2 x 2 : min,max (600x600x2)
@@ -58,9 +58,15 @@ struct meld {
 };
 
 #define N_ETEXLOAD	16
-struct etexload {
+struct metexload {
 	int wi,ri;
 	struct meld *buf[N_ETEXLOAD];
+};
+
+struct medls {
+	struct medls *nxt;
+	int w,h;
+	GLuint dls;
 };
 
 #define MEHNUM	128
@@ -68,12 +74,16 @@ struct mapele {
 	struct meld *ld[MEHNUM];
 	const char *cachedir;
 	const char *url;
-	struct etexload tl;
+	struct metexload tl;
+	struct medls *dls;
 } mapele = {
 	.ld={ NULL },
+	.tl.wi=0,
+	.tl.ri=0,
+	.dls=NULL,
 };
 
-void etexloadput(struct meld *ld){
+void metexloadput(struct meld *ld){
 	int nwi=(mapele.tl.wi+1)%N_ETEXLOAD;
 	while(nwi==mapele.tl.ri){
 		if(sdl_quit) return;
@@ -84,7 +94,7 @@ void etexloadput(struct meld *ld){
 	mapele.tl.wi=nwi;
 }
 
-char etexload(){
+char metexload(){
 	struct meld *ld;
 	if(mapele.tl.wi==mapele.tl.ri) return 0;
 	ld=mapele.tl.buf[mapele.tl.ri];
@@ -237,8 +247,6 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	int x,y;
 	ld->w=1201; ld->h=1201;
 	ld->tw=2048; ld->th=2048;
-	ld->rw=(float)ld->w/(float)ld->tw;
-	ld->rh=(float)ld->h/(float)ld->th;
 	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
 	if(!mapele.cachedir || !mapele.cachedir[0]) return;
 	snprintf(fn,FILELEN,"%s/srtm/%c%02i%c%03i.hgt.zip",mapele.cachedir,gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
@@ -285,10 +293,11 @@ char mapele_ld1(int gx,int gy){
 	ld->gy=gy;
 	ld->loading=0;
 	ld->tex=0;
+	ld->dls=0;
 	mapele_ld1_srtm(gx,gy,ld);
 	ld->nxt=mapele.ld[MELDCH(gx,gy)];
 	mapele.ld[MELDCH(gx,gy)]=ld;
-	etexloadput(ld);
+	metexloadput(ld);
 	sdlforceredraw();
 	return 1;
 }
@@ -301,16 +310,39 @@ char mapele_ld(int gx0,int gx1,int gy0,int gy1){
 	return 0;
 }
 
+void mapelegendls(struct meld *ld){
+	struct medls *dls=mapele.dls;
+	while(dls && dls->w!=ld->w && dls->h!=ld->h) dls=dls->nxt;
+	if(dls) ld->dls=dls->dls; else {
+		float xo,yo,rw,rh;
+		dls=malloc(sizeof(struct meld));
+		dls->w=ld->w;
+		dls->h=ld->h;
+		dls->dls=glGenLists(1);
+		glNewList(dls->dls,GL_COMPILE);
+		xo=.5f/(float)ld->w;
+		yo=.5f/(float)ld->h;
+		rw=(float)ld->w/(float)ld->tw;
+		rh=(float)ld->h/(float)ld->th;
+		glBegin(GL_QUADS);
+		glTexCoord2f(   xo,   yo); glVertex2f(0.,0.);
+		glTexCoord2f(rw-xo,   yo); glVertex2f(1.,0.);
+		glTexCoord2f(rw-xo,rh-yo); glVertex2f(1.,1.);
+		glTexCoord2f(   xo,rh-yo); glVertex2f(0.,1.);
+		glEnd();
+		glEndList();
+		dls->nxt=mapele.dls;
+		mapele.dls=dls;
+		ld->dls=dls->dls;
+	}
+}
+
 void mapelerenderld(struct meld *ld){
 	if(!ld) return;
 	if(!ld->tex) return;
+	if(!ld->dls) mapelegendls(ld);
 	glBindTexture(GL_TEXTURE_2D,ld->tex);
-	glBegin(GL_QUADS);
-	glTexCoord2f(    0.,    0.); glVertex2f(0.,0.);
-	glTexCoord2f(ld->rw,    0.); glVertex2f(1.,0.);
-	glTexCoord2f(ld->rw,ld->rh); glVertex2f(1.,1.);
-	glTexCoord2f(    0.,ld->rh); glVertex2f(0.,1.);
-	glEnd();
+	glCallList(ld->dls);
 }
 
 void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
@@ -320,14 +352,14 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	int gy1=(int)trunc(gsy1);
 	int gx,gy;
 	short mm[2]={32767,-32768};
-	while(etexload()) ;
+	while(metexload()) ;
 	if(!glprg()) return;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			mapele_mmget(mm,mapele_ldfind(gx,gy),gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glTranslatef(-.5f,-.5f,0.f);
-	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.);
+	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.); /* TODO: use zoom in */
 	glTranslated(trunc(gsx0)-gsx0,-1.+gsy1-trunc(gsy0),0.);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mm[0]/65535.+0.5,(double)(mm[1]-mm[0])/65535.,0.,.8);
