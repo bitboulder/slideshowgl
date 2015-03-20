@@ -335,10 +335,10 @@ void mapelegendls(struct meld *ld){
 		rw=(float)ld->w/(float)ld->tw;
 		rh=(float)ld->h/(float)ld->th;
 		glBegin(GL_QUADS);
-		glTexCoord2f(   xo,   yo); glVertex2f(0.,0.);
-		glTexCoord2f(rw-xo,   yo); glVertex2f(1.,0.);
-		glTexCoord2f(rw-xo,rh-yo); glVertex2f(1.,1.);
-		glTexCoord2f(   xo,rh-yo); glVertex2f(0.,1.);
+		glTexCoord2f(   xo,   yo); glVertex2f(0.,1.);
+		glTexCoord2f(rw-xo,   yo); glVertex2f(1.,1.);
+		glTexCoord2f(rw-xo,rh-yo); glVertex2f(1.,0.);
+		glTexCoord2f(   xo,rh-yo); glVertex2f(0.,0.);
 		glEnd();
 		glEndList();
 		dls->nxt=mapele.dls;
@@ -369,17 +369,15 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mm,ld,gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
-	glTranslatef(-.5f,-.5f,0.f);
-	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.); /* TODO: use zoom in */
-	glTranslated(trunc(gsx0)-gsx0,-1.+gsy1-trunc(gsy0),0.);
+	glTranslatef((float)gx0,(float)gy0,0.f);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mm[0]/65535.+0.5,(double)(mm[1]-mm[0])/65535.,0.,.8);
 	for(gx=gx0;gx<=gx1;gx++){
 		for(gy=gy0;gy<=gy1;gy++){
 			mapelerenderld(mapele_ldfind(gx,gy));
-			glTranslatef(0.f,-1.f,0.f);
+			glTranslatef(0.f,1.f,0.f);
 		}
-		glTranslatef(1.f,(float)(gy1-gy0+1),0.f);
+		glTranslatef(1.f,(float)(gy0-gy1+1),0.f);
 	}
 	glSecondaryColor3f(1.f,0.f,0.f); /* TODO: reset to previous value */
 	glColor4f(.5f,.5f,.5f,1.f); /* TODO: reset to previous value */

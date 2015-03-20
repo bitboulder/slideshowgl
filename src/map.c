@@ -284,6 +284,23 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapm2g(gx,gy,iz,gx,gy); \
 }
 
+float map_gw(float s,double gx,double *g0,double *g1){
+	float v=powf(2.f,-s)/256.f*360.f*(float)*map.scr_w;
+	if(g0) *g0=gx-v/2.;
+	if(g1) *g1=gx+v/2.;
+	return v;
+}
+
+float map_gh(float s,double gy,double *g0,double *g1){
+	double yr=asinh(tan(gy/180.*M_PI));
+	double vr=(double)*map.scr_h/256.*pow(2.,-s)*M_PI;
+	double v0=atan(sinh(yr-vr));
+	double v1=atan(sinh(yr+vr));
+	if(g0) *g0=180./M_PI*v0;
+	if(g1) *g1=180./M_PI*v1;
+	return (float)(180./M_PI*(v0-v1));
+}
+
 struct tile *maptilefind(int ix,int iy,int iz,char create){
 	if(iz<0 || iz>=N_ZOOM) return NULL;
 	if(ix<0 || ix>=1<<iz ) return NULL;
@@ -1085,13 +1102,29 @@ char maprender(char sel){
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 	else        glColor4f(1.f,1.f,1.f,1.f);
 	if(!sel) maprendermap();
-	if(!sel && map.ele){
-		double gsx0,gsx1,gsy0,gsy1,t;
-		maps2g(-.5f,.0f,map.pos.iz,gsx0,t);
-		maps2g( .5f,.0f,map.pos.iz,gsx1,t);
-		maps2g(.0f, .5f,map.pos.iz,t,gsy0);
-		maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
-		mapelerender(gsx0,gsx1,gsy0,gsy1);
+	{
+		int iz;
+		struct ecur *ecur=mapecur(&iz,NULL);
+		if(ecur && map.scr_w && map.scr_h){
+			float s=powf(2.f,ecur->s-(float)iz);
+			double gsx0,gsx1,gsy0,gsy1;
+			map_gw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
+			map_gh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
+			glPushMatrix();
+			glScalef(
+				1.f/map_gw(ecur->s,ecur->y,NULL,NULL),
+				1.f/map_gh(ecur->s,ecur->y,NULL,NULL),
+				1.f);
+			glTranslated(-ecur->x,-ecur->y,0.);
+/*			glBegin(GL_POLYGON);
+			glVertex2d(13.607791,51.063890);
+			glVertex2d(13.747180,51.123833);
+			glVertex2d(13.810008,51.053316);
+			glVertex2d(13.729327,51.008190);
+			glEnd();*/
+			if(!sel && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
+			glPopMatrix();
+		}
 	}
 	if(!optx) maprenderclt();
 	if(!sel) maprenderinfo();
