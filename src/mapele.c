@@ -142,6 +142,7 @@ void mapele_ld1_srtmget(int gx,int gy,char *fn){
 	l+=(size_t)snprintf(url+l,FILELEN*2-l,"%c%02i%c%03i",gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
 	snprintf(url+l,FILELEN*2-l,"%s",pos+5);
 	mkdirm(fn,1);
+	debug(DBG_STA,"mapele_ld1_strmget: download tex (fn: %s)",fn);
 	curl=curl_easy_init();
 	if(!curl){ error(ERR_CONT,"mapele_load: curl-init failed"); return; }
 	if(!(fd=fopen(fn,"wb"))){
@@ -161,9 +162,10 @@ void mapele_ld1_srtmget(int gx,int gy,char *fn){
 	curl_easy_cleanup(curl);
 	fclose(fd);
 	if(res!=CURLE_OK || !filesize(fn) || !mapld_filecheck(fn)){
-		debug(DBG_STA,"mapele_load: file loading failed (res: %i)",res);
+		debug(DBG_STA,"mapele_ld1_strmget: download failed (res: %i)",res);
 		unlink(fn);
-	}
+	}else
+		debug(DBG_STA,"mapele_ld1_strmget: tex downloaded (fn: %s)",fn);
 }
 #endif
 
@@ -265,8 +267,12 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	if(ft==FT_NX) mapele_ld1_srtmget(gx,gy,fn);
 	ft=filetype(fn);
 #endif
-	if(!(ft&FT_FILE)) return;
+	if(!(ft&FT_FILE)){
+		debug(ERR_CONT,"mapele_load: tex file not found (fn: %s)",fn);
+		return;
+	}
 	snprintf(cmd,FILELEN,"unzip -p '%s'\n",fn);
+	debug(DBG_STA,"mapele_load: loading tex (fn: %s)",fn);
 	if(!(fd=popen(cmd,"r"))){
 		debug(ERR_CONT,"mapele_load: file unzip failed (fn: %s)",fn);
 		return;
@@ -285,6 +291,7 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 			*dtex=(unsigned short)((int)*mm+32768);
 		}
 	mapele_mmgen(ld);
+	debug(DBG_STA,"mapele_load: tex loaded (fn: %s)",fn);
 }
 
 #define MELDCH(gx,gy)	(((gx)*90+(gy))%MEHNUM)
@@ -376,7 +383,7 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 			mapelerenderld(mapele_ldfind(gx,gy));
 			glTranslatef(0.f,1.f,0.f);
 		}
-		glTranslatef(1.f,(float)(gy0-gy1+1),0.f);
+		glTranslatef(1.f,(float)(gy0-gy1-1),0.f);
 	}
 	glSecondaryColor3f(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
