@@ -364,7 +364,6 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	short mm[2]={32767,-32768};
 	struct meld *ld;
 	while(metexload()) ;
-	if(!glprg()) return;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mm,ld,gsx0,gsx1,gsy0,gsy1);
@@ -379,8 +378,8 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 		}
 		glTranslatef(1.f,(float)(gy0-gy1+1),0.f);
 	}
-	glSecondaryColor3f(1.f,0.f,0.f); /* TODO: reset to previous value */
-	glColor4f(.5f,.5f,.5f,1.f); /* TODO: reset to previous value */
+	glSecondaryColor3f(1.f,0.f,0.f);
+	glColor4f(.5f,.5f,.5f,1.f);
 	glPopMatrix();
 }
 

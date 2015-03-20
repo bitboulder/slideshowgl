@@ -1268,6 +1268,7 @@ char dplev(struct ev *ev){
 	case DE_STAT:
 		if(!dplactil(ev->sx,clickimg)) ret=0;
 		dplmousehold(clickimg);
+		if(mapon()){ mapmousepos(ev->sx,ev->sy); ret=1; }
 	break;
 	case DE_JUMPEND:
 		if(!dplwritemode() || !mapcltsave(clickimg-IMGI_MAP)) dplprged("imgpos",1,dpl.actimgi,-1);

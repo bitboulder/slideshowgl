@@ -9,6 +9,7 @@ char mapon();
 void mapsdlsize(int *w,int *h);
 void mapswtype();
 void mapinfo(int i);
+void mapmousepos(float sx,float sy);
 const char *mapgetbasedirs();
 char mapdisplaymode();
 char mapelevation();

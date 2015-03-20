@@ -108,6 +108,7 @@ struct map {
 	enum mapeditmode {MEM_ADD,MEM_REPLACE,N_MEM} editmode;
 	unsigned long ftchk;
 	const char *starpat;
+	struct { float sx,sy; } mouse;
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
@@ -125,6 +126,8 @@ struct map {
 	.displaymode  = MDM_ALL,
 	.editmode  = MEM_ADD,
 	.ftchk = 3000,
+	.mouse.sx = .5f,
+	.mouse.sy = .5f,
 };
 
 char mapon(){
@@ -140,6 +143,10 @@ void mapinfo(int i){
 	if(map.info==i) return;
 	map.info=i;
 	sdlforceredraw();
+}
+void mapmousepos(float sx,float sy){
+	map.mouse.sx=sx;
+	map.mouse.sy=sy;
 }
 const char *mapgetbasedirs(){ return map.basedirs; }
 char mapdisplaymode(){
@@ -1106,7 +1113,6 @@ char maprender(char sel){
 		int iz;
 		struct ecur *ecur=mapecur(&iz,NULL);
 		if(ecur && map.scr_w && map.scr_h){
-			float s=powf(2.f,ecur->s-(float)iz);
 			double gsx0,gsx1,gsy0,gsy1;
 			map_gw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
 			map_gh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
@@ -1116,13 +1122,7 @@ char maprender(char sel){
 				1.f/map_gh(ecur->s,ecur->y,NULL,NULL),
 				1.f);
 			glTranslated(-ecur->x,-ecur->y,0.);
-/*			glBegin(GL_POLYGON);
-			glVertex2d(13.607791,51.063890);
-			glVertex2d(13.747180,51.123833);
-			glVertex2d(13.810008,51.053316);
-			glVertex2d(13.729327,51.008190);
-			glEnd();*/
-			if(!sel && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
+			if(!sel && glprg() && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
 			glPopMatrix();
 		}
 	}
@@ -1251,23 +1251,24 @@ void maprestorepos(){
 }
 
 char mapstatupdate(char *dsttxt){
-	double gsx0,gsx1,gsy0,gsy1,t;
+	double gw,gh,gx,gy;
 	char fmt[128];
 	char *txt;
 	if(map.init>MI_TEX || !mapon()) return 0;
-	maps2g( .5f,.0f,map.pos.iz,gsx0,t);
-	maps2g(-.5f,.0f,map.pos.iz,gsx1,t);
-	maps2g(.0f, .5f,map.pos.iz,t,gsy0);
-	maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
-	gsx0=fabs(gsx1-gsx0);
-	gsy0=fabs(gsy1-gsy0);
-	gsx0*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
-	gsy0*=(6356.752314*2.*M_PI)/360.;
-	snprintf(fmt,128,"%%.3f%%c %%.3f%%c %%.%ifx%%.%ifkm",gsx0>20.?0:gsx0>5.?1:2,gsy0>20.?0:gsy0>5.?1:2);
+	maps2g(map.mouse.sx,map.mouse.sy,map.pos.iz,gx,gy);
+	gw=map_gw((float)map.pos.iz,map.pos.gx,NULL,NULL);
+	gh=map_gh((float)map.pos.iz,map.pos.gy,NULL,NULL);
+	gw*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
+	gh*=(6356.752314*2.*M_PI)/360.;
+	snprintf(fmt,128,"%%.%if%%c %%.%if%%c %%.%ifx%%.%ifkm",
+			 (int)((float)map.pos.iz*0.301+0.8),
+			 (int)((float)map.pos.iz*0.301+0.8),
+			 gw>20.?0:gw>5.?1:2,
+			 gh>20.?0:gh>5.?1:2);
 	snprintf(dsttxt,ISTAT_TXTSIZE,fmt,
-			 fabs(map.pos.gy),map.pos.gy<0?'S':'N',
-			 fabs(map.pos.gx),map.pos.gx<0?'W':'E',
-			 gsx0,gsy0);
+			 fabs(gy),gy<0?'S':'N',
+			 fabs(gx),gx<0?'W':'E',
+			 gw,gh);
 	txt=dsttxt+strlen(dsttxt);
 	if(dplwritemode())
 		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",
