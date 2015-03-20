@@ -305,7 +305,7 @@ float map_gh(float s,double gy,double *g0,double *g1){
 	double v1=atan(sinh(yr+vr));
 	if(g0) *g0=180./M_PI*v0;
 	if(g1) *g1=180./M_PI*v1;
-	return (float)(180./M_PI*(v0-v1));
+	return (float)(180./M_PI*(v1-v0));
 }
 
 struct tile *maptilefind(int ix,int iy,int iz,char create){
@@ -1117,7 +1117,7 @@ char maprender(char sel){
 			glPushMatrix();
 			glScalef(
 				1.f/map_gw(ecur->s,ecur->x,&gsx0,&gsx1),
-				1.f/map_gh(ecur->s,ecur->y,&gsy0,&gsy1),
+				-1.f/map_gh(ecur->s,ecur->y,&gsy0,&gsy1),
 				1.f);
 			glTranslated(-ecur->x,-ecur->y,0.);
 			if(!sel && glprg() && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
