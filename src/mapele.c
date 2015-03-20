@@ -168,14 +168,10 @@ void mapele_ld1_srtmget(int gx,int gy,char *fn){
 #endif
 
 int mapele_mmsize(struct meld *ld){
-	int wi=ld->w;
-	int hi=ld->h;
-	int s=wi*hi;
-	while(wi>1 && hi>1){
-		wi/=2;
-		hi/=2;
-		s+=wi*hi*2;
-	}
+	int wi=ld->w>>1;
+	int hi=ld->h>>1;
+	int s=ld->w*ld->h;
+	for(;wi>1 || hi>1;wi>>=1,hi>>=1) s+=wi*hi*2;
 	return s;
 }
 
@@ -185,9 +181,9 @@ void mapele_mmgen(struct meld *ld){
 	short *mi=ld->maxmin;
 	short *mo=ld->maxmin+wi*hi;
 	int x,y,i=1;
-	while(wi>1 && hi>1){
-		wo=wi/2;
-		ho=hi/2;
+	for(;wi>1 || hi>1;wi=wo,hi=ho,i=2){
+		wo=wi>>1;
+		ho=hi>>1;
 		for(y=0;y<ho;y++){
 			for(x=0;x<wo;x++){
 				short v;
@@ -195,16 +191,12 @@ void mapele_mmgen(struct meld *ld){
 				if((mi[i]<v && mi[i]!=-32768) || v==-32768) v=mi[i];
 				if((mi[i*hi]<v && mi[i*hi]!=-32768) || v==-32768) v=mi[i*hi];
 				if((mi[i*(hi+1)]<v && mi[i*(hi+1)]!=-32768) || v==-32768) v=mi[i*(hi+1)];
-				/* TODO: add last row */
-				/* TODO: add last col */
 				*(mo++)=v;
 				if(i>1) mi++;
 				v=mi[0];
 				if(mi[i]>v) v=mi[i];
 				if(mi[i*hi]>v) v=mi[i*hi];
 				if(mi[i*(hi+1)]>v) v=mi[i*(hi+1)];
-				/* TODO: add last row */
-				/* TODO: add last col */
 				*(mo++)=v;
 				mi++;
 				mi+=i;
@@ -213,28 +205,45 @@ void mapele_mmgen(struct meld *ld){
 			mi+=i*wi;
 		}
 		if(hi%2) mi+=i*wi;
-		wi=wo;
-		hi=ho;
-		i=2;
 	}
 }
 
+#define MMUPD(s) { \
+	if(v[0]!=-32768 && v[0]<mm[0]) mm[0]=v[0]; \
+	if(v[s]!=-32768 && v[s]>mm[1]) mm[1]=v[s]; \
+}
+
 void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,double gsy1){
-	if(!ld) return;
 	double rx0=gsx0-(double)ld->gx,    rx1=gsx1-(double)ld->gx;
 	double ry1=1.+(double)ld->gy-gsy0, ry0=1.+(double)ld->gy-gsy1;
 	int ix0 = rx0<=0. ? 0     : (int)round(rx0*(double)ld->w);
 	int ix1 = rx1>=1. ? ld->w : (int)round(rx1*(double)ld->w);
 	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
 	int iy1 = ry1>=1. ? ld->h : (int)round(ry1*(double)ld->h);
-	int x,y;
-	short v;
-	/* TODO: speedup by precalc values */
-	for(y=iy0;y<iy1;y++)
-		for(x=ix0;x<ix1;x++) if((v=ld->maxmin[y*ld->h+x])!=-32768){
-			if(v<mm[0]) mm[0]=v;
-			if(v>mm[1]) mm[1]=v;
-		}
+	int wi=ld->w, hi=ld->h;
+	int i,x,y;
+	short *v,*vm=ld->maxmin;
+	if(ix0==ix1 || iy0==iy1) return;
+	if(ix0%2) for(v=vm+iy0*wi+ix0,    i=iy0;i<iy1;v+=wi,i++) MMUPD(0);
+	if(ix1%2) for(v=vm+iy0*wi+ix1-1,  i=iy0;i<iy1;v+=wi,i++) MMUPD(0);
+	if(iy0%2) for(v=vm+iy0*wi+ix0,    i=ix0;i<ix1;v++  ,i++) MMUPD(0);
+	if(iy1%2) for(v=vm+(iy1-1)*wi+ix0,i=ix0;i<ix1;v++  ,i++) MMUPD(0);
+	vm+=wi*hi;
+	ix0=(ix0+1)>>1; ix1>>=1;
+	iy0=(iy0+1)>>1; iy1>>=1;
+	if(ix0==ix1 || iy0==iy1) return;
+	wi>>=1; hi>>=1;
+	for(;wi>2 || hi>2;wi>>=1,hi>>=1){
+		if(ix0%2) for(v=vm+(iy0*wi+ix0)*2,    i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
+		if(ix1%2) for(v=vm+(iy0*wi+ix1-1)*2,  i=iy0;i<iy1;v+=wi*2,i++) MMUPD(1);
+		if(iy0%2) for(v=vm+(iy0*wi+ix0)*2,    i=ix0;i<ix1;v+=2   ,i++) MMUPD(1);
+		if(iy1%2) for(v=vm+((iy1-1)*wi+ix0)*2,i=ix0;i<ix1;v+=2   ,i++) MMUPD(1);
+		vm+=wi*hi*2;
+		ix0=(ix0+1)>>1; ix1>>=1;
+		iy0=(iy0+1)>>1; iy1>>=1;
+		if(ix0==ix1 || iy0==iy1) return;
+	}
+	for(y=iy0;y<iy1;y++) for(v=vm+(y*wi+ix0)*2,x=ix0;x<ix1;v+=2,x++) MMUPD(1);
 }
 
 void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
@@ -352,11 +361,12 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	int gy1=(int)trunc(gsy1);
 	int gx,gy;
 	short mm[2]={32767,-32768};
+	struct meld *ld;
 	while(metexload()) ;
 	if(!glprg()) return;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
-			mapele_mmget(mm,mapele_ldfind(gx,gy),gsx0,gsx1,gsy0,gsy1);
+			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mm,ld,gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glTranslatef(-.5f,-.5f,0.f);
 	glScaled(1./(gsx1-gsx0),1./(gsy1-gsy0),1.); /* TODO: use zoom in */
