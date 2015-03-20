@@ -1114,12 +1114,10 @@ char maprender(char sel){
 		struct ecur *ecur=mapecur(&iz,NULL);
 		if(ecur && map.scr_w && map.scr_h){
 			double gsx0,gsx1,gsy0,gsy1;
-			map_gw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
-			map_gh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
 			glPushMatrix();
 			glScalef(
-				1.f/map_gw(ecur->s,ecur->y,NULL,NULL),
-				1.f/map_gh(ecur->s,ecur->y,NULL,NULL),
+				1.f/map_gw(ecur->s,ecur->x,&gsx0,&gsx1),
+				1.f/map_gh(ecur->s,ecur->y,&gsy0,&gsy1),
 				1.f);
 			glTranslated(-ecur->x,-ecur->y,0.);
 			if(!sel && glprg() && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
