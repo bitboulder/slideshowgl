@@ -964,21 +964,30 @@ void maprendermap(double psx0,double psx1,double psy0,double psy1,int iz){
 	int ix,iy;
 	int iw,ih;
 	int ixc,iyc;
-	float s=(float)(1<<iz);
+	float s;
+	if(optx%2 && iz<7) iz=7;
+	s=(float)(1<<iz);
 	glPushMatrix();
 	glScalef(1.f/s,1.f/s,1.f);
 	ix=(int)floor(psx0*s);
 	iw=(int)floor(psx1*s)-ix+1;
 	iy=(int)floor(psy1*s);
 	ih=(int)floor(psy0*s)-iy+1;
+	if(optx%2){
+		if(iw>1<<iz){ ix=0; iw=1<<iz; }
+		if(ih>1<<iz){ iy=0; ih=1<<iz; }
+	}
 	glTranslatef((float)ix,(float)iy,0.f);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
-			int pz=1<<iz, px=ix+ixc, py=iy+iyc;
-			py=(py+2*pz)%(2*pz);
-			if(py>=pz){ py=2*pz-1-py; px+=pz/2; }
-			if(py<0){ py=-py; px+=pz/2; }
-			px=(px+pz)%pz;
+			int px=ix+ixc, py=iy+iyc;
+			if(!(optx%2)){
+				int pz=1<<iz;
+				py=(py+2*pz)%(2*pz);
+				if(py>=pz){ py=2*pz-1-py; px+=pz/2; }
+				if(py<0){ py=-py; px+=pz/2; }
+				px=(px+pz)%pz;
+			}
 			maprendertile(px,py,iz,iz);
 			glTranslatef(0.f,1.f,0.f);
 		}
@@ -1001,7 +1010,6 @@ void maprenderinfo(){
 	mapg2m(map.pos.gx,map.pos.gy,map.pos.iz,mx,my);
 	sx=(clti->mx-mx)*256.f/(double)*map.scr_w;
 	sy=(clti->my-my)*256.f/(double)*map.scr_h;
-	glPushMatrix();
 	sw=glmode(GLM_TXT);
 	h=glfontscale(hrat=glcfg()->hrat_cat,1.f);
 	hrat/=h;
@@ -1033,7 +1041,6 @@ void maprenderinfo(){
 			glTranslatef(w+b,h*(float)nl,0.f);
 		}
 	}
-	glPopMatrix();
 }
 
 char maprender(char sel){
@@ -1041,18 +1048,29 @@ char maprender(char sel){
 	struct ecur *ecur=mapecur(&iz,NULL);
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
-	glmode(GLM_2D);
-	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
-	else        glColor4f(1.f,1.f,1.f,1.f);
 	if(ecur && map.scr_w && map.scr_h){
 		double psx0,psx1,psy0,psy1,px,py;
+		float pw=mappscrw(ecur->s,ecur->x,&psx0,&psx1);
+		float ph=mappscrh(ecur->s,ecur->y,&psy0,&psy1);
 		mapg2p(ecur->x,ecur->y,px,py);
-		glPushMatrix();
-		glScalef(
-			1.f/mappscrw(ecur->s,ecur->x,&psx0,&psx1),
-			1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
-			1.f);
-		glTranslated(-px,-py,0.);
+		if(optx%2){
+			float s=powf(2.f,ecur->s);
+			glmodex(GLM_3DS,35,0); 
+			glMatrixMode(GL_PROJECTION);
+			glTranslatef(0.f,0.f,5.f);
+//			glTranslatef(0.f,0.f,-s);
+//			glScalef(s,s,s);
+			glRotatef(ecur->y,-1.f,0.f,0.f);
+			glRotatef(ecur->x,0.f,-1.f,0.f);
+			glMatrixMode(GL_MODELVIEW);
+			//glTranslated(-px,-py,0.);
+		}else{
+			glmode(GLM_2D);
+			glScalef(1.f/pw,1.f/ph,1.f);
+			glTranslated(-px,-py,0.);
+		}
+		if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
+		else        glColor4f(1.f,1.f,1.f,1.f);
 		if(!sel) maprendermap(psx0,psx1,psy0,psy1,iz);
 		if(!sel && glprg() && map.ele){
 			double gsx0,gsx1,gsy0,gsy1;
@@ -1061,7 +1079,6 @@ char maprender(char sel){
 			mapelerender(gsx0,gsx1,gsy0,gsy1);
 		}
 		maprenderclt(ecur->s,iz);
-		glPopMatrix();
 	}
 	if(!sel) maprenderinfo();
 	if(!sel && glprg() && map.ele) mapelerenderbar();

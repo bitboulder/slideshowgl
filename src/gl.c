@@ -39,6 +39,7 @@ struct gl {
 	GLuint prg;
 	GLuint prgms;
 	GLuint prgfish;
+	GLuint prgsphere;
 	GLuint movtex;
 	struct glfont font[NFT];
 	struct glfont *fontcur;
@@ -235,6 +236,7 @@ void glinit(char done){
 	gl.prg=glprgload("vs.c","fs.c");
 	gl.prgms=glprgload("vs.c","fs_modsaetigung.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
+	gl.prgsphere=glprgload("vs_sphere.c","fs.c");
 
 	gl.movtex=ldfile2tex(finddatafile("mov.png"));
 }
@@ -252,6 +254,7 @@ void glmodeslave(enum glmode dst){
 	cur=dst;
 	switch(dst){
 	case GLM_3D:
+	case GLM_3DS:
 	case GLM_3DP:
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
@@ -260,6 +263,7 @@ void glmodeslave(enum glmode dst){
 		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
+		else if(dst==GLM_3DS && gl.prgsphere) glUseProgram(gl.prgsphere);
 		else if(gl.prg) glUseProgram(gl.prg);
 	break;
 	case GLM_2D:
@@ -296,7 +300,7 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	static int cur_fm;
 	float w = dst!=GLM_2D && dst!=GLM_2DA ? sdlrat() : 1.f;
 	glmodeslave(dst);
-	if(cur==dst && ((dst!=GLM_3D && dst!=GLM_3DP) || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w) return w;
+	if(cur==dst && ((dst!=GLM_3D && dst!=GLM_3DS && dst!=GLM_3DP) || (h3d==cur_h3d && cur_fm==fm)) && w==cur_w) return w;
 	cur=dst;
 	cur_h3d=h3d;
 	cur_fm=fm;
@@ -307,7 +311,8 @@ float glmodex(enum glmode dst,float h3d,int fm){
 		glScalef(1.f,-1.f,1.f);
 	}
 	switch(dst){
-	case GLM_3D:  gluPerspective(h3d, w, 1., 15.); break;
+	case GLM_3D:
+	case GLM_3DS: gluPerspective(h3d, w, 1., 15.); break;
 	case GLM_3DP: panoperspective(h3d,fm,w); break;
 	case GLM_2D:
 	case GLM_2DA:
@@ -323,8 +328,11 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:
+	case GLM_3DS:
 	case GLM_3DP:
+		if(dst==GLM_3DS) glMatrixMode(GL_PROJECTION);
 		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
+		if(dst==GLM_3DS) glMatrixMode(GL_MODELVIEW);
 	break;
 	case GLM_2D:
 	case GLM_2DA:
