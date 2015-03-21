@@ -1126,6 +1126,7 @@ char maprender(char sel){
 	}
 	if(!optx) maprenderclt();
 	if(!sel) maprenderinfo();
+	if(!sel && glprg() && map.ele) mapelerenderbar();
 	return 1;
 }
 

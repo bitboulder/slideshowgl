@@ -14,7 +14,7 @@
 #include "help.h"
 #include "cfg.h"
 #include "sdl.h"
-#include "gl.h"
+#include "gl_int.h"
 
 /* SRTM3 Format
  
@@ -76,6 +76,8 @@ struct mapele {
 	const char *url;
 	struct metexload tl;
 	struct medls *dls;
+	short maxmin[2];
+	struct meld ldbar;
 } mapele = {
 	.ld={ NULL },
 	.tl.wi=0,
@@ -322,6 +324,7 @@ char mapele_ld1(int gx,int gy){
 char mapele_ld(int gx0,int gx1,int gy0,int gy1){
 	int gx,gy;
 	if(!glprg()) return 0;
+	/* TODO: load from center */
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++) if(mapele_ld1(gx,gy)) return 1;
 	return 0;
@@ -368,16 +371,17 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	int gy0=(int)trunc(gsy0);
 	int gy1=(int)trunc(gsy1);
 	int gx,gy;
-	short mm[2]={32767,-32768};
 	struct meld *ld;
 	while(metexload()) ;
+	mapele.maxmin[0]=32767;
+	mapele.maxmin[1]=-32768;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
-			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mm,ld,gsx0,gsx1,gsy0,gsy1);
+			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glTranslatef((float)gx0,(float)gy0,0.f);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
-	glColor4d((double)mm[0]/65535.+0.5,(double)(mm[1]-mm[0])/65535.,0.,.8);
+	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
 	for(gx=gx0;gx<=gx1;gx++){
 		for(gy=gy0;gy<=gy1;gy++){
 			mapelerenderld(mapele_ldfind(gx,gy));
@@ -390,7 +394,94 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	glPopMatrix();
 }
 
+#define MEBARSIZE	128
+
+/* TODO: move to gl.c */
+enum glft { FT_NOR, FT_BIG, NFT };
+char glfontsel(enum glft i);
+float glfontscale(float hrat,float wrat);
+float glfontwidth(const char *txt);
+enum glpos {
+	GP_LEFT    = 0x01,
+	GP_RIGHT   = 0x02,
+	GP_HCENTER = 0x04,
+	GP_TOP     = 0x10,
+	GP_BOTTOM  = 0x20,
+	GP_VCENTER = 0x40,
+};
+void glrectarc(float w,float h,enum glpos pos,float barc);
+void glfontrender(const char *txt,enum glpos pos);
+void glmodeslave(enum glmode dst);
+
+void mapelerenderbar(){
+	struct istat *stat=effstat();
+	float hrat,sw,h,w,b;
+	int si,vi;
+	float rf,sf,vf;
+	if(!stat->h || !glfontsel(FT_NOR)) return;
+	sw=glmode(GLM_TXT);
+	glTranslatef(0.f,-.5f,0.f);
+	glScalef(1.f,stat->h,1.f);
+
+	h=glfontscale(hrat=/*gl.cfg.hrat_stat*/0.025f,1.f);
+	hrat/=h;
+	w=(float)sw/hrat*.4f;
+	//b=h*gl.cfg.txt_border*2.f;
+	b=h*.1f*2.f;
+
+	si=(mapele.maxmin[1]-mapele.maxmin[0])/5;
+	for(vi=1;si>=20;vi*=10) si/=10;
+	if(si>=15) si=15;
+	else if(si>=10) si=10;
+	else if(si==9) si=8;
+	else if(si==7) si=6;
+	si*=vi;
+	rf=w/(float)(mapele.maxmin[1]-mapele.maxmin[0]);
+	sf=rf*(float)si;
+	vi=(mapele.maxmin[0]/si)*si;
+	if(vi<mapele.maxmin[0]) vi+=si;
+	vf=w/2.f-rf*(float)(vi-mapele.maxmin[0]);
+
+	//glColor4fv(gl.cfg.col_txtbg);
+	glColor4f(.8f,.8f,.8f,.7f);
+	glrectarc(w+b*2.f,b+h*2.f,GP_BOTTOM|GP_HCENTER,-b-h*2.f);
+
+	//glColor4fv(gl.cfg.col_txtfg);
+	glColor4f(0.f,0.f,0.f,1.f);
+	glPushMatrix();
+	glTranslatef(-vf,(h+b)/2.f,0.f);
+	for(;vi<=mapele.maxmin[1];vi+=si){
+		char str[16];
+		snprintf(str,16,"%i",vi);
+		glfontrender(str,GP_VCENTER|GP_HCENTER);
+		glTranslatef(sf,0.f,0.f);
+	}
+	glPopMatrix();
+
+	glmodeslave(GLM_2D);
+	glTranslatef(-w/2.f,h+b,0.f);
+	glScalef(w,h-2.f*b,1.f);
+	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
+	glColor4d(0.,(MEBARSIZE-1)/65535.,0.,1.);
+	mapelerenderld(&mapele.ldbar);
+	glSecondaryColor3f(1.f,0.f,0.f);
+	glColor4f(.5f,.5f,.5f,1.f);
+}
+
+void mapelebarinit(struct meld *ld){
+	unsigned short i;
+	ld->loading=0;
+	ld->tex=0;
+	ld->dls=0;
+	ld->w=ld->tw=MEBARSIZE;
+	ld->h=ld->th=1;
+	ld->dtex=malloc((size_t)(ld->tw*ld->th)*sizeof(unsigned short));
+	for(i=0;i<ld->w;i++) ld->dtex[i]=i;
+	metexloadput(ld);
+}
+
 void mapeleinit(const char *cachedir){
 	mapele.cachedir=cachedir;
 	mapele.url=cfggetstr("mapele.url");
+	mapelebarinit(&mapele.ldbar);
 }

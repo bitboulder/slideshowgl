@@ -379,7 +379,10 @@ void glrectarc(float w,float h,enum glpos pos,float barc){
 	glpostranslate(pos,w,h);
 	glRectf(0.f,0.f,w,h);
 	if(barc){
-		glTranslatef(0.f,h,0.f);
+		if(barc<0){
+			glScalef(1.f,-1.f,1.f);
+			barc=-barc;
+		}else glTranslatef(0.f,h,0.f);
 		glScalef(-barc,-h,1.f);
 		glCallList(gl.dls+DLS_ARC);
 		glScalef(-1.f,1.f,1.f);
