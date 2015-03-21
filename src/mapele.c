@@ -351,6 +351,7 @@ void mapelegendls(struct meld *ld){
 		mapg2p(ld->gx,  ld->gy,  px0,py0);
 		mapg2p(ld->gx+1,ld->gy+1,px1,py1);
 	}
+	glBindTexture(GL_TEXTURE_2D,ld->tex);
 	glBegin(GL_QUADS);
 	glTexCoord2f(   xo,   yo); glVertex2d(px0,py1);
 	glTexCoord2f(rw-xo,   yo); glVertex2d(px1,py1);
@@ -364,7 +365,6 @@ void mapelerenderld(struct meld *ld){
 	if(!ld) return;
 	if(!ld->tex) return;
 	if(!ld->dls) mapelegendls(ld);
-	glBindTexture(GL_TEXTURE_2D,ld->tex);
 	glCallList(ld->dls);
 }
 

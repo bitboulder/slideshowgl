@@ -109,6 +109,7 @@ struct map {
 	unsigned long ftchk;
 	const char *starpat;
 	struct { float sx,sy; } mouse;
+	GLuint cltdls;
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
@@ -128,6 +129,7 @@ struct map {
 	.ftchk = 3000,
 	.mouse.sx = .5f,
 	.mouse.sy = .5f,
+	.cltdls = 0,
 };
 
 char mapon(){
@@ -904,42 +906,35 @@ void mapinit(){
 	mapeleinit(mapldinit());
 }
 
-void maprenderclt(){
+void maprenderclt(float s,int iz){
 	struct mapclti *clti;
-	double mx,my;
 	GLuint name=IMGI_MAP+1;
-	int iz;
-	struct ecur *ecur=mapecur(&iz,NULL);
-	float s;
-	if(!ecur || !map.scr_w || !map.scr_h) return;
-	s=powf(2.f,ecur->s-(float)iz);
-	mapg2m(ecur->x,ecur->y,iz,mx,my);
-	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
-		glLoadName(name++);
-		if(optx){
-		double k[3],xs=15./512.,ys=10./512.;
-		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.,0.); mapm2k(clti->mx-xs,clti->my-ys,iz,k); glVertex3dv(k);
-		glTexCoord2f(1.,0.); mapm2k(clti->mx+xs,clti->my-ys,iz,k); glVertex3dv(k);
-		glTexCoord2f(1.,1.); mapm2k(clti->mx+xs,clti->my+ys,iz,k); glVertex3dv(k);
-		glTexCoord2f(0.,1.); mapm2k(clti->mx-xs,clti->my+ys,iz,k); glVertex3dv(k);
-		glEnd();
-		}else{
-		glPushMatrix();
-		glScalef(s*256.f/(float)*map.scr_w,s*256.f/(float)*map.scr_h,1.f);
-		glTranslated(clti->mx-mx,clti->my-my,0.);
-		glScalef(15.f/256.f/s,10.f/256.f/s,1.f);
-		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
+	float rx=15.f/256.f/powf(2.f,s);
+	float ry=10.f/256.f/powf(2.f,s);
+	if(!map.cltdls){
+		map.cltdls=glGenLists(1);
+		glNewList(map.cltdls,GL_COMPILE);
 		glBegin(GL_QUADS);
 		glTexCoord2f( 0.0, 0.0); glVertex2f(-0.5,-0.5);
 		glTexCoord2f( 1.0, 0.0); glVertex2f( 0.5,-0.5);
 		glTexCoord2f( 1.0, 1.0); glVertex2f( 0.5, 0.5);
 		glTexCoord2f( 0.0, 1.0); glVertex2f(-0.5, 0.5);
 		glEnd();
-		glPopMatrix();
-		}
+		glEndList();
 	}
+	glPushMatrix();
+	glScalef(rx,ry,1.f);
+	rx*=(float)(1<<iz);
+	ry*=(float)(1<<iz);
+	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
+		glLoadName(name++);
+		glPushMatrix();
+		glTranslated(clti->mx/rx,clti->my/ry,0.);
+		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
+		glCallList(map.cltdls);
+		glPopMatrix();
+	}
+	glPopMatrix();
 	glLoadName(0);
 }
 
@@ -1031,11 +1026,6 @@ void maprendermap(){
 		}
 		if(!optx) glTranslatef(1.f,(float)-ih,0.f);
 	}
-	if(optx){
-		r=(r+.001f)/r;
-		glScalef(r,r,r);
-		maprenderclt();
-	}
 	glPopMatrix();
 }
 
@@ -1089,34 +1079,32 @@ void maprenderinfo(){
 }
 
 char maprender(char sel){
+	int iz;
+	struct ecur *ecur=mapecur(&iz,NULL);
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
 	if(optx) glmodex(GLM_3D,35,0); else glmode(GLM_2D);
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 	else        glColor4f(1.f,1.f,1.f,1.f);
 	if(!sel) maprendermap();
-	{
-		int iz;
-		struct ecur *ecur=mapecur(&iz,NULL);
-		if(ecur && map.scr_w && map.scr_h){
-			double psx0,psx1,psy0,psy1,px,py;
-			mapg2p(ecur->x,ecur->y,px,py);
-			glPushMatrix();
-			glScalef(
-				1.f/mappscrw(ecur->s,ecur->x,&psx0,&psx1),
-				1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
-				1.f);
-			glTranslated(-px,-py,0.);
-			if(!sel && glprg() && map.ele){
-				double gsx0,gsx1,gsy0,gsy1;
-				mapp2g(psx0,psy0,gsx0,gsy0);
-				mapp2g(psx1,psy1,gsx1,gsy1);
-				mapelerender(gsx0,gsx1,gsy0,gsy1);
-			}
-			glPopMatrix();
+	if(ecur && map.scr_w && map.scr_h){
+		double psx0,psx1,psy0,psy1,px,py;
+		mapg2p(ecur->x,ecur->y,px,py);
+		glPushMatrix();
+		glScalef(
+			1.f/mappscrw(ecur->s,ecur->x,&psx0,&psx1),
+			1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
+			1.f);
+		glTranslated(-px,-py,0.);
+		if(!sel && glprg() && map.ele){
+			double gsx0,gsx1,gsy0,gsy1;
+			mapp2g(psx0,psy0,gsx0,gsy0);
+			mapp2g(psx1,psy1,gsx1,gsy1);
+			mapelerender(gsx0,gsx1,gsy0,gsy1);
 		}
+		if(!optx) maprenderclt(ecur->s,iz);
+		glPopMatrix();
 	}
-	if(!optx) maprenderclt();
 	if(!sel) maprenderinfo();
 	if(!sel && glprg() && map.ele) mapelerenderbar();
 	return 1;
