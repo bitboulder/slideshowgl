@@ -200,11 +200,11 @@ struct ecur *mapecur(int *iz,float *iscale){
 	return ecur;
 }
 
-#define mapg2k(gx,gy,k) { \
+/*#define mapg2k(gx,gy,k) { \
 	(k)[0]=cos(gy/360.*M_PI*2.)*sin(gx/360.*M_PI*2.); \
 	(k)[1]=sin(gy/360.*M_PI*2.); \
 	(k)[2]=cos(gy/360.*M_PI*2.)*cos(gx/360.*M_PI*2.); \
-}
+}*/
 
 #define mapp2g(px,py,gx,gy) { \
 	(gy)=0.5-(py); \
@@ -231,10 +231,10 @@ struct ecur *mapecur(int *iz,float *iscale){
 	(iy)=(int)(my); \
 }
 
-#define mapm2o(mx,my,ox,oy) { \
+/*#define mapm2o(mx,my,ox,oy) { \
 	(ox)=(float)(.5-(mx)+floor(mx)); \
 	(oy)=(float)(.5-(my)+floor(my)); \
-}
+}*/
 
 #define mapm2s(mx,my,iz,sx,sy) { \
 	if(map.scr_w && map.scr_h){ \
@@ -263,11 +263,11 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapp2g(gx,gy,gx,gy); \
 }
 
-#define mapm2k(mx,my,iz,k) { \
+/*#define mapm2k(mx,my,iz,k) { \
 	double gx,gy; \
 	mapm2g(mx,my,iz,gx,gy); \
 	mapg2k(gx,gy,k); \
-}
+}*/
 
 #define mapg2i(gx,gy,iz,ix,iy) { \
 	double mx,my; \
@@ -275,11 +275,11 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapm2i(mx,my,ix,iy); \
 }
 
-#define mapg2o(gx,gy,iz,ox,oy) { \
+/*#define mapg2o(gx,gy,iz,ox,oy) { \
 	double mx,my; \
 	mapg2m(gx,gy,iz,mx,my); \
 	mapm2o(mx,my,ox,oy); \
-}
+}*/
 
 #define maps2g(sx,sy,iz,gx,gy) { \
 	maps2m(sx,sy,iz,gx,gy); \
@@ -941,21 +941,7 @@ void maprenderclt(float s,int iz){
 void maprendertile(int ix,int iy,int iz,int izo){
 	struct tile *ti;
 	float tx0=0.f,tx1=1.f,ty0=0.f,ty1=1.f;
-	double k[12];
 	if(ix<0 || iy<0 || ix>=(1<<iz) || iy>=(1<<iz)) return;
-	if(optx && iz<5){
-		maprendertile(ix*2+0,iy*2+0,iz+1,izo);
-		maprendertile(ix*2+1,iy*2+0,iz+1,izo);
-		maprendertile(ix*2+0,iy*2+1,iz+1,izo);
-		maprendertile(ix*2+1,iy*2+1,iz+1,izo);
-		return;
-	}
-	if(optx){
-		mapm2k(ix+0,iy+0,iz,k+0); 
-		mapm2k(ix+1,iy+0,iz,k+3);
-		mapm2k(ix+1,iy+1,iz,k+6);
-		mapm2k(ix+0,iy+1,iz,k+9);
-	}
 	while(iz>izo || !(ti=maptilefind(ix,iy,iz,0)) || !ti->tex){
 		if(!iz--) return;
 		tx0/=2.f; tx1/=2.f;
@@ -965,55 +951,30 @@ void maprendertile(int ix,int iy,int iz,int izo){
 		ix/=2;
 		iy/=2;
 	}
-	//printf("%i/%i: %i %i => %.2f %.2f\n",iz,izo,ix,iy,tx0,ty0);
 	glBindTexture(GL_TEXTURE_2D,ti->tex);
 	glBegin(GL_QUADS);
-	if(optx){
-	glTexCoord2f(tx0,ty0); glVertex3dv(k+0);
-	glTexCoord2f(tx1,ty0); glVertex3dv(k+3);
-	glTexCoord2f(tx1,ty1); glVertex3dv(k+6);
-	glTexCoord2f(tx0,ty1); glVertex3dv(k+9);
-	}else{
-	glTexCoord2f(tx0,ty0); glVertex2f(-0.5,-0.5);
-	glTexCoord2f(tx1,ty0); glVertex2f( 0.5,-0.5);
-	glTexCoord2f(tx1,ty1); glVertex2f( 0.5, 0.5);
-	glTexCoord2f(tx0,ty1); glVertex2f(-0.5, 0.5);
-	}
+	glTexCoord2f(tx0,ty0); glVertex2f(0.f,0.f);
+	glTexCoord2f(tx1,ty0); glVertex2f(1.f,0.f);
+	glTexCoord2f(tx1,ty1); glVertex2f(1.f,1.f);
+	glTexCoord2f(tx0,ty1); glVertex2f(0.f,1.f);
 	glEnd();
 }
 
 void maprendermap(){
 	int ix,iy,iz;
 	int iw,ih;
-	float ox,oy;
 	int ixc,iyc;
 	float iscale;
 	struct ecur *ecur=mapecur(&iz,&iscale);
-	float s,r=0.f;
 	if(!ecur || !mapscrtis(&iw,&ih)) return;
-	s=powf(2.f,ecur->s-(float)iz);
 	iw=(int)((float)iw*iscale);
 	ih=(int)((float)ih*iscale);
 	mapg2i(ecur->x,ecur->y,iz,ix,iy);
-	mapg2o(ecur->x,ecur->y,iz,ox,oy);
 	glPushMatrix();
-//	glRotatef(90.f,0.f,0.f,1.f);
-//	glScalef(16.f/9.f,9.f/16.f,0.f);
-	if(optx){
-//	glTranslated(0.f,0.f,*map.scr_h*M_PI/256./(1<<iz)/tan(35./2.)+1.f);
-	r=0.19f*powf(2.f,ecur->s);
-	glTranslatef(0.f,0.f,5.f);
-	glScalef(r,-r,-r);
-	glTranslatef(0.f,0.f,-1.f);
-	glRotatef(ecur->y,1.f,0.f,0.f);
-	glRotatef(ecur->x,0.f,-1.f,0.f);
-	}else{
-	glScalef(s*256.f/(float)*map.scr_w,s*256.f/(float)*map.scr_h,1.f);
-	glTranslatef(ox,oy,0.f);
-	glTranslatef((float)(-(iw-1)/2),(float)(-(ih-1)/2),0.f);
-	}
+	glScalef(1.f/(float)(1<<iz),1.f/(float)(1<<iz),1.f);
 	ix-=(iw-1)/2;
 	iy-=(ih-1)/2;
+	glTranslatef((float)ix,(float)iy,0.f);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
 			int pz=1<<iz, px=ix+ixc, py=iy+iyc;
@@ -1022,9 +983,9 @@ void maprendermap(){
 			if(py<0){ py=-py; px+=pz/2; }
 			px=(px+pz)%pz;
 			maprendertile(px,py,iz,iz);
-			if(!optx) glTranslatef(0.f,1.f,0.f);
+			glTranslatef(0.f,1.f,0.f);
 		}
-		if(!optx) glTranslatef(1.f,(float)-ih,0.f);
+		glTranslatef(1.f,(float)-ih,0.f);
 	}
 	glPopMatrix();
 }
@@ -1083,10 +1044,9 @@ char maprender(char sel){
 	struct ecur *ecur=mapecur(&iz,NULL);
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
-	if(optx) glmodex(GLM_3D,35,0); else glmode(GLM_2D);
+	glmode(GLM_2D);
 	if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 	else        glColor4f(1.f,1.f,1.f,1.f);
-	if(!sel) maprendermap();
 	if(ecur && map.scr_w && map.scr_h){
 		double psx0,psx1,psy0,psy1,px,py;
 		mapg2p(ecur->x,ecur->y,px,py);
@@ -1096,13 +1056,14 @@ char maprender(char sel){
 			1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
 			1.f);
 		glTranslated(-px,-py,0.);
+		if(!sel) maprendermap();
 		if(!sel && glprg() && map.ele){
 			double gsx0,gsx1,gsy0,gsy1;
 			mapp2g(psx0,psy0,gsx0,gsy0);
 			mapp2g(psx1,psy1,gsx1,gsy1);
 			mapelerender(gsx0,gsx1,gsy0,gsy1);
 		}
-		if(!optx) maprenderclt(ecur->s,iz);
+		maprenderclt(ecur->s,iz);
 		glPopMatrix();
 	}
 	if(!sel) maprenderinfo();
