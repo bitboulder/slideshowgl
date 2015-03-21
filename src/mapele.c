@@ -323,12 +323,12 @@ char mapeleload(int gx0,int gx1,int gy0,int gy1){
 }
 
 const char *mapelestat(double gsx,double gsy){
-	struct meld *ld=mapele_ldfind((int)trunc(gsx),(int)trunc(gsy));
+	struct meld *ld=mapele_ldfind((int)floor(gsx),(int)floor(gsy));
 	int ix,iy;
 	static char str[16];
 	if(!ld) return " ?m";
-	ix=(int)round((gsx-trunc(gsx))*(double)(ld->w-1));
-	iy=(int)round((1.-(gsy-trunc(gsy)))*(double)(ld->h-1));
+	ix=(int)round((gsx-floor(gsx))*(double)(ld->w-1));
+	iy=(int)round((1.-(gsy-floor(gsy)))*(double)(ld->h-1));
 	if(ix<0) ix=0; if(ix>=ld->w) ix=ld->w-1;
 	if(iy<0) iy=0; if(iy>=ld->h) iy=ld->h-1;
 	snprintf(str,16," %im",ld->maxmin[iy*ld->w+ix]);
@@ -369,10 +369,10 @@ void mapelerenderld(struct meld *ld){
 }
 
 void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
-	int gx0=(int)trunc(gsx0);
-	int gx1=(int)trunc(gsx1);
-	int gy0=(int)trunc(gsy0);
-	int gy1=(int)trunc(gsy1);
+	int gx0=(int)floor(gsx0);
+	int gx1=(int)floor(gsx1);
+	int gy0=(int)floor(gsy0);
+	int gy1=(int)floor(gsy1);
 	int gx,gy;
 	struct meld *ld;
 	while(metexload()) ;

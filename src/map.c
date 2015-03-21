@@ -797,7 +797,7 @@ char mapldcheck(){
 		double gsx0,gsx1,gsy0,gsy1;
 		mapgscrw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
 		mapgscrh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
-		if(mapeleload((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
+		if(mapeleload((int)floor(gsx0),(int)floor(gsx1),(int)floor(gsy0),(int)floor(gsy1))) return 1;
 	}
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
@@ -960,20 +960,17 @@ void maprendertile(int ix,int iy,int iz,int izo){
 	glEnd();
 }
 
-void maprendermap(){
-	int ix,iy,iz;
+void maprendermap(double psx0,double psx1,double psy0,double psy1,int iz){
+	int ix,iy;
 	int iw,ih;
 	int ixc,iyc;
-	float iscale;
-	struct ecur *ecur=mapecur(&iz,&iscale);
-	if(!ecur || !mapscrtis(&iw,&ih)) return;
-	iw=(int)((float)iw*iscale);
-	ih=(int)((float)ih*iscale);
-	mapg2i(ecur->x,ecur->y,iz,ix,iy);
+	float s=(float)(1<<iz);
 	glPushMatrix();
-	glScalef(1.f/(float)(1<<iz),1.f/(float)(1<<iz),1.f);
-	ix-=(iw-1)/2;
-	iy-=(ih-1)/2;
+	glScalef(1.f/s,1.f/s,1.f);
+	ix=(int)floor(psx0*s);
+	iw=(int)floor(psx1*s)-ix+1;
+	iy=(int)floor(psy1*s);
+	ih=(int)floor(psy0*s)-iy+1;
 	glTranslatef((float)ix,(float)iy,0.f);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
@@ -1056,7 +1053,7 @@ char maprender(char sel){
 			1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
 			1.f);
 		glTranslated(-px,-py,0.);
-		if(!sel) maprendermap();
+		if(!sel) maprendermap(psx0,psx1,psy0,psy1,iz);
 		if(!sel && glprg() && map.ele){
 			double gsx0,gsx1,gsy0,gsy1;
 			mapp2g(psx0,psy0,gsx0,gsy0);
