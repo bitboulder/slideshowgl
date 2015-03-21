@@ -18,4 +18,11 @@ extern unsigned int nmaptypes;
 
 struct mappos *mapgetpos();
 
+#define mapg2p(gx,gy,px,py) { \
+	(py)=(gy)/180.*M_PI; \
+	(py)=asinh(tan(py))/M_PI/2.; \
+	(py)=0.5-(py); \
+	(px)=(gx)/360.+.5; \
+}
+
 #endif

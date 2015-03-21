@@ -204,13 +204,6 @@ struct ecur *mapecur(int *iz,float *iscale){
 	(k)[2]=cos(gy/360.*M_PI*2.)*cos(gx/360.*M_PI*2.); \
 }
 
-#define mapg2p(gx,gy,px,py) { \
-	(py)=(gy)/180.*M_PI; \
-	(py)=asinh(tan(py))/M_PI/2.; \
-	(py)=0.5-(py); \
-	(px)=(gx)/360.+.5; \
-}
-
 #define mapp2g(px,py,gx,gy) { \
 	(gy)=0.5-(py); \
 	(gy)=atan(sinh((gy)*2.*M_PI)); \
@@ -291,14 +284,14 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapm2g(gx,gy,iz,gx,gy); \
 }
 
-float map_gw(float s,double gx,double *g0,double *g1){
+float mapgscrw(float s,double gx,double *g0,double *g1){
 	float v=powf(2.f,-s)/256.f*360.f*(float)*map.scr_w;
 	if(g0) *g0=gx-v/2.;
 	if(g1) *g1=gx+v/2.;
 	return v;
 }
 
-float map_gh(float s,double gy,double *g0,double *g1){
+float mapgscrh(float s,double gy,double *g0,double *g1){
 	double yr=asinh(tan(gy/180.*M_PI));
 	double vr=(double)*map.scr_h/256.*pow(2.,-s)*M_PI;
 	double v0=atan(sinh(yr-vr));
@@ -306,6 +299,21 @@ float map_gh(float s,double gy,double *g0,double *g1){
 	if(g0) *g0=180./M_PI*v0;
 	if(g1) *g1=180./M_PI*v1;
 	return (float)(180./M_PI*(v1-v0));
+}
+
+float mappscrw(float s,double gx,double *p0,double *p1){
+	float v=powf(2.f,-s)/256.f*(float)*map.scr_w;
+	if(p0) *p0=gx/360.+.5-v/2.;
+	if(p1) *p1=gx/360.+.5+v/2.;
+	return v;
+}
+
+float mappscrh(float s,double gy,double *p0,double *p1){
+	float v=powf(2.f,-s)/256.f*(float)*map.scr_h;
+	double py=0.5-asinh(tan(gy/180.*M_PI))/M_PI/2;
+	if(p0) *p0=py+v/2.;
+	if(p1) *p1=py-v/2.;
+	return v;
 }
 
 struct tile *maptilefind(int ix,int iy,int iz,char create){
@@ -785,9 +793,9 @@ char mapldcheck(){
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(map.ele){
 		double gsx0,gsx1,gsy0,gsy1;
-		maps2g(-.5f, .5f,map.pos.iz,gsx0,gsy0);
-		maps2g( .5f,-.5f,map.pos.iz,gsx1,gsy1);
-		if(mapele_ld((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
+		mapgscrw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
+		mapgscrh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
+		if(mapeleload((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
 	}
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
@@ -1091,14 +1099,20 @@ char maprender(char sel){
 		int iz;
 		struct ecur *ecur=mapecur(&iz,NULL);
 		if(ecur && map.scr_w && map.scr_h){
-			double gsx0,gsx1,gsy0,gsy1;
+			double psx0,psx1,psy0,psy1,px,py;
+			mapg2p(ecur->x,ecur->y,px,py);
 			glPushMatrix();
 			glScalef(
-				1.f/map_gw(ecur->s,ecur->x,&gsx0,&gsx1),
-				-1.f/map_gh(ecur->s,ecur->y,&gsy0,&gsy1),
+				1.f/mappscrw(ecur->s,ecur->x,&psx0,&psx1),
+				1.f/mappscrh(ecur->s,ecur->y,&psy0,&psy1),
 				1.f);
-			glTranslated(-ecur->x,-ecur->y,0.);
-			if(!sel && glprg() && map.ele) mapelerender(gsx0,gsx1,gsy0,gsy1);
+			glTranslated(-px,-py,0.);
+			if(!sel && glprg() && map.ele){
+				double gsx0,gsx1,gsy0,gsy1;
+				mapp2g(psx0,psy0,gsx0,gsy0);
+				mapp2g(psx1,psy1,gsx1,gsy1);
+				mapelerender(gsx0,gsx1,gsy0,gsy1);
+			}
 			glPopMatrix();
 		}
 	}
@@ -1233,8 +1247,8 @@ char mapstatupdate(char *dsttxt){
 	char *txt;
 	if(map.init>MI_TEX || !mapon()) return 0;
 	maps2g(map.mouse.sx,map.mouse.sy,map.pos.iz,gx,gy);
-	gw=map_gw((float)map.pos.iz,map.pos.gx,NULL,NULL);
-	gh=map_gh((float)map.pos.iz,map.pos.gy,NULL,NULL);
+	gw=mapgscrw((float)map.pos.iz,map.pos.gx,NULL,NULL);
+	gh=mapgscrh((float)map.pos.iz,map.pos.gy,NULL,NULL);
 	gw*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
 	gh*=(6356.752314*2.*M_PI)/360.;
 	snprintf(fmt,128,"%%.%if%%c %%.%if%%c%%s %%.%ifx%%.%ifkm",

@@ -63,26 +63,18 @@ struct metexload {
 	struct meld *buf[N_ETEXLOAD];
 };
 
-struct medls {
-	struct medls *nxt;
-	int w,h;
-	GLuint dls;
-};
-
 #define MEHNUM	128
 struct mapele {
 	struct meld *ld[MEHNUM];
 	const char *cachedir;
 	const char *url;
 	struct metexload tl;
-	struct medls *dls;
 	short maxmin[2];
 	struct meld ldbar;
 } mapele = {
 	.ld={ NULL },
 	.tl.wi=0,
 	.tl.ri=0,
-	.dls=NULL,
 };
 
 void metexloadput(struct meld *ld){
@@ -321,7 +313,7 @@ char mapele_ld1(int gx,int gy){
 	return 1;
 }
 
-char mapele_ld(int gx0,int gx1,int gy0,int gy1){
+char mapeleload(int gx0,int gx1,int gy0,int gy1){
 	int gx,gy;
 	if(!glprg()) return 0;
 	/* TODO: load from center */
@@ -344,30 +336,28 @@ const char *mapelestat(double gsx,double gsy){
 }
 
 void mapelegendls(struct meld *ld){
-	struct medls *dls=mapele.dls;
-	while(dls && dls->w!=ld->w && dls->h!=ld->h) dls=dls->nxt;
-	if(dls) ld->dls=dls->dls; else {
-		float xo,yo,rw,rh;
-		dls=malloc(sizeof(struct meld));
-		dls->w=ld->w;
-		dls->h=ld->h;
-		dls->dls=glGenLists(1);
-		glNewList(dls->dls,GL_COMPILE);
-		xo=.5f/(float)ld->w;
-		yo=.5f/(float)ld->h;
-		rw=(float)ld->w/(float)ld->tw;
-		rh=(float)ld->h/(float)ld->th;
-		glBegin(GL_QUADS);
-		glTexCoord2f(   xo,   yo); glVertex2f(0.,1.);
-		glTexCoord2f(rw-xo,   yo); glVertex2f(1.,1.);
-		glTexCoord2f(rw-xo,rh-yo); glVertex2f(1.,0.);
-		glTexCoord2f(   xo,rh-yo); glVertex2f(0.,0.);
-		glEnd();
-		glEndList();
-		dls->nxt=mapele.dls;
-		mapele.dls=dls;
-		ld->dls=dls->dls;
+	float xo,yo,rw,rh;
+	double px0,px1,py0,py1;
+	ld->dls=glGenLists(1);
+	glNewList(ld->dls,GL_COMPILE);
+	xo=.5f/(float)ld->w;
+	yo=.5f/(float)ld->h;
+	rw=(float)ld->w/(float)ld->tw;
+	rh=(float)ld->h/(float)ld->th;
+	if(ld->gx==1000){
+		px0=py0=0.;
+		px1=py1=1.;
+	}else{
+		mapg2p(ld->gx,  ld->gy,  px0,py0);
+		mapg2p(ld->gx+1,ld->gy+1,px1,py1);
 	}
+	glBegin(GL_QUADS);
+	glTexCoord2f(   xo,   yo); glVertex2d(px0,py1);
+	glTexCoord2f(rw-xo,   yo); glVertex2d(px1,py1);
+	glTexCoord2f(rw-xo,rh-yo); glVertex2d(px1,py0);
+	glTexCoord2f(   xo,rh-yo); glVertex2d(px0,py0);
+	glEnd();
+	glEndList();
 }
 
 void mapelerenderld(struct meld *ld){
@@ -391,20 +381,13 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
-	glPushMatrix();
-	glTranslatef((float)gx0,(float)gy0,0.f);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
-	for(gx=gx0;gx<=gx1;gx++){
-		for(gy=gy0;gy<=gy1;gy++){
+	for(gx=gx0;gx<=gx1;gx++)
+		for(gy=gy0;gy<=gy1;gy++)
 			mapelerenderld(mapele_ldfind(gx,gy));
-			glTranslatef(0.f,1.f,0.f);
-		}
-		glTranslatef(1.f,(float)(gy0-gy1-1),0.f);
-	}
 	glSecondaryColor3f(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
-	glPopMatrix();
 }
 
 #define MEBARSIZE	128
@@ -464,6 +447,7 @@ void mapelerenderbar(){
 void mapelebarinit(struct meld *ld){
 	unsigned short i;
 	ld->loading=0;
+	ld->gx=ld->gy=1000;
 	ld->tex=0;
 	ld->dls=0;
 	ld->w=ld->tw=MEBARSIZE;
