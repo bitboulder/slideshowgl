@@ -7,7 +7,7 @@
 #if HAVE_FTGL
 	#include <ftgl.h>
 #endif
-#include "gl_int.h"
+#include "gl_rnd.h"
 #include "main.h"
 #include "sdl.h"
 #include "dpl.h"
@@ -24,8 +24,6 @@
 #include "hist.h"
 
 enum dls { DLS_IMG, DLS_BRD, DLS_STOP, DLS_RUN, DLS_ARC, DLS_NUM };
-
-enum glft { FT_NOR, FT_BIG, NFT };
 
 struct glfont {
 #if HAVE_FTGL
@@ -45,24 +43,7 @@ struct gl {
 	struct glfont font[NFT];
 	struct glfont *fontcur;
 	float bar;
-	struct glcfg {
-		float hrat_input;
-		float hrat_stat;
-		float hrat_txtimg;
-		float hrat_dirname;
-		float hrat_cat;
-		float txt_border;
-		float dir_border;
-		float col_txtbg[4];
-		float col_txtfg[4];
-		float col_txtti[4];
-		float col_txtmk[4];
-		float col_colmk[4];
-		float col_dirname[4];
-		float col_playicon[4];
-		float prged_w;
-		float prg_rat;
-	} cfg;
+	struct glcfg cfg;
 	struct glsel {
 		char act;
 		int x,y;
@@ -90,6 +71,7 @@ void glcolora(float *col,float a){
 void glsetbar(float bar){ gl.bar=bar; sdlforceredraw(); }
 char glprg(){ return !!gl.prg; }
 char glprgfish(){ return !!gl.prgfish; }
+struct glcfg *glcfg(){ return &gl.cfg; }
 
 char *textload(char *fn){
 	FILE *fd;
@@ -356,16 +338,6 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	return w;
 }
 
-enum glpos {
-	GP_LEFT    = 0x01,
-	GP_RIGHT   = 0x02,
-	GP_HCENTER = 0x04,
-	GP_TOP     = 0x10,
-	GP_BOTTOM  = 0x20,
-	GP_VCENTER = 0x40,
-};
-#define GP_CENTER	(GP_HCENTER|GP_VCENTER)
-
 void glpostranslate(enum glpos pos,float w,float h){
 	if(pos&GP_RIGHT  ) glTranslatef(-w,0.f,0.f);
 	if(pos&GP_HCENTER) glTranslatef(-w/2.f,0.f,0.f);
@@ -373,7 +345,6 @@ void glpostranslate(enum glpos pos,float w,float h){
 	if(pos&GP_VCENTER) glTranslatef(0.f,-h/2.f,0.f);
 }
 
-#define glrect(w,h,p)	glrectarc(w,h,p,0.f);
 void glrectarc(float w,float h,enum glpos pos,float barc){
 	glPushMatrix();
 	glpostranslate(pos,w,h);

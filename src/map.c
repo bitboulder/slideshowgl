@@ -21,7 +21,7 @@
 #include "file.h"
 #include "cfg.h"
 #include "sdl.h"
-#include "gl_int.h"
+#include "gl_rnd.h"
 #include "file.h"
 #include "act.h"
 #include "eff.h"     //ISTAT_TXTSIZE
@@ -1033,23 +1033,6 @@ void maprendermap(){
 	glPopMatrix();
 }
 
-/* TODO: move to gl.c */
-enum glft { FT_NOR, FT_BIG, NFT };
-char glfontsel(enum glft i);
-float glfontscale(float hrat,float wrat);
-float glfontwidth(const char *txt);
-enum glpos {
-	GP_LEFT    = 0x01,
-	GP_RIGHT   = 0x02,
-	GP_HCENTER = 0x04,
-	GP_TOP     = 0x10,
-	GP_BOTTOM  = 0x20,
-	GP_VCENTER = 0x40,
-};
-#define glrect(w,h,p)	glrectarc(w,h,p,0.f);
-void glrectarc(float w,float h,enum glpos pos,float barc);
-void glfontrender(const char *txt,enum glpos pos);
-
 void maprenderinfo(){
 	int i;
 	struct mapclti *clti,*ci;
@@ -1066,11 +1049,10 @@ void maprenderinfo(){
 	sy=(clti->my-my)*256.f/(double)*map.scr_h;
 	glPushMatrix();
 	sw=glmode(GLM_TXT);
-	h=glfontscale(hrat=/*gl.cfg.hrat_cat*/0.03f,1.f);
+	h=glfontscale(hrat=glcfg()->hrat_cat,1.f);
 	hrat/=h;
 	for(w=0.f,ci=clti;ci;ci=ci->nxtimg) if((b=glfontwidth(ci->img->name))>w) w=b;
-	//b=h*gl.cfg.txt_border*2.f;
-	b=h*.1f*2.f;
+	b=h*glcfg()->txt_border*2.f;
 	nl=clti->nimg; nc=1;
 	if((b+h*(float)nl)*hrat>1.f){
 		nl=(int)((1.f/hrat-b)/h);
@@ -1082,15 +1064,13 @@ void maprenderinfo(){
 	if(sx<-.5f) sx=-.5f;
 	if(sy<-.5f) sy=-.5f;
 	glTranslated(sx*sw/hrat,-sy/hrat,0.f);
-	//glColor4fv(gl.cfg.col_txtbg);
-	glColor4f(.8f,.8f,.8f,.7f);
+	glColor4fv(glcfg()->col_txtbg);
 	if(nc>1) glrect((w+b)*(float)(nc-1),b+h*(float)clti->nimg,GP_TOP|GP_LEFT);
 	glTranslatef((w+b)*(float)(nc-1),0.f,0.f);
 	glrect(w+b,b+h*(float)(clti->nimg-(nc-1)*nl),GP_TOP|GP_LEFT);
 	glTranslatef(-(w+b)*(float)(nc-1),0.f,0.f);
 	glTranslatef(b/2.f,-(b+h)/2.f,0.f);
-	//glColor4fv(gl.cfg.col_txtfg);
-	glColor4f(0.f,0.f,0.f,1.f);
+	glColor4fv(glcfg()->col_txtfg);
 	for(ci=clti,i=1;ci;ci=ci->nxtimg,i++){
 		glfontrender(ci->img->name,GP_VCENTER|GP_LEFT);
 		glTranslatef(0.f,-h,0.f);

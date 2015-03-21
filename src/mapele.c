@@ -14,7 +14,7 @@
 #include "help.h"
 #include "cfg.h"
 #include "sdl.h"
-#include "gl_int.h"
+#include "gl_rnd.h"
 
 /* SRTM3 Format
  
@@ -396,23 +396,6 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 
 #define MEBARSIZE	128
 
-/* TODO: move to gl.c */
-enum glft { FT_NOR, FT_BIG, NFT };
-char glfontsel(enum glft i);
-float glfontscale(float hrat,float wrat);
-float glfontwidth(const char *txt);
-enum glpos {
-	GP_LEFT    = 0x01,
-	GP_RIGHT   = 0x02,
-	GP_HCENTER = 0x04,
-	GP_TOP     = 0x10,
-	GP_BOTTOM  = 0x20,
-	GP_VCENTER = 0x40,
-};
-void glrectarc(float w,float h,enum glpos pos,float barc);
-void glfontrender(const char *txt,enum glpos pos);
-void glmodeslave(enum glmode dst);
-
 void mapelerenderbar(){
 	struct istat *stat=effstat();
 	float hrat,sw,h,w,b;
@@ -423,11 +406,10 @@ void mapelerenderbar(){
 	glTranslatef(0.f,-.5f,0.f);
 	glScalef(1.f,stat->h,1.f);
 
-	h=glfontscale(hrat=/*gl.cfg.hrat_stat*/0.025f,1.f);
+	h=glfontscale(hrat=glcfg()->hrat_stat,1.f);
 	hrat/=h;
 	w=(float)sw/hrat*.4f;
-	//b=h*gl.cfg.txt_border*2.f;
-	b=h*.1f*2.f;
+	b=h*glcfg()->txt_border*2.f;
 
 	si=(mapele.maxmin[1]-mapele.maxmin[0])/5;
 	for(vi=1;si>=20;vi*=10) si/=10;
@@ -442,12 +424,10 @@ void mapelerenderbar(){
 	if(vi<mapele.maxmin[0]) vi+=si;
 	vf=w/2.f-rf*(float)(vi-mapele.maxmin[0]);
 
-	//glColor4fv(gl.cfg.col_txtbg);
-	glColor4f(.8f,.8f,.8f,.7f);
+	glColor4fv(glcfg()->col_txtbg);
 	glrectarc(w+b*2.f,b+h*2.f,GP_BOTTOM|GP_HCENTER,-b-h*2.f);
 
-	//glColor4fv(gl.cfg.col_txtfg);
-	glColor4f(0.f,0.f,0.f,1.f);
+	glColor4fv(glcfg()->col_txtfg);
 	glPushMatrix();
 	glTranslatef(-vf,(h+b)/2.f,0.f);
 	for(;vi<=mapele.maxmin[1];vi+=si){
