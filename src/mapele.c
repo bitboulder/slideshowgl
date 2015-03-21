@@ -292,7 +292,6 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 			/* TODO: fix -32768 */
 			*dtex=(unsigned short)((int)*mm+32768);
 		}
-	mapele_mmgen(ld);
 	debug(DBG_STA,"mapele_load: tex loaded (fn: %s)",fn);
 }
 
@@ -314,6 +313,7 @@ char mapele_ld1(int gx,int gy){
 	ld->tex=0;
 	ld->dls=0;
 	mapele_ld1_srtm(gx,gy,ld);
+	mapele_mmgen(ld);
 	ld->nxt=mapele.ld[MELDCH(gx,gy)];
 	mapele.ld[MELDCH(gx,gy)]=ld;
 	metexloadput(ld);
@@ -328,6 +328,19 @@ char mapele_ld(int gx0,int gx1,int gy0,int gy1){
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++) if(mapele_ld1(gx,gy)) return 1;
 	return 0;
+}
+
+const char *mapelestat(double gsx,double gsy){
+	struct meld *ld=mapele_ldfind((int)trunc(gsx),(int)trunc(gsy));
+	int ix,iy;
+	static char str[16];
+	if(!ld) return " ?m";
+	ix=(int)round((gsx-trunc(gsx))*(double)(ld->w-1));
+	iy=(int)round((1.-(gsy-trunc(gsy)))*(double)(ld->h-1));
+	if(ix<0) ix=0; if(ix>=ld->w) ix=ld->w-1;
+	if(iy<0) iy=0; if(iy>=ld->h) iy=ld->h-1;
+	snprintf(str,16," %im",ld->maxmin[iy*ld->w+ix]);
+	return str;
 }
 
 void mapelegendls(struct meld *ld){

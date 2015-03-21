@@ -1239,7 +1239,7 @@ char mapstatupdate(char *dsttxt){
 	gh=map_gh((float)map.pos.iz,map.pos.gy,NULL,NULL);
 	gw*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
 	gh*=(6356.752314*2.*M_PI)/360.;
-	snprintf(fmt,128,"%%.%if%%c %%.%if%%c %%.%ifx%%.%ifkm",
+	snprintf(fmt,128,"%%.%if%%c %%.%if%%c%%s %%.%ifx%%.%ifkm",
 			 (int)((float)map.pos.iz*0.301+0.8),
 			 (int)((float)map.pos.iz*0.301+0.8),
 			 gw>20.?0:gw>5.?1:2,
@@ -1247,6 +1247,7 @@ char mapstatupdate(char *dsttxt){
 	snprintf(dsttxt,ISTAT_TXTSIZE,fmt,
 			 fabs(gy),gy<0?'S':'N',
 			 fabs(gx),gx<0?'W':'E',
+			 map.ele ? mapelestat(gx,gy) : "",
 			 gw,gh);
 	txt=dsttxt+strlen(dsttxt);
 	if(dplwritemode())
