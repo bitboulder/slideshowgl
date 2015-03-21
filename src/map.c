@@ -784,11 +784,9 @@ char mapldcheck(){
 	if(map.init>MI_TEX || !mapon() || !ecur) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(map.ele){
-		double gsx0,gsx1,gsy0,gsy1,t;
-		maps2g(-.5f,.0f,map.pos.iz,gsx0,t);
-		maps2g( .5f,.0f,map.pos.iz,gsx1,t);
-		maps2g(.0f, .5f,map.pos.iz,t,gsy0);
-		maps2g(.0f,-.5f,map.pos.iz,t,gsy1);
+		double gsx0,gsx1,gsy0,gsy1;
+		maps2g(-.5f, .5f,map.pos.iz,gsx0,gsy0);
+		maps2g( .5f,-.5f,map.pos.iz,gsx1,gsy1);
 		if(mapele_ld((int)trunc(gsx0),(int)trunc(gsx1),(int)trunc(gsy0),(int)trunc(gsy1))) return 1;
 	}
 	if(mapldchecktile(0,0,0)) return 1;
