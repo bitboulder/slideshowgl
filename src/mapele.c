@@ -253,7 +253,6 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	int x,y;
 	ld->w=1201; ld->h=1201;
 	ld->tw=2048; ld->th=2048;
-	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
 	if(!mapele.cachedir || !mapele.cachedir[0]) return;
 	snprintf(fn,FILELEN,"%s/srtm/%c%02i%c%03i.hgt.zip",mapele.cachedir,gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
 	ft=filetype(fn);
@@ -277,6 +276,7 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 		return;
 	}
 	pclose(fd);
+	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
 	for(dtex=ld->dtex,mm=ld->maxmin,y=0;y<ld->w;y++,dtex+=((size_t)(ld->th-ld->h)))
 		for(x=0;x<ld->h;x++,mm++,dtex++){
 			unsigned char *b=(unsigned char*)mm;
@@ -287,7 +287,7 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 	debug(DBG_STA,"mapele_load: tex loaded (fn: %s)",fn);
 }
 
-#define MELDCH(gx,gy)	(((gx)*90+(gy))%MEHNUM)
+#define MELDCH(gx,gy)	(abs((gx)*90+(gy))%MEHNUM)
 
 struct meld *mapele_ldfind(int gx,int gy){
 	struct meld *ld=mapele.ld[MELDCH(gx,gy)];
@@ -304,11 +304,13 @@ char mapele_ld1(int gx,int gy){
 	ld->loading=0;
 	ld->tex=0;
 	ld->dls=0;
+	ld->maxmin=NULL;
+	ld->dtex=NULL;
 	mapele_ld1_srtm(gx,gy,ld);
-	mapele_mmgen(ld);
+	if(ld->maxmin) mapele_mmgen(ld);
 	ld->nxt=mapele.ld[MELDCH(gx,gy)];
 	mapele.ld[MELDCH(gx,gy)]=ld;
-	metexloadput(ld);
+	if(ld->maxmin) metexloadput(ld);
 	sdlforceredraw();
 	return 1;
 }
@@ -380,7 +382,7 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	mapele.maxmin[1]=-32768;
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
-			if((ld=mapele_ldfind(gx,gy))) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
 	for(gx=gx0;gx<=gx1;gx++)
