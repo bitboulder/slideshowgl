@@ -328,8 +328,8 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	glLoadIdentity();
 	switch(dst){
 	case GLM_3D:
-	case GLM_3DS:
 	case GLM_3DP:
+	case GLM_3DS:
 		if(dst==GLM_3DS) glMatrixMode(GL_PROJECTION);
 		gluLookAt(0.,0.,0., 0.,0.,1., 0.,-1.,0.);
 		if(dst==GLM_3DS) glMatrixMode(GL_MODELVIEW);

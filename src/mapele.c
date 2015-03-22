@@ -413,6 +413,7 @@ void mapelerenderbar(){
 	else if(si>=10) si=10;
 	else if(si==9) si=8;
 	else if(si==7) si=6;
+	else if(si==0) si=1;
 	si*=vi;
 	rf=w/(float)(mapele.maxmin[1]-mapele.maxmin[0]);
 	sf=rf*(float)si;
