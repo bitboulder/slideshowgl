@@ -15,6 +15,7 @@
 #include "cfg.h"
 #include "sdl.h"
 #include "gl_rnd.h"
+#include "zlib.h"
 
 /* SRTM3 Format
  
@@ -71,10 +72,12 @@ struct mapele {
 	struct metexload tl;
 	short maxmin[2];
 	struct meld ldbar;
+	unsigned short *uid;
 } mapele = {
 	.ld={ NULL },
 	.tl.wi=0,
 	.tl.ri=0,
+	.uid=NULL,
 };
 
 void metexloadput(struct meld *ld){
@@ -115,6 +118,32 @@ char metexload(){
 	return 1;
 }
 
+void mapeleuidinit(){
+	const char *fn;
+	gzFile fd;
+	unsigned short *uid;
+	if(!(fn=finddatafile("srtm.map.gz"))){ debug(ERR_CONT,"mapeleuidinit: srtm.map.gz not found"); return; }
+	if(!(fd=gzopen(fn,"rb"))){ debug(ERR_CONT,"mapeleuidinit: file '%s' not readable",fn); return; }
+	uid=malloc(36*180*sizeof(unsigned short));
+	if(36*180*sizeof(unsigned short)!=gzread(fd,uid,36*180*sizeof(unsigned short))){ debug(ERR_CONT,"mapeleuidinit: file '%s' read failure",fn); return; }
+	gzclose(fd);
+	mapele.uid=uid;
+}
+
+const char *mapeleuidget(int gx,int gy){
+	unsigned short v=mapele.uid[(gy+90)*36+(gx+180)/10];
+	int i=v&(1<<((gx+180)%10));
+	switch((v>>(i?13:10))&0x7){
+	case 1: return "Africa";
+	case 2: return "Australia";
+	case 3: return "Eurasia";
+	case 4: return "Islands";
+	case 5: return "North_America";
+	case 6: return "South_America";
+	default: return NULL;
+	}
+}
+
 #if HAVE_CURL
 static size_t mapele_ld1_srtmdata(void *data,size_t size,size_t nmemb,void *arg){
 	FILE **fd=(FILE**)arg;
@@ -122,25 +151,23 @@ static size_t mapele_ld1_srtmdata(void *data,size_t size,size_t nmemb,void *arg)
 }
 
 void mapele_ld1_srtmget(int gx,int gy,char *fn){
-	char url[FILELEN*2],*pos;
-	size_t l=0;
+	char url[FILELEN*2];
 	FILE *fd;
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *lst=NULL;
-	if(!mapele.url || !mapele.url[0]) return;
-	pos=strstr(mapele.url,"[pos]");
-	if(!pos) return;
-	snprintf(url,FILELEN*2,"%s",mapele.url);
-	l=(size_t)(pos-mapele.url);
-	l+=(size_t)snprintf(url+l,FILELEN*2-l,"%c%02i%c%03i",gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx));
-	snprintf(url+l,FILELEN*2-l,"%s",pos+5);
+	const char *uid=mapeleuidget(gx,gy);
+	if(!mapele.url || !mapele.url[0] || !uid) return;
+	snprintf(url,FILELEN*2,"%s/%s/%c%02i%c%03i%shgt.zip",
+		mapele.url,uid,
+		gy<0?'S':'N',abs(gy),gx<0?'W':'E',abs(gx),
+		gx>=55 && gx<=60 && gy>=43 && gy<=174 ? "" : ".");
 	mkdirm(fn,1);
 	debug(DBG_STA,"mapele_ld1_strmget: download tex (fn: %s)",fn);
 	curl=curl_easy_init();
-	if(!curl){ error(ERR_CONT,"mapele_load: curl-init failed"); return; }
+	if(!curl){ error(ERR_CONT,"mapele_ld1_strmget: curl-init failed"); return; }
 	if(!(fd=fopen(fn,"wb"))){
-		error(ERR_CONT,"mapele_load: cache-file open failed (%s)",fn);
+		error(ERR_CONT,"mapele_ld1_strmget: cache-file open failed (%s)",fn);
 		curl_easy_cleanup(curl);
 		return;
 	}
@@ -318,6 +345,7 @@ char mapele_ld1(int gx,int gy){
 char mapeleload(int gx0,int gx1,int gy0,int gy1){
 	int gx,gy;
 	if(!glprg()) return 0;
+	/* TODO: restrict to -180..179, -90..89 */
 	/* TODO: load from center */
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++) if(mapele_ld1(gx,gy)) return 1;
@@ -328,7 +356,7 @@ const char *mapelestat(double gsx,double gsy){
 	struct meld *ld=mapele_ldfind((int)floor(gsx),(int)floor(gsy));
 	int ix,iy;
 	static char str[16];
-	if(!ld) return " ?m";
+	if(!ld || !ld->maxmin) return " ?m";
 	ix=(int)round((gsx-floor(gsx))*(double)(ld->w-1));
 	iy=(int)round((1.-(gsy-floor(gsy)))*(double)(ld->h-1));
 	if(ix<0) ix=0; if(ix>=ld->w) ix=ld->w-1;
@@ -467,4 +495,5 @@ void mapeleinit(const char *cachedir){
 	mapele.cachedir=cachedir;
 	mapele.url=cfggetstr("mapele.url");
 	mapelebarinit(&mapele.ldbar);
+	mapeleuidinit();
 }

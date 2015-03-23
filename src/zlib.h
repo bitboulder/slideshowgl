@@ -10,6 +10,7 @@
 	#define gzeof			feof
 	#define gzprintf		fprintf
 	#define gzgets(f,b,l)	fgets(b,l,f)
+	#define gzread(f,b,l)	fread(b,1,l,f)
 #endif
 
 #endif
