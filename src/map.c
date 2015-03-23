@@ -906,11 +906,11 @@ void mapinit(){
 	mapeleinit(mapldinit());
 }
 
-void maprenderclt(float s,int iz){
+void maprenderclt(double px,double py,float s,int iz){
 	struct mapclti *clti;
 	GLuint name=IMGI_MAP+1;
-	float rx=15.f/256.f/powf(2.f,s);
-	float ry=10.f/256.f/powf(2.f,s);
+	double rx=15.f/256.f/powf(2.f,s),rmx=rx*(double)(1<<iz);
+	double ry=10.f/256.f/powf(2.f,s),rmy=ry*(double)(1<<iz);
 	if(!map.cltdls){
 		map.cltdls=glGenLists(1);
 		glNewList(map.cltdls,GL_COMPILE);
@@ -923,13 +923,12 @@ void maprenderclt(float s,int iz){
 		glEndList();
 	}
 	glPushMatrix();
-	glScalef(rx,ry,1.f);
-	rx*=(float)(1<<iz);
-	ry*=(float)(1<<iz);
+	glScaled(rx,ry,1.);
+	px/=rx; py/=ry;
 	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
 		glLoadName(name++);
 		glPushMatrix();
-		glTranslated(clti->mx/rx,clti->my/ry,0.);
+		glTranslated(clti->mx/rmx-px,clti->my/rmy-py,0.);
 		glBindTexture(GL_TEXTURE_2D,map.imgdir[clti->id].tex);
 		glCallList(map.cltdls);
 		glPopMatrix();
@@ -960,7 +959,7 @@ void maprendertile(int ix,int iy,int iz,int izo){
 	glEnd();
 }
 
-void maprendermap(double psx0,double psx1,double psy0,double psy1,int iz){
+void maprendermap(double px,double py,double psx0,double psx1,double psy0,double psy1,int iz){
 	int ix,iy;
 	int iw,ih;
 	int ixc,iyc;
@@ -977,18 +976,18 @@ void maprendermap(double psx0,double psx1,double psy0,double psy1,int iz){
 		if(iw>1<<iz){ ix=0; iw=1<<iz; }
 		if(ih>1<<iz){ iy=0; ih=1<<iz; }
 	}
-	glTranslatef((float)ix,(float)iy,0.f);
+	glTranslated((double)ix-px*s,(double)iy-py*s,0.);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
-			int px=ix+ixc, py=iy+iyc;
+			int ox=ix+ixc, oy=iy+iyc;
 			if(!(optx%2)){
-				int pz=1<<iz;
-				py=(py+2*pz)%(2*pz);
-				if(py>=pz){ py=2*pz-1-py; px+=pz/2; }
-				if(py<0){ py=-py; px+=pz/2; }
-				px=(px+pz)%pz;
+				int oz=1<<iz;
+				oy=(oy+2*oz)%(2*oz);
+				if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
+				if(oy<0){ oy=-oy; ox+=oz/2; }
+				ox=(ox+oz)%oz;
 			}
-			maprendertile(px,py,iz,iz);
+			maprendertile(ox,oy,iz,iz);
 			glTranslatef(0.f,1.f,0.f);
 		}
 		glTranslatef(1.f,(float)-ih,0.f);
@@ -1069,23 +1068,23 @@ char maprender(char sel){
 			glRotatef(ecur->x,0.f,1.f,0.f);
 			glMatrixMode(GL_MODELVIEW);
 			glTranslatef(0.f,0.f,1.f);
+			glUniform2f(glarg(),(float)px,(float)py);
 		}else{
 			glmode(GLM_2D);
 			glScalef(1.f/pw,1.f/ph,1.f);
-			glTranslated(-px,-py,0.);
 		}
 		if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 		else        glColor4f(1.f,1.f,1.f,1.f);
-		if(!sel) maprendermap(psx0,psx1,psy0,psy1,iz);
+		if(!sel) maprendermap(px,py,psx0,psx1,psy0,psy1,iz);
 		if(optx%2) glTranslatef(0.f,0.f,roff);
 		if(!sel && glprg() && map.ele){
 			double gsx0,gsx1,gsy0,gsy1;
 			mapp2g(psx0,psy0,gsx0,gsy0);
 			mapp2g(psx1,psy1,gsx1,gsy1);
-			mapelerender(gsx0,gsx1,gsy0,gsy1);
+			mapelerender(px,py,gsx0,gsx1,gsy0,gsy1);
 		}
 		if(optx%2) glTranslatef(0.f,0.f,roff);
-		maprenderclt(ecur->s,iz);
+		maprenderclt(px,py,ecur->s,iz);
 	}
 	if(!sel) maprenderinfo();
 	if(!sel && glprg() && map.ele) mapelerenderbar();

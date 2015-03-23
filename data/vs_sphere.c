@@ -1,5 +1,7 @@
 const float pi = 3.14159265358979323846;
 
+uniform vec2 arg;
+
 void main(){
 	gl_FrontColor = gl_Color;
 	gl_FrontSecondaryColor = gl_SecondaryColor;
@@ -7,6 +9,8 @@ void main(){
 
 	// apply modelview matrix
 	vec4 v = gl_ModelViewMatrix * gl_Vertex;
+	v.x+=arg.x;
+	v.y+=arg.y;
 
 	if(v.y==0){
 		v.z=v.x=0;

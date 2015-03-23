@@ -43,8 +43,9 @@ struct gl {
 	GLuint movtex;
 	struct glfont font[NFT];
 	struct glfont *fontcur;
-	float bar;
+	float  bar;
 	struct glcfg cfg;
+	GLint  arg;
 	struct glsel {
 		char act;
 		int x,y;
@@ -52,6 +53,7 @@ struct gl {
 	} sel;
 } gl = {
 	.bar = 0.f,
+	.arg = -1,
 };
 
 void glprgsw(){
@@ -73,6 +75,7 @@ void glsetbar(float bar){ gl.bar=bar; sdlforceredraw(); }
 char glprg(){ return !!gl.prg; }
 char glprgfish(){ return !!gl.prgfish; }
 struct glcfg *glcfg(){ return &gl.cfg; }
+GLint glarg(){ return gl.arg; }
 
 char *textload(char *fn){
 	FILE *fd;
@@ -263,8 +266,10 @@ void glmodeslave(enum glmode dst){
 		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
-		else if(dst==GLM_3DS && gl.prgsphere) glUseProgram(gl.prgsphere);
-		else if(gl.prg) glUseProgram(gl.prg);
+		else if(dst==GLM_3DS && gl.prgsphere){
+			glUseProgram(gl.prgsphere);
+			gl.arg=glGetUniformLocation(gl.prgsphere,"arg");
+		}else if(gl.prg) glUseProgram(gl.prg);
 	break;
 	case GLM_2D:
 	case GLM_2DA:

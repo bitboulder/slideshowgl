@@ -34,6 +34,7 @@ enum glpos {
 #define GP_CENTER	(GP_HCENTER|GP_VCENTER)
 
 struct glcfg *glcfg();
+GLint glarg();
 char glfontsel(enum glft i);
 float glfontscale(float hrat,float wrat);
 float glfontwidth(const char *txt);

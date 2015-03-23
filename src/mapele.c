@@ -370,7 +370,7 @@ void mapelerenderld(struct meld *ld){
 	glCallList(ld->dls);
 }
 
-void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
+void mapelerender(double px,double py,double gsx0,double gsx1,double gsy0,double gsy1){
 	int gx0=(int)floor(gsx0);
 	int gx1=(int)floor(gsx1);
 	int gy0=(int)floor(gsy0);
@@ -383,6 +383,8 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 	for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+	glPushMatrix();
+	glTranslated(-px,-py,0.);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
 	for(gx=gx0;gx<=gx1;gx++)
@@ -390,6 +392,7 @@ void mapelerender(double gsx0,double gsx1,double gsy0,double gsy1){
 			mapelerenderld(mapele_ldfind(gx,gy));
 	glSecondaryColor3f(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
+	glPopMatrix();
 }
 
 #define MEBARSIZE	128
