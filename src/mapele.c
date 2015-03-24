@@ -17,6 +17,8 @@
 #include "gl_rnd.h"
 #include "zlib.h"
 
+#define MAXREFIZ	7
+
 /* SRTM3 Format
  
  cfggetstr("map.ele.url") -> [pos]=N51E013
@@ -71,7 +73,7 @@ struct mapele {
 	const char *url;
 	struct metexload tl;
 	short maxmin[2];
-	struct meld ldbar;
+	struct meld ldbar,ldref;
 	unsigned short *uid;
 } mapele = {
 	.ld={ NULL },
@@ -237,8 +239,10 @@ void mapele_mmgen(struct meld *ld){
 }
 
 void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,double gsy1){
-	double rx0=gsx0-(double)ld->gx,    rx1=gsx1-(double)ld->gx;
-	double ry1=1.+(double)ld->gy-gsy0, ry0=1.+(double)ld->gy-gsy1;
+	double rx0= ld->gx==1000 ? (gsx0+180)*12./(double)ld->w : gsx0-(double)ld->gx;
+	double rx1= ld->gx==1000 ? (gsx1+180)*12./(double)ld->w : gsx1-(double)ld->gx;
+	double ry1= ld->gy==1000 ? (90-gsy0)*12./(double)ld->h  : 1.+(double)ld->gy-gsy0;
+	double ry0= ld->gy==1000 ? (90-gsy1)*12./(double)ld->h  : 1.+(double)ld->gy-gsy1;
 	int ix0 = rx0<=0. ? 0     : (int)round(rx0*(double)ld->w);
 	int ix1 = rx1>=1. ? ld->w : (int)round(rx1*(double)ld->w);
 	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
@@ -246,6 +250,20 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 	int wi=ld->w, hi=ld->h;
 	int i;
 	short *v,*vm=ld->maxmin;
+	if(ld->gx==1000){
+		int x,y;
+		//printf("i  %i-%i %i-%i\n",ix0,ix1,iy0,iy1);
+		for(y=iy0;y<iy1;y++){
+			//printf("v  ");
+			for(x=ix0;x<ix1;x++){
+				//printf(" %i",ld->maxmin[y*ld->w+x]);
+				if(ld->maxmin[y*ld->w+x]<mm[0]) mm[0]=ld->maxmin[y*ld->w+x];
+				if(ld->maxmin[y*ld->w+x]>mm[1]) mm[1]=ld->maxmin[y*ld->w+x];
+			}
+			//printf("\n");
+		}
+		return; /* TODO: precalc does not work correct for ldref */
+	}
 	if(ix0==ix1 || iy0==iy1) return;
 	if(ix0==0 && iy0==0 && ix1==ld->w && iy1==ld->h){
 		v=ld->maxmin+mapele_mmsize(ld)-2;
@@ -342,9 +360,9 @@ char mapele_ld1(int gx,int gy){
 	return 1;
 }
 
-char mapeleload(int gx0,int gx1,int gy0,int gy1){
+char mapeleload(int iz,int gx0,int gx1,int gy0,int gy1){
 	int gx,gy;
-	if(!glprg()) return 0;
+	if(!glprg() || iz<=MAXREFIZ) return 0;
 	/* TODO: restrict to -180..179, -90..89 */
 	/* TODO: load from center */
 	for(gx=gx0;gx<=gx1;gx++)
@@ -391,33 +409,51 @@ void mapelegendls(struct meld *ld){
 	glEndList();
 }
 
-void mapelerenderld(struct meld *ld){
-	if(!ld) return;
-	if(!ld->tex) return;
-	if(!ld->dls) mapelegendls(ld);
-	glCallList(ld->dls);
+void mapelerenderld(int gx,int gy,int d,struct meld *ld){
+	if(ld && ld->tex){
+		if(!ld->dls) mapelegendls(ld);
+		glCallList(ld->dls);
+	}else if(mapele.ldref.tex){
+		double px0,px1,py0,py1;
+		double tx0=(double)(gx+180  )/mapele.ldref.tw*12.;
+		double tx1=(double)(gx+180+d)/mapele.ldref.tw*12.;
+		double ty0=(double)(90-gy-d )/mapele.ldref.th*12.;
+		double ty1=(double)(90-gy   )/mapele.ldref.th*12.;
+		mapg2p(gx,  gy,  px0,py0);
+		mapg2p(gx+d,gy+d,px1,py1);
+		glBindTexture(GL_TEXTURE_2D,mapele.ldref.tex);
+		glBegin(GL_QUADS);
+		glTexCoord2d(tx0,ty0); glVertex2d(px0,py1);
+		glTexCoord2d(tx1,ty0); glVertex2d(px1,py1);
+		glTexCoord2d(tx1,ty1); glVertex2d(px1,py0);
+		glTexCoord2d(tx0,ty1); glVertex2d(px0,py0);
+		glEnd();
+	}
 }
 
-void mapelerender(double px,double py,double gsx0,double gsx1,double gsy0,double gsy1){
+void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0,double gsy1){
 	int gx0=(int)floor(gsx0);
 	int gx1=(int)floor(gsx1);
 	int gy0=(int)floor(gsy0);
 	int gy1=(int)floor(gsy1);
 	int gx,gy;
 	struct meld *ld;
+	int d = iz<=MAXREFIZ ? 10 : 1;
 	while(metexload()) ;
 	mapele.maxmin[0]=32767;
 	mapele.maxmin[1]=-32768;
-	for(gx=gx0;gx<=gx1;gx++)
+	/* TODO: restrict to -180..179, -90..89 */
+	mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
+	if(d==1) for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glTranslated(-px,-py,0.);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
-	for(gx=gx0;gx<=gx1;gx++)
-		for(gy=gy0;gy<=gy1;gy++)
-			mapelerenderld(mapele_ldfind(gx,gy));
+	for(gx=gx0;gx<=gx1;gx+=d)
+		for(gy=gy0;gy<=gy1;gy+=d)
+			mapelerenderld(gx,gy,d,d==1?mapele_ldfind(gx,gy):NULL);
 	glSecondaryColor3f(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
 	glPopMatrix();
@@ -473,7 +509,7 @@ void mapelerenderbar(){
 	glScalef(w,h-2.f*b,1.f);
 	glSecondaryColor3f(1.f,1.f,0.f); /* TODO: only if gl.ver>1.4f */
 	glColor4d(0.,(MEBARSIZE-1)/65535.,0.,1.);
-	mapelerenderld(&mapele.ldbar);
+	mapelerenderld(0,0,1,&mapele.ldbar);
 	glSecondaryColor3f(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
 }
@@ -491,9 +527,34 @@ void mapelebarinit(struct meld *ld){
 	metexloadput(ld);
 }
 
+void mapelerefinit(struct meld *ld){
+	const char *fn;
+	gzFile fd;
+	int x,y;
+	ld->loading=0;
+	ld->gx=ld->gy=1000;
+	ld->tex=0;
+	ld->dls=0;
+	ld->w=360*12; ld->tw=8192;
+	ld->h=180*12; ld->th=4096;
+	ld->maxmin=NULL;
+	ld->dtex=NULL;
+	if(!(fn=finddatafile("mapf.gz"))){ debug(ERR_CONT,"mapelerefinit: mapf not found"); return; }
+	if(!(fd=gzopen(fn,"rb"))){ debug(ERR_CONT,"mapelerefinit: file '%s' not readable",fn); return; }
+	ld->maxmin=malloc(sizeof(short)*(size_t)mapele_mmsize(ld));
+	if(ld->w*ld->h*(int)sizeof(unsigned short)!=gzread(fd,ld->maxmin,(unsigned int)(ld->w*ld->h)*(unsigned int)sizeof(short))){ debug(ERR_CONT,"mapelerefinit: file '%s' read failure",fn); free(ld->maxmin); ld->maxmin=NULL; return; }
+	gzclose(fd);
+	mapele_mmgen(ld);
+	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
+	for(y=0;y<ld->h;y++) for(x=0;x<ld->w;x++)
+		ld->dtex[y*ld->tw+x]=(unsigned short)((int)ld->maxmin[y*ld->w+x]+32768);
+	metexloadput(ld);
+}
+
 void mapeleinit(const char *cachedir){
 	mapele.cachedir=cachedir;
 	mapele.url=cfggetstr("mapele.url");
 	mapelebarinit(&mapele.ldbar);
+	mapelerefinit(&mapele.ldref);
 	mapeleuidinit();
 }

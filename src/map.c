@@ -797,7 +797,7 @@ char mapldcheck(){
 		double gsx0,gsx1,gsy0,gsy1;
 		mapgscrw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
 		mapgscrh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
-		if(mapeleload((int)floor(gsx0),(int)floor(gsx1),(int)floor(gsy0),(int)floor(gsy1))) return 1;
+		if(mapeleload(map.pos.iz,(int)floor(gsx0),(int)floor(gsx1),(int)floor(gsy0),(int)floor(gsy1))) return 1;
 	}
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
@@ -1081,7 +1081,7 @@ char maprender(char sel){
 			double gsx0,gsx1,gsy0,gsy1;
 			mapp2g(psx0,psy0,gsx0,gsy0);
 			mapp2g(psx1,psy1,gsx1,gsy1);
-			mapelerender(px,py,gsx0,gsx1,gsy0,gsy1);
+			mapelerender(px,py,iz,gsx0,gsx1,gsy0,gsy1);
 		}
 		if(optx%2) glTranslatef(0.f,0.f,roff);
 		maprenderclt(px,py,ecur->s,iz);
