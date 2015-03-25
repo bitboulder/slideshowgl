@@ -262,7 +262,7 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 			}
 			//printf("\n");
 		}
-		return; /* TODO: precalc does not work correct for ldref */
+		return; /* TODO: precalc does not work correct for ldref (min is always 0) */
 	}
 	if(ix0==ix1 || iy0==iy1) return;
 	if(ix0==0 && iy0==0 && ix1==ld->w && iy1==ld->h){
@@ -443,7 +443,7 @@ void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0
 	mapele.maxmin[0]=32767;
 	mapele.maxmin[1]=-32768;
 	/* TODO: restrict to -180..179, -90..89 */
-	mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
+	if(mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
 	if(d==1) for(gx=gx0;gx<=gx1;gx++)
 		for(gy=gy0;gy<=gy1;gy++)
 			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
@@ -527,6 +527,31 @@ void mapelebarinit(struct meld *ld){
 	metexloadput(ld);
 }
 
+char mapelerefread(short *m,int mn,gzFile fd){
+	short *mi=m;
+	short *me=m+mn;
+	unsigned int v;
+	while(mi<me){
+		int n=3;
+		v=0; if(3!=gzread(fd,&v,3)) return 1;
+		mi+=v+1;
+		if(mi==me) return 0;
+		if(mi>me) return 1;
+		while(n==3){
+			int k;
+			if(4!=gzread(fd,&v,4)) return 1;
+			n=(int)(v>>30);
+			if(mi+n+1>me) return 1;
+			for(k=0;k<=n && k<3;k++){
+				int vi=(v>>k*10)&1023;
+				*(mi++)=(short)(vi*8-512);
+			}
+		}
+		
+	}
+	return 0;
+}
+
 void mapelerefinit(struct meld *ld){
 	const char *fn;
 	gzFile fd;
@@ -539,10 +564,10 @@ void mapelerefinit(struct meld *ld){
 	ld->h=180*12; ld->th=4096;
 	ld->maxmin=NULL;
 	ld->dtex=NULL;
-	if(!(fn=finddatafile("mapf.gz"))){ debug(ERR_CONT,"mapelerefinit: mapf not found"); return; }
+	if(!(fn=finddatafile("mapref.gz"))){ debug(ERR_CONT,"mapelerefinit: mapref not found"); return; }
 	if(!(fd=gzopen(fn,"rb"))){ debug(ERR_CONT,"mapelerefinit: file '%s' not readable",fn); return; }
-	ld->maxmin=malloc(sizeof(short)*(size_t)mapele_mmsize(ld));
-	if(ld->w*ld->h*(int)sizeof(unsigned short)!=gzread(fd,ld->maxmin,(unsigned int)(ld->w*ld->h)*(unsigned int)sizeof(short))){ debug(ERR_CONT,"mapelerefinit: file '%s' read failure",fn); free(ld->maxmin); ld->maxmin=NULL; return; }
+	ld->maxmin=calloc((size_t)mapele_mmsize(ld),sizeof(short));
+	if(mapelerefread(ld->maxmin,ld->w*ld->h,fd)){ debug(ERR_CONT,"mapelerefinit: file '%s' read failure",fn); free(ld->maxmin); ld->maxmin=NULL; return; }
 	gzclose(fd);
 	mapele_mmgen(ld);
 	ld->dtex=calloc((size_t)(ld->tw*ld->th),sizeof(unsigned short));
