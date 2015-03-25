@@ -1085,26 +1085,15 @@ char maprender(char sel){
 	return 1;
 }
 
-char mapscrsize(double *gw,double *gh){
-	double size=(double)(1<<map.pos.iz);
-	if(!map.scr_w || !map.scr_h) return 0;
-	*gw=360./size;
-	*gh=180./size; /* TODO */
-	*gw*=(double)*map.scr_w/256.;
-	*gh*=(double)*map.scr_h/256.;
-	return 1;
-}
-
 char mapmove(enum dplev ev,float sx,float sy){
 	int dir=DE_DIR(ev);
-	double gw,gh;
 	if(map.init>MI_TEX || !mapon()) return 0;
-	if(!mapscrsize(&gw,&gh)) return 1;
+	if(!map.scr_w || !map.scr_h) return 1;
 	if(ev&(DE_RIGHT|DE_LEFT)){
-		map.pos.gx+=(double)dir*gw/3.f;
+		map.pos.gx+=(double)dir*mapgscrw((float)map.pos.iz,map.pos.gx,NULL,NULL)/3.f;
 	}
 	if(ev&(DE_UP|DE_DOWN)){
-		map.pos.gy+=(double)dir*gh/3.f;
+		map.pos.gy+=(double)dir*mapgscrw((float)map.pos.iz,map.pos.gy,NULL,NULL)/3.f;
 	}
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		int iz=map.pos.iz+dir;
