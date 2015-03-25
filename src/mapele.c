@@ -214,14 +214,14 @@ void mapele_mmgen(struct meld *ld){
 				short v;
 				v=mi[0];
 				if((mi[i]<v && mi[i]!=-32768) || v==-32768) v=mi[i];
-				if((mi[i*hi]<v && mi[i*hi]!=-32768) || v==-32768) v=mi[i*hi];
-				if((mi[i*(hi+1)]<v && mi[i*(hi+1)]!=-32768) || v==-32768) v=mi[i*(hi+1)];
+				if((mi[i*wi]<v && mi[i*wi]!=-32768) || v==-32768) v=mi[i*wi];
+				if((mi[i*(wi+1)]<v && mi[i*(wi+1)]!=-32768) || v==-32768) v=mi[i*(wi+1)];
 				*(mo++)=v;
 				if(i>1) mi++;
 				v=mi[0];
 				if(mi[i]>v) v=mi[i];
-				if(mi[i*hi]>v) v=mi[i*hi];
-				if(mi[i*(hi+1)]>v) v=mi[i*(hi+1)];
+				if(mi[i*wi]>v) v=mi[i*wi];
+				if(mi[i*(wi+1)]>v) v=mi[i*(wi+1)];
 				*(mo++)=v;
 				mi++;
 				mi+=i;
@@ -250,20 +250,6 @@ void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,
 	int wi=ld->w, hi=ld->h;
 	int i;
 	short *v,*vm=ld->maxmin;
-	if(ld->gx==1000){
-		int x,y;
-		//printf("i  %i-%i %i-%i\n",ix0,ix1,iy0,iy1);
-		for(y=iy0;y<iy1;y++){
-			//printf("v  ");
-			for(x=ix0;x<ix1;x++){
-				//printf(" %i",ld->maxmin[y*ld->w+x]);
-				if(ld->maxmin[y*ld->w+x]<mm[0]) mm[0]=ld->maxmin[y*ld->w+x];
-				if(ld->maxmin[y*ld->w+x]>mm[1]) mm[1]=ld->maxmin[y*ld->w+x];
-			}
-			//printf("\n");
-		}
-		return; /* TODO: precalc does not work correct for ldref (min is always 0) */
-	}
 	if(ix0==ix1 || iy0==iy1) return;
 	if(ix0==0 && iy0==0 && ix1==ld->w && iy1==ld->h){
 		v=ld->maxmin+mapele_mmsize(ld)-2;
@@ -439,21 +425,21 @@ void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0
 	int gx,gy;
 	struct meld *ld;
 	int d = iz<=MAXREFIZ ? 10 : 1;
+	char mmref=0;
 	while(metexload()) ;
 	mapele.maxmin[0]=32767;
 	mapele.maxmin[1]=-32768;
 	/* TODO: restrict to -180..179, -90..89 */
-	if(mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
-	if(d==1) for(gx=gx0;gx<=gx1;gx++)
-		for(gy=gy0;gy<=gy1;gy++)
-			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+	if(d==1) for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
+		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+		else mmref=1;
+	if((d!=1 || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
 	glPushMatrix();
 	glTranslated(-px,-py,0.);
 	glseccol(1.f,1.f,0.f);
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
-	for(gx=gx0;gx<=gx1;gx+=d)
-		for(gy=gy0;gy<=gy1;gy+=d)
-			mapelerenderld(gx,gy,d,d==1?mapele_ldfind(gx,gy):NULL);
+	for(gx=gx0;gx<=gx1;gx+=d) for(gy=gy0;gy<=gy1;gy+=d)
+		mapelerenderld(gx,gy,d,d==1?mapele_ldfind(gx,gy):NULL);
 	glseccol(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
 	glPopMatrix();
