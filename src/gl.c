@@ -259,7 +259,8 @@ void glmodeslave(enum glmode dst){
 	case GLM_3D:
 	case GLM_3DS:
 	case GLM_3DP:
-		glEnable(GL_DEPTH_TEST);
+		if(dst==GLM_3DS) glDisable(GL_DEPTH_TEST);
+		else glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);

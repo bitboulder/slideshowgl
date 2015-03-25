@@ -1051,15 +1051,13 @@ char maprender(char sel){
 		double psx0,psx1,psy0,psy1,px,py;
 		float pw=mappscrw(ecur->s,ecur->x,&psx0,&psx1);
 		float ph=mappscrh(ecur->s,ecur->y,&psy0,&psy1);
-		float roff=0.f;
 		mapg2p(ecur->x,ecur->y,px,py);
 		if(optx%2){
 			float dist=5.f;
 			float fov=35.f;
 			float s=(float)(256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_w[0]*tan(fov/180.*M_PI)*2.);
-			roff=.2f*(ecur->s<8?ecur->s/9.f:1.f)/s;
 			glmodex(GLM_3DS,fov,0); 
-			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST); /* => glmodeslave */
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,dist);
 			glScalef(s,s,s);
@@ -1067,7 +1065,6 @@ char maprender(char sel){
 			glRotatef(ecur->y,1.f,0.f,0.f);
 			glRotatef(ecur->x,0.f,1.f,0.f);
 			glMatrixMode(GL_MODELVIEW);
-			glTranslatef(0.f,0.f,1.f);
 			glUniform2f(glarg(),(float)px,(float)py);
 		}else{
 			glmode(GLM_2D);
@@ -1076,14 +1073,12 @@ char maprender(char sel){
 		if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 		else        glColor4f(1.f,1.f,1.f,1.f);
 		if(!sel) maprendermap(px,py,psx0,psx1,psy0,psy1,iz);
-		if(optx%2) glTranslatef(0.f,0.f,roff);
 		if(!sel && glprg() && map.ele){
 			double gsx0,gsx1,gsy0,gsy1;
 			mapp2g(psx0,psy0,gsx0,gsy0);
 			mapp2g(psx1,psy1,gsx1,gsy1);
 			mapelerender(px,py,iz,gsx0,gsx1,gsy0,gsy1);
 		}
-		if(optx%2) glTranslatef(0.f,0.f,roff);
 		maprenderclt(px,py,ecur->s,iz);
 	}
 	if(!sel) maprenderinfo();
