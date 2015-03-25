@@ -396,7 +396,7 @@ void mapelegendls(struct meld *ld){
 }
 
 void mapelerenderld(int gx,int gy,int d,struct meld *ld){
-	if(ld && ld->tex){
+	if(d==1 && ld && ld->tex){
 		if(!ld->dls) mapelegendls(ld);
 		glCallList(ld->dls);
 	}else if(mapele.ldref.tex){
@@ -424,7 +424,7 @@ void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0
 	int gy1=(int)floor(gsy1);
 	int gx,gy;
 	struct meld *ld;
-	int d = iz<=MAXREFIZ ? 10 : 1;
+	int d = iz<=MAXREFIZ ? MAXREFIZ-iz+2 : 1;
 	char mmref=0;
 	while(metexload()) ;
 	mapele.maxmin[0]=32767;
