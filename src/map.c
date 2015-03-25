@@ -1057,7 +1057,6 @@ char maprender(char sel){
 			float fov=35.f;
 			float s=(float)(256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_w[0]*tan(fov/180.*M_PI)*2.);
 			glmodex(GLM_3DS,fov,0); 
-			glDisable(GL_DEPTH_TEST); /* => glmodeslave */
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,dist);
 			glScalef(s,s,s);
