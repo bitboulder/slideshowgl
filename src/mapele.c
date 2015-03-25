@@ -374,8 +374,8 @@ void mapelegendls(struct meld *ld){
 	double px0,px1,py0,py1;
 	ld->dls=glGenLists(1);
 	glNewList(ld->dls,GL_COMPILE);
-	xo=.5f/(float)ld->w;
-	yo=.5f/(float)ld->h;
+	xo=.25f/(float)ld->w; /* TODO 0.25 ?? & value for ref ?? */
+	yo=.25f/(float)ld->h; /* TODO 0.25 ?? & value for ref ?? */
 	rw=(float)ld->w/(float)ld->tw;
 	rh=(float)ld->h/(float)ld->th;
 	if(ld->gx==1000){
@@ -424,7 +424,7 @@ void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0
 	int gy1=(int)floor(gsy1);
 	int gx,gy;
 	struct meld *ld;
-	int d = iz<=MAXREFIZ ? MAXREFIZ-iz+2 : 1;
+	int d = iz<=MAXREFIZ ? MAXREFIZ-iz+2 : 1; /* TODO: sub-d for large zoom - y not linear relavant ? */
 	char mmref=0;
 	while(metexload()) ;
 	mapele.maxmin[0]=32767;
