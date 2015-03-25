@@ -35,6 +35,7 @@ enum glpos {
 
 struct glcfg *glcfg();
 GLint glarg();
+void glseccol(float r,float g,float b);
 char glfontsel(enum glft i);
 float glfontscale(float hrat,float wrat);
 float glfontwidth(const char *txt);

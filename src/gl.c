@@ -251,6 +251,10 @@ void glfree(){
 #endif
 }
 
+void glseccol(float r,float g,float b){
+	if(gl.ver>=1.4f) glSecondaryColor3f(r,g,b);
+}
+
 void glmodeslave(enum glmode dst){
 	static enum glmode cur=-1;
 	if(cur==dst) return;
@@ -264,7 +268,7 @@ void glmodeslave(enum glmode dst){
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
-		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
+		glseccol(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
 		else if(dst==GLM_3DS && gl.prgsphere){
@@ -277,7 +281,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		if(gl.ver>=1.4f) glSecondaryColor3f(1.f,0.f,0.f);
+		glseccol(1.f,0.f,0.f);
 		if(dst==GLM_2DA) glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 		else glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(gl.prg) glUseProgram(gl.prg);
@@ -288,7 +292,7 @@ void glmodeslave(enum glmode dst){
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
-		if(gl.ver>=1.4f) glSecondaryColor3f(0.f,0.f,0.f);
+		glseccol(0.f,0.f,0.f);
 		if(dst==GLM_1DI){
 			glBlendFunc(GL_ONE_MINUS_DST_COLOR,GL_ONE_MINUS_SRC_ALPHA);
 		}else{
