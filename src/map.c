@@ -979,14 +979,11 @@ void maprendermap(double px,double py,double psx0,double psx1,double psy0,double
 	glTranslated((double)ix-px*s,(double)iy-py*s,0.);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
-			int ox=ix+ixc, oy=iy+iyc;
-			if(!(optx%2)){
-				int oz=1<<iz;
-				oy=(oy+2*oz)%(2*oz);
-				if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
-				if(oy<0){ oy=-oy; ox+=oz/2; }
-				ox=(ox+oz)%oz;
-			}
+			int oz=1<<iz, ox=ix+ixc, oy=iy+iyc;
+			oy=(oy+2*oz)%(2*oz);
+			if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
+			if(oy<0){ oy=-oy; ox+=oz/2; }
+			ox=(ox+oz)%oz;
 			maprendertile(ox,oy,iz,iz);
 			glTranslatef(0.f,1.f,0.f);
 		}
