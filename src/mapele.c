@@ -374,8 +374,8 @@ void mapelegendls(struct meld *ld){
 	double px0,px1,py0,py1;
 	ld->dls=glGenLists(1);
 	glNewList(ld->dls,GL_COMPILE);
-	xo=.25f/(float)ld->w; /* TODO 0.25 ?? & value for ref ?? */
-	yo=.25f/(float)ld->h; /* TODO 0.25 ?? & value for ref ?? */
+	xo=.5f/(float)ld->tw; /* TODO value for ref ?? */
+	yo=.5f/(float)ld->th; /* TODO value for ref ?? */
 	rw=(float)ld->w/(float)ld->tw;
 	rh=(float)ld->h/(float)ld->th;
 	if(ld->gx==1000){
