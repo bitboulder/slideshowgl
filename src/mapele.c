@@ -196,7 +196,7 @@ int mapele_mmsize(struct meld *ld){
 	int hi=ld->h>>1;
 	int s=ld->w*ld->h;
 	for(;wi>0 || hi>0;wi>>=1,hi>>=1) s+=wi*hi*2;
-	return s;
+	return s+2;
 }
 
 void mapele_mmgen(struct meld *ld){
@@ -204,31 +204,46 @@ void mapele_mmgen(struct meld *ld){
 	int hi=ld->h, ho;
 	short *mi=ld->maxmin;
 	short *mo=ld->maxmin+wi*hi;
+	short *mf=ld->maxmin+mapele_mmsize(ld)-2;
 	int x,y,i=1;
+	mf[0]=32767; mf[1]=-32768;
 	for(;wi>0 || hi>0;wi=wo,hi=ho,i=2){
 		wo=wi>>1;
 		ho=hi>>1;
 		for(y=0;y<ho;y++){
 			for(x=0;x<wo;x++){
 				short v;
-				v=mi[0];
-				if((mi[i]<v && mi[i]!=-32768) || v==-32768) v=mi[i];
-				if((mi[i*wi]<v && mi[i*wi]!=-32768) || v==-32768) v=mi[i*wi];
-				if((mi[i*(wi+1)]<v && mi[i*(wi+1)]!=-32768) || v==-32768) v=mi[i*(wi+1)];
+				v = mi[0]==-32768 ? 32767 : mi[0];
+				if(mi[i]<v && mi[i]!=-32768) v=mi[i];
+				if(mi[i*wi]<v && mi[i*wi]!=-32768) v=mi[i*wi];
+				if(mi[i*(wi+1)]<v && mi[i*(wi+1)]!=-32768) v=mi[i*(wi+1)];
 				*(mo++)=v;
-				if(i>1) mi++;
+				if(i!=1) mi++;
+				else if(v<mf[0] && v!=-32768) mf[0]=v;
 				v=mi[0];
 				if(mi[i]>v) v=mi[i];
 				if(mi[i*wi]>v) v=mi[i*wi];
 				if(mi[i*(wi+1)]>v) v=mi[i*(wi+1)];
 				*(mo++)=v;
+				if(i==1 && v>mf[1]) mf[1]=v;
 				mi++;
 				mi+=i;
 			}
-			if(wi%2) mi+=i;
+			if(wi%2){
+				if(i==1){
+					if(*mi<mf[0] && *mi!=-32768) mf[0]=*mi;
+					if(*mi>mf[1]) mf[1]=*mi;
+				}
+				mi+=i;
+			}
 			mi+=i*wi;
 		}
-		if(hi%2) mi+=i*wi;
+		if(hi%2){
+			if(i==1) for(x=0;x<wi;x++,mi++){
+				if(*mi<mf[0] && *mi!=-32768) mf[0]=*mi;
+				if(*mi>mf[1]) mf[1]=*mi;
+			}else mi+=i*wi;
+		}
 	}
 }
 
