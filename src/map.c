@@ -1058,10 +1058,8 @@ char maprender(char sel){
 			glTranslatef(0.f,0.f,dist);
 			glScalef(s,s,s);
 			glTranslatef(0.f,0.f,1.f);
-			glRotatef(ecur->y,1.f,0.f,0.f);
-			glRotatef(ecur->x,0.f,1.f,0.f);
 			glMatrixMode(GL_MODELVIEW);
-			glUniform2f(glarg(),(float)px,(float)py);
+			glUniform3f(glarg(),(float)py,sinf(ecur->y/180.f*M_PIf),cosf(ecur->y/180.f*M_PIf));
 		}else{
 			glmode(GLM_2D);
 			glScalef(1.f/pw,1.f/ph,1.f);

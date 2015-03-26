@@ -1,6 +1,6 @@
 const float pi = 3.14159265358979323846;
 
-uniform vec2 arg;
+uniform vec3 arg; /* psy,sgy,cgy */
 
 void main(){
 	gl_FrontColor = gl_Color;
@@ -9,21 +9,27 @@ void main(){
 
 	// apply modelview matrix
 	vec4 v = gl_ModelViewMatrix * gl_Vertex;
-	v.x+=arg.x;
-	v.y+=arg.y;
 
-	if(v.y==0){
+	float py=v.y+arg.x;
+	if(py==0){
 		v.z=v.x=0;
 		v.y=-1;
-	}else if(v.y==1){
+	}else if(py==1){
 		v.z=v.x=0;
 		v.y=1;
 	}else{
-		float p=(v.x-0.5)*pi*2;
-		float t=pi/2-atan(sinh((0.5-v.y)*2*pi));
-		v.z=-sin(t)*cos(p);
-		v.y=-cos(t);
-		v.x=sin(t)*sin(p);
+		v.xy=v.xy*2*pi;
+		float svx=sin(v.x);
+		float cvx=cos(v.x);
+		float svy=sinh(v.y);
+		float cvy=cosh(v.y);
+		float sgy=arg.y;
+		float cgy=arg.z;
+		float f=cgy/(cvy-svy*sgy);
+
+		v.x=f*svx;
+		v.y=f*((cvx-cvy)*sgy+svy);
+		v.z=f*(cvy-cvx)*cgy-1;
 	}
 
 	gl_Position = gl_ProjectionMatrix * v;

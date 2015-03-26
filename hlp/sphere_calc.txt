@@ -1,0 +1,176 @@
+
+gsx=13.3	# -180..0..180
+gsy=50.5	# -90..0..90
+vx=5e-7		# -0.5..0..0.5
+vy=4e-7		# -0.5..0..0.5
+
+gpx=gsx/180*pi	# -pi..0..pi
+gpy=gsy/180*pi	# -pi/2..0..pi/2
+
+psx=gsx/360+.5				# 0..0.5..1
+psy=.5-asinh(tan(gpy))/pi/2	# -inf..0.5..inf
+
+px=psx+vx	# -0.5..0.5..1.5 (0..0.5..1)
+py=psy+vy	# -inf..0.5..inf
+
+p=(px-.5)*pi*2						# -2*pi..0..2*pi (-pi..0..pi)
+t=pi/2-atan(sinh((0.5-py)*2*pi))	# 0..pi/2..pi
+
+x1=sin(t)*sin(p)
+y1=-cos(t)
+z1=-sin(t)*cos(p)
+
+x2=x1*cos(gsx)+z1*sin(gsx)
+y2=y1
+z2=-x1*sin(gsx)+z1*cos(gsx)
+
+x3=x2
+y3=y2*cos(gpy)-z2*sin(gpy)
+z3=y2*sin(gpy)+z2*cos(gpy)
+
+x3=x1*cos(gpx)+z1*sin(gpx)
+  = sin(t)*( sin(p)*cos(gpx)-cos(p)*sin(gpx) )
+  = sin(t)*sin(p-gpx)
+
+y3=y1*cos(gpy)+(x1*sin(gpx)-z1*cos(gpx))*sin(gpy)
+  = -cos(t)*cos(gpy)
+   +( sin(t)*( sin(p)*sin(gpx) + cos(p)*cos(gpx) ) )*sin(gpy)
+  = sin(t)*cos(p-gpx)*sin(gpy) - cos(t)*cos(gpy)
+
+z3=y1*sin(gpy)+(-x1*sin(gpx)+z1*cos(gpx))*cos(gpy)
+  =-cos(t)*sin(gpy)+(-sin(t)*sin(p)*sin(gpx)-sin(t)*cos(p)*cos(gpx))*cos(gpy)
+  =-sin(t)*cos(p-gpx)*cos(gpy) - cos(t)*sin(gpy)
+
+svx=sin(vx*pi*2)
+cvx=cos(vx*pi*2)
+svy=sinh(vy*pi*2)
+cvy=cosh(vy*pi*2)
+
+x3=sin(t)*sin((px-.5)*pi*2-gsx/180*pi)
+  =sin(t)*sin((gsx/360+vx)*pi*2-gsx/180*pi)
+  =sin(t)*sin(vx*pi*2)
+  =sin(t)*svx
+
+y3= sin(t)*cos(vx*pi*2)*sin(gpy) - cos(t)*cos(gpy)
+  = ( cos(vx*pi*2)*(cos(t-gpy)-cos(t+gpy)) - (cos(t-gpy)+cos(t+gpy)) )/2
+  = ( (cos(vx*pi*2)-1)*cos(t-gpy) - (cos(vx*pi*2)+1)*cos(t+gpy) )/2
+  = ( (cvx-1)*cos(t-gpy) - (cvx+1)*cos(t+gpy) )/2
+
+z3= -sin(t)*cos(vx*pi*2)*cos(gpy) - cos(t)*sin(gpy)
+  = ( -cos(vx*pi*2)*(sin(t-gpy)+sin(t+gpy)) - (sin(gpy-t)+sin(t+gpy)) )/2
+  = (-(cos(vx*pi*2)-1)*sin(t-gpy) - (cos(vx*pi*2)+1)*sin(t+gpy) )/2
+  = (-(cvx-1)*sin(t-gpy) - (cvx+1)*sin(t+gpy) )/2
+
+x3= sin(t)*svx
+y3= ( (cvx-1)*cos(t-gpy) - (cvx+1)*cos(t+gpy) )/2
+z3= (-(cvx-1)*sin(t-gpy) - (cvx+1)*sin(t+gpy) )/2
+
+sin(pi/2-atan(x))
+  = cos(atan(x))
+  = 1/sqrt(1+x^2)
+
+cos(pi/2-atan(x))
+  = sin(atan(x))
+  = x/sqrt(1+x^2)
+
+sin(t)
+  = sin(pi/2-atan(sinh((psy+vy-0.5)*2*pi)))
+  = cos(atan(sinh((psy+vy-0.5)*2*pi)))
+  = 1/sqrt(1+sinh((psy+vy-0.5)*2*pi)^2)
+  = 1/cosh((psy+vy-0.5)*2*pi)
+  = 1/( cosh((psy-.5)*2*pi)*cvy + sinh((psy-.5)*2*pi)*svy )
+  = 1/( cvy/cos(gpy) - svy*tan(gpy) )
+  = cos(gpy)/( cvy - svy*sin(gpy) )
+  = cgy/(cvy-svy*sgy)
+
+t = pi/2-atan(sinh((.5-psy-vy)*2*pi))
+  = pi/2-atan(sinh((.5-.5+asinh(tan(gpy))/pi/2-vy)*2*pi))
+  = pi/2-atan(sinh(asinh(tan(gpy))-vy*2*pi))
+  = pi/2-atan(cvy*tan(gpy) - svy*cosh(asinh(tan(gpy))))
+  = pi/2-atan(cvy*tan(gpy) - svy*sqrt(1+tan(gpy)^2))
+  = pi/2-atan((cvy*sgy - svy)/cgy)
+
+atan(x)+atan(y)
+  = atan((x+y)/(1-x*y))		# xy<1
+  = atan((x+y)/(1-x*y))+pi	# xy>1 & x>0
+  = atan((x+y)/(1-x*y))-pi	# xy>1 & x<0
+  #only use in sin() + cos() => +pi = -pi
+  = atan((x+y)/(1-x*y))		# xy<1
+  = atan((x+y)/(1-x*y))+pi	# xy>1
+atan(x)-atan(y)
+  = atan((x-y)/(1+x*y))		# xy>-1
+  = atan((x-y)/(1+x*y))+pi	# xy<-1 & x>0
+  = atan((x-y)/(1+x*y))-pi	# xy<-1 & x<0
+  #only use in sin() + cos() => +pi = -pi
+  = atan((x-y)/(1+x*y))		# xy>-1
+  = atan((x-y)/(1+x*y))+pi	# xy<-1
+
+t-gpy
+  = pi/2-( atan((cvy*sgy - svy)/cgy) + atan(tan(gpy)) )
+  = pi/2-atan( ( (cvy*sgy - svy)/cgy + tan(gpy) )/( 1 - (cvy*sgy - svy)/cgy*tan(gpy) ) ) # TODO +/- pi
+  = pi/2-atan( ((cvy+1)*sgy - svy)/cgy /( 1 - (cvy*sgy - svy)*sgy/cgy^2 ) )
+  = pi/2-atan( ((cvy+1)*sgy - svy)/( cgy - (cvy*sgy - svy)*sgy/cgy ) )
+  = pi/2-atan( cgy/( 1/((cvy+1)*sgy-svy) - sgy ) )
+t+gpy
+  = pi/2-( atan((cvy*sgy - svy)/cgy) - atan(tan(gpy)) )
+  = pi/2-atan( ( (cvy*sgy - svy)/cgy - tan(gpy) )/( 1 + (cvy*sgy - svy)/cgy*tan(gpy) ) ) # TODO +/- pi
+  = pi/2-atan( ((cvy-1)*sgy - svy)/cgy /( 1 + (cvy*sgy - svy)*sgy/cgy^2 ) )
+  = pi/2-atan( ((cvy-1)*sgy - svy)/( cgy + (cvy*sgy - svy)*sgy/cgy ) )
+  = pi/2-atan( cgy/( 1/((cvy-1)*sgy-svy) + sgy ) )
+
+a=(cvy+1)*sgy-svy
+sin(t-gpy)
+  = -1/sqrt( 1 + cgy^2/( 1/a - sgy )^2 )				# neg for +pi in bsp
+  = -1/sqrt( 1 + cgy^2/( 1/a^2 + sgy^2 - 2*sgy/a ) )
+  = -1/sqrt( ( 1 + 1/a^2 - 2*sgy/a )/( 1/a^2 + sgy^2 - 2*sgy/a ) )
+  = -1/sqrt( ( a^2 + 1 - 2*sgy*a )/( 1 + a^2*sgy^2 - 2*sgy*a ) )
+  = ( 1 - sgy*a )/sqrt( a^2 + 1 - 2*sgy*a )				# 1-sgy*a < 0 for bsp
+  = ( 1 - sgy*a )/sqrt( 1 + (cvy^2-1)*sgy^2 + svy^2 - 2*cvy*svy*sgy )
+  = ( 1 - sgy*a )/sqrt( svy^2*sgy^2 + cvy^2 - 2*cvy*svy*sgy )
+  = ( 1 - sgy*a )/( cvy - svy*sgy )						# svy*sgy-cvy < 0 for bsp
+  = ( 1 - (cvy+1)*sgy^2 + svy*sgy )/( cvy - svy*sgy )
+  = ( 1 - cvy*sgy^2 - sgy^2 + svy*sgy )/(cvy-svy*sgy)
+  = ( cgy^2 - cvy*(1-cgy^2) + svy*sgy )/(cvy-svy*sgy)
+  = cgy^2*(1+cvy)/(cvy-svy*sgy) - 1
+
+b=(cvy-1)*sgy-svy
+sin(t+gpy)
+  = 1/sqrt( 1 + cgy^2/( 1/b + sgy )^2 )
+  = 1/sqrt( 1 + cgy^2*b^2/( 1 + sgy*b )^2 )
+  = (1+sgy*b)/sqrt( 1 + 2*sgy*b + b^2 )
+  = (1+sgy*b)/sqrt( 1 + (cvy^2-1)*sgy^2 + svy^2 - 2*cvy*sgy*svy )
+  = (1+sgy*b)/sqrt( cvy^2 + svy^2*sgy^2 - 2*cvy*sgy*svy )
+  = (1+sgy*b)/( cvy - svy*sgy )
+  = ( 1 + sgy^2*cvy - sgy^2 - sgy*svy) )/(cvy-svy*sgy)
+  = ( cgy^2 + (1-cgy^2)*cvy - sgy*svy) )/(cvy-svy*sgy)
+  = cgy^2*(1-cvy)/(cvy-svy*sgy) + 1
+
+c=cgy^2/(cvy-svy*sgy)
+z3= ( -(cvx-1)*(c*(1+cvy)-1) - (cvx+1)*(c*(1-cvy)+1) )/2
+  = ( -(cvx-1)*(c+c*cvy-1) - (cvx+1)*(c-c*cvy+1) )/2
+  = ( -c*cvx -c*cvy*cvx +cvx +c +c*cvy -1 -c*cvx +c*cvy*cvx -cvx -c +c*cvy -1 )/2
+  = c*cvy-c*cvx-1
+
+cos(t-gpy)
+  = cgy/(1/((cvy+1)*sgy-svy)-sgy) * sin(t-gpy)
+  = cgy * ( (cvy+1)*cgy^2 -cvy +svy*sgy ) / ( 1/((cvy+1)*sgy-svy) - sgy ) / (cvy-svy*sgy)
+  = cgy * ( (cvy+1)*cgy^2 -cvy +svy*sgy ) * ((cvy+1)*sgy-svy) / ( 1 -(cvy+1)*sgy^2 +svy*sgy ) / (cvy-svy*sgy)
+  = cgy * ( (cvy+1)*cgy^2 -cvy +svy*sgy ) * ((cvy+1)*sgy-svy) / ( 1 -(cvy+1)*(1-cgy^2) +svy*sgy ) / (cvy-svy*sgy)
+  = cgy * ( (cvy+1)*sgy -svy ) / (cvy-svy*sgy)
+  = f*((cvy+1)*sgy-svy)
+
+cos(t+gpy)
+  = cgy/( 1/((cvy-1)*sgy-svy) + sgy ) * sin(t+gpy)
+  = cgy * ((cvy-1)*sgy-svy) / (1+(cvy-1)*sgy^2-svy*sgy ) * sin(t+gpy)
+  = cgy * ((cvy-1)*sgy-svy) / ((1-cgy^2)*cvy+cgy^2-svy*sgy ) * sin(t+gpy)
+  = cgy * ((cvy-1)*sgy-svy) / (cvy-svy*sgy)
+  = f*((cvy-1)*sgy-svy)
+
+y3= ( (cvx-1)*((cvy+1)*sgy-svy) - (cvx+1)*((cvy-1)*sgy-svy) )*f/2
+  = ( (cvx-1)*(cvy*sgy+sgy-svy) - (cvx+1)*(cvy*sgy-sgy-svy) )*f/2
+  = ((cvx-cvy)*sgy+svy)*f
+
+f=cgy/(cvy-svy*sgy)
+x3=f*svx
+y3=f*((cvx-cvy)*sgy+svy)
+z3=f*(cvy-cvx)*cgy-1
