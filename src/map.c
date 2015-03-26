@@ -964,7 +964,7 @@ void maprendermap(double px,double py,double psx0,double psx1,double psy0,double
 	int iw,ih;
 	int ixc,iyc;
 	float s;
-	if(optx%2 && iz<7) iz=7;
+	if(!dplwritemode() && iz<6) iz=6;
 	s=(float)(1<<iz);
 	glPushMatrix();
 	glScalef(1.f/s,1.f/s,1.f);
@@ -972,7 +972,7 @@ void maprendermap(double px,double py,double psx0,double psx1,double psy0,double
 	iw=(int)floor(psx1*s)-ix+1;
 	iy=(int)floor(psy1*s);
 	ih=(int)floor(psy0*s)-iy+1;
-	if(optx%2){
+	if(!dplwritemode()){
 		if(iw>1<<iz){ ix=0; iw=1<<iz; }
 		if(ih>1<<iz){ iy=0; ih=1<<iz; }
 	}
@@ -1049,7 +1049,7 @@ char maprender(char sel){
 		float pw=mappscrw(ecur->s,ecur->x,&psx0,&psx1);
 		float ph=mappscrh(ecur->s,ecur->y,&psy0,&psy1);
 		mapg2p(ecur->x,ecur->y,px,py);
-		if(optx%2){
+		if(!dplwritemode()){
 			float dist=5.f;
 			float fov=35.f;
 			float s=(float)(0.955*256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_w[0]*tan(fov/180.*M_PI)*2.); /* TODO: 0.955 ?? */
