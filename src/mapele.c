@@ -103,8 +103,8 @@ char metexload(){
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		if(GLEW_EXT_texture_edge_clamp){
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE); /* TODO: correct ? */
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE); /* TODO: correct ? */
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 		}else{
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP);
@@ -253,10 +253,10 @@ void mapele_mmgen(struct meld *ld){
 }
 
 void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,double gsy1){
-	double rx0= ld->gx==1000 ? (gsx0+180)*12./(double)ld->w : gsx0-(double)ld->gx;
-	double rx1= ld->gx==1000 ? (gsx1+180)*12./(double)ld->w : gsx1-(double)ld->gx;
-	double ry1= ld->gy==1000 ? (90-gsy0)*12./(double)ld->h  : 1.+(double)ld->gy-gsy0;
-	double ry0= ld->gy==1000 ? (90-gsy1)*12./(double)ld->h  : 1.+(double)ld->gy-gsy1;
+	double rx0= ld->gx==INT_MAX ? (gsx0+180)*12./(double)ld->w : gsx0-(double)ld->gx;
+	double rx1= ld->gx==INT_MAX ? (gsx1+180)*12./(double)ld->w : gsx1-(double)ld->gx;
+	double ry1= ld->gy==INT_MAX ? (90-gsy0)*12./(double)ld->h  : 1.+(double)ld->gy-gsy0;
+	double ry0= ld->gy==INT_MAX ? (90-gsy1)*12./(double)ld->h  : 1.+(double)ld->gy-gsy1;
 	int ix0 = rx0<=0. ? 0     : (int)round(rx0*(double)ld->w);
 	int ix1 = rx1>=1. ? ld->w : (int)round(rx1*(double)ld->w);
 	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
@@ -335,7 +335,9 @@ void mapele_ld1_srtm(int gx,int gy,struct meld *ld){
 #define MELDCH(gx,gy)	(abs((gx)*90+(gy))%MEHNUM)
 
 struct meld *mapele_ldfind(int gx,int gy){
-	struct meld *ld=mapele.ld[MELDCH(gx,gy)];
+	struct meld *ld;
+	gx%=360; if(gx<-180) gx+=360; if(gx>=180) gx-=360;
+	ld=mapele.ld[MELDCH(gx,gy)];
 	while(ld && (ld->gx!=gx || ld->gy!=gy)) ld=ld->nxt;
 	return ld;
 }
@@ -400,6 +402,10 @@ const char *mapelestat(double gsx,double gsy){
 }
 
 void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
+	if(gx!=INT_MAX){
+		while(gx<-180.) gx+=360.;
+		while(gx>=180.) gx-=360.;
+	}
 	/* TODO: precalc in display list ?? */
 	if(div>=0 && ld && ld->tex){
 		float x0,x1,y0,y1;
@@ -408,7 +414,7 @@ void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
 		y0=(float)(.5+(1.-goff-gy+ld->gy)*(ld->h-1))/(float)ld->th;
 		x1=x0+(float)(ld->w-1)*goff/(float)ld->tw;
 		y1=y0+(float)(ld->h-1)*goff/(float)ld->th;
-		if(ld->gx==1000){
+		if(ld->gx==INT_MAX){
 			px0=py0=0.;
 			px1=py1=1.;
 		}else{
@@ -441,7 +447,7 @@ void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
 }
 
 void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0,double gsy1){
-	int div = iz/2-4; /* see mapele_subscale.m */ /* TODO clip at -3/-2 ? (current min: -4) */
+	int div = iz/2-4; /* see mapele_subscale.m */
 	float goff=powf(.5f,(float)div);
 	double gx0=floor(gsx0/goff)*goff;
 	double gx1=floor(gsx1/goff)*goff;
@@ -520,7 +526,7 @@ void mapelerenderbar(){
 void mapelebarinit(struct meld *ld){
 	unsigned short i;
 	ld->loading=0;
-	ld->gx=ld->gy=1000;
+	ld->gx=ld->gy=INT_MAX;
 	ld->tex=0;
 	ld->w=ld->tw=MEBARSIZE;
 	ld->h=ld->th=1;
@@ -559,7 +565,7 @@ void mapelerefinit(struct meld *ld){
 	gzFile fd;
 	int x,y;
 	ld->loading=0;
-	ld->gx=ld->gy=1000;
+	ld->gx=ld->gy=INT_MAX;
 	ld->tex=0;
 	ld->w=360*12; ld->tw=8192;
 	ld->h=180*12; ld->th=4096;
