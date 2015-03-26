@@ -45,6 +45,8 @@ svx=sin(vx*pi*2)
 cvx=cos(vx*pi*2)
 svy=sinh(vy*pi*2)
 cvy=cosh(vy*pi*2)
+sgy=sin(gpy)
+cgy=cos(gpy)
 
 x3=sin(t)*sin((px-.5)*pi*2-gsx/180*pi)
   =sin(t)*sin((gsx/360+vx)*pi*2-gsx/180*pi)
