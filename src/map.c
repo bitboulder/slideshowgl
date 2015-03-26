@@ -1052,7 +1052,7 @@ char maprender(char sel){
 		if(!dplwritemode()){
 			float dist=5.f;
 			float fov=35.f;
-			float s=(float)(0.955*256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_w[0]*tan(fov/180.*M_PI)*2.); /* TODO: 0.955 ?? */
+			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 ?? */
 			glmodex(GLM_3DS,fov,0); 
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,dist);
