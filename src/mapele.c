@@ -49,7 +49,6 @@ struct meld {
 	int w,h;
 	char loading;
 	GLuint tex;
-	GLuint dls;
 	short *maxmin;
 		/* tw   x th   x 1 : value   (1201x1201x2)
 		 * tw/2 x th/2 x 2 : min,max (600x600x2)
@@ -334,7 +333,6 @@ char mapele_ld1(int gx,int gy){
 	ld->gy=gy;
 	ld->loading=0;
 	ld->tex=0;
-	ld->dls=0;
 	ld->maxmin=NULL;
 	ld->dtex=NULL;
 	mapele_ld1_srtm(gx,gy,ld);
@@ -356,6 +354,23 @@ char mapeleload(int iz,int gx0,int gx1,int gy0,int gy1){
 	return 0;
 }
 
+void mapele_mmupd(double gsx0,double gsx1,double gsy0,double gsy1,char refonly){
+	int gx0=(int)floor(gsx0);
+	int gx1=(int)floor(gsx1);
+	int gy0=(int)floor(gsy0);
+	int gy1=(int)floor(gsy1);
+	int gx,gy;
+	char mmref=0;
+	struct meld *ld;
+	mapele.maxmin[0]=32767;
+	mapele.maxmin[1]=-32768;
+	/* TODO: restrict to -180..179, -90..89 */
+	if(!refonly) for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
+		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+		else mmref=1;
+	if((refonly || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
+}
+
 const char *mapelestat(double gsx,double gsy){
 	struct meld *ld=mapele_ldfind((int)floor(gsx),(int)floor(gsy));
 	int ix,iy;
@@ -369,44 +384,37 @@ const char *mapelestat(double gsx,double gsy){
 	return str;
 }
 
-void mapelegendls(struct meld *ld){
-	float xo,yo,rw,rh;
-	double px0,px1,py0,py1;
-	ld->dls=glGenLists(1);
-	glNewList(ld->dls,GL_COMPILE);
-	xo=.5f/(float)ld->tw; /* TODO value for ref ?? */
-	yo=.5f/(float)ld->th; /* TODO value for ref ?? */
-	rw=(float)ld->w/(float)ld->tw;
-	rh=(float)ld->h/(float)ld->th;
-	if(ld->gx==1000){
-		px0=py0=0.;
-		px1=py1=1.;
-	}else{
-		mapg2p(ld->gx,  ld->gy,  px0,py0);
-		mapg2p(ld->gx+1,ld->gy+1,px1,py1);
-	}
-	glBindTexture(GL_TEXTURE_2D,ld->tex);
-	glBegin(GL_QUADS);
-	glTexCoord2f(   xo,   yo); glVertex2d(px0,py1);
-	glTexCoord2f(rw-xo,   yo); glVertex2d(px1,py1);
-	glTexCoord2f(rw-xo,rh-yo); glVertex2d(px1,py0);
-	glTexCoord2f(   xo,rh-yo); glVertex2d(px0,py0);
-	glEnd();
-	glEndList();
-}
-
-void mapelerenderld(int gx,int gy,int d,struct meld *ld){
-	if(d==1 && ld && ld->tex){
-		if(!ld->dls) mapelegendls(ld);
-		glCallList(ld->dls);
+void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
+	/* TODO: precalc in display list ?? */
+	if(div>=0 && ld && ld->tex){
+		float x0,x1,y0,y1;
+		double px0,px1,py0,py1;
+		x0=(float)(.5+(gx-ld->gx)*(ld->w-1))/(float)ld->tw;
+		y0=(float)(.5+(1.-goff-gy+ld->gy)*(ld->h-1))/(float)ld->th;
+		x1=x0+(float)(ld->w-1)*goff/(float)ld->tw;
+		y1=y0+(float)(ld->h-1)*goff/(float)ld->th;
+		if(ld->gx==1000){
+			px0=py0=0.;
+			px1=py1=1.;
+		}else{
+			mapg2p(gx,     gy,     px0,py0);
+			mapg2p(gx+goff,gy+goff,px1,py1);
+		}
+		glBindTexture(GL_TEXTURE_2D,ld->tex);
+		glBegin(GL_QUADS);
+		glTexCoord2f(x0,y0); glVertex2d(px0,py1);
+		glTexCoord2f(x1,y0); glVertex2d(px1,py1);
+		glTexCoord2f(x1,y1); glVertex2d(px1,py0);
+		glTexCoord2f(x0,y1); glVertex2d(px0,py0);
+		glEnd();
 	}else if(mapele.ldref.tex){
 		double px0,px1,py0,py1;
-		double tx0=(double)(gx+180  )/mapele.ldref.tw*12.;
-		double tx1=(double)(gx+180+d)/mapele.ldref.tw*12.;
-		double ty0=(double)(90-gy-d )/mapele.ldref.th*12.;
-		double ty1=(double)(90-gy   )/mapele.ldref.th*12.;
-		mapg2p(gx,  gy,  px0,py0);
-		mapg2p(gx+d,gy+d,px1,py1);
+		double tx0=(double)(gx+180     )/mapele.ldref.tw*12.;
+		double tx1=(double)(gx+180+goff)/mapele.ldref.tw*12.;
+		double ty0=(double)(90-gy-goff )/mapele.ldref.th*12.;
+		double ty1=(double)(90-gy      )/mapele.ldref.th*12.;
+		mapg2p(gx,     gy,     px0,py0);
+		mapg2p(gx+goff,gy+goff,px1,py1);
 		glBindTexture(GL_TEXTURE_2D,mapele.ldref.tex);
 		glBegin(GL_QUADS);
 		glTexCoord2d(tx0,ty0); glVertex2d(px0,py1);
@@ -418,28 +426,22 @@ void mapelerenderld(int gx,int gy,int d,struct meld *ld){
 }
 
 void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0,double gsy1){
-	int gx0=(int)floor(gsx0);
-	int gx1=(int)floor(gsx1);
-	int gy0=(int)floor(gsy0);
-	int gy1=(int)floor(gsy1);
-	int gx,gy;
-	struct meld *ld;
-	int d = iz<=MAXREFIZ ? MAXREFIZ-iz+2 : 1; /* TODO: sub-d for large zoom - y not linear relavant ? */
-	char mmref=0;
+	int div = iz/2-4; /* see mapele_subscale.m */ /* TODO clip at -3/-2 ? (current min: -4) */
+	float goff=powf(.5f,(float)div);
+	double gx0=floor(gsx0/goff)*goff;
+	double gx1=floor(gsx1/goff)*goff;
+	double gy0=floor(gsy0/goff)*goff;
+	double gy1=floor(gsy1/goff)*goff;
+	double gx,gy;
 	while(metexload()) ;
-	mapele.maxmin[0]=32767;
-	mapele.maxmin[1]=-32768;
-	/* TODO: restrict to -180..179, -90..89 */
-	if(d==1) for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
-		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
-		else mmref=1;
-	if((d!=1 || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
+	mapele_mmupd(gsx0,gsx1,gsy0,gsy1,div<0);
 	glPushMatrix();
 	glTranslated(-px,-py,0.);
 	glseccol(1.f,1.f,0.f);
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
-	for(gx=gx0;gx<=gx1;gx+=d) for(gy=gy0;gy<=gy1;gy+=d)
-		mapelerenderld(gx,gy,d,d==1?mapele_ldfind(gx,gy):NULL);
+	/* TODO: restrict to -180..179, -90..89 */
+	for(gx=gx0;gx<=gx1;gx+=goff) for(gy=gy0;gy<=gy1;gy+=goff)
+		mapelerenderld(gx,gy,goff,div,div>=0?mapele_ldfind((int)floor(gx),(int)floor(gy)):NULL);
 	glseccol(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
 	glPopMatrix();
@@ -495,7 +497,7 @@ void mapelerenderbar(){
 	glScalef(w,h-2.f*b,1.f);
 	glseccol(1.f,1.f,0.f);
 	glColor4d(0.,(MEBARSIZE-1)/65535.,0.,1.);
-	mapelerenderld(0,0,1,&mapele.ldbar);
+	mapelerenderld(mapele.ldbar.gx,mapele.ldbar.gy,1.f,0,&mapele.ldbar);
 	glseccol(1.f,0.f,0.f);
 	glColor4f(.5f,.5f,.5f,1.f);
 }
@@ -505,7 +507,6 @@ void mapelebarinit(struct meld *ld){
 	ld->loading=0;
 	ld->gx=ld->gy=1000;
 	ld->tex=0;
-	ld->dls=0;
 	ld->w=ld->tw=MEBARSIZE;
 	ld->h=ld->th=1;
 	ld->dtex=malloc((size_t)(ld->tw*ld->th)*sizeof(unsigned short));
@@ -545,7 +546,6 @@ void mapelerefinit(struct meld *ld){
 	ld->loading=0;
 	ld->gx=ld->gy=1000;
 	ld->tex=0;
-	ld->dls=0;
 	ld->w=360*12; ld->tw=8192;
 	ld->h=180*12; ld->th=4096;
 	ld->maxmin=NULL;
