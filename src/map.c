@@ -318,6 +318,24 @@ float mappscrh(float s,double gy,double *p0,double *p1){
 	return v;
 }
 
+char mapview(struct mapview *mv,char dst){
+	struct ecur *ecur = dst ? NULL : mapecur(&mv->iz,NULL);
+	if((!dst && !ecur) || !map.scr_w || !map.scr_h) return 0;
+	if(dst) mv->iz=map.pos.iz;
+	mv->s  = dst ? (float)map.pos.iz : ecur->s;
+	mv->gx = dst ? (float)map.pos.gx : ecur->x;
+	mv->gy = dst ? (float)map.pos.gy : ecur->y;
+	/* TODO: clip mv->gx, mv->gy */
+	mv->pw=mappscrw(mv->s,mv->gx,&mv->psx0,&mv->psx1);
+	mv->ph=mappscrh(mv->s,mv->gy,&mv->psy0,&mv->psy1);
+	mv->gw=mapgscrw(mv->s,mv->gx,NULL,NULL);
+	mv->gh=mapgscrh(mv->s,mv->gy,NULL,NULL);
+	mapg2p(mv->gx,mv->gy,mv->px,mv->py);
+	mapp2g(mv->psx0,mv->psy0,mv->gsx0,mv->gsy0);
+	mapp2g(mv->psx1,mv->psy1,mv->gsx1,mv->gsy1);
+	return 1;
+}
+
 struct tile *maptilefind(int ix,int iy,int iz,char create){
 	if(iz<0 || iz>=N_ZOOM) return NULL;
 	if(ix<0 || ix>=1<<iz ) return NULL;
@@ -790,15 +808,12 @@ char mapscrtis(int *iw,int *ih){
 char mapldcheck(){
 	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
-	struct ecur *ecur=mapecur(&iz,NULL);
+	struct ecur *ecur=mapecur(&iz,NULL); /* TODO: replace with mapview */
+	struct mapview mv;
 	if(map.init>MI_TEX || !mapon() || !ecur) return 0;
-	if(!mapscrtis(&iw,&ih)) return 0;
-	if(map.ele){
-		double gsx0,gsx1,gsy0,gsy1;
-		mapgscrw((float)map.pos.iz,map.pos.gx,&gsx0,&gsx1);
-		mapgscrh((float)map.pos.iz,map.pos.gy,&gsy0,&gsy1);
-		if(mapeleload(map.pos.iz,(int)floor(gsx0),(int)floor(gsx1),(int)floor(gsy0),(int)floor(gsy1))) return 1;
-	}
+	if(!mapscrtis(&iw,&ih)) return 0; /* TODO: replace with mapview */
+	if(!mapview(&mv,1)) return 0;
+	if(map.ele && mapeleload(&mv)) return 1;
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
 	if(iz>maptypes[map.maptype].maxz) iz=maptypes[map.maptype].maxz;
@@ -906,11 +921,13 @@ void mapinit(){
 	mapeleinit(mapldinit());
 }
 
-void maprenderclt(double px,double py,float s,int iz){
+void maprenderclt(struct mapview *mv){
 	struct mapclti *clti;
 	GLuint name=IMGI_MAP+1;
-	double rx=15.f/256.f/powf(2.f,s),rmx=rx*(double)(1<<iz);
-	double ry=10.f/256.f/powf(2.f,s),rmy=ry*(double)(1<<iz);
+	double rx=15.f/256.f/powf(2.f,mv->s),rmx=rx*(double)(1<<mv->iz);
+	double ry=10.f/256.f/powf(2.f,mv->s),rmy=ry*(double)(1<<mv->iz);
+	double px=mv->px/rx;
+	double py=mv->py/ry;
 	if(!map.cltdls){
 		map.cltdls=glGenLists(1);
 		glNewList(map.cltdls,GL_COMPILE);
@@ -924,8 +941,7 @@ void maprenderclt(double px,double py,float s,int iz){
 	}
 	glPushMatrix();
 	glScaled(rx,ry,1.);
-	px/=rx; py/=ry;
-	for(clti=mapimgs.clt[iz].clts;clti;clti=clti->nxtclt){
+	for(clti=mapimgs.clt[mv->iz].clts;clti;clti=clti->nxtclt){
 		glLoadName(name++);
 		glPushMatrix();
 		glTranslated(clti->mx/rmx-px,clti->my/rmy-py,0.);
@@ -959,27 +975,28 @@ void maprendertile(int ix,int iy,int iz,int izo){
 	glEnd();
 }
 
-void maprendermap(double px,double py,double psx0,double psx1,double psy0,double psy1,int iz){
+void maprendermap(struct mapview *mv){
 	int ix,iy;
 	int iw,ih;
 	int ixc,iyc;
-	float s;
+	int iz=mv->iz;
+	int s;
 	if(!dplwritemode() && iz<6) iz=6;
-	s=(float)(1<<iz);
+	s=1<<iz;
 	glPushMatrix();
-	glScalef(1.f/s,1.f/s,1.f);
-	ix=(int)floor(psx0*s);
-	iw=(int)floor(psx1*s)-ix+1;
-	iy=(int)floor(psy1*s);
-	ih=(int)floor(psy0*s)-iy+1;
+	glScalef(1.f/(float)s,1.f/(float)s,1.f);
+	ix=(int)floor(mv->psx0*s);
+	iw=(int)floor(mv->psx1*s)-ix+1;
+	iy=(int)floor(mv->psy1*s);
+	ih=(int)floor(mv->psy0*s)-iy+1;
 	if(!dplwritemode()){
-		if(iw>1<<iz){ ix=0; iw=1<<iz; }
-		if(ih>1<<iz){ iy=0; ih=1<<iz; }
+		if(iw>s){ ix=0; iw=s; }
+		if(ih>s){ iy=0; ih=s; }
 	}
-	glTranslated((double)ix-px*s,(double)iy-py*s,0.);
+	glTranslated(ix-mv->px*s,iy-mv->py*s,0.);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
-			int oz=1<<iz, ox=ix+ixc, oy=iy+iyc;
+			int oz=s, ox=ix+ixc, oy=iy+iyc;
 			oy=(oy+2*oz)%(2*oz);
 			if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
 			if(oy<0){ oy=-oy; ox+=oz/2; }
@@ -1040,40 +1057,30 @@ void maprenderinfo(){
 }
 
 char maprender(char sel){
-	int iz;
-	struct ecur *ecur=mapecur(&iz,NULL);
+	struct mapview mv;
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
-	if(ecur && map.scr_w && map.scr_h){
-		double psx0,psx1,psy0,psy1,px,py;
-		float pw=mappscrw(ecur->s,ecur->x,&psx0,&psx1);
-		float ph=mappscrh(ecur->s,ecur->y,&psy0,&psy1);
-		mapg2p(ecur->x,ecur->y,px,py);
+	if(mapview(&mv,0)){
 		if(!dplwritemode()){
 			float dist=5.f;
 			float fov=35.f;
-			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,ecur->s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 ?? */
+			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,mv.s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 ?? */
 			glmodex(GLM_3DS,fov,0); 
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,dist);
 			glScalef(s,s,s);
 			glTranslatef(0.f,0.f,1.f);
 			glMatrixMode(GL_MODELVIEW);
-			glUniform3f(glarg(),(float)py,sinf(ecur->y/180.f*M_PIf),cosf(ecur->y/180.f*M_PIf));
+			glUniform3f(glarg(),(float)mv.py,sinf(mv.gy/180.f*M_PIf),cosf(mv.gy/180.f*M_PIf));
 		}else{
 			glmode(GLM_2D);
-			glScalef(1.f/pw,1.f/ph,1.f);
+			glScalef(1.f/mv.pw,1.f/mv.ph,1.f);
 		}
 		if(glprg()) glColor4f(.5f,.5f,.5f,1.f);
 		else        glColor4f(1.f,1.f,1.f,1.f);
-		if(!sel) maprendermap(px,py,psx0,psx1,psy0,psy1,iz);
-		if(!sel && glprg() && map.ele){
-			double gsx0,gsx1,gsy0,gsy1;
-			mapp2g(psx0,psy0,gsx0,gsy0);
-			mapp2g(psx1,psy1,gsx1,gsy1);
-			mapelerender(px,py,iz,gsx0,gsx1,gsy0,gsy1);
-		}
-		maprenderclt(px,py,ecur->s,iz);
+		if(!sel) maprendermap(&mv);
+		if(!sel && glprg() && map.ele) mapelerender(&mv);
+		maprenderclt(&mv);
 	}
 	if(!sel) maprenderinfo();
 	if(!sel && glprg() && map.ele) mapelerenderbar();
@@ -1082,12 +1089,11 @@ char maprender(char sel){
 
 char mapmove(enum dplev ev,float sx,float sy){
 	int dir=DE_DIR(ev);
+	struct mapview mv;
 	if(map.init>MI_TEX || !mapon()) return 0;
-	if(!map.scr_w || !map.scr_h) return 1;
-	if(ev&(DE_RIGHT|DE_LEFT))
-		map.pos.gx+=(double)dir*mapgscrw((float)map.pos.iz,map.pos.gx,NULL,NULL)/3.f;
-	if(ev&(DE_UP|DE_DOWN))
-		map.pos.gy+=(double)dir*mapgscrw((float)map.pos.iz,map.pos.gy,NULL,NULL)/3.f;
+	if(!mapview(&mv,1)) return 1;
+	if(ev&(DE_RIGHT|DE_LEFT)) map.pos.gx+=(double)dir*mv.gw/3.f;
+	if(ev&(DE_UP|DE_DOWN)) map.pos.gy+=(double)dir*mv.gh/3.f;
 	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
 		int iz=map.pos.iz+dir;
 		double gx0,gx1,gy0,gy1;
@@ -1187,25 +1193,24 @@ void maprestorepos(){
 }
 
 char mapstatupdate(char *dsttxt){
-	double gw,gh,gx,gy;
+	double gx,gy;
 	char fmt[128];
 	char *txt;
-	if(map.init>MI_TEX || !mapon()) return 0;
-	maps2g(map.mouse.sx,map.mouse.sy,map.pos.iz,gx,gy);
-	gw=mapgscrw((float)map.pos.iz,map.pos.gx,NULL,NULL);
-	gh=mapgscrh((float)map.pos.iz,map.pos.gy,NULL,NULL);
-	gw*=(6378.137*2.*M_PI)/360.*cos(map.pos.gy/180.*M_PI);
-	gh*=(6356.752314*2.*M_PI)/360.;
+	struct mapview mv;
+	if(map.init>MI_TEX || !mapon() || !mapview(&mv,1)) return 0;
+	maps2g(map.mouse.sx,map.mouse.sy,mv.iz,gx,gy);
+	mv.gw*=(6378.137f*2.f*M_PIf)/360.f*cosf(mv.gy/180.f*M_PIf);
+	mv.gh*=(6356.752314f*2.f*M_PIf)/360.f;
 	snprintf(fmt,128,"%%.%if%%c %%.%if%%c%%s %%.%ifx%%.%ifkm",
-			 (int)((float)map.pos.iz*0.301+0.8),
-			 (int)((float)map.pos.iz*0.301+0.8),
-			 gw>20.?0:gw>5.?1:2,
-			 gh>20.?0:gh>5.?1:2);
+			 (int)(mv.s*0.301+0.8),
+			 (int)(mv.s*0.301+0.8),
+			 mv.gw>20.?0:mv.gw>5.?1:2,
+			 mv.gh>20.?0:mv.gh>5.?1:2);
 	snprintf(dsttxt,ISTAT_TXTSIZE,fmt,
 			 fabs(gy),gy<0?'S':'N',
 			 fabs(gx),gx<0?'W':'E',
 			 map.ele ? mapelestat(gx,gy) : "",
-			 gw,gh);
+			 mv.gw,mv.gh);
 	txt=dsttxt+strlen(dsttxt);
 	if(dplwritemode())
 		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",

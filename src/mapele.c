@@ -252,11 +252,11 @@ void mapele_mmgen(struct meld *ld){
 	if(v[s]!=-32768 && v[s]>mm[1]) mm[1]=v[s]; \
 }
 
-void mapele_mmget(short *mm,struct meld *ld,double gsx0,double gsx1,double gsy0,double gsy1){
-	double rx0= ld->gx==INT_MAX ? (gsx0+180)*12./(double)ld->w : gsx0-(double)ld->gx;
-	double rx1= ld->gx==INT_MAX ? (gsx1+180)*12./(double)ld->w : gsx1-(double)ld->gx;
-	double ry1= ld->gy==INT_MAX ? (90-gsy0)*12./(double)ld->h  : 1.+(double)ld->gy-gsy0;
-	double ry0= ld->gy==INT_MAX ? (90-gsy1)*12./(double)ld->h  : 1.+(double)ld->gy-gsy1;
+void mapele_mmget(short *mm,struct meld *ld,struct mapview *mv){
+	double rx0= ld->gx==INT_MAX ? (mv->gsx0+180)*12./(double)ld->w : mv->gsx0-(double)ld->gx;
+	double rx1= ld->gx==INT_MAX ? (mv->gsx1+180)*12./(double)ld->w : mv->gsx1-(double)ld->gx;
+	double ry1= ld->gy==INT_MAX ? (90-mv->gsy0)*12./(double)ld->h  : 1.+(double)ld->gy-mv->gsy0;
+	double ry0= ld->gy==INT_MAX ? (90-mv->gsy1)*12./(double)ld->h  : 1.+(double)ld->gy-mv->gsy1;
 	int ix0 = rx0<=0. ? 0     : (int)round(rx0*(double)ld->w);
 	int ix1 = rx1>=1. ? ld->w : (int)round(rx1*(double)ld->w);
 	int iy0 = ry0<=0. ? 0     : (int)round(ry0*(double)ld->h);
@@ -361,9 +361,13 @@ char mapele_ld1(int gx,int gy){
 	return 1;
 }
 
-char mapeleload(int iz,int gx0,int gx1,int gy0,int gy1){
+char mapeleload(struct mapview *mv){
+	int gx0=(int)floor(mv->gsx0);
+	int gx1=(int)floor(mv->gsx1);
+	int gy0=(int)floor(mv->gsy0);
+	int gy1=(int)floor(mv->gsy1);
 	int gx,gy;
-	if(!glprg() || iz<=MAXREFIZ) return 0;
+	if(!glprg() || mv->iz<=MAXREFIZ) return 0;
 	/* TODO: restrict to -180..179, -90..89 */
 	/* TODO: load from center */
 	for(gx=gx0;gx<=gx1;gx++)
@@ -371,11 +375,11 @@ char mapeleload(int iz,int gx0,int gx1,int gy0,int gy1){
 	return 0;
 }
 
-void mapele_mmupd(double gsx0,double gsx1,double gsy0,double gsy1,char refonly){
-	int gx0=(int)floor(gsx0);
-	int gx1=(int)floor(gsx1);
-	int gy0=(int)floor(gsy0);
-	int gy1=(int)floor(gsy1);
+void mapele_mmupd(struct mapview *mv,char refonly){
+	int gx0=(int)floor(mv->gsx0);
+	int gx1=(int)floor(mv->gsx1);
+	int gy0=(int)floor(mv->gsy0);
+	int gy1=(int)floor(mv->gsy1);
 	int gx,gy;
 	char mmref=0;
 	struct meld *ld;
@@ -383,9 +387,9 @@ void mapele_mmupd(double gsx0,double gsx1,double gsy0,double gsy1,char refonly){
 	mapele.maxmin[1]=-32768;
 	/* TODO: restrict to -180..179, -90..89 */
 	if(!refonly) for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
-		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,gsx0,gsx1,gsy0,gsy1);
+		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,mv);
 		else mmref=1;
-	if((refonly || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,gsx0,gsx1,gsy0,gsy1);
+	if((refonly || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,mv);
 }
 
 const char *mapelestat(double gsx,double gsy){
@@ -446,18 +450,18 @@ void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
 	}
 }
 
-void mapelerender(double px,double py,int iz,double gsx0,double gsx1,double gsy0,double gsy1){
-	int div = iz/2-4; /* see mapele_subscale.m */
+void mapelerender(struct mapview *mv){
+	int div = mv->iz/2-4; /* see mapele_subscale.m */
 	float goff=powf(.5f,(float)div);
-	double gx0=floor(gsx0/goff)*goff;
-	double gx1=floor(gsx1/goff)*goff;
-	double gy0=floor(gsy0/goff)*goff;
-	double gy1=floor(gsy1/goff)*goff;
+	double gx0=floor(mv->gsx0/goff)*goff;
+	double gx1=floor(mv->gsx1/goff)*goff;
+	double gy0=floor(mv->gsy0/goff)*goff;
+	double gy1=floor(mv->gsy1/goff)*goff;
 	double gx,gy;
 	while(metexload()) ;
-	mapele_mmupd(gsx0,gsx1,gsy0,gsy1,div<0);
+	mapele_mmupd(mv,div<0);
 	glPushMatrix();
-	glTranslated(-px,-py,0.);
+	glTranslated(-mv->px,-mv->py,0.);
 	glseccol(1.f,1.f,0.f);
 	glColor4d((double)mapele.maxmin[0]/65535.+0.5,(double)(mapele.maxmin[1]-mapele.maxmin[0])/65535.,0.,.8);
 	/* TODO: restrict to -180..179, -90..89 */

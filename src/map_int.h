@@ -8,6 +8,17 @@ struct mappos {
 	int iz;
 };
 
+struct mapview {
+	int    iz;
+	float  s;
+	float  gx,gy;
+	double px,py;
+	float  pw,ph;
+	float  gw,gh;
+	double gsx0,gsx1,gsy0,gsy1;
+	double psx0,psx1,psy0,psy1;
+};
+
 struct maptype {
 	char id[8];
 	int maxz;
