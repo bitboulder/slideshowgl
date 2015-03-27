@@ -330,8 +330,8 @@ char mapview(struct mapview *mv,char dst){
 	mv->gx=remainderf(mv->gx,360.f);
 	if(mv->gx==180.f) mv->gx=-180.f;
 	mv->gy=remainderf(mv->gy,360.f);
-	if(mv->gy<-90.f) mv->gy=-180.f-mv->gy;
-	if(mv->gy> 90.f) mv->gy= 180.f-mv->gy;
+	if(mv->gy<-90.f){ mv->gy=-180.f-mv->gy; mv->gx+=180.f; }
+	if(mv->gy> 90.f){ mv->gy= 180.f-mv->gy; mv->gx+=180.f; }
 
 	sx=exp2f(-mv->s-8.f);
 	mv->px=mv->gx/360.+.5;
