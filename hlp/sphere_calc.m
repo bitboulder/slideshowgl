@@ -1,6 +1,6 @@
 
-vx=-0.5:0.01:0.5;
-vy=(-0.5:0.01:0.5)';
+vx=-1.5:0.01:1.5;
+vy=(-1.5:0.01:1.5)';
 
 vx=ones(size(vy)(1),1)*vx;
 vy=vy*ones(1,size(vx)(2));
@@ -28,10 +28,10 @@ for gsy=-90:10:90
 		system(['echo "#-xlabel vx" >>' fn]);
 		system(['echo "#-ylabel vy" >>' fn]);
 		system([sprintf('echo "#-title gsy=%i" >>',gsy) fn]);
-		system(['echo "#-xrange -0.5:100.5" >>' fn]);
-		system(['echo "#-yrange -0.5:100.5" >>' fn]);
-		system(['echo "#-xtics -0.5:0.1/101+50.5:0.5" >>' fn]);
-		system(['echo "#-ytics -0.5:0.1/101+50.5:0.5" >>' fn]);
+		system(['echo "#-xrange -0.5:300.5" >>' fn]);
+		system(['echo "#-yrange -0.5:300.5" >>' fn]);
+		system(['echo "#-xtics -1.5:0.1/101+150.5:1.5" >>' fn]);
+		system(['echo "#-ytics -1.5:0.1/101+150.5:1.5" >>' fn]);
 	end
 
 end

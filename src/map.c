@@ -320,19 +320,38 @@ float mappscrh(float s,double gy,double *p0,double *p1){
 
 char mapview(struct mapview *mv,char dst){
 	struct ecur *ecur = dst ? NULL : mapecur(&mv->iz,NULL);
+	float sx;
 	if((!dst && !ecur) || !map.scr_w || !map.scr_h) return 0;
 	if(dst) mv->iz=map.pos.iz;
 	mv->s  = dst ? (float)map.pos.iz : ecur->s;
 	mv->gx = dst ? (float)map.pos.gx : ecur->x;
 	mv->gy = dst ? (float)map.pos.gy : ecur->y;
-	/* TODO: clip mv->gx, mv->gy */
-	mv->pw=mappscrw(mv->s,mv->gx,&mv->psx0,&mv->psx1);
-	mv->ph=mappscrh(mv->s,mv->gy,&mv->psy0,&mv->psy1);
-	mv->gw=mapgscrw(mv->s,mv->gx,NULL,NULL);
-	mv->gh=mapgscrh(mv->s,mv->gy,NULL,NULL);
-	mapg2p(mv->gx,mv->gy,mv->px,mv->py);
-	mapp2g(mv->psx0,mv->psy0,mv->gsx0,mv->gsy0);
-	mapp2g(mv->psx1,mv->psy1,mv->gsx1,mv->gsy1);
+
+	mv->gx=remainderf(mv->gx,360.f);
+	if(mv->gx==180.f) mv->gx=-180.f;
+	mv->gy=remainderf(mv->gy,360.f);
+	if(mv->gy<-90.f) mv->gy=-180.f-mv->gy;
+	if(mv->gy> 90.f) mv->gy= 180.f-mv->gy;
+
+	sx=exp2f(-mv->s-8.f);
+	mv->px=mv->gx/360.+.5;
+	mv->py=0.5-asinh(tan(mv->gy/180.*M_PI))/M_PI/2.;
+	mv->pw=sx*(float)*map.scr_w;
+	mv->ph=sx*(float)*map.scr_h;
+
+	mv->psx0=mv->gx/360.+.5-mv->pw/2.;
+	mv->psx1=mv->gx/360.+.5+mv->pw/2.;
+	mv->psy0=mv->py+mv->ph/2.;
+	mv->psy1=mv->py-mv->ph/2.;
+
+	mv->gsy0=atan(sinh((0.5-mv->psy0)*2.*M_PI))*180./M_PI;
+	mv->gsy1=atan(sinh((0.5-mv->psy1)*2.*M_PI))*180./M_PI;
+	mv->gsx0=(mv->psx0-.5)*360.;
+	mv->gsx1=(mv->psx1-.5)*360.;
+
+	mv->gw=mv->pw*360.f;
+	mv->gh=(float)(mv->gsy1-mv->gsy0);
+
 	return 1;
 }
 
@@ -1064,7 +1083,7 @@ char maprender(char sel){
 		if(!dplwritemode()){
 			float dist=5.f;
 			float fov=35.f;
-			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,mv.s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 ?? */
+			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,mv.s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 from mv->gy ?? */
 			glmodex(GLM_3DS,fov,0); 
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,dist);
