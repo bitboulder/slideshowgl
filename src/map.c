@@ -359,6 +359,10 @@ char mapview(struct mapview *mv,char dst){
 			float src1=sr1/cot/cot;
 			float rad1=1.f-ds*(2.f+ds)*src1;
 			float kz1=( -(1.f+ds)*src1-sqrtf(rad1) )/(1.f+src1);
+			float srs=sdlrat()*sdlrat();
+			float srcs=srs/cot/cot;
+			float rads=1.f-ds*(2.f+ds)*srcs;
+			float kzs=( -(1.f+ds)*srcs-sqrtf(rads) )/(1.f+srcs);
 			float sgy=sinf((float)mv->gy/180.f*M_PIf);
 			float cgy=cosf((float)mv->gy/180.f*M_PIf);
 			float gythr=asinf(2/cot)/M_PIf*90.f;
@@ -366,20 +370,17 @@ char mapview(struct mapview *mv,char dst){
 			float kzy1 = mv->gy> 90.f-gythr || mv->gy< gythr ? kz1s : kz1;
 
 			mv->gsx0=fabsf(atanf(sdlrat()/(cgy*cot/(1+(1+ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f);
-			mv->gw=2.f*mv->gsx0; /* TODO: use value at center ?? */
+			mv->gw=2.f*atanf(sdlrat()/cgy*cot/(1+(1+ds)/kzs));
 			mv->gsx1=mv->gx+mv->gsx0;
 			mv->gsx0=mv->gx-mv->gsx0;
 
 			mv->gsy0=-90.f+acosf(kzy0*sgy+(kzy0+1+ds)/cot*cgy)/M_PIf*180.f;
 			mv->gsy1=-90.f+acosf(kzy1*sgy-(kzy1+1+ds)/cot*cgy)/M_PIf*180.f;
-			mv->gh=mv->gsy1-mv->gsy0; /* TODO: use value at center ?? */
-
+			mv->gh=(acosf(kz1*sgy-(kz1+1+ds)/cot*cgy)-acosf(kz1*sgy+(kz1+1+ds)/cot*cgy))/M_PIf*180.f;
 		}
 
 		mapg2p(mv->gsx0,mv->gsy0,mv->psx0,mv->psy0);
 		mapg2p(mv->gsx1,mv->gsy1,mv->psx1,mv->psy1);
-		mv->pw=mv->psx1-mv->psx0;
-		mv->ph=mv->psy0-mv->psy1;
 	}else{
 
 		mv->pw=sx*(float)*map.scr_w;
