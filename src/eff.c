@@ -227,7 +227,7 @@ void effsetcur(struct effpar *ep,enum dplev ev,struct ecur *ip){
 		ip->x=(float)((struct mappos *)ep->dat)->gx;
 		ip->y=(float)((struct mappos *)ep->dat)->gy;
 		ip->a=1.f;
-		ip->s=3.f;
+		ip->s=1.f;
 		return;
 	}
 	if(!ep->diff || !(ev&DE_ZOOMOUT) || ep->dp->zoom!=-1) return;
