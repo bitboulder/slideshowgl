@@ -34,6 +34,8 @@ struct mappos *mapgetpos();
 	(py)=(gy)/180.*M_PI; \
 	(py)=asinh(tan(py))/M_PI/2.; \
 	(py)=0.5-(py); \
+	if((gy)> 90.f) (py)-=1.; \
+	if((gy)<-90.f) (py)+=1.; \
 	(px)=(gx)/360.+.5; \
 }
 
