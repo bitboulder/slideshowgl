@@ -345,13 +345,17 @@ char mapview(struct mapview *mv,char dst){
 		float sr1s=1.f+sdlrat()*sdlrat();
 		float src1s=sr1s/cot/cot;
 		float rad1s=1.f-ds*(2.f+ds)*src1s;
-		/*TODO: mv->gy==+-90 => kz'==0 */
 		mv->ks=mv->kdist/ds;
-		if(rad1s<0){
+		if(rad1s<0.1){
 			mv->gsx0=mv->gx-90.;
 			mv->gsx1=mv->gx+90.;
-			mv->gsy0=mv->gy-90.;
-			mv->gsy1=mv->gy+90.;
+			if(mv->gy>0.){
+				mv->gsy0=mv->gy-90.;
+				mv->gsy1=mv->gy+180.;
+			}else{
+				mv->gsy0=mv->gy-180.;
+				mv->gsy1=mv->gy+90.;
+			}
 			mv->gw=180.f;
 			mv->gh=180.f;
 		}else{
@@ -366,22 +370,17 @@ char mapview(struct mapview *mv,char dst){
 			float kzs=( -(1.f+ds)*srcs-sqrtf(rads) )/(1.f+srcs);
 			float sgy=sinf((float)mv->gy/180.f*M_PIf);
 			float cgy=cosf((float)mv->gy/180.f*M_PIf);
+			float gsxo=-atanf(sdlrat()/(cgy*cot/(1+(1+ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f;
 			float kzy0 = mv->gy<-mv->kfov/2.f ? kz1 : kz1s;
 			float kzy1 = mv->gy> mv->kfov/2.f ? kz1 : kz1s;
+
+			mv->gsx1=mv->gx+gsxo;
+			mv->gsx0=mv->gx-gsxo;
+			mv->gw=-2.f*atanf(sdlrat()/cgy/cot*(1+(1+ds)/kzs))/M_PIf*180.f;
 
 			mv->gsy0=-90.f+acosf(kzy0*sgy+(kzy0+1+ds)/cot*cgy)/M_PIf*180.f;
 			mv->gsy1=-90.f+acosf(kzy1*sgy-(kzy1+1+ds)/cot*cgy)/M_PIf*180.f;
 			mv->gh=(acosf(kz1*sgy-(kz1+1+ds)/cot*cgy)-acosf(kz1*sgy+(kz1+1+ds)/cot*cgy))/M_PIf*180.f;
-
-			if(mv->gsy0<-90.f || mv->gsy1>90.f){
-				mv->gsx0=mv->gx-90.f;
-				mv->gsx1=mv->gx+90.f;
-			}else{
-				float gsxo=-atanf(sdlrat()/(cgy*cot/(1+(1+ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f;
-				mv->gsx1=mv->gx+gsxo;
-				mv->gsx0=mv->gx-gsxo;
-			}
-			mv->gw=2.f*atanf(sdlrat()/cgy*cot/(1+(1+ds)/kzs));
 		}
 
 		mapg2p(mv->gsx0,mv->gsy0,mv->psx0,mv->psy0);
@@ -1062,7 +1061,7 @@ void maprendermap(struct mapview *mv){
 	iw=(int)floor(mv->psx1*s)-ix+1;
 	iy=(int)floor(mv->psy1*s);
 	ih=(int)floor(mv->psy0*s)-iy+1;
-	glTranslated(ix-mv->px*s,iy-mv->py*s,0.);
+	glTranslated(-mv->px*s,-mv->py*s,0.);
 	for(ixc=0;ixc<iw;ixc++){
 		for(iyc=0;iyc<ih;iyc++){
 			int oz=s, ox=ix+ixc, oy=iy+iyc;
@@ -1070,10 +1069,11 @@ void maprendermap(struct mapview *mv){
 			if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
 			if(oy<0){ oy=-oy; ox+=oz/2; }
 			ox=(ox+oz)%oz;
+			glPushMatrix();
+			glTranslatef((float)ox,(float)oy,0.f);
 			maprendertile(ox,oy,iz,mv->iz);
-			glTranslatef(0.f,1.f,0.f);
+			glPopMatrix();
 		}
-		glTranslatef(1.f,(float)-ih,0.f);
 	}
 	glPopMatrix();
 }

@@ -458,6 +458,10 @@ void mapelerender(struct mapview *mv){
 	double gy0=floor(mv->gsy0/goff)*goff;
 	double gy1=floor(mv->gsy1/goff)*goff;
 	double gx,gy;
+	if(gy0<-90. || gy1>=90.){
+		gy0=-90.; gy1=90.-goff;
+		gx0=-180.; gx1=180.-goff;
+	}
 	while(metexload()) ;
 	mapele_mmupd(mv,div<0);
 	glPushMatrix();

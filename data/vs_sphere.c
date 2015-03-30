@@ -11,20 +11,22 @@ void main(){
 	vec4 v = gl_ModelViewMatrix * gl_Vertex;
 
 	float py=v.y+arg.x;
-	if(py==0){
-		v.z=v.x=0;
-		v.y=-1;
-	}else if(py==1){
-		v.z=v.x=0;
-		v.y=1;
+	float sgy=arg.y;
+	float cgy=arg.z;
+	if(py<=0){
+		v.x=0;
+		v.y=-cgy;
+		v.z=-sgy;
+	}else if(py>=1){
+		v.x=0;
+		v.y=cgy;
+		v.z=sgy;
 	}else{
 		v.xy=v.xy*2*pi;
 		float svx=sin(v.x);
 		float cvx=cos(v.x);
 		float svy=sinh(v.y);
 		float cvy=cosh(v.y);
-		float sgy=arg.y;
-		float cgy=arg.z;
 		float f=cgy/(cvy-svy*sgy);
 
 		v.x=f*svx;
