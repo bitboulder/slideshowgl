@@ -326,6 +326,7 @@ char mapview(struct mapview *mv,char dst){
 	mv->s  = dst ? (float)map.pos.iz : ecur->s;
 	mv->gx = dst ? (float)map.pos.gx : ecur->x;
 	mv->gy = dst ? (float)map.pos.gy : ecur->y;
+	sx=exp2f(-mv->s-8.f);
 
 	mv->gx=remainderf(mv->gx,360.f);
 	if(mv->gx==180.f) mv->gx=-180.f;
@@ -333,24 +334,72 @@ char mapview(struct mapview *mv,char dst){
 	if(mv->gy<-90.f){ mv->gy=-180.f-mv->gy; mv->gx+=180.f; }
 	if(mv->gy> 90.f){ mv->gy= 180.f-mv->gy; mv->gx+=180.f; }
 
-	sx=exp2f(-mv->s-8.f);
 	mv->px=mv->gx/360.+.5;
 	mv->py=0.5-asinh(tan(mv->gy/180.*M_PI))/M_PI/2.;
-	mv->pw=sx*(float)*map.scr_w;
-	mv->ph=sx*(float)*map.scr_h;
 
-	mv->psx0=mv->gx/360.+.5-mv->pw/2.;
-	mv->psx1=mv->gx/360.+.5+mv->pw/2.;
-	mv->psy0=mv->py+mv->ph/2.;
-	mv->psy1=mv->py-mv->ph/2.;
+	mv->kdist=5.f;
+	mv->kfov=35.f;
+	if(!dplwritemode()){
+		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
+		float ds=1.f/((float)(3.1835/sx/2./M_PI/map.scr_h[0]/cot)); /* TODO: 3.1835 from mv->gy ?? */
+		float sr1s=1.f+sdlrat()*sdlrat();
+		float src1s=sr1s/cot/cot;
+		float rad1s=1.f-ds*(2.f+ds)*src1s;
+		mv->ks=mv->kdist/ds;
+		if(rad1s<0){
+			mv->gsx0=mv->gx-90.;
+			mv->gsx1=mv->gx+90.;
+			mv->gsy0=mv->gy-90.;
+			mv->gsy1=mv->gy+90.;
+			mv->gw=180.f;
+			mv->gh=180.f;
+		}else{
+			float kz1s=( -(1.f+ds)*src1s-sqrtf(rad1s) )/(1.f+src1s);
+			float sr1=1.f;
+			float src1=sr1/cot/cot;
+			float rad1=1.f-ds*(2.f+ds)*src1;
+			float kz1=( -(1.f+ds)*src1-sqrtf(rad1) )/(1.f+src1);
+			float sgy=sinf((float)mv->gy/180.f*M_PIf);
+			float cgy=cosf((float)mv->gy/180.f*M_PIf);
+			float gythr=asinf(2/cot)/M_PIf*90.f;
+			float kzy0 = mv->gy<-90.f+gythr || mv->gy>-gythr ? kz1  : kz1s;
+			float kzy1 = mv->gy> 90.f-gythr || mv->gy< gythr ? kz1s : kz1;
 
-	mv->gsy0=atan(sinh((0.5-mv->psy0)*2.*M_PI))*180./M_PI;
-	mv->gsy1=atan(sinh((0.5-mv->psy1)*2.*M_PI))*180./M_PI;
-	mv->gsx0=(mv->psx0-.5)*360.;
-	mv->gsx1=(mv->psx1-.5)*360.;
+			mv->gsx0=fabsf(atanf(sdlrat()/(cgy*cot/(1+(1+ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f);
+			mv->gw=2.f*mv->gsx0; /* TODO: use value at center ?? */
+			mv->gsx1=mv->gx+mv->gsx0;
+			mv->gsx0=mv->gx-mv->gsx0;
 
-	mv->gw=mv->pw*360.f;
-	mv->gh=(float)(mv->gsy1-mv->gsy0);
+			mv->gsy0=-90.f+acosf(kzy0*sgy+(kzy0+1+ds)/cot*cgy)/M_PIf*180.f;
+			mv->gsy1=-90.f+acosf(kzy1*sgy-(kzy1+1+ds)/cot*cgy)/M_PIf*180.f;
+			mv->gh=mv->gsy1-mv->gsy0; /* TODO: use value at center ?? */
+
+		}
+
+		mapg2p(mv->gsx0,mv->gsy0,mv->psx0,mv->psy0);
+		mapg2p(mv->gsx1,mv->gsy1,mv->psx1,mv->psy1);
+		mv->pw=mv->psx1-mv->psx0;
+		mv->ph=mv->psy0-mv->psy1;
+	}else{
+
+		mv->pw=sx*(float)*map.scr_w;
+		mv->ph=sx*(float)*map.scr_h;
+
+		mv->psx0=mv->gx/360.+.5-mv->pw/2.;
+		mv->psx1=mv->gx/360.+.5+mv->pw/2.;
+		mv->psy0=mv->py+mv->ph/2.;
+		mv->psy1=mv->py-mv->ph/2.;
+
+		mv->gsy0=atan(sinh((0.5-mv->psy0)*2.*M_PI))*180./M_PI;
+		mv->gsy1=atan(sinh((0.5-mv->psy1)*2.*M_PI))*180./M_PI;
+		mv->gsx0=(mv->psx0-.5)*360.;
+		mv->gsx1=(mv->psx1-.5)*360.;
+
+		mv->gw=mv->pw*360.f;
+		mv->gh=(float)(mv->gsy1-mv->gsy0);
+
+	}
+	//printf("%.2f-%.2f x %.2f-%.2f\n",mv->gsx0,mv->gsx1,mv->gsy0,mv->gsy1);
 
 	return 1;
 }
@@ -1081,13 +1130,10 @@ char maprender(char sel){
 	if(!sel) while(texload()) ;
 	if(mapview(&mv,0)){
 		if(!dplwritemode()){
-			float dist=5.f;
-			float fov=35.f;
-			float s=(float)(3.1835*256.*dist/2./M_PI*pow(2.,mv.s)/map.scr_h[0]*tan(fov/360.*M_PI)); /* TODO: 3.1835 from mv->gy ?? */
-			glmodex(GLM_3DS,fov,0); 
+			glmodex(GLM_3DS,mv.kfov,0); 
 			glMatrixMode(GL_PROJECTION);
-			glTranslatef(0.f,0.f,dist);
-			glScalef(s,s,s);
+			glTranslatef(0.f,0.f,mv.kdist);
+			glScalef(mv.ks,mv.ks,mv.ks);
 			glTranslatef(0.f,0.f,1.f);
 			glMatrixMode(GL_MODELVIEW);
 			glUniform3f(glarg(),(float)mv.py,sinf(mv.gy/180.f*M_PIf),cosf(mv.gy/180.f*M_PIf));

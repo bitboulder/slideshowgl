@@ -11,6 +11,7 @@ struct mappos {
 struct mapview {
 	int    iz;
 	float  s;
+	float  ks,kdist,kfov;
 	float  gx,gy;
 	double px,py;
 	float  pw,ph;

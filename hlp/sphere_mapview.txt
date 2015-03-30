@@ -1,0 +1,131 @@
+
+Raum mit Kugel: kx,ky,kz (Vor Projektion)
+
+Bildschirm: sx,sy (nach Projektion)
+(-1,+1 - +1,+1)
+(-1,-1 - +1,-1)
+
+Projektion:
+kx = -ky*sdlrat*sx/sy
+kz = -ky*cot(fov/360*pi)/sy -1 -dist/s
+
+cot= cot(fov/360*pi)
+s  = 3.1835*2^(iz+8)*dist/2/pi/scrh*cot
+ds = dist/s
+ds = 1/3.1835/2^(iz+8)*2*pi*scrh/cot
+sr = sy^2+sx^2*sdlrat^2
+src= sr/cot^2
+
+kx =  sx*(kz+1+ds)*sdlrat/cot
+ky = -sy*(kz+1+ds)/cot
+
+Kugel:
+1 = kx^2+ky^2+kz^2
+1 = kz^2
+    + sy^2*kz^2/cot^2 + sy^2*2*kz*(1+ds)/cot^2 + sy^2*(1+ds)^2/cot^2
+    + kz^2*sx^2*sdlrat^2/cot^2 + 2*kz*(1+ds)*sx^2*sdlrat^2/cot^2 + (1+ds)^2*sx^2*sdlrat^2/cot^2
+0 = kz^2*( 1 + (sy^2+sx^2*sdlrat^2)/cot^2 )
+    + kz*2*(1+ds)/cot^2*(sy^2+sx^2*sdlrat^2)
+	+ ((sy^2+sx^2*sdlrat^2)*(1+ds)^2/cot^2 -1)
+0 = kz^2*(1+sr/cot^2) + kz*2*(1+ds)/cot^2*sr + (sr*(1+ds)^2/cot^2-1)
+
+kz12 = ( -(1+ds)/cot^2*sr +- sqrt( (1+ds)^2/cot^4*sr^2 - (sr*(1+ds)^2/cot^2-1)*(1+sr/cot^2) ) )/(1+sr/cot^2)
+rad = (1+ds)^2/cot^4*sr^2 - (sr*(1+ds)^2/cot^2-1)*(1+sr/cot^2)
+rad = 1-ds*(2+ds)*src
+
+kz12 = ( -(1+ds)*src +- sqrt(1-ds*(2+ds)*src) )/(1+src)
+
+Near:
+kz = ( -(1+ds)*src - sqrt(1-ds*(2+ds)*src) )/(1+src)
+kx =  sx*(kz+1+ds)*sdlrat/cot
+ky = -sy*(kz+1+ds)/cot
+
+kx'= kx
+ky'= ky*cgy+kz*sgy
+kz'=-ky*sgy+kz*cgy
+
+gsy=90-acos(-ky')
+gsx=gx+( atan(-kx'/kz')	# kz'<0
+       ( sgn(kx')*90	# kz'=0
+
+gsy=-90+acos( -sy*(kz+1+ds)/cot*cgy+kz*sgy )
+gsx01=gx+atan(1/(ky/kx*sgy-kz/kx*cgy))
+
+sx	sy	sr		kz		kx		ky		ky'
+-1	-1	1+sr^2	kz1s	-kx1s	ky1s	ky'1sp
+ 1	-1	1+sr^2	kz1s	kx1s	ky1s	ky'1sp
+-1	 1	1+sr^2	kz1s	-kx1s	-ky1s	ky'1sn
+ 1	 1	1+sr^2	kz1s	kx1s	-ky1s	ky'1sn
+ 0	-1	1		kz1		0		ky1		ky'1p
+ 0	 1	1		kz1		0		-ky1	ky'1n
+-1	 0	sr^2	kzs		-kxs	0		ky's
+ 1	 0	sr^2	kzs		kxs		0		ky's
+
+gsx01=gx+-atan(1/(-sy/sx/sdlrat*sgy-kz/sx/(kz+1+ds)/sdlrat*cot*cgy))
+gsx01=gx-+abs(atan(sdlrat/(cot*cgy/(1+(1+ds)/kz) + sy*sgy)))
+min(abs( cgy*cot/(1+(1+ds)/kz) + abs(sgy) ))
+gsx01=gx-+abs(atan(sdlrat/( cgy*cot/(1+(1+ds)/kz1s) + abs(sgy) )))  # wenn 1+(1+ds)/kz<0
+gsx01=gx-+abs(atan(sdlrat/( cgy*cot/(1+(1+ds)/kzs) )))  # wenn 1+(1+ds)/kz<0 && cgy*cot/(1+(1+ds)/kz)<-2*abs(sgy)
+
+1+(1+ds)/kz<0
+kz>-1-ds
+-(1+ds)*src/(1+src) - X/(1+src) > -1-ds
+-(1+ds)*src/(1+src)+1+ds > X/(1+src)
+1+ds > X
+1+2*ds+ds^2 > 1-ds*(2+ds)*src
+2*ds+ds^2 > (2*ds+ds^2)*src
+1>src
+cot^2>1+sdlrat^2
+fov==35 => sdlrat<3
+
+cgy*cot/(1+(1+ds)/kz)<-2*abs(sgy)
+-cot/2/abs(tgy)-1 < (1+ds)/kz < -1-ds
+cot/2/ds > abs(tgy)
+3.1835*2^(iz+8)/4/pi/scrh*cot^2 > abs(tgy)
+abs(tgy) < 2.5483*2^(iz+8)/srch
+scrh=768
+iz	abs(tgy)	gy
+4	13.591		85,79
+5	27.18		87,89
+10	869.8		89.94
+15	27834		89.99
+20	890695		90.00
+
+gsx01 = gx-+atan(sdlrat/( cgy*cot/(1+(1+ds)/kz1s) + abs(sgy) ))
+gw    = 2 * atan(sdlrat/( cgy*cot/(1+(1+ds)/kzs) ))
+
+gsy=-90+acos( -sy*(kz+1+ds)/cot*cgy+kz*sgy )
+gsy=-90+acos( kz*(sgy-sy/cot/cgy)-sy*(1+ds)/cot*cgy )
+
+gsy(sx=0)>gsy(sx=1)
+-90+acos(sx=0)>-90+acos(sx=1)
+acos(sx=0)>acos(sx=1)
+kz1*(sgy-sy/cot/cgy) < kz1s*(sgy-sy/cot/cgy)
+
+sgy-sy/cot/cgy>0
+sgy*cgy*cot>sy
+s2gy>sy*2/cot
+#sy==1 & fov==35
+s2gy>0.6306
+gy== 19.547...70.453
+#sy==-1 & fov==35
+s2gy>-0.6306
+gy== -90...-70.453 & -19.547...90
+
+kz1 < kz1s
+( -(1+ds)*src1 - sqrt(1-ds*(2+ds)*src1) )/(1+src1) < ( -(1+ds)*src1s - sqrt(1-ds*(2+ds)*src1s) )/(1+src1s)
+src1=1/cot^2
+src1s=(1+sdlrat)/cot^2
+( -(1+ds) - sqrt(1-ds*(2+ds)*cot^2) )/(1+cot^2) < ( -(1+ds)*(1+sdlrat) - sqrt(1-ds*(2+ds)*(1+sdlrat)*cot^2) )/(cot^2+1+sdlrat)
+(1+ds)/(1+cot^2) + sqrt(1-ds*(2+ds)*cot^2)/(1+cot^2) > (1+ds)*(1+sdlrat)/(cot^2+1+sdlrat) + sqrt(1-ds*(2+ds)*(1+sdlrat)*cot^2)/(cot^2+1+sdlrat)
+# empirisch: wahr
+
+   arcsin(2/cot)/pi*90 = 19.547
+90-arcsin(2/cot)/pi*90 = 70.453
+gsy0=-90+acos( kz1 *sgy+(kz1 +1+ds)/cot*cgy )	# gy== -90...-70.453 & -19.547...90
+gsy0=-90+acos( kz1s*sgy+(kz1s+1+ds)/cot*cgy )	# gy== -70.453...-19.547
+gsy1=-90+acos( kz1 *sgy-(kz1 +1+ds)/cot*cgy )	# gy== 19.547...70.453
+gsy1=-90+acos( kz1s*sgy-(kz1s+1+ds)/cot*cgy )	# gy== -90...19.547 & 70.453...90
+
+gh=acos(kz1*sgy-(kz1+1+ds)/cot*cgy)-acos(kz1*sgy+(kz1+1+ds)/cot*cgy)
+
