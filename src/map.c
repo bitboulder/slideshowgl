@@ -226,10 +226,10 @@ struct ecur *mapecur(int *iz,float *iscale){
 	(py)=(my)/size; \
 }
 
-#define mapm2i(mx,my,ix,iy) { \
+/*#define mapm2i(mx,my,ix,iy) { \
 	(ix)=(int)(mx); \
 	(iy)=(int)(my); \
-}
+}*/
 
 /*#define mapm2o(mx,my,ox,oy) { \
 	(ox)=(float)(.5-(mx)+floor(mx)); \
@@ -269,11 +269,11 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapg2k(gx,gy,k); \
 }*/
 
-#define mapg2i(gx,gy,iz,ix,iy) { \
+/*#define mapg2i(gx,gy,iz,ix,iy) { \
 	double mx,my; \
 	mapg2m(gx,gy,iz,mx,my); \
 	mapm2i(mx,my,ix,iy); \
-}
+}*/
 
 /*#define mapg2o(gx,gy,iz,ox,oy) { \
 	double mx,my; \
@@ -877,21 +877,20 @@ char mapscrtis(int *iw,int *ih){
 char mapldcheck(){
 	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
-	struct ecur *ecur=mapecur(&iz,NULL); /* TODO: replace with mapview */
 	struct mapview mv;
-	if(map.init>MI_TEX || !mapon() || !ecur) return 0;
-	if(!mapscrtis(&iw,&ih)) return 0; /* TODO: replace with mapview */
-	if(!mapview(&mv,1)) return 0;
+	if(map.init>MI_TEX || !mapon() || !mapview(&mv,1)) return 0;
+	if(!mapscrtis(&iw,&ih)) return 0;
 	if(map.ele && mapeleload(&mv)) return 1;
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
-	if(iz>maptypes[map.maptype].maxz) iz=maptypes[map.maptype].maxz;
+	iz = mv.iz>maptypes[map.maptype].maxz ? maptypes[map.maptype].maxz : mv.iz;
 	iw=(iw-1)/2;
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
 	izmin=MAX(iz-6,0);
 	for(;iz>=izmin;iz=(iz-1)&~1,ir--){
-		mapg2i(ecur->x,ecur->y,iz,ix,iy);
+		ix=(int)(mv.px*(double)(1<<iz));
+		iy=(int)(mv.py*(double)(1<<iz));
 		for(r=0;r<=ir;r++){
 			for(i=0;i<(r?r*8:1);i++){
 				if(!r) ixc=iyc=0;
