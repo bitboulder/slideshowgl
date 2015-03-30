@@ -17,6 +17,7 @@ data = """
 	FreeSans.ttf
 	vs.c
 	vs_fish.c
+	vs_sphere.c
 	fs.c
 	effprg.pl
 	effprged.pl
