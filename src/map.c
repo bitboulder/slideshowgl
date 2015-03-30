@@ -341,7 +341,7 @@ char mapview(struct mapview *mv,char dst){
 	mv->kfov=35.f;
 	if(!dplwritemode()){
 		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
-		float ds=1.f/((float)(3.1835/sx/2./M_PI/map.scr_h[0]/cot)); /* TODO: 3.1835 from mv->gy ?? */
+		float ds=sx*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
 		float sr1s=1.f+sdlrat()*sdlrat();
 		float src1s=sr1s/cot/cot;
 		float rad1s=1.f-ds*(2.f+ds)*src1s;
