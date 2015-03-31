@@ -22,6 +22,8 @@ data = """
 	effprg.pl
 	effprged.pl
 	fs_modsaetigung.c
+	mapref.gz
+	srtm.map.gz
 """.split()
 
 env['DATADIR'] = os.path.join(prefix,'share',env['APPNAME'])
