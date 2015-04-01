@@ -284,7 +284,7 @@ struct ecur *mapecur(int *iz,float *iscale){
 #define maps2g(sx,sy,iz,gx,gy) { \
 	maps2m(sx,sy,iz,gx,gy); \
 	mapm2g(gx,gy,iz,gx,gy); \
-}
+} /* TODO: maps2g for sphere based on mapview */
 
 float mapgscrw(float s,double gx,double *g0,double *g1){
 	float v=powf(2.f,-s)/256.f*360.f*(float)*map.scr_w;

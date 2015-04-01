@@ -266,8 +266,7 @@ void glmodeslave(enum glmode dst){
 		if(dst==GLM_3DS) glDisable(GL_DEPTH_TEST);
 		else glEnable(GL_DEPTH_TEST);
 		glEnable(GL_TEXTURE_2D);
-		if(gl.sel.act) glDisable(GL_CULL_FACE); /* TODO enable when y-inversion fixed */
-		else glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
 		glseccol(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -318,8 +317,9 @@ float glmodex(enum glmode dst,float h3d,int fm){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	if(gl.sel.act){
-		gluPickMatrix(gl.sel.x,gl.sel.y,1.,1.,gl.sel.view);
-		glScalef(1.f,-1.f,1.f); /* TODO: why y-inversion ?? */
+		float scr_h;
+		sdlwh(NULL,&scr_h);
+		gluPickMatrix(gl.sel.x,scr_h-1.f-(float)gl.sel.y,1.,1.,gl.sel.view);
 	}
 	switch(dst){
 	case GLM_3D:
