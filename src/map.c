@@ -324,25 +324,22 @@ char maps2g(struct mapview *mv,float sx,float sy,double *gx,double *gy){
 	sy=-2.f*sy;
 	sx= 2.f*sx;
 	if(map.scr_h){
-		float sex=exp2f(-mv->s-8.f);
-		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
-		float ds=sex*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
 		double sr=sy*sy+sx*sx*sdlrat();
-		double src=sr/cot/cot;
-		double rad=1.-ds*(2.f+ds)*src;
+		double src=sr/mv->cot/mv->cot;
+		double rad=1.-mv->ds*(2.f+mv->ds)*src;
 		if(rad>=0.1){
-			double kz=( -(1.f+ds)*src-sqrt(rad) )/(1.f+src);
+			double kz=( -(1.f+mv->ds)*src-sqrt(rad) )/(1.f+src);
 			float sgy=sinf((float)mv->gy/180.f*M_PIf);
 			float cgy=cosf((float)mv->gy/180.f*M_PIf);
-			if(gx) *gx=mv->gx+atan(sx*sdlrat()/(-sy*sgy-kz/(kz+1.+ds)*cot*cgy))/M_PI*180.;
-			if(gy) *gy=-90.+acos(kz*sgy-sy*(kz+1.+ds)/cot*cgy)/M_PI*180.;
+			if(gx) *gx=mv->gx+atan(sx*sdlrat()/(-sy*sgy-kz/(kz+1.+mv->ds)*mv->cot*cgy))/M_PI*180.;
+			if(gy) *gy=-90.+acos(kz*sgy-sy*(kz+1.+mv->ds)/mv->cot*cgy)/M_PI*180.;
 			return 1;
 		}
 	}
 	return 0;
 }
 
-char mapview(struct mapview *mv,char dst){
+char mapview(struct mapview *mv,char dst){ /* TODO: select calced values */
 	struct ecur *ecur = dst ? NULL : mapecur(&mv->iz,NULL);
 	float sex;
 	if((!dst && !ecur) || !map.scr_w || !map.scr_h) return 0;
@@ -364,12 +361,13 @@ char mapview(struct mapview *mv,char dst){
 	mv->kdist=5.f;
 	mv->kfov=35.f;
 	if(!dplwritemode()){
-		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
-		float ds=sex*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
 		float sr1s=1.f+sdlrat()*sdlrat();
-		float src1s=sr1s/cot/cot;
-		float rad1s=1.f-ds*(2.f+ds)*src1s;
-		mv->ks=mv->kdist/ds;
+		float rad1s,src1s;
+		mv->cot=1.f/tanf(mv->kfov/360.f*M_PIf);
+		mv->ds=sex*M_PIf*(float)map.scr_h[0]*mv->cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
+		src1s=sr1s/mv->cot/mv->cot;
+		rad1s=1.f-mv->ds*(2.f+mv->ds)*src1s;
+		mv->ks=mv->kdist/mv->ds;
 		if(rad1s<0.1){
 			mv->gsx0=mv->gx-90.;
 			mv->gsx1=mv->gx+90.;
@@ -383,28 +381,28 @@ char mapview(struct mapview *mv,char dst){
 			mv->gw=180.f;
 			mv->gh=180.f;
 		}else{
-			float kz1s=( -(1.f+ds)*src1s-sqrtf(rad1s) )/(1.f+src1s);
+			float kz1s=( -(1.f+mv->ds)*src1s-sqrtf(rad1s) )/(1.f+src1s);
 			float sr1=1.f;
-			float src1=sr1/cot/cot;
-			float rad1=1.f-ds*(2.f+ds)*src1;
-			float kz1=( -(1.f+ds)*src1-sqrtf(rad1) )/(1.f+src1);
+			float src1=sr1/mv->cot/mv->cot;
+			float rad1=1.f-mv->ds*(2.f+mv->ds)*src1;
+			float kz1=( -(1.f+mv->ds)*src1-sqrtf(rad1) )/(1.f+src1);
 			float srs=sdlrat()*sdlrat();
-			float srcs=srs/cot/cot;
-			float rads=1.f-ds*(2.f+ds)*srcs;
-			float kzs=( -(1.f+ds)*srcs-sqrtf(rads) )/(1.f+srcs);
+			float srcs=srs/mv->cot/mv->cot;
+			float rads=1.f-mv->ds*(2.f+mv->ds)*srcs;
+			float kzs=( -(1.f+mv->ds)*srcs-sqrtf(rads) )/(1.f+srcs);
 			float sgy=sinf((float)mv->gy/180.f*M_PIf);
 			float cgy=cosf((float)mv->gy/180.f*M_PIf);
-			float gsxo=-atanf(sdlrat()/(cgy*cot/(1+(1+ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f;
+			float gsxo=-atanf(sdlrat()/(cgy*mv->cot/(1+(1+mv->ds)/kz1s)+fabsf(sgy)))/M_PIf*180.f;
 			float kzy0 = mv->gy<-mv->kfov/2.f ? kz1 : kz1s;
 			float kzy1 = mv->gy> mv->kfov/2.f ? kz1 : kz1s;
 
 			mv->gsx1=mv->gx+gsxo;
 			mv->gsx0=mv->gx-gsxo;
-			mv->gw=-2.f*atanf(sdlrat()/cgy/cot*(1+(1+ds)/kzs))/M_PIf*180.f;
+			mv->gw=-2.f*atanf(sdlrat()/cgy/mv->cot*(1+(1+mv->ds)/kzs))/M_PIf*180.f;
 
-			mv->gsy0=-90.f+acosf(kzy0*sgy+(kzy0+1+ds)/cot*cgy)/M_PIf*180.f;
-			mv->gsy1=-90.f+acosf(kzy1*sgy-(kzy1+1+ds)/cot*cgy)/M_PIf*180.f;
-			mv->gh=(acosf(kz1*sgy-(kz1+1+ds)/cot*cgy)-acosf(kz1*sgy+(kz1+1+ds)/cot*cgy))/M_PIf*180.f;
+			mv->gsy0=-90.f+acosf(kzy0*sgy+(kzy0+1+mv->ds)/mv->cot*cgy)/M_PIf*180.f;
+			mv->gsy1=-90.f+acosf(kzy1*sgy-(kzy1+1+mv->ds)/mv->cot*cgy)/M_PIf*180.f;
+			mv->gh=(acosf(kz1*sgy-(kz1+1+mv->ds)/mv->cot*cgy)-acosf(kz1*sgy+(kz1+1+mv->ds)/mv->cot*cgy))/M_PIf*180.f;
 		}
 
 		mapg2p(mv->gsx0,mv->gsy0,mv->psx0,mv->psy0);

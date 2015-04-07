@@ -12,6 +12,7 @@ struct mapview {
 	int    iz;
 	float  s;
 	float  ks,kdist,kfov;
+	float  ds,cot;
 	float  gx,gy;
 	double px,py;
 	float  pw,ph;
