@@ -1053,6 +1053,7 @@ void maprendermap(struct mapview *mv){
 	int ixc,iyc;
 	int iz=mv->iz;
 	int s;
+	int gox=0,goy=0;
 	if(!dplwritemode() && iz<6) iz=6;
 	s=1<<iz;
 	glPushMatrix();
@@ -1069,10 +1070,9 @@ void maprendermap(struct mapview *mv){
 			if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
 			if(oy<0){ oy=-oy; ox+=oz/2; }
 			ox=(ox+oz)%oz;
-			glPushMatrix();
-			glTranslatef((float)ox,(float)oy,0.f);
+			glTranslatef((float)(ox-gox),(float)(oy-goy),0);
 			maprendertile(ox,oy,iz,mv->iz);
-			glPopMatrix();
+			gox=ox; goy=oy;
 		}
 	}
 	glPopMatrix();
