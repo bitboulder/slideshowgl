@@ -281,10 +281,10 @@ struct ecur *mapecur(int *iz,float *iscale){
 	mapm2o(mx,my,ox,oy); \
 }*/
 
-#define maps2g(sx,sy,iz,gx,gy) { \
+/*#define maps2g(sx,sy,iz,gx,gy) { \
 	maps2m(sx,sy,iz,gx,gy); \
 	mapm2g(gx,gy,iz,gx,gy); \
-} /* TODO: maps2g for sphere based on mapview */
+}*/
 
 float mapgscrw(float s,double gx,double *g0,double *g1){
 	float v=powf(2.f,-s)/256.f*360.f*(float)*map.scr_w;
@@ -318,15 +318,39 @@ float mappscrh(float s,double gy,double *p0,double *p1){
 	return v;
 }
 
+char maps2g(struct mapview *mv,float sx,float sy,double *gx,double *gy){
+	maps2m(sx,sy,mv->iz,*gx,*gy);
+	mapm2g(*gx,*gy,mv->iz,*gx,*gy);
+	sy=-2.f*sy;
+	sx= 2.f*sx;
+	if(map.scr_h){
+		float sex=exp2f(-mv->s-8.f);
+		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
+		float ds=sex*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
+		double sr=sy*sy+sx*sx*sdlrat();
+		double src=sr/cot/cot;
+		double rad=1.-ds*(2.f+ds)*src;
+		if(rad>=0.1){
+			double kz=( -(1.f+ds)*src-sqrt(rad) )/(1.f+src);
+			float sgy=sinf((float)mv->gy/180.f*M_PIf);
+			float cgy=cosf((float)mv->gy/180.f*M_PIf);
+			if(gx) *gx=mv->gx+atan(sx*sdlrat()/(-sy*sgy-kz/(kz+1.+ds)*cot*cgy))/M_PI*180.;
+			if(gy) *gy=-90.+acos(kz*sgy-sy*(kz+1.+ds)/cot*cgy)/M_PI*180.;
+			return 1;
+		}
+	}
+	return 0;
+}
+
 char mapview(struct mapview *mv,char dst){
 	struct ecur *ecur = dst ? NULL : mapecur(&mv->iz,NULL);
-	float sx;
+	float sex;
 	if((!dst && !ecur) || !map.scr_w || !map.scr_h) return 0;
 	if(dst) mv->iz=map.pos.iz;
 	mv->s  = dst ? (float)map.pos.iz : ecur->s;
 	mv->gx = dst ? (float)map.pos.gx : ecur->x;
 	mv->gy = dst ? (float)map.pos.gy : ecur->y;
-	sx=exp2f(-mv->s-8.f);
+	sex=exp2f(-mv->s-8.f);
 
 	mv->gx=remainderf(mv->gx,360.f);
 	if(mv->gx==180.f) mv->gx=-180.f;
@@ -341,7 +365,7 @@ char mapview(struct mapview *mv,char dst){
 	mv->kfov=35.f;
 	if(!dplwritemode()){
 		float cot=1.f/tanf(mv->kfov/360.f*M_PIf);
-		float ds=sx*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
+		float ds=sex*M_PIf*(float)map.scr_h[0]*cot*sinf((float)(90.-mv->gy)/180.f*M_PIf);
 		float sr1s=1.f+sdlrat()*sdlrat();
 		float src1s=sr1s/cot/cot;
 		float rad1s=1.f-ds*(2.f+ds)*src1s;
@@ -387,8 +411,8 @@ char mapview(struct mapview *mv,char dst){
 		mapg2p(mv->gsx1,mv->gsy1,mv->psx1,mv->psy1);
 	}else{
 
-		mv->pw=sx*(float)*map.scr_w;
-		mv->ph=sx*(float)*map.scr_h;
+		mv->pw=sex*(float)*map.scr_w;
+		mv->ph=sex*(float)*map.scr_h;
 
 		mv->psx0=mv->gx/360.+.5-mv->pw/2.;
 		mv->psx1=mv->gx/360.+.5+mv->pw/2.;
@@ -1070,7 +1094,7 @@ void maprendermap(struct mapview *mv){
 			if(oy>=oz){ oy=2*oz-1-oy; ox+=oz/2; }
 			if(oy<0){ oy=-oy; ox+=oz/2; }
 			ox=(ox+oz)%oz;
-			glTranslatef((float)(ox-gox),(float)(oy-goy),0);
+			glTranslatef((float)(ox-gox),(float)(oy-goy),0); /* TODO: calc without gox,goy */
 			maprendertile(ox,oy,iz,mv->iz);
 			gox=ox; goy=oy;
 		}
@@ -1164,11 +1188,12 @@ char mapmove(enum dplev ev,float sx,float sy){
 		int iz=map.pos.iz+dir;
 		double gx0,gx1,gy0,gy1;
 		if(iz<0 || iz>=N_ZOOM) return 0;
-		maps2g(sx,sy,map.pos.iz,gx0,gy0);
-		maps2g(sx,sy,iz,gx1,gy1);
+		if(!maps2g(&mv,sx,sy,&gx0,&gy0)) return 0;
 		map.pos.iz=iz;
-		map.pos.gx-=gx1-gx0;
-		map.pos.gy-=gy1-gy0;
+		if(mapview(&mv,1) && maps2g(&mv,sx,sy,&gx1,&gy1)){
+			map.pos.gx-=gx1-gx0;
+			map.pos.gy-=gy1-gy0;
+		}
 		debug(DBG_DBG,"map zoom %i (%s)",iz,maptypes[map.maptype].id);
 	}
 	sdlforceredraw();
@@ -1177,10 +1202,11 @@ char mapmove(enum dplev ev,float sx,float sy){
 
 /* thread: dpl */
 char mapmovepos(float sx,float sy){
+	struct mapview mv;
 	double gx0,gx1,gy0,gy1;
-	if(map.init>MI_TEX || !mapon()) return 0;
-	maps2g(0.,0.,map.pos.iz,gx0,gy0);
-	maps2g(sx,sy,map.pos.iz,gx1,gy1);
+	if(map.init>MI_TEX || !mapon() || !mapview(&mv,1)) return 0;
+	if(!maps2g(&mv,0.f,0.f,&gx0,&gy0)) return 0;
+	if(!maps2g(&mv,sx,sy,&gx1,&gy1)) return 0;
 	map.pos.gx+=gx1-gx0;
 	map.pos.gy+=gy1-gy0;
 	return 1;
@@ -1205,10 +1231,11 @@ void mapimgsave(const char *dir){
 
 /* thread: dpl */
 char mapmarkpos(float sx,float sy,const char *dir){
+	struct mapview mv;
 	double gx,gy;
 	if(map.init>MI_ALL || !mapon()) return 0;
 	if(!(filetype(dir)&FT_DIR)) return 0;
-	maps2g(sx,sy,map.pos.iz,gx,gy);
+	if(!mapview(&mv,1) || !maps2g(&mv,sx,sy,&gx,&gy)) return 0;
 	mapimgadd(dir,-1,gx,gy,1);
 	mapimgsave(dir);
 	return 1;
@@ -1264,7 +1291,7 @@ char mapstatupdate(char *dsttxt){
 	char *txt;
 	struct mapview mv;
 	if(map.init>MI_TEX || !mapon() || !mapview(&mv,1)) return 0;
-	maps2g(map.mouse.sx,map.mouse.sy,mv.iz,gx,gy);
+	if(!maps2g(&mv,map.mouse.sx,map.mouse.sy,&gx,&gy)) return 0;
 	mv.gw*=(6378.137f*2.f*M_PIf)/360.f*cosf(mv.gy/180.f*M_PIf);
 	mv.gh*=(6356.752314f*2.f*M_PIf)/360.f;
 	snprintf(fmt,128,"%%.%if%%c %%.%if%%c%%s %%.%ifx%%.%ifkm",
