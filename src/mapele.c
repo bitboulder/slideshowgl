@@ -57,7 +57,7 @@ struct meld {
 	unsigned short *dtex;
 };
 
-#define mapelediv(iz) ((iz)/2-4)
+#define mapelediv(mv) ((mv)->gsx1-(mv)->gsx0>90.f ? -3 : (mv)->iz/2-4)
 
 #define N_ETEXLOAD	16
 struct metexload {
@@ -367,7 +367,7 @@ char mapeleload(struct mapview *mv){
 	int gy0=(int)floor(mv->gsy0);
 	int gy1=(int)floor(mv->gsy1);
 	int gx,gy;
-	if(!glprg() || mapelediv(mv->iz)<0) return 0;
+	if(!glprg() || mapelediv(mv)<0) return 0;
 	/* TODO: restrict to -180..179, -90..89 */
 	/* TODO: load from center */
 	for(gx=gx0;gx<=gx1;gx++)
@@ -451,7 +451,7 @@ void mapelerenderld(double gx,double gy,float goff,int div,struct meld *ld){
 }
 
 void mapelerender(struct mapview *mv){
-	int div=mapelediv(mv->iz); /* see mapele_subscale.m */
+	int div=mapelediv(mv); /* see mapele_subscale.m */
 	float goff=powf(.5f,(float)div);
 	double gx0=floor(mv->gsx0/goff)*goff;
 	double gx1=floor(mv->gsx1/goff)*goff;
