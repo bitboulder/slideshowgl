@@ -240,6 +240,7 @@ void glinit(char done){
 	gl.prgms=glprgload("vs.c","fs_modsaetigung.c");
 	gl.prgfish=glprgload("vs_fish.c","fs.c");
 	gl.prgsphere=glprgload("vs_sphere.c","fs.c");
+	gl.arg=glGetUniformLocation(gl.prgsphere,"arg");
 
 	gl.movtex=ldfile2tex(finddatafile("mov.png"));
 }
@@ -271,10 +272,8 @@ void glmodeslave(enum glmode dst){
 		glseccol(1.f,0.f,0.f);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 		if(dst==GLM_3DP && gl.prgfish) glUseProgram(gl.prgfish);
-		else if(dst==GLM_3DS && gl.prgsphere){
-			glUseProgram(gl.prgsphere);
-			gl.arg=glGetUniformLocation(gl.prgsphere,"arg");
-		}else if(gl.prg) glUseProgram(gl.prg);
+		else if(dst==GLM_3DS && gl.prgsphere) glUseProgram(gl.prgsphere);
+		else if(gl.prg) glUseProgram(gl.prg);
 	break;
 	case GLM_2D:
 	case GLM_2DA:
