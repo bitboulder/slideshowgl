@@ -22,12 +22,13 @@ void main(){
 		v.y=cgy;
 		v.z=sgy;
 	}else{
+		float svx,cvx,svy,cvy,f;
 		v.xy=v.xy*2*pi;
-		float svx=sin(v.x);
-		float cvx=cos(v.x);
-		float svy=sinh(v.y);
-		float cvy=cosh(v.y);
-		float f=cgy/(cvy-svy*sgy);
+		if(abs(v.x)<2e-3){ svx=v.x; cvx=1; }
+		else{ svx=sin(v.x); cvx=cos(v.x); }
+		if(abs(v.y)<2e-3){ svy=v.y; cvy=1; }
+		else{ svy=sinh(v.y); cvy=cosh(v.y); }
+		f=cgy/(cvy-svy*sgy);
 
 		v.x=f*svx;
 		v.y=f*((cvx-cvy)*sgy+svy);
