@@ -25,7 +25,6 @@
 #include "file.h"
 #include "act.h"
 #include "eff.h"     //ISTAT_TXTSIZE
-#include "dpl_int.h" //dplwritemode
 #include "mapld.h"
 #include "mapele.h"
 
@@ -110,6 +109,7 @@ struct map {
 	const char *starpat;
 	struct { float sx,sy; } mouse;
 	GLuint cltdls;
+	char sphere;
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
@@ -130,6 +130,7 @@ struct map {
 	.mouse.sx = .5f,
 	.mouse.sy = .5f,
 	.cltdls = 0,
+	.sphere = 0,
 };
 
 char mapon(){
@@ -360,7 +361,7 @@ char mapview(struct mapview *mv,char dst){ /* TODO: select calced values */
 
 	mv->kdist=5.f;
 	mv->kfov=35.f;
-	if(!dplwritemode()){
+	if(!map.sphere){
 		float sr1s=1.f+sdlrat()*sdlrat();
 		float rad1s,src1s;
 		mv->cot=1.f/tanf(mv->kfov/360.f*M_PIf);
@@ -1076,7 +1077,7 @@ void maprendermap(struct mapview *mv){
 	int iz=mv->iz;
 	int s;
 	int gox=0,goy=0;
-	if(!dplwritemode() && iz<6) iz=6;
+	if(!map.sphere && iz<6) iz=6;
 	s=1<<iz;
 	glPushMatrix();
 	glScalef(1.f/(float)s,1.f/(float)s,1.f);
@@ -1152,7 +1153,7 @@ char maprender(char sel){
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
 	if(mapview(&mv,0)){
-		if(!dplwritemode()){
+		if(!map.sphere){
 			glmodex(GLM_3DS,mv.kfov,0); 
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,mv.kdist);
@@ -1303,7 +1304,7 @@ char mapstatupdate(char *dsttxt){
 			 map.ele ? mapelestat(gx,gy) : "",
 			 mv.gw,mv.gh);
 	txt=dsttxt+strlen(dsttxt);
-	if(dplwritemode())
+	if(map.sphere)
 		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",
 			 _(" (write-mode)"),
 			 (map.editmode==MEM_ADD?_("Add"):_("Replace")));
