@@ -1316,7 +1316,8 @@ void mapcopypos(float sx,float sy){
 	struct mapview mv;
 	char buf[64];
 	if(!mapon() || !mapview(&mv,1)) return;
-	if(!maps2g(&mv,sx,sy,&gx,&gy)) return;
+	if(sx==-10. || sy==-10.){ gx=map.pos.gx; gy=map.pos.gy; }
+	else if(!maps2g(&mv,sx,sy,&gx,&gy)) return;
 	snprintf(buf,64,"%.6f,%.6f",gy,gx);
 	SDL_SetClipboardText(buf);
 }

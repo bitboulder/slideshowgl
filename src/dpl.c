@@ -1141,6 +1141,7 @@ void dplkey(uint32_t key){
 	case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
 	case 'p': if(mapon()) dplmapeffupd(mappastepos()); else panoev(PE_FISHMODE); break;
+	case 'P': if(mapon()) mapcopypos(-10.,-10.); break;
 	case 'f': sdlfullscreen(-1); break;
 	case 'w':
 		if(dpl.pos.ailtyp&AIL_ED) cilsetact(!cilgetacti()); else{
@@ -1275,9 +1276,10 @@ char dplev(struct ev *ev){
 	break;
 	case DE_COL: effprgcolset(clickimg); break;
 	case DE_MAPMK:
-		dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
+		evdone=dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
 	break;
-	case DE_MAPPOS: mapcopypos(ev->sx,ev->sy); break;
+	case DE_MAPCOPY:  mapcopypos(ev->sx,ev->sy); break;
+	case DE_MAPPASTE: dplmapeffupd(mappastepos()); break;
 	}
 	if(dplwritemode() || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || ilcimgi(NULL)==IMGI_END) ret|=2;
 	return ret;

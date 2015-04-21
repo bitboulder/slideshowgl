@@ -27,10 +27,12 @@ __(" Left click")"\0"                __("Center to position")"\0"
 __(" Double click on marker")"\0"    __("Open marker images")"\0"
 __(" Hold on marker")"\0"            __("Show folders in marker")"\0"
 __(" Scroll")"\0"                    __("Zoom in/out")"\0"
-__(" Middle click")"\0"              __("Copy position to clipboard")"\0"
 #ifdef IF_MAPED
 __(" Right drag")"\0"                __("Move marker")"\0"
 __(" Right click")"\0"               __("Set new marker")"\0"
+#else
+__(" Middle click")"\0"              __("Paste position from clipboard")"\0"
+__(" Right click")"\0"               __("Copy position to clipboard")"\0"
 #endif
 #else
 __(" Left drag")"\0"                 __("Move")"\0"
@@ -83,7 +85,8 @@ __(" Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 __(" Home/End")"\0"            __("Goto begin/end")"\0"
 __(" Back")"\0"                __("Leave map")"\0"
 __(" /")"\0"                   __("Search for marker")"\0"
-__(" p")"\0"                   __("Set position from clipboard")"\0"
+__(" p")"\0"                   __("Paste position from clipboard")"\0"
+__(" P")"\0"                   __("Copy position to clipboard")"\0"
 __(" m")"\0"                   __("Switch map type")"\0"
 #else
 #ifdef IF_PRGED
