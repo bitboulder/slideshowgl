@@ -32,6 +32,7 @@ void mapsavepos();
 void maprestorepos();
 char mapstatupdate(char *dsttxt);
 void mapcopypos(float sx,float sy);
+struct imglist *mappastepos();
 void mapcltmove(int ci,float sx,float sy);
 char mapcltsave(int ci);
 

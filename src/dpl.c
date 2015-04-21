@@ -843,15 +843,15 @@ void dpldired(char *input,int id){
 	dplsecdir();
 }
 
+void dplmapeffupd(struct imglist *il){
+	if(!il) return;
+	cilset(il,-1,0);
+	effinit(EFFREF_ALL,DE_ZOOM,NULL,-1);
+	sdlforceredraw();
+}
+
 void dplmap(){
-	if(mapon()) mapswtype(); else{
-		struct imglist *il=mapsetpos(ilcimg(NULL));
-		if(il){
-			cilset(il,-1,0);
-			effinit(EFFREF_ALL,DE_ZOOM,NULL,-1);
-			sdlforceredraw();
-		}
-	}
+	if(mapon()) mapswtype(); else dplmapeffupd(mapsetpos(ilcimg(NULL)));
 }
 
 void dpljump(int mid,float sx,float sy,int imgi,enum dplev ev){
@@ -1140,7 +1140,7 @@ void dplkey(uint32_t key){
 	case  '\b': if(!panoev(PE_MODE)) dplevputi(DE_DIR,IMGI_END); break;
 	case 'r': dplrotate(DE_ROT1); break;
 	case 'R': dplrotate(DE_ROT2); break;
-	case 'p': panoev(PE_FISHMODE); break;
+	case 'p': if(mapon()) dplmapeffupd(mappastepos()); else panoev(PE_FISHMODE); break;
 	case 'f': sdlfullscreen(-1); break;
 	case 'w':
 		if(dpl.pos.ailtyp&AIL_ED) cilsetact(!cilgetacti()); else{

@@ -1320,6 +1320,15 @@ void mapcopypos(float sx,float sy){
 	/* TODO: copy to clipboard */
 }
 
+struct imglist *mappastepos(){
+	struct imglist *il;
+	/*char *buf="51.082175,13.733098";*/
+	if(!mapon()) return NULL;
+	map.pos.gx=13.733098;
+	map.pos.gy=51.082175;
+	return ilfind("[MAP]",&il) ? il : NULL;
+}
+
 void mapcltmove(int i,float sx,float sy){
 	struct mapclti *clti;
 	float csx,csy;

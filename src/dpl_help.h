@@ -83,6 +83,7 @@ __(" Pageup/Pagedown")"\0"     __("Zoom in/out")"\0"
 __(" Home/End")"\0"            __("Goto begin/end")"\0"
 __(" Back")"\0"                __("Leave map")"\0"
 __(" /")"\0"                   __("Search for marker")"\0"
+__(" p")"\0"                   __("Set position from clipboard")"\0"
 __(" m")"\0"                   __("Switch map type")"\0"
 #else
 #ifdef IF_PRGED
