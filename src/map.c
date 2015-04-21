@@ -1314,18 +1314,23 @@ char mapstatupdate(char *dsttxt){
 void mapcopypos(float sx,float sy){
 	double gx,gy;
 	struct mapview mv;
+	char buf[64];
 	if(!mapon() || !mapview(&mv,1)) return;
 	if(!maps2g(&mv,sx,sy,&gx,&gy)) return;
-	printf("%.6f,%.6f\n",gy,gx);
-	/* TODO: copy to clipboard */
+	snprintf(buf,64,"%.6f,%.6f",gy,gx);
+	SDL_SetClipboardText(buf);
 }
 
 struct imglist *mappastepos(){
 	struct imglist *il;
-	/*char *buf="51.082175,13.733098";*/
-	if(!mapon()) return NULL;
-	map.pos.gx=13.733098;
-	map.pos.gy=51.082175;
+	char *buf,*p;
+	double x,y;
+	if(!mapon() || !(buf=SDL_GetClipboardText())) return NULL;
+	if(!(p=strchr(buf,','))) return NULL;
+	*p='\0';
+	if(!(y=atof(buf)) || !(x=atof(p+1))) return NULL;
+	map.pos.gx=x;
+	map.pos.gy=y;
 	return ilfind("[MAP]",&il) ? il : NULL;
 }
 
