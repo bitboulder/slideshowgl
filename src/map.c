@@ -21,6 +21,7 @@
 #include "file.h"
 #include "cfg.h"
 #include "sdl.h"
+#include "dpl_int.h"
 #include "gl_rnd.h"
 #include "file.h"
 #include "act.h"
@@ -1304,7 +1305,7 @@ char mapstatupdate(char *dsttxt){
 			 map.ele ? mapelestat(gx,gy) : "",
 			 mv.gw,mv.gh);
 	txt=dsttxt+strlen(dsttxt);
-	if(map.sphere)
+	if(dplwritemode())
 		snprintf(txt,(size_t)(dsttxt+ISTAT_TXTSIZE-txt),"%s [%s]",
 			 _(" (write-mode)"),
 			 (map.editmode==MEM_ADD?_("Add"):_("Replace")));
