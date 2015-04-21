@@ -1277,6 +1277,7 @@ char dplev(struct ev *ev){
 	case DE_MAPMK:
 		dplinputtxtinitp(ITM_MAPMK,ev->sx,ev->sy);
 	break;
+	case DE_MAPPOS: mapcopypos(ev->sx,ev->sy); break;
 	}
 	if(dplwritemode() || dpl.pos.zoom!=0 || ev->ev!=DE_RIGHT || ilcimgi(NULL)==IMGI_END) ret|=2;
 	return ret;

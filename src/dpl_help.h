@@ -27,6 +27,7 @@ __(" Left click")"\0"                __("Center to position")"\0"
 __(" Double click on marker")"\0"    __("Open marker images")"\0"
 __(" Hold on marker")"\0"            __("Show folders in marker")"\0"
 __(" Scroll")"\0"                    __("Zoom in/out")"\0"
+__(" Middle click")"\0"              __("Copy position to clipboard")"\0"
 #ifdef IF_MAPED
 __(" Right drag")"\0"                __("Move marker")"\0"
 __(" Right click")"\0"               __("Set new marker")"\0"

@@ -1311,6 +1311,15 @@ char mapstatupdate(char *dsttxt){
 	return 1;
 }
 
+void mapcopypos(float sx,float sy){
+	double gx,gy;
+	struct mapview mv;
+	if(!mapon() || !mapview(&mv,1)) return;
+	if(!maps2g(&mv,sx,sy,&gx,&gy)) return;
+	printf("%.6f,%.6f\n",gy,gx);
+	/* TODO: copy to clipboard */
+}
+
 void mapcltmove(int i,float sx,float sy){
 	struct mapclti *clti;
 	float csx,csy;
