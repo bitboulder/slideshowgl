@@ -509,8 +509,11 @@ char ldfload(struct imgld *il,enum imgtex it){
 		lastscale=scale;
 		sw=(float)(il->w/scale);
 		sh=(float)(il->h/scale);
-		tw=(int)(sw/(float)xres); if(tw*xres<sw) tw++;
-		th=(int)(sh/(float)yres); if(th*yres<sh) th++;
+		while((float)(xres>>1)>=sw) xres>>=1;
+		while((float)(yres>>1)>=sh) yres>>=1;
+		tw=(int)ceil(sw/(float)xres);
+		th=(int)ceil(sh/(float)yres);
+		printf("ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)\n",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		debug(DBG_DBG,"ld Loading to tex %s (%ix%i -> %i -> %ix%i -> t: %ix%i %ix%i)",_(imgtex_str[i]),il->w,il->h,scale,il->w/scale,il->h/scale,tw,th,xres,yres);
 		tx=0;
 		if(tex->tx){
