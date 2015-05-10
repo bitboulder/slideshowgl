@@ -92,7 +92,7 @@ void metexloadput(struct meld *ld){
 	mapele.tl.wi=nwi;
 }
 
-char metexload(){
+char metexload(){ /* TODO: unify into load.c */
 	struct meld *ld;
 	if(mapele.tl.wi==mapele.tl.ri) return 0;
 	ld=mapele.tl.buf[mapele.tl.ri];

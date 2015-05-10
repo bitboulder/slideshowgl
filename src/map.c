@@ -833,7 +833,7 @@ void texloadput(struct tile *ti,SDL_Surface *sf){
 	map.tl.wi=nwi;
 }
 
-char texload(){
+char texload(){ /* TODO: unify into load.c */
 	SDL_Surface *sf;
 	struct tile *ti;
 	if(map.tl.wi==map.tl.ri) return 0;
