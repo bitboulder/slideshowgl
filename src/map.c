@@ -905,7 +905,7 @@ char mapscrtis(int *iw,int *ih){
 char mapldcheckfree(struct mapview *mv){
 	int ch;
 	struct tile **ti;
-	for(ch=0;ch<NTHSH;ch++) for(ti=map.tileh+ch;ti[0];ti=&ti[0]->nxt){
+	for(ch=0;ch<NTHSH;ch++) for(ti=map.tileh+ch;ti[0];ti=&ti[0]->nxt){ /* TODO: repeat from last ch */
 		int ize=1<<ti[0]->iz;
 		int ixc=(int)(mv->px*(double)ize);
 		int iyc=(int)(mv->py*(double)ize);
