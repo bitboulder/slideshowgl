@@ -503,6 +503,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
 			while(wide/scale>load.maximgwide[i]) scale++;
 		}
+		/* TODO: skip loading into small tex if big tex activated */
 		if(lastscale && lastscale==scale && !tex->pano) continue;
 		tex->loading=1;
 		tex->loaded=0;
@@ -519,7 +520,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 			while(tex->tx[tx].tex) tx++;
 			while(tx>tw*th){
 				tx--;
-				/* todo: glDeleteTextures(tex->tx[tx] */
+				/* TODO: glDeleteTextures(tex->tx[tx] */
 			}
 		}
 		ti=tex->tx=realloc(tex->tx,sizeof(struct itx)*(long unsigned int)(tw*th+1));
