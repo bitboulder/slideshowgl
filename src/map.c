@@ -872,7 +872,7 @@ char maploadtile(struct tile *ti){
 	ti->loading=mapld_check(map.maptype,ti->iz,ti->ix,ti->iy,!ti->loading,fn);
 	if(ti->loading<2 || ti->ft>=filetime(fn)) return 0;
 	ti->ft=filetime(fn);
-	debug(DBG_STA,"map loading map %i/%i/%i",ti->iz,ti->ix,ti->iy);
+	debug(DBG_STA,"map loading map %s/%i/%i/%i",maptypes[map.maptype].id,ti->iz,ti->ix,ti->iy);
 	if(!(sf=IMG_Load(fn))) return 0;
 	if(sf->w!=256 || sf->h!=256) return 0;
 	memset(&fmt,0,sizeof(SDL_PixelFormat));
@@ -902,6 +902,34 @@ char mapscrtis(int *iw,int *ih){
 	return 1;
 }
 
+char mapldcheckfree(struct mapview *mv){
+	unsigned int mt;
+	int ix,iy,ixc,iyc,iz;
+	if(map.tile) for(mt=0;mt<nmaptypes;mt++) if(map.tile[mt])
+		for(iz=N_ZOOM-1;iz>0;iz--) if(map.tile[mt][iz]){
+			int ux=0;
+			ixc=(int)(mv->px*(double)(1<<iz));
+			iyc=(int)(mv->py*(double)(1<<iz));
+			for(ix=(1<<iz)-1;ix>=0;ux+=map.tile[mt][iz][ix--]?0:1) if(map.tile[mt][iz][ix]){
+				int uy=0;
+				for(iy=(1<<iz)-1;iy>=0;uy+=map.tile[mt][iz][ix][iy--].tex?0:1) if((abs(ix-ixc)%(1<<iz)>12 || abs(iy-iyc)%(1<<iz)>12) && map.tile[mt][iz][ix][iy].tex){
+					debug(DBG_STA,"map free map %s/%i/%i/%i",maptypes[mt].id,iz,ix,iy);
+					texloadput(map.tile[mt][iz][ix]+iy,NULL);
+					return 1;
+				}
+				if(!uy){
+					free(map.tile[mt][iz][ix]);
+					map.tile[mt][iz][ix]=NULL;
+				}
+			}
+			if(!ux){
+				free(map.tile[mt][iz]);
+				map.tile[mt][iz]=NULL;
+			}
+		}
+	return 0;
+}
+
 char mapldcheck(){
 	int ix,iy,ixc,iyc,iz,izmin;
 	int iw,ih,ir,r,i;
@@ -909,6 +937,7 @@ char mapldcheck(){
 	if(map.init>MI_TEX || !mapon() || !mapview(&mv,1)) return 0;
 	if(!mapscrtis(&iw,&ih)) return 0;
 	if(map.ele && mapeleload(&mv)) return 1;
+	/* load head */
 	if(mapldchecktile(0,0,0)) return 1;
 	for(ix=0;ix<7;ix++) for(iy=0;iy<7;iy++) if(mapldchecktile(ix,iy,3)) return 1;
 	iz = mv.iz>maptypes[map.maptype].maxz ? maptypes[map.maptype].maxz : mv.iz;
@@ -916,6 +945,7 @@ char mapldcheck(){
 	ih=(ih-1)/2;
 	ir=MAX(iw,ih);
 	izmin=MAX(iz-6,0);
+	/* load current + above */
 	for(;iz>=izmin;iz=(iz-1)&~1,ir--){
 		ix=(int)(mv.px*(double)(1<<iz));
 		iy=(int)(mv.py*(double)(1<<iz));
@@ -933,7 +963,7 @@ char mapldcheck(){
 			}
 		}
 	}
-	return 0;
+	return mapldcheckfree(&mv);
 }
 
 struct maploaddir {
