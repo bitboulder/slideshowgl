@@ -46,6 +46,8 @@ struct maptype *maptypes=NULL;
 unsigned int nmaptypes=0;
 
 struct tile {
+	struct tile *nxt;
+	unsigned int mt;
 	int ix,iy,iz;
 	long ft;
 	unsigned long ftchk;
@@ -92,13 +94,14 @@ struct mapimgs {
 	struct mapclt clt[N_ZOOM];
 } mapimgs;
 
+#define NTHSH	4192
 struct map {
 	enum mapinit {MI_ALL=0,MI_TEX=1,MI_BDIR=2,MI_NONE=3} init;
 	char *basedirs;
 	unsigned int maptype;
 	struct mappos pos;
 	struct mappos possave;
-	struct tile ****tile;
+	struct tile *tileh[NTHSH];
 	struct texload tl;
 	int *scr_w, *scr_h;
 	struct tile imgdir[5];
@@ -118,7 +121,7 @@ struct map {
 	.pos.gx = 13.733098,
 	.pos.gy = 51.082175,
 	.pos.iz = 12,
-	.tile = NULL,
+	.tileh = { NULL },
 	.tl.wi = 0,
 	.tl.ri = 0,
 	.scr_w = NULL,
@@ -433,32 +436,29 @@ char mapview(struct mapview *mv,char dst){ /* TODO: select calced values */
 	return 1;
 }
 
-struct tile *maptilefind(int ix,int iy,int iz,char create){
-	if(iz<0 || iz>=N_ZOOM) return NULL;
-	if(ix<0 || ix>=1<<iz ) return NULL;
-	if(iy<0 || iy>=1<<iz ) return NULL;
-	if(!map.tile){
-		if(!create) return NULL;
-		map.tile=calloc(nmaptypes,sizeof(struct tile **));
-	}
-	if(!map.tile[map.maptype]){
-		if(!create) return NULL;
-		map.tile[map.maptype]=calloc(N_ZOOM,sizeof(struct tile **));
-	}
-	if(!map.tile[map.maptype][iz]){
-		if(!create) return NULL;
-		map.tile[map.maptype][iz]=calloc((size_t)1<<iz,sizeof(struct tile *));
-	}
-	if(!map.tile[map.maptype][iz][ix]){
-		if(!create) return NULL;
-		map.tile[map.maptype][iz][ix]=calloc((size_t)1<<iz,sizeof(struct tile));
-	}
-	if(create){
-		map.tile[map.maptype][iz][ix][iy].ix=ix;
-		map.tile[map.maptype][iz][ix][iy].iy=iy;
-		map.tile[map.maptype][iz][ix][iy].iz=iz;
-	}
-	return map.tile[map.maptype][iz][ix]+iy;
+unsigned int maptilehch(unsigned int mt,int ix,int iy,int iz){
+	if(iz<0 || iz>=N_ZOOM) return NTHSH;
+	if(ix<0 || ix>=1<<iz ) return NTHSH;
+	if(iy<0 || iy>=1<<iz ) return NTHSH;
+	if(mt>=nmaptypes     ) return NTHSH;
+	return 0;
+}
+
+struct tile *maptilefind(unsigned int mt,int ix,int iy,int iz,char create){
+	unsigned int ch=maptilehch(mt,ix,iy,iz);
+	struct tile *ti;
+	if(ch==NTHSH) return NULL;
+	for(ti=map.tileh[ch];ti && (ti->mt!=mt || ti->iz!=iz || ti->iy!=iy || ti->ix!=ix);) ti=ti->nxt;
+	if(ti) return ti;
+	if(!create) return NULL;
+	ti=calloc(1,sizeof(struct tile));
+	ti->mt=mt;
+	ti->ix=ix;
+	ti->iy=iy;
+	ti->iz=iz;
+	ti->nxt=map.tileh[ch];
+	map.tileh[ch]=ti;
+	return ti;
 }
 
 const char *mapimgname(const char *dir){
@@ -855,7 +855,7 @@ char texload(){
 		ti->loading=0;
 	}else{
 		glDeleteTextures(1,&ti->tex);
-		ti->tex=0;
+		free(ti);
 	}
 	map.tl.ri=(map.tl.ri+1)%N_TEXLOAD;
 	return 1;
@@ -890,7 +890,7 @@ char maploadtile(struct tile *ti){
 }
 
 char mapldchecktile(int ix,int iy,int iz){
-	struct tile *ti=maptilefind(ix,iy,iz,1);
+	struct tile *ti=maptilefind(map.maptype,ix,iy,iz,1);
 	if(!maploadtile(ti)) return 0;
 	return 1;
 }
@@ -903,30 +903,20 @@ char mapscrtis(int *iw,int *ih){
 }
 
 char mapldcheckfree(struct mapview *mv){
-	unsigned int mt;
-	int ix,iy,ixc,iyc,iz;
-	if(map.tile) for(mt=0;mt<nmaptypes;mt++) if(map.tile[mt])
-		for(iz=N_ZOOM-1;iz>0;iz--) if(map.tile[mt][iz]){
-			int ux=0;
-			ixc=(int)(mv->px*(double)(1<<iz));
-			iyc=(int)(mv->py*(double)(1<<iz));
-			for(ix=(1<<iz)-1;ix>=0;ux+=map.tile[mt][iz][ix--]?0:1) if(map.tile[mt][iz][ix]){
-				int uy=0;
-				for(iy=(1<<iz)-1;iy>=0;uy+=map.tile[mt][iz][ix][iy--].tex?0:1) if((abs(ix-ixc)%(1<<iz)>12 || abs(iy-iyc)%(1<<iz)>12) && map.tile[mt][iz][ix][iy].tex){
-					debug(DBG_STA,"map free map %s/%i/%i/%i",maptypes[mt].id,iz,ix,iy);
-					texloadput(map.tile[mt][iz][ix]+iy,NULL);
-					return 1;
-				}
-				if(!uy){
-					free(map.tile[mt][iz][ix]);
-					map.tile[mt][iz][ix]=NULL;
-				}
-			}
-			if(!ux){
-				free(map.tile[mt][iz]);
-				map.tile[mt][iz]=NULL;
-			}
+	int ch;
+	struct tile **ti;
+	for(ch=0;ch<NTHSH;ch++) for(ti=map.tileh+ch;ti[0];ti=&ti[0]->nxt){
+		int ize=1<<ti[0]->iz;
+		int ixc=(int)(mv->px*(double)ize);
+		int iyc=(int)(mv->py*(double)ize);
+		if(abs(ti[0]->ix-ixc)%ize>12 || abs(ti[0]->iy-iyc)%ize>12){
+			struct tile *tix=ti[0];
+			debug(DBG_STA,"map free map %s/%i/%i/%i",maptypes[tix->mt].id,tix->iz,tix->ix,tix->iy);
+			ti[0]=ti[0]->nxt;
+			texloadput(tix,NULL);
+			return 1;
 		}
+	}
 	return 0;
 }
 
@@ -1033,6 +1023,8 @@ void mapaddbasedir(const char *dir,const char *name,char cfg){
 }
 
 void mapinit(){
+	int ch;
+	for(ch=0;ch<NTHSH;ch++) map.tileh[ch]=0;
 	while(map.init>2) SDL_Delay(500);
 	map.starpat=cfggetstr("map.star");
 	mapaddbasedir(cfggetstr("map.base"),"",1);
@@ -1083,7 +1075,7 @@ void maprendertile(int ix,int iy,int iz,int izo){
 	struct tile *ti;
 	float tx0=0.f,tx1=1.f,ty0=0.f,ty1=1.f;
 	if(ix<0 || iy<0 || ix>=(1<<iz) || iy>=(1<<iz)) return;
-	while(iz>izo || !(ti=maptilefind(ix,iy,iz,0)) || !ti->tex){
+	while(iz>izo || !(ti=maptilefind(map.maptype,ix,iy,iz,0)) || !ti->tex){
 		if(!iz--) return;
 		tx0/=2.f; tx1/=2.f;
 		ty0/=2.f; ty1/=2.f;
