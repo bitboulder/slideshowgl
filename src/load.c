@@ -482,7 +482,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		sdlimg->sf->pixels);
 	timer(TI_LDF,3,0);
 
-	for(i=0;i<=it;i++){
+	for(i=0;i<=it;i++){ /* TODO: update max it while loading */
 		int scale=1;
 		float sw,sh;
 		int xres=load.maxtexsize;
@@ -503,7 +503,6 @@ char ldfload(struct imgld *il,enum imgtex it){
 			while(slim/(scale+1)>=load.minimgslim[i]) scale++;
 			while(wide/scale>load.maximgwide[i]) scale++;
 		}
-		/* TODO: skip loading into small tex if big tex activated */
 		if(lastscale && lastscale==scale && !tex->pano) continue;
 		tex->loading=1;
 		tex->loaded=0;
