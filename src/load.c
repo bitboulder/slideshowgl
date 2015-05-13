@@ -411,6 +411,19 @@ GLuint ldfile2tex(const char *fn){
 
 /***************************** load + free img ********************************/
 
+enum imgtex ldcheck_texupd(enum imgtex *tex,struct img *img){
+	struct loadconcept *ldcp;
+	struct imglist *il=img->il;
+	int i,cimgi;
+	if(*tex!=TEX_BIG) return *tex;
+	cimgi=ilrelimgi(il,ilcimgi(il));
+	ldcp=ldconceptget();
+	for(i=0;ldcp->load[i].tex==TEX_FULL;i++)
+		if(ilclipimgi(il,cimgi+ldcp->load[i].imgi,0)==img->frm)
+			return *tex=TEX_FULL;
+	return *tex;
+}
+
 char ldfload(struct imgld *il,enum imgtex it){
 	struct sdlimg *sdlimg;
 	int i;
@@ -482,7 +495,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		sdlimg->sf->pixels);
 	timer(TI_LDF,3,0);
 
-	for(i=0;i<=it;i++){ /* TODO: update max it while loading */
+	for(i=0;i<=ldcheck_texupd(&it,il->img);i++){
 		int scale=1;
 		float sw,sh;
 		int xres=load.maxtexsize;
@@ -492,7 +505,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 		struct itx *ti;
 		if(tex->loaded && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
-		if(i==TEX_FULL && panoenable){
+		if(i==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))){
 			tex->pano=il->img->pano;
 			xres=load.maxpanotexsize;
 			yres=load.maxpanotexsize;
