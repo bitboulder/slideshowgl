@@ -41,6 +41,8 @@ sources = """
 	il.c
 	avl.c
 	ilo.c
+	ldc.c
+	sdlimg.c
 """
 if not env.GetOption('clean'):
 	if env['HAVE_EXIV2'] == 1:

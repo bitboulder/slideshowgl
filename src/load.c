@@ -14,7 +14,6 @@
 #include "cfg.h"
 #include "act.h"
 #include "gl.h"
-#include "ldjpg.h"
 #include "file.h"
 #include "eff.h"
 #include "ldcp.h"
@@ -22,6 +21,8 @@
 #include "prg.h"
 #include "map.h"
 #include "hist.h"
+#include "sdlimg.h"
+#include "ldc.h"
 
 #define E2(X,N)	#X
 const char *imgtex_str[]={ IMGTEX };
@@ -193,70 +194,6 @@ char ldfiletime(struct ldft *lf,enum eldft act,char *fn){
 
 char imgldfiletime(struct imgld *il,enum eldft act){
 	return ldfiletime(&il->lf,act,imgfilefn(il->img->file));
-}
-
-/***************************** sdlimg *****************************************/
-
-struct sdlimg {
-	SDL_Surface *sf;
-	GLenum fmt;
-	int ref;
-};
-
-void sdlimg_unref(struct sdlimg *sdlimg){
-	if(!sdlimg || !sdlimg->ref){
-		error(ERR_CONT,"sdlimg_unref: unref of %s image",sdlimg?"ref=0":"NULL");
-		return;
-	}
-	if(--sdlimg->ref) return;
-	SDL_FreeSurface(sdlimg->sf);
-	free(sdlimg);
-}
-
-void sdlimg_ref(struct sdlimg *sdlimg){
-	if(!sdlimg){
-		error(ERR_CONT,"sdlimg_ref: ref of NULL image");
-		return;
-	}
-	sdlimg->ref++;
-}
-
-void sdlimg_pixelformat(struct sdlimg *sdlimg){
-	SDL_PixelFormat *fmt=sdlimg->sf->format;
-	sdlimg->fmt=0;
-	if(fmt->BytesPerPixel==3){
-		if(fmt->Rmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Bmask==0x00ff0000) sdlimg->fmt=GL_RGB;
-		if(fmt->Bmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Rmask==0x00ff0000) sdlimg->fmt=GL_BGR;
-	}
-	if(fmt->BytesPerPixel==4){
-		if(fmt->Rmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Bmask==0x00ff0000 && fmt->Amask==0xff000000) sdlimg->fmt=GL_RGBA;
-		if(fmt->Bmask==0x000000ff && fmt->Gmask==0x0000ff00 && fmt->Rmask==0x00ff0000 && fmt->Amask==0xff000000) sdlimg->fmt=GL_BGRA;
-	}
-}
-
-struct sdlimg* sdlimg_gen(SDL_Surface *sf){
-	struct sdlimg *sdlimg;
-	if(!sf) return NULL;
-	sdlimg=malloc(sizeof(struct sdlimg));
-	sdlimg->sf=sf;
-	sdlimg->ref=1;
-	sdlimg_pixelformat(sdlimg);
-	if(!sdlimg->fmt){
-		SDL_PixelFormat fmtnew;
-		memset(&fmtnew,0,sizeof(SDL_PixelFormat));
-		fmtnew.BitsPerPixel=32;
-		fmtnew.BytesPerPixel=4;
-		fmtnew.Rmask=0x000000ff;
-		fmtnew.Gmask=0x0000ff00;
-		fmtnew.Bmask=0x00ff0000;
-		fmtnew.Amask=0xff000000;
-		if((sf=SDL_ConvertSurface(sdlimg->sf,&fmtnew,sdlimg->sf->flags))){
-			SDL_FreeSurface(sdlimg->sf);
-			sdlimg->sf=sf;
-			sdlimg_pixelformat(sdlimg);
-		}
-	}
-	return sdlimg;
 }
 
 /***************************** texload ****************************************/
@@ -471,9 +408,7 @@ char ldfload(struct imgld *il,enum imgtex it){
 	debug(DBG_STA,"ld loading img tex %s %s",_(imgtex_str[it]),fn);
 	if(it==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))) glsetbar(0.0001f);
 	timer(TI_LDF,0,0);
-	sdlimg=sdlimg_gen(IMG_Load(fn));
-	if(!sdlimg){ swap=1; sdlimg=sdlimg_gen(JPG_LoadSwap(fn)); }
-	if(!sdlimg){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
+	if(!(sdlimg=ldc(fn,thumb,&swap))){ error(ERR_CONT,"Loading img failed \"%s\": %s",fn,IMG_GetError()); goto end3; }
 	if(!sdlimg->fmt){ error(ERR_CONT,"Not supported pixelformat \"%s\"",fn); goto end3; }
 	timer(TI_LDF,1,0);
 
@@ -672,6 +607,7 @@ extern Uint32 paint_last;
 int ldthread(void *UNUSED(arg)){
 	tlb.pmx=SDL_CreateMutex();
 	ldconceptcompile();
+	ldcinit();
 	ldfload(defimg->ld,TEX_BIG);
 	ldfload(dirimg->ld,TEX_BIG);
 	while(!sdl_quit){
