@@ -114,6 +114,7 @@ struct map {
 	struct { float sx,sy; } mouse;
 	GLuint cltdls;
 	char sphere;
+	struct { double gx,gy; } dirstar;
 } map = {
 	.init = MI_NONE,
 	.basedirs = NULL,
@@ -135,6 +136,7 @@ struct map {
 	.mouse.sy = .5f,
 	.cltdls = 0,
 	.sphere = 0,
+	.dirstar = {0.,0.},
 };
 
 char mapon(){
@@ -170,6 +172,25 @@ char mapelevation(){
 void mapeditmode(){
 	if(map.init>MI_TEX || !mapon()) return;
 	map.editmode=(map.editmode+1)%N_MEM;
+}
+
+char sdlclip2pos(double *gx,double *gy){
+	char *buf,*p;
+	double x,y;
+	if(!(buf=SDL_GetClipboardText())) return 0;
+	if(!(p=strchr(buf,','))) return 0;
+	*p='\0';
+	if(!(y=atof(buf)) || !(x=atof(p+1))) return 0;
+	if(gx) *gx=x;
+	if(gy) *gy=y;
+	return 1;
+}
+
+char mapdirstar(){
+	if(map.init>MI_TEX || !mapon()) return 0;
+	if(map.dirstar.gx==0.) return sdlclip2pos(&map.dirstar.gx,&map.dirstar.gy);
+	map.dirstar.gx=0.;
+	return 1;
 }
 
 char mapld_cplurl(char *url,const char *in,int x,int y,int z);
@@ -1171,6 +1192,36 @@ void maprenderinfo(){
 	}
 }
 
+void maprenderdirstar(struct mapview *mv){
+	double d,pdx,pdy;
+	if(map.dirstar.gx==0. || mv->iz<10) return;
+	mapg2p(map.dirstar.gx,map.dirstar.gy,pdx,pdy);
+	glseccol(0.f,0.f,0.f);
+	for(d=0.;d<180.;d+=5.){
+		double pxy0=pdx+(mv->psy0-pdy)*tan(d/180.*M_PI); /* TODO: calc crosspoints on sphere */
+		double pxy1=pdx+(mv->psy1-pdy)*tan(d/180.*M_PI);
+		double pyx0=pdy+(mv->psx0-pdx)/tan(d/180.*M_PI);
+		double pyx1=pdy+(mv->psx1-pdx)/tan(d/180.*M_PI);
+		int c=0;
+		double v[4];
+		if(pxy0>=mv->psx0 && pxy0<=mv->psx1 && c<4){ v[c++]=pxy0; v[c++]=mv->psy0; }
+		if(pxy1>=mv->psx0 && pxy1<=mv->psx1 && c<4){ v[c++]=pxy1; v[c++]=mv->psy1; }
+		if(pyx0<=mv->psy0 && pyx0>=mv->psy1 && c<4){ v[c++]=mv->psx0; v[c++]=pyx0; }
+		if(pyx1<=mv->psy0 && pyx1>=mv->psy1 && c<4){ v[c++]=mv->psx1; v[c++]=pyx1; }
+		if(c==4){
+			if(round(d/90.)*90.==d) glColor4f(1.f,0.f,0.f,1.f);
+			else if(round(d/30.)*30.==d) glColor4f(0.f,0.f,0.f,1.f);
+			else if(round(d/15.)*15.==d) glColor4f(.5f,0.f,0.f,.5f);
+			else glColor4f(.5f,.5f,0.f,.5f);
+			glBegin(GL_LINES);
+			glVertex2d(v[0]-mv->px,v[1]-mv->py);
+			glVertex2d(v[2]-mv->px,v[3]-mv->py);
+			glEnd();
+		}
+	}
+	glseccol(1.f,0.f,0.f); /* TODO: reset to previous value */
+}
+
 char maprender(char sel){
 	struct mapview mv;
 	if(map.init>MI_TEX || !mapon()) return 0;
@@ -1193,6 +1244,7 @@ char maprender(char sel){
 		if(!sel) maprendermap(&mv);
 		if(!sel && glprg() && map.ele) mapelerender(&mv);
 		maprenderclt(&mv);
+		maprenderdirstar(&mv);
 	}
 	if(!sel) maprenderinfo();
 	if(!sel && glprg() && map.ele) mapelerenderbar();
@@ -1347,14 +1399,7 @@ void mapcopypos(float sx,float sy){
 
 struct imglist *mappastepos(){
 	struct imglist *il;
-	char *buf,*p;
-	double x,y;
-	if(!mapon() || !(buf=SDL_GetClipboardText())) return NULL;
-	if(!(p=strchr(buf,','))) return NULL;
-	*p='\0';
-	if(!(y=atof(buf)) || !(x=atof(p+1))) return NULL;
-	map.pos.gx=x;
-	map.pos.gy=y;
+	if(!mapon() || !sdlclip2pos(&map.pos.gx,&map.pos.gy)) return NULL;
 	return ilfind("[MAP]",&il) ? il : NULL;
 }
 

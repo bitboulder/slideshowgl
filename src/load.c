@@ -291,6 +291,8 @@ char ldtexload(){
 		glTexImage2D(GL_TEXTURE_2D,0,(GLint)sdlimg->fmt,sdlimg->sf->w,sdlimg->sf->h,0,sdlimg->fmt,GL_UNSIGNED_BYTE,sdlimg->sf->pixels);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+//		glGenerateMipmap(GL_TEXTURE_2D);
+//		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
 		if(GLEW_EXT_texture_edge_clamp){
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);

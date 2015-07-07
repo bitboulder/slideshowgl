@@ -14,6 +14,7 @@ const char *mapgetbasedirs();
 char mapdisplaymode();
 char mapelevation();
 void mapeditmode();
+char mapdirstar();
 void mapaddurl(char *txt);
 char mapgetclt(int i,struct imglist **il,const char **fn,const char **dir);
 char mapgetcltpos(int i,float *sx,float *sy);

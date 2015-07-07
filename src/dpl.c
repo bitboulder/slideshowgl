@@ -1174,7 +1174,7 @@ void dplkey(uint32_t key){
 	case 'C': if(!dplprgcolcopy()) dplconvert(); break;
 	case 'b': if(glprg()) dpl.colmode=COL_B; break;
 	case 'k': effsw(ESW_CAT,-1); catforce(CF_OFF); break;
-	case 's': if(dplwritemode() && dplinputtxtinit(ITM_CATSEL)) catforce(CF_ON); break;
+	case 's': if(!mapdirstar() && dplwritemode() && dplinputtxtinit(ITM_CATSEL)) catforce(CF_ON); break;
 	case 'S': if(dplmark(ilcimgi(NULL),1)) catforce(CF_ONRUN); else{ ilsortchg(NULL); effinit(EFFREF_ALL,0,NULL,-1); } break;
 	case 127: if(dplwritemode()) dpldel(DD_DEL); break;
 	case 'o': if(dplwritemode()) dpldel(DD_ORI); break;

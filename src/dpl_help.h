@@ -88,6 +88,7 @@ __(" /")"\0"                   __("Search for marker")"\0"
 __(" p")"\0"                   __("Paste position from clipboard")"\0"
 __(" P")"\0"                   __("Copy position to clipboard")"\0"
 __(" m")"\0"                   __("Switch map type")"\0"
+__(" s")"\0"                   __("Toggle direction star display")"\0"
 #else
 #ifdef IF_PRGED
 __(" Right/Left")"\0"          __("Forward/Backward")"\0"
