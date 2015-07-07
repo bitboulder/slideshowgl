@@ -55,6 +55,7 @@ struct sdl {
 	Uint32 hidecursor;
 	struct sdlmove move;
 	Sint32 mousex,mousey;
+	Uint32 lastmotion;
 	char fullscreen;
 	char dofullscreen;
 	char docentermouse;
@@ -79,6 +80,7 @@ struct sdl {
 	.move.base_x= 0xffff,
 	.mousex     = 0,
 	.mousey     = 0,
+	.lastmotion = 0,
 	.clickdelay.time = 0,
 	.lastfrm    = 0,
 };
@@ -389,13 +391,18 @@ void sdlclick(Uint8 btn,Sint32 x,Sint32 y,int clickimg){
 void sdlmotion(Sint32 x,Sint32 y){
 	float fx = (float)x/(float)sdl.scr_w - .5f;
 	float fy = (float)y/(float)sdl.scr_h - .5f;
+	Uint32 now=SDL_GetTicks();
 	sdl.mousex=x; sdl.mousey=y;
 	SDL_ShowCursor(SDL_ENABLE);
-	sdl.hidecursor=SDL_GetTicks()+sdl.cfg.hidecursor;
+	sdl.hidecursor=now+sdl.cfg.hidecursor;
 	//printixy((float)x/(float)sdl.scr_w-.5f,(float)y/(float)sdl.scr_h-.5f);
 	if(sdl.move.base_x!=0xffff) sdljump(x,y,0);
-	else if(dplgetactil(NULL)>=0 || mapon()) 
-		dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
+	else if(dplgetactil(NULL)>=0 || mapon()){
+		if(now-sdl.lastmotion>100){
+			dplevputx(DE_STAT,0,fx,fy,glselect(x,y+sdl.off_y),DES_MOUSE);
+			sdl.lastmotion=now;
+		}
+	}
 	else dplevputs(DE_STAT,DES_MOUSE);
 }
 
