@@ -1197,7 +1197,7 @@ void maprenderdirstar(struct mapview *mv){
 	if(map.dirstar.gx==0. || mv->iz<10) return;
 	mapg2p(map.dirstar.gx,map.dirstar.gy,pdx,pdy);
 	glseccol(0.f,0.f,0.f);
-	for(d=0.;d<180.;d+=5.){
+	for(d=0.;d<180.;d+=1.){
 		double pxy0=pdx+(mv->psy0-pdy)*tan(d/180.*M_PI); /* TODO: calc crosspoints on sphere */
 		double pxy1=pdx+(mv->psy1-pdy)*tan(d/180.*M_PI);
 		double pyx0=pdy+(mv->psx0-pdx)/tan(d/180.*M_PI);
@@ -1209,10 +1209,10 @@ void maprenderdirstar(struct mapview *mv){
 		if(pyx0<=mv->psy0 && pyx0>=mv->psy1 && c<4){ v[c++]=mv->psx0; v[c++]=pyx0; }
 		if(pyx1<=mv->psy0 && pyx1>=mv->psy1 && c<4){ v[c++]=mv->psx1; v[c++]=pyx1; }
 		if(c==4){
-			if(round(d/90.)*90.==d) glColor4f(1.f,0.f,0.f,1.f);
-			else if(round(d/30.)*30.==d) glColor4f(0.f,0.f,0.f,1.f);
-			else if(round(d/15.)*15.==d) glColor4f(.5f,0.f,0.f,.5f);
-			else glColor4f(.5f,.5f,0.f,.5f);
+			if(round(d/45.)*45.==d) glColor4f(1.f,0.f,0.f,1.f);
+			else if(round(d/15.)*15.==d) glColor4f(0.f,0.f,1.f,1.f);
+			else if(round(d/5.)*5.==d) glColor4f(1.f,0.f,1.f,1.f);
+			else glColor4f(.5f,.5f,.5f,.5f);
 			glBegin(GL_LINES);
 			glVertex2d(v[0]-mv->px,v[1]-mv->py);
 			glVertex2d(v[2]-mv->px,v[3]-mv->py);
