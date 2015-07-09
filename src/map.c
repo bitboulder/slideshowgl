@@ -135,7 +135,7 @@ struct map {
 	.mouse.sx = .5f,
 	.mouse.sy = .5f,
 	.cltdls = 0,
-	.sphere = 0,
+	.sphere = 1,
 	.dirstar = {0.,0.},
 };
 
@@ -386,7 +386,7 @@ char mapview(struct mapview *mv,char dst){ /* TODO: select calced values */
 
 	mv->kdist=5.f;
 	mv->kfov=35.f;
-	if(!map.sphere){
+	if(map.sphere){
 		float sr1s=1.f+sdlrat()*sdlrat();
 		float rad1s,src1s;
 		mv->cot=1.f/tanf(mv->kfov/360.f*M_PIf);
@@ -1048,6 +1048,7 @@ void mapinit(){
 	for(ch=0;ch<NTHSH;ch++) map.tileh[ch]=0;
 	while(map.init>2) SDL_Delay(500);
 	map.starpat=cfggetstr("map.star");
+	map.sphere=cfggetbool("map.sphere");
 	mapaddbasedir(cfggetstr("map.base"),"",1);
 	map.ftchk=cfggetuint("ld.filetime_check");
 	memset(&mapimgs,0,sizeof(struct mapimgs));
@@ -1121,7 +1122,7 @@ void maprendermap(struct mapview *mv){
 	int iz=mv->iz;
 	int s;
 	int gox=0,goy=0;
-	if(!map.sphere && iz<6) iz=6;
+	if(map.sphere && iz<6) iz=6;
 	s=1<<iz;
 	glPushMatrix();
 	glScalef(1.f/(float)s,1.f/(float)s,1.f);
@@ -1227,7 +1228,7 @@ char maprender(char sel){
 	if(map.init>MI_TEX || !mapon()) return 0;
 	if(!sel) while(texload()) ;
 	if(mapview(&mv,0)){
-		if(!map.sphere){
+		if(map.sphere){
 			glmodex(GLM_3DS,mv.kfov,0); 
 			glMatrixMode(GL_PROJECTION);
 			glTranslatef(0.f,0.f,mv.kdist);

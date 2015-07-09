@@ -124,6 +124,7 @@ struct cfg {
 	{ 0,   "map.url",             CT_STR, CM_DO,   "",       {NULL}, __("Add url for another map type (ID,MAXZOOM,URL_WITH_[x][y][z])") },
 	{ 0,   "mapele.url",          CT_STR, CM_SET,  "",       {NULL}, __("Set url for map elevation srtm data [pos]=N51E031") },
 	{ 0,   "map.star",            CT_STR, CM_SET,  "",       {NULL}, __("Pattern for stared markers inside map.base") },
+	{ 0,   "map.sphere",          CT_INT, CM_FLIP, "1",      {NULL}, __("Display map as globus sphere") },
 	{ 0,   "mapld.cachedir",      CT_STR, CM_SET,  "",       {NULL}, __("Cache directory for map images (default: TMP/slideshowgl-cache)") },
 	{ 0,   "mapld.expire",        CT_INT, CM_SET,  "7",      {NULL}, __("Dayes of expire for map cache") },
 	{ 0,   "hist.max",            CT_FLT, CM_SET,  "0.02",   {NULL}, __("Maximal fraction displayed in histogram") },
