@@ -42,6 +42,7 @@ struct load {
 	int  maxtexsize;
 	int  maxpanotexsize;
 	int  maxpanopixels;
+	int  maxpanolowdim;
 	int numexifloadperimg;
 	char vartex;
 	char reset;
@@ -59,6 +60,7 @@ void ldmaxtexsize(){
 	load.maxtexsize=cfggetint("ld.maxtexsize");
 	load.maxpanotexsize=cfggetint("ld.maxpanotexsize");
 	load.maxpanopixels=cfggetint("ld.maxpanopixels");
+	load.maxpanolowdim=cfggetint("ld.maxpanolowdim");
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE,&maxtex);
 	if(maxtex<load.maxtexsize) load.maxtexsize=maxtex;
 	if(maxtex<load.maxpanotexsize) load.maxpanotexsize=maxtex;
@@ -442,10 +444,12 @@ char ldfload(struct imgld *il,enum imgtex it){
 		if(tex->loaded && (thumb || i!=TEX_SMALL || !tex->thumb)) continue;
 		if(tex->loading != tex->loaded) continue;
 		if(i==TEX_FULL && (panoenable=imgpanoenable(il->img->pano))){
+			int ldim=MIN(il->w,il->h);
 			tex->pano=il->img->pano;
 			xres=load.maxpanotexsize;
 			yres=load.maxpanotexsize;
-			while(il->w/scale*il->h/scale>load.maxpanopixels) scale++;
+			while(il->w/scale*il->h/scale>load.maxpanopixels*1000000) scale++;
+			while(ldim/(scale+1)>load.maxpanolowdim) scale++;
 			panores(tex->pano,il->w/scale,il->h/scale,&xres,&yres);
 		}else tex->pano=NULL;
 		if(i!=TEX_FULL){
