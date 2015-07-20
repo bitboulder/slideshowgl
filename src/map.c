@@ -1194,29 +1194,38 @@ void maprenderinfo(){
 }
 
 void maprenderdirstar(struct mapview *mv){
-	double d,pdx,pdy;
+	double d;
 	if(map.dirstar.gx==0. || mv->iz<10) return;
-	mapg2p(map.dirstar.gx,map.dirstar.gy,pdx,pdy);
 	glseccol(0.f,0.f,0.f);
 	for(d=0.;d<180.;d+=1.){
-		double pxy0=pdx+(mv->psy0-pdy)*tan(d/180.*M_PI); /* TODO: calc crosspoints on sphere */
-		double pxy1=pdx+(mv->psy1-pdy)*tan(d/180.*M_PI);
-		double pyx0=pdy+(mv->psx0-pdx)/tan(d/180.*M_PI);
-		double pyx1=pdy+(mv->psx1-pdx)/tan(d/180.*M_PI);
+		double gx=map.dirstar.gx/180.*M_PI;
+		double gy=map.dirstar.gy/180.*M_PI;
+		double a=d/180.*M_PI;
+		double ax=gx-(sin(gy)&&tan(a) ? atan(-1./sin(gy)/tan(a))+M_PI : M_PI/2.);
+		double ay=asin(sin(a)*cos(gy));
+		double gxy0=atan(-cos(mv->gsx0/180.*M_PI-ax)/tan(ay))/M_PI*180.;
+		double gxy1=atan(-cos(mv->gsx1/180.*M_PI-ax)/tan(ay))/M_PI*180.;
+		double gyx0=(ax+acos(-tan(ay)*tan(mv->gsy0/180.*M_PI))*(d>90.?-1.:1.))/M_PI*180.;
+		double gyx1=(ax+acos(-tan(ay)*tan(mv->gsy1/180.*M_PI))*(d>90.?-1.:1.))/M_PI*180.;
 		int c=0;
 		double v[4];
-		if(pxy0>=mv->psx0 && pxy0<=mv->psx1 && c<4){ v[c++]=pxy0; v[c++]=mv->psy0; }
-		if(pxy1>=mv->psx0 && pxy1<=mv->psx1 && c<4){ v[c++]=pxy1; v[c++]=mv->psy1; }
-		if(pyx0<=mv->psy0 && pyx0>=mv->psy1 && c<4){ v[c++]=mv->psx0; v[c++]=pyx0; }
-		if(pyx1<=mv->psy0 && pyx1>=mv->psy1 && c<4){ v[c++]=mv->psx1; v[c++]=pyx1; }
+		while(gyx0<mv->gx-180.) gyx0+=360.;
+		while(gyx0>mv->gx+180.) gyx0-=360.;
+		while(gyx1<mv->gx-180.) gyx1+=360.;
+		while(gyx1>mv->gx+180.) gyx1-=360.;
+		if(gyx0>=mv->gsx0 && gyx0<=mv->gsx1 && c<4){ v[c++]=gyx0; v[c++]=mv->gsy0; }
+		if(gyx1>=mv->gsx0 && gyx1<=mv->gsx1 && c<4){ v[c++]=gyx1; v[c++]=mv->gsy1; }
+		if(gxy0>=mv->gsy0 && gxy0<=mv->gsy1 && c<4){ v[c++]=mv->gsx0; v[c++]=gxy0; }
+		if(gxy1>=mv->gsy0 && gxy1<=mv->gsy1 && c<4){ v[c++]=mv->gsx1; v[c++]=gxy1; }
 		if(c==4){
+			double px,py;
 			if(round(d/45.)*45.==d) glColor4f(1.f,0.f,0.f,1.f);
 			else if(round(d/15.)*15.==d) glColor4f(0.f,0.f,1.f,1.f);
 			else if(round(d/5.)*5.==d) glColor4f(1.f,0.f,1.f,1.f);
 			else glColor4f(.5f,.5f,.5f,.5f);
 			glBegin(GL_LINES);
-			glVertex2d(v[0]-mv->px,v[1]-mv->py);
-			glVertex2d(v[2]-mv->px,v[3]-mv->py);
+			mapg2p(v[0],v[1],px,py); glVertex2d(px-mv->px,py-mv->py);
+			mapg2p(v[2],v[3],px,py); glVertex2d(px-mv->px,py-mv->py);
 			glEnd();
 		}
 	}
