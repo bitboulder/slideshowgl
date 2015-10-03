@@ -279,7 +279,7 @@ void sdlkey(SDL_Keysym key){
 		case SDLK_UP:       dplevput(DE_UP);      break;
 		case SDLK_DOWN:     dplevput(DE_DOWN);    break;
 		case SDLK_PAGEUP:   dplevput(DE_ZOOMIN);  break;
-		case SDLK_PAGEDOWN: dplevput(DE_ZOOMOUT); break;
+		case SDLK_PAGEDOWN: dplevput(key.mod&KMOD_SHIFT?DE_ZOOMOUTF:DE_ZOOMOUT); break;
 		case SDLK_KP_ENTER: dplevputk(SDLK_SPACE);break;
 		case SDLK_HOME:     dplevputi(DE_SEL,0);  break;
 		case SDLK_END:      dplevputi(DE_SEL,IMGI_END-1); break;
@@ -434,7 +434,8 @@ void sdlwheel(Sint32 wy){
 	float fx = (float)sdl.mousex/(float)sdl.scr_w - .5f;
 	float fy = (float)sdl.mousey/(float)sdl.scr_h - .5f;
 	int clickimg = glselect(sdl.mousex,sdl.mousey+sdl.off_y);
-	dplevputpi(wy<0?DE_ZOOMOUT:DE_ZOOMIN,fx,fy,clickimg);
+	char shf=SDL_GetModState()&KMOD_SHIFT;
+	dplevputpi(wy<0?(shf?DE_ZOOMOUTF:DE_ZOOMOUT):DE_ZOOMIN,fx,fy,clickimg); /* TODO: DE_ZOOMOUTF on SHIFT */
 }
 
 void sdlhidecursor(){

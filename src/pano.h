@@ -10,6 +10,7 @@
 struct imgpano *imgpanoinit();
 void imgpanofree(struct imgpano *ip);
 char imgpanoenable(struct imgpano *ip);
+int imgpanozoomf(struct imgpano *ip);
 void imgpanoload(struct imgpano *ip,const char *fn);
 
 char panorunning();
@@ -17,6 +18,7 @@ void panoinit(char done);
 
 struct img *panoactive();
 char panostattxt(char *txt,size_t len);
+char panozoomf(int dir);
 
 void panores(struct imgpano *ip,int w,int h,int *xres,int *yres);
 char panospos2ipos(struct img *img,float sx,float sy,float *ix,float *iy);

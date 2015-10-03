@@ -1268,7 +1268,7 @@ char mapmove(enum dplev ev,float sx,float sy){
 	if(!mapview(&mv,1)) return 1;
 	if(ev&(DE_RIGHT|DE_LEFT)) map.pos.gx+=(double)dir*mv.gw/3.f;
 	if(ev&(DE_UP|DE_DOWN)) map.pos.gy+=(double)dir*mv.gh/3.f;
-	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
+	if(ev&DE_ZOOM){
 		int iz=map.pos.iz+dir;
 		double gx0,gx1,gy0,gy1;
 		if(iz<0 || iz>=N_ZOOM) return 0;

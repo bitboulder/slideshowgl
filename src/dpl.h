@@ -31,13 +31,14 @@ enum dplev {
 	DE_MAPMK   = 0x00400000,
 	DE_MAPCOPY = 0x00800000,
 	DE_MAPPASTE= 0x01000000,
+	DE_ZOOMOUTF= 0x02000000,
 };
 #define DE_JUMP		(DE_JUMPX|DE_JUMPY)
 #define DE_HOR		(DE_RIGHT|DE_LEFT)
 #define DE_VER  	(DE_UP|DE_DOWN)
-#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT)
+#define DE_ZOOM		(DE_ZOOMIN|DE_ZOOMOUT|DE_ZOOMOUTF)
 #define DEX_DIR1	(DE_RIGHT|DE_UP|DE_ZOOMIN|DE_ROT1)
-#define DEX_DIR2	(DEX_DIR1<<1)
+#define DEX_DIR2	((DEX_DIR1<<1)|DE_ZOOMOUTF)
 #define DEX_NDIR	(~(unsigned int)(DEX_DIR1|DEX_DIR2))
 #define DE_DIR(ev)	(((ev)&DEX_DIR1)?1:(((ev)&DEX_DIR2)?-1:0))
 #define DE_NEG(ev)	(((ev)&DEX_NDIR)|(((ev)&DEX_DIR1)<<1)|(((ev)&DEX_DIR2)>>1))

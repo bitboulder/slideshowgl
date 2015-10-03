@@ -477,7 +477,9 @@ void dplmove(enum dplev ev,float sx,float sy,int clickimg){
 		else if(dpl.pos.zoom==0) dplchgimgi( dir*zoomtab[-dpl.pos.zoom].move);
 		else dplmovepos(0.f,-(float)dir*.25f);
 	}
-	if(ev&(DE_ZOOMIN|DE_ZOOMOUT)){
+	if((ev&DE_ZOOMOUTF) && dpl.pos.zoom==1 && panozoomf(dir)){ }
+	else if((ev&DE_ZOOMIN) && dpl.pos.zoom==1 && panozoomf(dir)){ }
+	else if(ev&DE_ZOOM){
 		float x,fitw;
 		struct img *img;
 		if(dpl.pos.ailtyp==AIL_PRGED){
@@ -1223,6 +1225,7 @@ char dplevdelay(struct ev *ev){
 		case DE_RIGHT:   if(ev->src==DES_KEY && !dplwritemode()) grp=DEG_RIGHT; break;
 		case DE_LEFT:    if(ev->src==DES_KEY && !dplwritemode()) grp=DEG_LEFT;  break;
 		case DE_ZOOMIN:  grp=DEG_ZOOMIN;  if(dpl.pos.zoom!=-1) nxttime=0; break;
+		case DE_ZOOMOUTF:
 		case DE_ZOOMOUT: grp=DEG_ZOOMOUT; if(dpl.pos.zoom!=(panoactive()?2:1)) nxttime=0; break;
 		case DE_MOV:
 		case DE_PLAY:
@@ -1258,6 +1261,7 @@ char dplev(struct ev *ev){
 	case DE_UP:
 	case DE_DOWN:
 	case DE_ZOOMIN:
+	case DE_ZOOMOUTF:
 	case DE_ZOOMOUT: dplmove(ev->ev,ev->sx,ev->sy,clickimg); break;
 	case DE_SEL:     dplsel(clickimg); break;
 	case DE_DIR:     evdone=dpldir(clickimg,ev->src!=DES_MOUSE); break;

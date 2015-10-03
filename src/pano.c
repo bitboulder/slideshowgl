@@ -21,11 +21,14 @@ struct imgpano {
 	float gh;
 	float gyoff;
 	float rotinit;
+	int   zoomf;
 };
 
 struct imgpano *imgpanoinit(){ return calloc(1,sizeof(struct imgpano)); }
 void imgpanofree(struct imgpano *ip){ free(ip); }
 char imgpanoenable(struct imgpano *ip){ return ip->enable; }
+int imgpanozoomf(struct imgpano *ip){ return ip->zoomf<0 ? 0 : ip->zoomf; }
+
 
 void imgpanoload(struct imgpano *ip,const char *fn){
 	char pfn[FILELEN];
@@ -120,6 +123,18 @@ char panostattxt(char *txt,size_t len){
 	return pano.run;
 }
 
+/* thread: dpl */
+char panozoomf(int dir){
+	struct img *img;
+	if(!(img=panoactive())) return 0;
+	if(dir>0){
+		if(img->pano->zoomf<1) return 0;
+		img->pano->zoomf--;
+	}else if(img->pano->zoomf<0) img->pano->zoomf=1;
+	else img->pano->zoomf++;
+	return 1;
+}
+
 /* thread: load */
 void panores(struct imgpano *ip,int w,int h,int *xres,int *yres){
 	while(*xres>(float)w/ip->gw*pano.cfg.texdegree) *xres>>=1;
@@ -143,7 +158,7 @@ void panoperspect(struct imgpano *ip,float spos,float *perspectw,float *perspect
 	float gh=panoclipgh(ip);
 	float srat=sdlrat();
 	if(spos==PSPOS_DPL) spos=powf(2.f,(float)dplgetzoom());
-	if(spos<2.f) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
+	if(spos<2.f && ip->zoomf<0) spos=powf(ip->gw/ip->gh/srat,2.f-spos);
 	else spos=sqrtf(2.f)/powf(spos,0.5f);
 	if(perspecth) *perspecth=gh*spos;
 	if(perspectw) *perspectw=gh*spos*srat;
@@ -205,6 +220,7 @@ char panostart(struct img *img,float fitw,float *x){
 	if(!img) return 0;
 	if(!img->pano->enable) return 0;
 	ip=img->pano;
+	ip->zoomf=-1;
 	pano.mode = ip->gh>90.f && glprgfish() ? PM_FISHEYE : PM_NORMAL;
 	pano.run=0;
 	pano.rot=pano.cfg.defrot;

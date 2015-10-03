@@ -192,6 +192,10 @@ void effinitpos(struct effpar *ep,struct img *img,struct ecur *ip){
 		ip->s=(ep->cimgi==ep->imgi ? 1.f : .75f) * eff.cfg.prged_w;
 		ip->x=-.4f;
 		ip->y=(float)ep->diff*eff.cfg.prged_w;
+	}else if(panoactive() && !ep->diff){
+		ip->s=powf(2.f,(float)(ep->dp->zoom-imgpanozoomf(img->pano)));
+		ip->x=-ep->dp->x;
+		ip->y=-ep->dp->y;
 	}else if(ep->dp->zoom<0){
 		ip->s=zoomtab[-ep->dp->zoom].size;
 		ip->x=(float)ep->diff*ip->s;
@@ -201,10 +205,6 @@ void effinitpos(struct effpar *ep,struct img *img,struct ecur *ip){
 		if(ep->imgi!=ep->cimgi) ip->s*=eff.cfg.shrink;
 		ip->x*=eff.maxfit.w;
 		ip->y*=eff.maxfit.h;
-	}else if(panoactive() && !ep->diff){
-		ip->s=powf(2.f,(float)ep->dp->zoom);
-		ip->x=-ep->dp->x;
-		ip->y=-ep->dp->y;
 	}else if(!ep->diff){
 		float fitw,fith;
 		ip->s=dplgetz();
