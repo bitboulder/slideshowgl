@@ -179,6 +179,8 @@ else:
 	env.Append(CCFLAGS = ['-O2'])
 	env.Append(CCFLAGS = ['-g'])
 
+env.Append(CCFLAGS = ['-Wno-format-security'])
+
 Export('env')
 Export('prefix')
 Export('destdir')
