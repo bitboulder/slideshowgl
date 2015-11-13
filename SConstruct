@@ -150,6 +150,7 @@ if not env.GetOption('clean'):
 		conf.CheckPKG('xinerama >= 1.0',0,'XINERAMA')
 		conf.CheckPKG('libcurl >= 0.2',0,'CURL')
 		conf.CheckPKG('zlib >= 1.2',0,'ZLIB')
+		conf.CheckPKG('mirclient',0,'MIR')
 		conf.CheckFuncMy('iconv',0,'ICONV')
 		conf.CheckLibMy('pthread',0,'PTHREAD')
 
