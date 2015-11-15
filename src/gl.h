@@ -1,5 +1,5 @@
-#ifndef _GL_H
-#define _GL_H
+#ifndef _GL_HM
+#define _GL_HM
 
 #include "load.h"
 #include <GL/glew.h>
