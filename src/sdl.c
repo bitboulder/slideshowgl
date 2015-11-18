@@ -30,6 +30,7 @@
 char sdl_quit = 0;
 
 struct sdlcfg {
+	float rat;
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
 	int fsaa;
@@ -86,7 +87,7 @@ struct sdl {
 };
 
 /* thread: gl */
-float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h; }
+float sdlrat(){ return (float)sdl.scr_w/(float)sdl.scr_h*sdl.cfg.rat; }
 
 /* thread: dpl */
 void sdlwh(float *w,float *h){
@@ -230,6 +231,7 @@ void sdlicon(){
 void sdlinit(){
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
+	sdl.cfg.rat=cfggetfloat("sdl.rat");
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
 	sdl.scr_w=cfggetint("sdl.width");
 	sdl.scr_h=cfggetint("sdl.height");

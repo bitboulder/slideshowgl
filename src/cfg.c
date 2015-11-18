@@ -55,6 +55,7 @@ struct cfg {
 	{ 'W', "sdl.width",           CT_INT, CM_SET,  "1024",   {NULL}, __("Set window width") },
 	{ 'H', "sdl.height",          CT_INT, CM_SET,  "768",    {NULL}, __("Set window height") },
 	{ 's', "sdl.sync",            CT_INT, CM_FLIP, "1",      {NULL}, __("Toggle video sync") },
+	{ 0,   "sdl.rat",             CT_FLT, CM_SET,  "1",      {NULL}, __("Additional width/height ratio (<0: wide)") },
 	{ 0,   "sdl.hidecursor",      CT_INT, CM_SET,  "1500",   {NULL}, __("After that time (ms) the cursor is hidden") },
 	{ 0,   "sdl.doubleclicktime", CT_INT, CM_SET,  "500",    {NULL}, __("Delay for double-click in ms") },
 	{ 0,   "sdl.fsaa",            CT_INT, CM_SET,  "4",      {NULL}, __("Antialias mode") },
