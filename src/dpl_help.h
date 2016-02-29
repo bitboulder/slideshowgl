@@ -119,7 +119,7 @@ __(" e")"\0"                   __("Leave program editor")"\0"
 #elif defined IF_DIRED
 __(" e")"\0"                   __("Leave directory editor")"\0"
 #else
-__(" e")"\0"                   __("Open directory or program editor")"\0"
+__(" e")"\0"                   __("Open directory or program editor (only in real directories)")"\0"
 #ifdef IF_WRM
 __(" m")"\0"                   __("Open map (only if no image is active)")"\0"
 #else
