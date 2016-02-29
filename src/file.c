@@ -30,7 +30,7 @@
 #include "mark.h"
 
 #define IMGEXT		"jpg", "jpeg", "png", "tif", "tiff"
-#define MOVEXT		"mov", "avi", "mpg"
+#define MOVEXT		"mov", "avi", "mpg", "mp4"
 #define WAVEXT		"wav", "mp3", "ogg"
 #define RAWEXT		"ufraw", "cr2"
 #define SLAVEEXT	MOVEXT, "thm"
