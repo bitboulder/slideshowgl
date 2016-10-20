@@ -12,12 +12,13 @@
 #define FORMAT(a,b) __attribute__((format(printf,a,b)))
 #define NORETURN __attribute__((noreturn))
 
-#define ETIMER  E(NONE), E(SDL), E(DPL), E(GLLD), E(LD), E(LDF), E(COL), E(THR)
+#define ETIMER  E(NONE), E(SDL), E(DPL), E(GLLD), E(LD), E(LDF), E(COL), E(THR), E(GL)
 #define E(X)	TI_##X
 enum timer { ETIMER };
 #undef E
 
-void timer(enum timer timer,int id,char reset);
+#define timer(ti,id,reset)	timerx(ti,id,reset,1.)
+void timerx(enum timer ti,int id,char reset,double count);
 
 #define EDEBUG	E(NONE), E(STA), E(DBG), E(EFF)
 #define E(X)	DBG_##X

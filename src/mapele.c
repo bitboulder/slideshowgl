@@ -386,9 +386,11 @@ void mapele_mmupd(struct mapview *mv,char refonly){
 	mapele.maxmin[0]=32767;
 	mapele.maxmin[1]=-32768;
 	/* TODO: restrict to -180..179, -90..89 */
-	if(!refonly) for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
-		if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,mv);
-		else mmref=1;
+	if(!refonly){
+		for(gx=gx0;gx<=gx1;gx++) for(gy=gy0;gy<=gy1;gy++)
+			if((ld=mapele_ldfind(gx,gy)) && ld->maxmin) mapele_mmget(mapele.maxmin,ld,mv);
+			else mmref=1;
+	}
 	if((refonly || mmref) && mapele.ldref.maxmin) mapele_mmget(mapele.maxmin,&mapele.ldref,mv);
 }
 
@@ -399,8 +401,10 @@ const char *mapelestat(double gsx,double gsy){
 	if(!ld || !ld->maxmin) return " ?m";
 	ix=(int)round((gsx-floor(gsx))*(double)(ld->w-1));
 	iy=(int)round((1.-(gsy-floor(gsy)))*(double)(ld->h-1));
-	if(ix<0) ix=0; if(ix>=ld->w) ix=ld->w-1;
-	if(iy<0) iy=0; if(iy>=ld->h) iy=ld->h-1;
+	if(ix<0) ix=0;
+	if(iy<0) iy=0;
+	if(ix>=ld->w) ix=ld->w-1;
+	if(iy>=ld->h) iy=ld->h-1;
 	snprintf(str,16," %im",ld->maxmin[iy*ld->w+ix]);
 	return str;
 }

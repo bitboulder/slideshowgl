@@ -1,7 +1,7 @@
 #include "config.h"
 #ifndef __WIN32__
 	#define _POSIX_C_SOURCE 200809L
-	#define	_BSD_SOURCE
+	#define	_DEFAULT_SOURCE
 	#include <features.h>
 #endif
 #include <stdio.h>
@@ -188,13 +188,15 @@ char end_threads(){
 
 enum timer tim;
 #define TIMER_NUM	16
-void timer(enum timer ti,int id,char reset){
-	static Uint32 ti_max[TIMER_NUM];
-	static Uint32 ti_sum[TIMER_NUM];
-	static Uint32 ti_cnt[TIMER_NUM];
-	static Uint32 ti_lst[TIMER_NUM];
-	static Uint32 last=0, lastp=0;
-	Uint32 now=SDL_GetTicks();
+#define TDIFF(a,b)	( (double)((b).tv_sec-(a).tv_sec)*1e3 +  (double)((b).tv_nsec-(a).tv_nsec)/1e6 )
+void timerx(enum timer ti,int id,char reset,double count){
+	static double ti_max[TIMER_NUM];
+	static double ti_sum[TIMER_NUM];
+	static double ti_cnt[TIMER_NUM];
+	static double ti_lst[TIMER_NUM];
+	static struct timespec last={0,0}, lastp={0,0};
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC,&now);
 	if(ti!=tim) return;
 	if(ti==TI_THR){
 #if SDL_THREAD_PTHREAD && HAVE_PTHREAD
@@ -203,39 +205,39 @@ void timer(enum timer ti,int id,char reset){
 		for(i=0;mt->fnc;mt++,i++) if(mt->pt){
 			clockid_t cid;
 			struct timespec time;
-			Uint32 t;
+			double t;
 			pthread_getcpuclockid(mt->pt, &cid);
 			clock_gettime(cid,&time);
-			t=(Uint32)time.tv_sec*100000+(Uint32)time.tv_nsec/10000;
+			t=(double)time.tv_sec*100000.+(double)time.tv_nsec/10000.;
 			if(ti_lst[i]) ti_sum[i]+=t-ti_lst[i];
 			ti_lst[i]=t;
 			ti_cnt[i]=1;
 		}
 #endif
-	}else if(id>=0 && id<TIMER_NUM && last){
-		Uint32 diff=now-last;
+	}else if(id>=0 && id<TIMER_NUM && last.tv_nsec){
+		double diff=TDIFF(last,now);
 		if(ti_max[id]<diff) ti_max[id]=diff;
 		ti_sum[id]+=diff;
-		ti_cnt[id]++;
+		ti_cnt[id]+=count;
 	}
 	last=now;
-	if(now-lastp>2000){
-		if(lastp){
+	if(TDIFF(lastp,now)>2000){
+		if(lastp.tv_nsec){
 			int i,l;
 			char tmp[256];
 			snprintf(tmp,256,"timer:");
 			for(l=TIMER_NUM-1;l>=0 && !ti_cnt[l];) l--;
 			for(i=0;i<=l;i++)
 				if(ti==TI_THR) snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%-4s)",
-					(float)ti_sum[i]/(float)(now-lastp),mainthreads[i].name);
-				else snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4i)",
-					(float)ti_sum[i]/(float)ti_cnt[i],ti_max[i]);
+					ti_sum[i]/TDIFF(lastp,now),mainthreads[i].name);
+				else snprintf(tmp+strlen(tmp),256-strlen(tmp)," %6.1f(%4.0f)",
+					ti_sum[i]/ti_cnt[i],ti_max[i]);
 			debug(DBG_NONE,tmp);
 		}
 		if(reset){
-			memset(ti_max,0,sizeof(Uint32)*TIMER_NUM);
-			memset(ti_sum,0,sizeof(Uint32)*TIMER_NUM);
-			memset(ti_cnt,0,sizeof(Uint32)*TIMER_NUM);
+			memset(ti_max,0,sizeof(double)*TIMER_NUM);
+			memset(ti_sum,0,sizeof(double)*TIMER_NUM);
+			memset(ti_cnt,0,sizeof(double)*TIMER_NUM);
 		}
 		lastp=now;
 	}

@@ -995,13 +995,19 @@ void glrenderhist(){
 void glpaint(){
 	GLenum glerr;
 
+	timer(TI_GL,-1,1);
 	glClearColor(0.,0.,0.,1.);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glrenderback();
+	timer(TI_GL,0,1);
 	if(!panorender(gl.sel.act) && !maprender(gl.sel.act)) glrenderimgs();
+	timer(TI_GL,1,1);
+	timer(TI_GL,6,1);
 	glrendercat();
+	timer(TI_GL,2,1);
 	glrenderprgcol();
+	timer(TI_GL,3,1);
 	if(gl.sel.act) return;
 	glrenderbar();
 	glrenderstat();
@@ -1010,6 +1016,7 @@ void glpaint(){
 	glrenderinfo();
 	glrenderinput();
 	glrenderhelp();
+	timer(TI_GL,4,1);
 	
 	if((glerr=glGetError())) error(ERR_CONT,"in glpaint (gl-err: %d)",glerr);
 }

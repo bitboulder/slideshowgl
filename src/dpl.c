@@ -1099,8 +1099,9 @@ void dplinputtxtfinal(char ok){
 		if(ok && dpl.input.res[0]) mapmarkpos(dpl.input.x,dpl.input.y,dpl.input.res);
 	break;
 	case ITM_MARKFN:
-	printf("%i %lu +%s+%s+\n",ok,len,dpl.input.res,dpl.input.in);
-		if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL); break;
+		printf("%i %lu +%s+%s+\n",ok,len,dpl.input.res,dpl.input.in);
+		if(ok && len && markswitchfn(dpl.input.res)) ileffref(CIL_ALL,EFFREF_ALL);
+	break;
 	}
 	dpl.input.lastmode=dpl.input.mode;
 	dpl.input.mode=ITM_OFF;

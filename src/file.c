@@ -1,6 +1,6 @@
 #include "config.h"
 #ifndef __WIN32__
-	#define	_BSD_SOURCE
+	#define	_DEFAULT_SOURCE
 	#include <features.h>
 #endif
 #include <stdlib.h>
