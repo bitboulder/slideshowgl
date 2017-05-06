@@ -31,6 +31,7 @@ char sdl_quit = 0;
 
 struct sdlcfg {
 	float rat;
+	float fixrat;
 	Uint32 hidecursor;
 	Uint32 doubleclicktime;
 	int fsaa;
@@ -159,7 +160,15 @@ void sdlcentermouse(){
 void sdlresize(int w,int h){
 	int fsaa=sdl.cfg.fsaa;
 	debug(DBG_STA,"sdl window resize %ix%i",w,h);
-	sdl.scr_w=w; sdl.scr_h=h;
+	if(!sdl.cfg.fixrat){
+		sdl.scr_w=w; sdl.scr_h=h;
+	}else if((float)w/(float)h>sdl.cfg.fixrat){
+		sdl.scr_h=h;
+		sdl.scr_w=(int)roundf((float)h*sdl.cfg.fixrat);
+	}else{
+		sdl.scr_w=w;
+		sdl.scr_h=(int)roundf((float)w/sdl.cfg.fixrat);
+	}
 	if(fsaa && (w>sdl.cfg.fsaamaxw || h>sdl.cfg.fsaamaxh)){
 		debug(DBG_STA,"disable anti-aliasing for window size");
 		fsaa=0;
@@ -167,7 +176,7 @@ void sdlresize(int w,int h){
 	if(sdl.docentermouse) sdlcentermouse();
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,fsaa?1:0);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,fsaa);
-	glViewport(0, 0, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
+	glViewport((w-sdl.scr_w)/2, (h-sdl.scr_h)/2, (GLint)sdl.scr_w, (GLint)sdl.scr_h);
 	ileffref(CIL_ALL,EFFREF_FIT);
 	sdlforceredraw();
 }
@@ -232,6 +241,7 @@ void sdlinit(){
 	sdl.sync=cfggetbool("sdl.sync");
 	sdl.fullscreen=cfggetbool("sdl.fullscreen");
 	sdl.cfg.rat=cfggetfloat("sdl.rat");
+	sdl.cfg.fixrat=cfggetfloat("sdl.fixratio");
 	sdl.cfg.hidecursor=cfggetuint("sdl.hidecursor");
 	sdl.scr_w=cfggetint("sdl.width");
 	sdl.scr_h=cfggetint("sdl.height");
