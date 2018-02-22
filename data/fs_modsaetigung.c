@@ -10,7 +10,11 @@ void main(){
 		color = texture2D(tex,gl_TexCoord[0].st);
 
 		// colmod
-		if(gl_Color.x!=0.5) color.xyz = pow(color.xyz,-log2(gl_Color.x));
+		if(gl_Color.x!=0.5){
+			color.x = pow(color.x,-log2(gl_Color.x));
+			color.y = pow(color.y,-log2(gl_Color.x));
+			color.z = pow(color.z,-log2(gl_Color.x));
+		}
 		if(gl_Color.y!=0.5) color.xyz = (0.5-color.xyz)*log2(1.0-gl_Color.y) + 0.5;
 		if(gl_Color.z!=0.5) color.xyz = color.xyz + (gl_Color.z - 0.5)*2.0;
 

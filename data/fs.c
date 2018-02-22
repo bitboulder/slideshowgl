@@ -8,25 +8,29 @@ void main(){
 		if(gl_SecondaryColor[1]>0.0){
 			color.x=(color.x-gl_Color.x)/gl_Color.y;
 			if(color.r<0.2){
-				color.g=color.r*5;
-				color.b=1;
-				color.r=0;
+				color.g=color.r*5.;
+				color.b=1.;
+				color.r=0.;
 			}else if(color.r<0.4){
-				color.g=1-(color.r-0.2)*5*0.5;
-				color.b=1-(color.r-0.2)*5;
-				color.r=0;
+				color.g=1.-(color.r-0.2)*5.*0.5;
+				color.b=1.-(color.r-0.2)*5.;
+				color.r=0.;
 			}else if(color.r<0.6){
-				color.g=(color.r-0.4)*5*0.5+0.5;
-				color.r=(color.r-0.4)*5;
+				color.g=(color.r-0.4)*5.*0.5+0.5;
+				color.r=(color.r-0.4)*5.;
 			}else if(color.r<0.8){
-				color.g=1-(color.r-0.6)*5;
-				color.r=1;
+				color.g=1.-(color.r-0.6)*5.;
+				color.r=1.;
 			}else{
-				color.g=color.b=(color.r-0.8)*5;
-				color.r=1;
+				color.g=color.b=(color.r-0.8)*5.;
+				color.r=1.;
 			}
 		}else{
-			if(gl_Color.x!=0.5) color.xyz = pow(color.xyz,-log2(gl_Color.x));
+			if(gl_Color.x!=0.5){
+				color.x = pow(color.x,-log2(gl_Color.x));
+				color.y = pow(color.y,-log2(gl_Color.x));
+				color.z = pow(color.z,-log2(gl_Color.x));
+			}
 			if(gl_Color.y!=0.5) color.xyz = (0.5-color.xyz)*log2(1.0-gl_Color.y) + 0.5;
 			if(gl_Color.z!=0.5) color.xyz = color.xyz + (gl_Color.z - 0.5)*2.0;
 		}

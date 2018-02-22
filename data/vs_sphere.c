@@ -13,26 +13,32 @@ void main(){
 	float py=v.y+arg.x;
 	float sgy=arg.y;
 	float cgy=arg.z;
-	if(py<=0){
-		v.x=0;
+	if(py<=0.){
+		v.x=0.;
 		v.y=-cgy;
 		v.z=-sgy;
-	}else if(py>=1){
-		v.x=0;
+	}else if(py>=1.){
+		v.x=0.;
 		v.y=cgy;
 		v.z=sgy;
 	}else{
 		float svx,cvx,svy,cvy,f;
-		v.xy=v.xy*2*pi;
-		if(abs(v.x)<2e-3){ svx=v.x; cvx=1; }
+		v.xy=v.xy*2.*pi;
+		if(abs(v.x)<2e-3){ svx=v.x; cvx=1.; }
 		else{ svx=sin(v.x); cvx=cos(v.x); }
-		if(abs(v.y)<2e-3){ svy=v.y; cvy=1; }
-		else{ svy=sinh(v.y); cvy=cosh(v.y); }
+		if(abs(v.y)<2e-3){ svy=v.y; cvy=1.; }
+//		else{ svy=sinh(v.y); cvy=cosh(v.y); }
+		else{
+			float a=exp(v.y);
+			float b=exp(-v.y);
+			svy=0.5*(a-b);
+			cvy=0.5*(a+b);
+		}
 		f=cgy/(cvy-svy*sgy);
 
 		v.x=f*svx;
 		v.y=f*((cvx-cvy)*sgy+svy);
-		v.z=f*(cvy-cvx)*cgy-1;
+		v.z=f*(cvy-cvx)*cgy-1.;
 	}
 
 	gl_Position = gl_ProjectionMatrix * v;
