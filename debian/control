@@ -7,7 +7,7 @@ Standards-Version: 2.3
 
 Package: slideshowgl
 Architecture: any
-Depends: libgl1, libglu1, libglew2.0, libsdl2-2.0-0, libsdl2-image-2.0-0, libexif12, libftgl2, libx11-6, libxext6, libcurl3, libz1
+Depends: libgl1, libglu1, libglew2.0, libsdl2-2.0-0, libsdl2-image-2.0-0, libexif12, libftgl2, libx11-6, libxext6, libcurl4, libz1
 Suggests: mpv, myjpegtool
 Description: myjpegtool
 
